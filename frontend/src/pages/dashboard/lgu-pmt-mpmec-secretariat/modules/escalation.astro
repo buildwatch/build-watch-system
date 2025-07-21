@@ -1,0 +1,243 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+---
+
+<Layout title="Escalate to PPMC | MPMEC Secretariat">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Escalate to PPMC</h1>
+          <p class="text-gray-600">Forward unresolved validation issues to PPMC with notes and urgency indicators</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="createEscalation()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+            </svg>
+            Create Escalation
+          </button>
+          <button onclick="exportEscalations()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Escalation Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Escalations</p>
+              <p class="text-2xl font-bold text-blue-600" id="totalEscalations">0</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">High Priority</p>
+              <p class="text-2xl font-bold text-red-600" id="highPriority">0</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Response</p>
+              <p class="text-2xl font-bold text-yellow-600" id="pendingResponse">0</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Resolved</p>
+              <p class="text-2xl font-bold text-green-600" id="resolved">0</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escalation Queue -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-800">Escalation Queue</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Escalated</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="escalationTable">
+              <!-- Escalations will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </SecretariatLayout>
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      if (user.role !== 'LGU-PMT' || !user.subRole || !user.subRole.toLowerCase().includes('secretariat')) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+
+    // Initialize escalation data
+    loadEscalationData();
+  });
+
+  function loadEscalationData() {
+    // Sample data
+    document.getElementById('totalEscalations').textContent = '7';
+    document.getElementById('highPriority').textContent = '3';
+    document.getElementById('pendingResponse').textContent = '4';
+    document.getElementById('resolved').textContent = '3';
+    
+    // Load escalation table
+    loadEscalationTable();
+  }
+
+  function loadEscalationTable() {
+    const container = document.getElementById('escalationTable');
+    const escalations = [
+      {
+        id: 1,
+        issue: 'Budget overrun - 25%',
+        project: 'Health Center Construction',
+        priority: 'high',
+        escalated: '2025-01-15',
+        status: 'pending'
+      },
+      {
+        id: 2,
+        issue: 'Timeline delay - 3 months',
+        project: 'Road Network Improvement',
+        priority: 'medium',
+        escalated: '2025-01-14',
+        status: 'in_progress'
+      },
+      {
+        id: 3,
+        issue: 'Quality standards not met',
+        project: 'Market Renovation',
+        priority: 'high',
+        escalated: '2025-01-13',
+        status: 'resolved'
+      }
+    ];
+
+    container.innerHTML = escalations.map(escalation => `
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-800">${escalation.issue}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-600">${escalation.project}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            escalation.priority === 'high' ? 'bg-red-100 text-red-800' :
+            escalation.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-green-100 text-green-800'
+          }">
+            ${escalation.priority.charAt(0).toUpperCase() + escalation.priority.slice(1)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${escalation.escalated}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            escalation.status === 'resolved' ? 'bg-green-100 text-green-800' :
+            escalation.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+            'bg-yellow-100 text-yellow-800'
+          }">
+            ${escalation.status.replace('_', ' ').charAt(0).toUpperCase() + escalation.status.replace('_', ' ').slice(1)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="viewEscalation(${escalation.id})" class="text-[#FE5353] hover:text-[#E54545] mr-3">View</button>
+          <button onclick="updateEscalation(${escalation.id})" class="text-blue-600 hover:text-blue-800 mr-3">Update</button>
+          <button onclick="closeEscalation(${escalation.id})" class="text-green-600 hover:text-green-800">Close</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function createEscalation() {
+    // TODO: Implement escalation creation modal
+    alert('Create Escalation functionality will be implemented here');
+  }
+
+  function exportEscalations() {
+    // TODO: Implement escalation export functionality
+    alert('Export functionality will be implemented here');
+  }
+
+  function viewEscalation(id) {
+    // TODO: Implement escalation view functionality
+    alert(`View escalation ${id} functionality will be implemented here`);
+  }
+
+  function updateEscalation(id) {
+    // TODO: Implement escalation update functionality
+    alert(`Update escalation ${id} functionality will be implemented here`);
+  }
+
+  function closeEscalation(id) {
+    // TODO: Implement escalation close functionality
+    alert(`Close escalation ${id} functionality will be implemented here`);
+  }
+</script>

@@ -1,0 +1,621 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
+---
+
+<Layout title="Events & Schedules | MPMEC Dashboard">
+  <LGUPMTLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Events & Schedules</h1>
+          <p class="text-gray-600">Manage MPMEC meetings, evaluations, and policy discussions</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="createEvent()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Event
+          </button>
+          <button onclick="exportSchedule()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Events</p>
+              <p class="text-2xl font-bold text-blue-600" id="totalEvents">0</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Upcoming</p>
+              <p class="text-2xl font-bold text-green-600" id="upcomingEvents">0</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">This Week</p>
+              <p class="text-2xl font-bold text-yellow-600" id="thisWeekEvents">0</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Completed</p>
+              <p class="text-2xl font-bold text-purple-600" id="completedEvents">0</p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Calendar View -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-800">Calendar View</h2>
+              <div class="flex items-center gap-2">
+                <button onclick="previousMonth()" class="p-2 text-gray-600 hover:text-gray-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                  </svg>
+                </button>
+                <span class="text-lg font-medium text-gray-800" id="currentMonth">January 2025</span>
+                <button onclick="nextMonth()" class="p-2 text-gray-600 hover:text-gray-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Calendar Grid -->
+            <div class="grid grid-cols-7 gap-1 mb-4">
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Sun</div>
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Mon</div>
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Tue</div>
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Wed</div>
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Thu</div>
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Fri</div>
+              <div class="p-2 text-center text-sm font-medium text-gray-500">Sat</div>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-1" id="calendarGrid">
+              <!-- Calendar days will be generated here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Events Sidebar -->
+        <div class="space-y-6">
+          <!-- Quick Actions -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+              <button onclick="createEvent()" class="w-full px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors text-left">
+                <div class="flex items-center gap-3">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  <span>Schedule Meeting</span>
+                </div>
+              </button>
+              <button onclick="createEvaluation()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-left">
+                <div class="flex items-center gap-3">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>Plan Evaluation</span>
+                </div>
+              </button>
+              <button onclick="setReminder()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-left">
+                <div class="flex items-center gap-3">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.19 4.19A2 2 0 004 6v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 01-2-2V6a2 2 0 012-2z"></path>
+                  </svg>
+                  <span>Set Reminder</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Upcoming Events -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Upcoming Events</h3>
+              <a href="#" class="text-[#FE5353] hover:text-[#E54545] text-sm font-medium">View All</a>
+            </div>
+            <div class="space-y-4" id="upcomingEventsList">
+              <!-- Upcoming events will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Event Categories -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Event Categories</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span class="text-sm font-medium text-gray-800">Committee Meetings</span>
+                </div>
+                <span class="text-sm text-gray-600">8</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span class="text-sm font-medium text-gray-800">Project Evaluations</span>
+                </div>
+                <span class="text-sm text-gray-600">5</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span class="text-sm font-medium text-gray-800">Policy Reviews</span>
+                </div>
+                <span class="text-sm text-gray-600">3</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                  <span class="text-sm font-medium text-gray-800">Training Sessions</span>
+                </div>
+                <span class="text-sm text-gray-600">2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events List -->
+      <div class="mt-8 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-800">All Events</h2>
+            <div class="flex items-center gap-2">
+              <select id="eventFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                <option value="">All Events</option>
+                <option value="meeting">Committee Meetings</option>
+                <option value="evaluation">Project Evaluations</option>
+                <option value="policy">Policy Reviews</option>
+                <option value="training">Training Sessions</option>
+              </select>
+              <button onclick="refreshEvents()" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="eventsTable">
+              <!-- Events will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </LGUPMTLayout>
+</Layout>
+
+<!-- Create Event Modal -->
+<div id="eventModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-800" id="modalTitle">Create New Event</h3>
+          <button onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <form id="eventForm" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+          <input type="text" id="eventTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" placeholder="Enter event title...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+          <select id="eventType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            <option value="">Select event type...</option>
+            <option value="meeting">Committee Meeting</option>
+            <option value="evaluation">Project Evaluation</option>
+            <option value="policy">Policy Review</option>
+            <option value="training">Training Session</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input type="date" id="eventDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
+            <input type="time" id="eventTime" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <input type="text" id="eventLocation" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" placeholder="Enter location...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea id="eventDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" placeholder="Enter event description..."></textarea>
+        </div>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center">
+            <input type="checkbox" id="sendReminder" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Send reminder notifications</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" id="isRecurring" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Recurring event</span>
+          </label>
+        </div>
+        
+        <div class="flex gap-3 pt-4">
+          <button type="submit" class="flex-1 px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
+            Create Event
+          </button>
+          <button type="button" onclick="closeEventModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      if (user.role !== 'LGU-PMT') {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+
+    // Initialize calendar and events
+    initializeCalendar();
+    loadEvents();
+    loadUpcomingEvents();
+  });
+
+  let currentDate = new Date();
+  let events = [
+    {
+      id: 1,
+      title: 'MPMEC Monthly Meeting',
+      type: 'meeting',
+      date: '2025-01-20',
+      time: '09:00',
+      location: 'Municipal Conference Room',
+      description: 'Monthly committee meeting to discuss ongoing projects and policy updates',
+      status: 'upcoming'
+    },
+    {
+      id: 2,
+      title: 'Project Evaluation - Health Center',
+      type: 'evaluation',
+      date: '2025-01-25',
+      time: '14:00',
+      location: 'Health Center Site',
+      description: 'On-site evaluation of the health center construction project',
+      status: 'upcoming'
+    },
+    {
+      id: 3,
+      title: 'Policy Review Session',
+      type: 'policy',
+      date: '2025-01-15',
+      time: '10:00',
+      location: 'Municipal Hall',
+      description: 'Review of updated monitoring guidelines and procedures',
+      status: 'completed'
+    }
+  ];
+
+  function initializeCalendar() {
+    updateCalendar();
+  }
+
+  function updateCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    document.getElementById('currentMonth').textContent = 
+      new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const calendarGrid = document.getElementById('calendarGrid');
+    calendarGrid.innerHTML = '';
+    
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      
+      const dayElement = document.createElement('div');
+      dayElement.className = 'p-2 min-h-[80px] border border-gray-100 relative';
+      
+      const isCurrentMonth = date.getMonth() === month;
+      const isToday = date.toDateString() === new Date().toDateString();
+      
+      dayElement.innerHTML = `
+        <div class="text-sm font-medium ${isCurrentMonth ? 'text-gray-800' : 'text-gray-400'} ${isToday ? 'bg-[#FE5353] text-white rounded-full w-6 h-6 flex items-center justify-center' : ''}">
+          ${date.getDate()}
+        </div>
+        <div class="mt-1 space-y-1" id="events-${date.toISOString().split('T')[0]}">
+          ${getEventsForDate(date).map(event => `
+            <div class="text-xs p-1 rounded ${getEventTypeColor(event.type)} cursor-pointer" onclick="viewEvent(${event.id})">
+              ${event.title}
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      calendarGrid.appendChild(dayElement);
+    }
+  }
+
+  function getEventsForDate(date) {
+    const dateString = date.toISOString().split('T')[0];
+    return events.filter(event => event.date === dateString);
+  }
+
+  function getEventTypeColor(type) {
+    switch(type) {
+      case 'meeting': return 'bg-blue-100 text-blue-800';
+      case 'evaluation': return 'bg-green-100 text-green-800';
+      case 'policy': return 'bg-yellow-100 text-yellow-800';
+      case 'training': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    updateCalendar();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    updateCalendar();
+  }
+
+  function loadEvents() {
+    // Update statistics
+    document.getElementById('totalEvents').textContent = events.length;
+    document.getElementById('upcomingEvents').textContent = events.filter(e => e.status === 'upcoming').length;
+    document.getElementById('completedEvents').textContent = events.filter(e => e.status === 'completed').length;
+    
+    // Calculate this week's events
+    const today = new Date();
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const thisWeekEvents = events.filter(e => {
+      const eventDate = new Date(e.date);
+      return eventDate >= today && eventDate <= weekFromNow;
+    });
+    document.getElementById('thisWeekEvents').textContent = thisWeekEvents.length;
+    
+    // Update events table
+    const tableBody = document.getElementById('eventsTable');
+    tableBody.innerHTML = events.map(event => `
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-800">${event.title}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEventTypeColor(event.type)}">
+            ${event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+          ${new Date(event.date).toLocaleDateString()} at ${event.time}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${event.location}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            event.status === 'upcoming' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          }">
+            ${event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="editEvent(${event.id})" class="text-[#FE5353] hover:text-[#E54545] mr-3">Edit</button>
+          <button onclick="deleteEvent(${event.id})" class="text-red-600 hover:text-red-800">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function loadUpcomingEvents() {
+    const container = document.getElementById('upcomingEventsList');
+    const upcomingEvents = events.filter(e => e.status === 'upcoming').slice(0, 5);
+    
+    container.innerHTML = upcomingEvents.map(event => `
+      <div class="p-3 border border-gray-200 rounded-lg">
+        <div class="flex items-start justify-between mb-2">
+          <h4 class="text-sm font-medium text-gray-800">${event.title}</h4>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getEventTypeColor(event.type)}">
+            ${event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+          </span>
+        </div>
+        <p class="text-xs text-gray-600 mb-2">${event.description}</p>
+        <div class="flex items-center justify-between text-xs text-gray-500">
+          <span>${new Date(event.date).toLocaleDateString()} at ${event.time}</span>
+          <span>${event.location}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function createEvent() {
+    document.getElementById('modalTitle').textContent = 'Create New Event';
+    document.getElementById('eventForm').reset();
+    document.getElementById('eventModal').classList.remove('hidden');
+  }
+
+  function createEvaluation() {
+    document.getElementById('modalTitle').textContent = 'Create Project Evaluation';
+    document.getElementById('eventForm').reset();
+    document.getElementById('eventType').value = 'evaluation';
+    document.getElementById('eventModal').classList.remove('hidden');
+  }
+
+  function setReminder() {
+    alert('Reminder functionality will be implemented here');
+  }
+
+  function viewEvent(id) {
+    const event = events.find(e => e.id === id);
+    if (event) {
+      alert(`Event: ${event.title}\nDate: ${event.date} at ${event.time}\nLocation: ${event.location}\nDescription: ${event.description}`);
+    }
+  }
+
+  function editEvent(id) {
+    const event = events.find(e => e.id === id);
+    if (event) {
+      document.getElementById('modalTitle').textContent = 'Edit Event';
+      document.getElementById('eventTitle').value = event.title;
+      document.getElementById('eventType').value = event.type;
+      document.getElementById('eventDate').value = event.date;
+      document.getElementById('eventTime').value = event.time;
+      document.getElementById('eventLocation').value = event.location;
+      document.getElementById('eventDescription').value = event.description;
+      document.getElementById('eventModal').classList.remove('hidden');
+    }
+  }
+
+  function deleteEvent(id) {
+    if (confirm('Are you sure you want to delete this event?')) {
+      events = events.filter(e => e.id !== id);
+      loadEvents();
+      loadUpcomingEvents();
+      updateCalendar();
+    }
+  }
+
+  function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+  }
+
+  function exportSchedule() {
+    console.log('Exporting schedule...');
+    alert('Schedule exported successfully!');
+  }
+
+  function refreshEvents() {
+    console.log('Refreshing events...');
+    loadEvents();
+    loadUpcomingEvents();
+    updateCalendar();
+  }
+
+  // Handle event form submission
+  document.getElementById('eventForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+      title: document.getElementById('eventTitle').value,
+      type: document.getElementById('eventType').value,
+      date: document.getElementById('eventDate').value,
+      time: document.getElementById('eventTime').value,
+      location: document.getElementById('eventLocation').value,
+      description: document.getElementById('eventDescription').value,
+      sendReminder: document.getElementById('sendReminder').checked,
+      isRecurring: document.getElementById('isRecurring').checked
+    };
+    
+    // Here you would typically send the data to the backend
+    console.log('Creating event:', formData);
+    
+    // Add to local events array
+    const newEvent = {
+      id: events.length + 1,
+      ...formData,
+      status: 'upcoming'
+    };
+    
+    events.push(newEvent);
+    loadEvents();
+    loadUpcomingEvents();
+    updateCalendar();
+    
+    alert('Event created successfully!');
+    closeEventModal();
+  });
+</script> 

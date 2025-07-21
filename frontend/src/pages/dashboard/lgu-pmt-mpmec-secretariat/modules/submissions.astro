@@ -1,0 +1,1507 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let submissions = [];
+let stats = {
+  totalSubmissions: 0,
+  pendingReview: 0,
+  approved: 0,
+  overdue: 0
+};
+let loading = true;
+let error = '';
+
+// Try to fetch submissions data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // Fetch all projects for Secretariat review
+    const projectsRes = await fetch(`${API_URL}/projects`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (projectsRes.ok) {
+      const data = await projectsRes.json();
+      if (data.success) {
+        submissions = data.projects;
+        
+        // Calculate statistics
+        stats.totalSubmissions = submissions.length;
+        stats.pendingReview = submissions.filter(p => p.status === 'pending').length;
+        stats.approved = submissions.filter(p => p.approvedBySecretariat).length;
+        stats.overdue = submissions.filter(p => {
+          if (p.status === 'pending' && p.endDate) {
+            return new Date(p.endDate) < new Date();
+          }
+          return false;
+        }).length;
+      }
+    }
+  }
+} catch (err) {
+  console.error('Error fetching submissions data:', err);
+  error = 'Failed to fetch submissions data.';
+}
+
+loading = false;
+---
+
+<style>
+  .timeline-container {
+    position: relative;
+  }
+  
+  .timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+  
+  .timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  
+  .timeline-item:nth-child(odd) .timeline-content {
+    margin-left: 0;
+    margin-right: 50%;
+    padding-right: 2rem;
+  }
+  
+  .timeline-item:nth-child(even) .timeline-content {
+    margin-left: 50%;
+    margin-right: 0;
+    padding-left: 2rem;
+  }
+  
+  .timeline-dot {
+    position: absolute;
+    left: 50%;
+    top: 1rem;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border: 4px solid white;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    z-index: 10;
+  }
+  
+  .timeline-content {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  
+  .timeline-content:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  }
+  
+  .progress-ring {
+    transform: rotate(-90deg);
+  }
+  
+  .progress-ring-circle {
+    transition: stroke-dasharray 0.35s;
+    transform-origin: 50% 50%;
+  }
+  
+  .department-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+  }
+  
+  .department-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .project-card {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  
+  .project-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+  }
+  
+  .milestone-progress {
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .milestone-progress-fill {
+    height: 100%;
+    border-radius: 0.5rem;
+    transition: width 0.5s ease;
+  }
+  
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .status-ongoing {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+  }
+  
+  .status-complete {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+  }
+  
+  .status-pending {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+  }
+</style>
+
+<Layout title="Submissions & Tracker | MPMEC Secretariat">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Submissions & Tracker</h1>
+          <p class="text-gray-600">Monitor all incoming project submissions and updates in real-time</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="refreshSubmissions()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+          </button>
+          <button onclick="exportData()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Submissions</p>
+              <p class="text-2xl font-bold text-blue-600" id="totalSubmissions">{stats.totalSubmissions}</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Review</p>
+              <p class="text-2xl font-bold text-yellow-600" id="pendingReview">{stats.pendingReview}</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Approved</p>
+              <p class="text-2xl font-bold text-green-600" id="approved">{stats.approved}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Overdue</p>
+              <p class="text-2xl font-bold text-red-600" id="overdue">{stats.overdue}</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search Submissions</label>
+            <input type="text" id="searchInput" placeholder="Search by project name..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="complete">Complete</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Office</label>
+            <select id="officeFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Offices</option>
+              <option value="Municipal Engineer Office">Municipal Engineer Office</option>
+              <option value="Health Department">Health Department</option>
+              <option value="Finance Department">Finance Department</option>
+              <option value="Planning Office">Planning Office</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Categories</option>
+              <option value="infrastructure">Infrastructure</option>
+              <option value="health">Health</option>
+              <option value="education">Education</option>
+              <option value="agriculture">Agriculture</option>
+              <option value="social">Social Services</option>
+              <option value="environment">Environment</option>
+              <option value="transportation">Transportation</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE5353]"></div>
+          <span class="ml-3 text-gray-600">Loading submissions...</span>
+        </div>
+      ) : error ? (
+        <div class="text-center py-12">
+          <p class="text-red-600 mb-4">{error}</p>
+          <button onclick="loadSubmissions()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-all">
+            Try Again
+          </button>
+        </div>
+      ) : submissions.length === 0 ? (
+        <div class="text-center py-12">
+          <svg class="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No Submissions Found</h3>
+          <p class="text-gray-600 mb-6">No project submissions have been received yet. Projects will appear here once they are created by Implementing Offices.</p>
+        </div>
+      ) : (
+        <!-- Submissions Table -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-gray-800">All Submissions</h2>
+              <div class="flex items-center gap-2">
+                <button onclick="markAllReviewed()" class="text-sm text-[#FE5353] hover:text-[#E54545]">Mark All Reviewed</button>
+                <button onclick="bulkAction()" class="text-sm text-blue-600 hover:text-blue-800">Bulk Actions</button>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input type="checkbox" id="selectAll" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Office</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="submissionsTable">
+                {submissions.map(submission => {
+                  const progress = parseFloat(submission.progress?.overallProgress || submission.overallProgress || 0);
+                  const isOverdue = submission.status === 'pending' && submission.endDate && new Date(submission.endDate) < new Date();
+                  
+                  return (
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="submission-checkbox h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded" value={submission.id}>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">{submission.name}</div>
+                          <div class="text-sm text-gray-500">{submission.projectCode}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{submission.implementingOfficeName}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
+                          submission.category === 'infrastructure' ? 'bg-blue-100 text-blue-700' :
+                          submission.category === 'health' ? 'bg-green-100 text-green-700' :
+                          submission.category === 'education' ? 'bg-purple-100 text-purple-700' :
+                          submission.category === 'agriculture' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {submission.category}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(submission.createdAt).toLocaleDateString()}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                          submission.status === 'complete' ? 'bg-green-100 text-green-700' :
+                          submission.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
+                          submission.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {submission.status}
+                          {isOverdue && <span class="ml-1 text-red-600">(Overdue)</span>}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class={`h-2 rounded-full ${
+                              submission.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
+                            }`} style={`width: ${progress}%`}></div>
+                          </div>
+                          <span class="text-sm text-gray-900">{progress}%</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex items-center gap-2">
+                          <button onclick={`viewSubmission('${submission.id}')`} class="text-[#FE5353] hover:text-[#E54545]">
+                            View
+                          </button>
+                          {submission.status === 'pending' && (
+                            <>
+                              <button onclick={`approveSubmission('${submission.id}')`} class="text-green-600 hover:text-green-800">
+                                Approve
+                              </button>
+                              <button onclick={`rejectSubmission('${submission.id}')`} class="text-red-600 hover:text-red-800">
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-gray-700">Showing <span id="showingCount">{submissions.length}</span> of <span id="totalCount">{submissions.length}</span> submissions</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <!-- Department Timeline Overview -->
+      {submissions.length > 0 && (
+        <div class="mt-12">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                  <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                  Department Timeline Overview
+                </h2>
+                <div class="flex items-center gap-3">
+                  <button onclick="toggleAllDepartments()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    Toggle All
+                  </button>
+                  <button onclick="expandAllDepartments()" class="text-sm text-green-600 hover:text-green-800 font-medium">
+                    Expand All
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="p-6">
+              <div id="departmentTimelines" class="space-y-8">
+                <!-- Department timelines will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+
+    <!-- Submission Details Modal -->
+    <div id="submissionModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Modal Header -->
+          <div class="sticky top-0 bg-white rounded-t-2xl p-6 border-b border-gray-200 z-10">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-2xl font-bold text-gray-900" id="modalTitle">Project Submission Details</h3>
+                <p class="text-sm text-gray-600 mt-1" id="modalSubtitle">Comprehensive project information and progress tracking</p>
+              </div>
+              <button onclick="closeSubmissionModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Modal Content -->
+          <div class="p-6" id="modalContent">
+            <!-- Loading State -->
+            <div id="modalLoading" class="flex items-center justify-center py-12">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span class="ml-3 text-gray-600">Loading project details...</span>
+            </div>
+            
+            <!-- Error State -->
+            <div id="modalError" class="hidden text-center py-12">
+              <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Error Loading Project</h3>
+              <p class="text-gray-600 mb-4">Failed to load project details. Please try again.</p>
+              <button onclick="retryLoadProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Try Again
+              </button>
+            </div>
+            
+            <!-- Project Content -->
+            <div id="modalProjectContent" class="hidden">
+              <!-- Project will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </SecretariatLayout>
+</Layout>
+
+<script>
+  // API Configuration
+  const API_URL = 'http://localhost:3000/api';
+  
+  // Global variables
+  let submissions = [];
+  let currentUser = null;
+
+  // Initialize the page
+  async function initializePage() {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Fetch user data for authentication
+        const userRes = await fetch(`${API_URL}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (userRes.ok) {
+          const userDataResponse = await userRes.json();
+          if (userDataResponse.success && userDataResponse.user) {
+            currentUser = userDataResponse.user;
+          }
+        }
+
+        // Fetch submissions from the API
+        const submissionsRes = await fetch(`${API_URL}/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (submissionsRes.ok) {
+          const data = await submissionsRes.json();
+          if (data.success) {
+            submissions = data.projects;
+            updateSubmissionsUI();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching submissions data:', error);
+    }
+  }
+
+  // Initialize the page when the script loads
+  initializePage();
+
+  // Render department timelines on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    if (submissions.length > 0) {
+      renderDepartmentTimelines();
+    }
+  });
+
+  // Load submissions function
+  async function loadSubmissions() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/projects`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          submissions = data.projects;
+          updateSubmissionsUI();
+          location.reload(); // Refresh the page to update statistics
+        }
+      }
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+    }
+  }
+
+  // Update submissions UI
+  function updateSubmissionsUI() {
+    console.log('Submissions updated:', submissions);
+    renderDepartmentTimelines();
+  }
+
+  // Render department timelines
+  function renderDepartmentTimelines() {
+    const container = document.getElementById('departmentTimelines');
+    if (!container) return;
+
+    // Group projects by department
+    const departments = {};
+    submissions.forEach(project => {
+      const dept = project.implementingOfficeName || 'Unknown Department';
+      if (!departments[dept]) {
+        departments[dept] = [];
+      }
+      departments[dept].push(project);
+    });
+
+    // Calculate department statistics
+    const departmentStats = {};
+    Object.keys(departments).forEach(dept => {
+      const projects = departments[dept];
+      const totalProjects = projects.length;
+      const completedProjects = projects.filter(p => p.status === 'complete').length;
+      const ongoingProjects = projects.filter(p => p.status === 'ongoing').length;
+      const pendingProjects = projects.filter(p => p.status === 'pending').length;
+      const avgProgress = projects.reduce((sum, p) => sum + (parseFloat(p.progress?.overallProgress || p.overallProgress || 0)), 0) / totalProjects;
+      const totalBudget = projects.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
+
+      departmentStats[dept] = {
+        totalProjects,
+        completedProjects,
+        ongoingProjects,
+        pendingProjects,
+        avgProgress: Math.round(avgProgress * 10) / 10,
+        totalBudget
+      };
+    });
+
+    // Render each department
+    container.innerHTML = Object.keys(departments).map((dept, deptIndex) => {
+      const projects = departments[dept];
+      const stats = departmentStats[dept];
+      
+      return `
+        <div class="department-card rounded-2xl p-6" data-department="${deptIndex}">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                ${dept.charAt(0)}
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800">${dept}</h3>
+                <p class="text-sm text-gray-600">${stats.totalProjects} project${stats.totalProjects !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="text-right">
+                <p class="text-sm text-gray-600">Total Budget</p>
+                <p class="text-lg font-bold text-gray-800">₱${stats.totalBudget.toLocaleString()}</p>
+              </div>
+              <button onclick="toggleDepartment(${deptIndex})" class="text-blue-600 hover:text-blue-800 transition-colors">
+                <svg class="w-6 h-6 transform transition-transform" id="toggle-icon-${deptIndex}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Department Statistics -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl p-4 border border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-600">Total</p>
+                  <p class="text-2xl font-bold text-blue-600">${stats.totalProjects}</p>
+                </div>
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-600">Ongoing</p>
+                  <p class="text-2xl font-bold text-blue-600">${stats.ongoingProjects}</p>
+                </div>
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-600">Completed</p>
+                  <p class="text-2xl font-bold text-green-600">${stats.completedProjects}</p>
+                </div>
+                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-600">Avg Progress</p>
+                  <p class="text-2xl font-bold text-purple-600">${stats.avgProgress}%</p>
+                </div>
+                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Projects Timeline -->
+          <div class="department-projects hidden" id="department-projects-${deptIndex}">
+            <div class="timeline-container">
+              <div class="timeline-line"></div>
+              ${projects.map((project, projectIndex) => {
+                const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
+                const statusClass = project.status === 'complete' ? 'status-complete' : 
+                                  project.status === 'ongoing' ? 'status-ongoing' : 'status-pending';
+                
+                return `
+                  <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                      <div class="project-card p-4">
+                        <div class="flex items-start justify-between mb-4">
+                          <div class="flex-1">
+                            <h4 class="text-lg font-bold text-gray-800 mb-2">${project.name}</h4>
+                            <p class="text-sm text-gray-600 mb-2">${project.projectCode}</p>
+                            <div class="flex items-center gap-4 mb-3">
+                              <span class="status-badge ${statusClass}">${project.status}</span>
+                              <span class="text-sm text-gray-600">₱${parseFloat(project.totalBudget || 0).toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <button onclick="viewProjectTimeline('${project.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                              Timeline
+                            </button>
+                            <button onclick="viewSubmission('${project.id}')" class="text-green-600 hover:text-green-800 text-sm font-medium">
+                              Details
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <!-- Progress Overview -->
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <p class="text-xs text-gray-600 mb-1">Timeline</p>
+                            <div class="milestone-progress h-2">
+                              <div class="milestone-progress-fill bg-blue-500" style="width: ${project.timelineProgress || 0}%"></div>
+                            </div>
+                            <p class="text-xs text-gray-800 mt-1">${project.timelineProgress || 0}%</p>
+                          </div>
+                          <div>
+                            <p class="text-xs text-gray-600 mb-1">Budget</p>
+                            <div class="milestone-progress h-2">
+                              <div class="milestone-progress-fill bg-green-500" style="width: ${project.budgetProgress || 0}%"></div>
+                            </div>
+                            <p class="text-xs text-gray-800 mt-1">${project.budgetProgress || 0}%</p>
+                          </div>
+                          <div>
+                            <p class="text-xs text-gray-600 mb-1">Physical</p>
+                            <div class="milestone-progress h-2">
+                              <div class="milestone-progress-fill bg-purple-500" style="width: ${project.physicalProgress || 0}%"></div>
+                            </div>
+                            <p class="text-xs text-gray-800 mt-1">${project.physicalProgress || 0}%</p>
+                          </div>
+                        </div>
+                        
+                        <!-- Overall Progress Ring -->
+                        <div class="flex items-center justify-center">
+                          <div class="relative w-16 h-16">
+                            <svg class="w-16 h-16 progress-ring">
+                              <circle
+                                cx="32"
+                                cy="32"
+                                r="28"
+                                stroke="#e5e7eb"
+                                stroke-width="4"
+                                fill="transparent"
+                              />
+                              <circle
+                                cx="32"
+                                cy="32"
+                                r="28"
+                                stroke="${progress > 50 ? '#10b981' : progress > 25 ? '#f59e0b' : '#ef4444'}"
+                                stroke-width="4"
+                                fill="transparent"
+                                stroke-dasharray="${2 * Math.PI * 28}"
+                                stroke-dashoffset="${2 * Math.PI * 28 * (1 - progress / 100)}"
+                                class="progress-ring-circle"
+                              />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                              <span class="text-sm font-bold text-gray-800">${progress}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Toggle department visibility
+  function toggleDepartment(deptIndex) {
+    const projectsContainer = document.getElementById(`department-projects-${deptIndex}`);
+    const toggleIcon = document.getElementById(`toggle-icon-${deptIndex}`);
+    
+    if (projectsContainer.classList.contains('hidden')) {
+      projectsContainer.classList.remove('hidden');
+      toggleIcon.style.transform = 'rotate(180deg)';
+    } else {
+      projectsContainer.classList.add('hidden');
+      toggleIcon.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  // Toggle all departments
+  function toggleAllDepartments() {
+    const containers = document.querySelectorAll('.department-projects');
+    const icons = document.querySelectorAll('[id^="toggle-icon-"]');
+    
+    const allHidden = Array.from(containers).every(container => container.classList.contains('hidden'));
+    
+    containers.forEach((container, index) => {
+      if (allHidden) {
+        container.classList.remove('hidden');
+        icons[index].style.transform = 'rotate(180deg)';
+      } else {
+        container.classList.add('hidden');
+        icons[index].style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+
+  // Expand all departments
+  function expandAllDepartments() {
+    const containers = document.querySelectorAll('.department-projects');
+    const icons = document.querySelectorAll('[id^="toggle-icon-"]');
+    
+    containers.forEach((container, index) => {
+      container.classList.remove('hidden');
+      icons[index].style.transform = 'rotate(180deg)';
+    });
+  }
+
+  // View project timeline
+  function viewProjectTimeline(projectId) {
+    // Redirect to compilation page with timeline modal
+    window.location.href = `/dashboard/lgu-pmt-mpmec-secretariat/modules/compilation?project=${projectId}&showTimeline=true`;
+  }
+
+  // Refresh submissions
+  async function refreshSubmissions() {
+    await loadSubmissions();
+  }
+
+  // Export data
+  function exportData() {
+    // TODO: Implement export functionality
+    console.log('Exporting submissions data...');
+  }
+
+  // Mark all reviewed
+  function markAllReviewed() {
+    // TODO: Implement bulk review functionality
+    console.log('Marking all submissions as reviewed...');
+  }
+
+  // Bulk action
+  function bulkAction() {
+    // TODO: Implement bulk actions
+    console.log('Performing bulk action...');
+  }
+
+  // View submission details
+  async function viewSubmission(submissionId) {
+    // Show loading state in modal
+    const modal = document.getElementById('submissionModal');
+    const modalLoading = document.getElementById('modalLoading');
+    const modalError = document.getElementById('modalError');
+    const modalProjectContent = document.getElementById('modalProjectContent');
+    
+    // Show modal with loading state
+    modal.classList.remove('hidden');
+    modalLoading.classList.remove('hidden');
+    modalError.classList.add('hidden');
+    modalProjectContent.classList.add('hidden');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/projects/${submissionId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('=== API RESPONSE DEBUG ===');
+        console.log('Full API Response:', data);
+        console.log('API Response Keys:', Object.keys(data));
+        console.log('Success flag:', data.success);
+        
+        if (data.success) {
+          // Handle deeply nested structure: {project: {project: {...}, progress: {...}, milestones: {...}}}
+          let projectData;
+          if (data.project) {
+            console.log('Found nested project structure');
+            console.log('Top level project object:', data.project);
+            console.log('Top level project keys:', Object.keys(data.project));
+            
+            // Check if there's a nested project object inside data.project
+            if (data.project.project) {
+              console.log('Found nested project.project object:', data.project.project);
+              console.log('Nested project keys:', Object.keys(data.project.project));
+              
+              // Extract the actual project data from the nested structure
+              projectData = {
+                ...data.project.project, // The actual project data
+                progress: data.project.progress || {},
+                milestones: data.project.milestones || [],
+                compiledReport: data.project.compiledReport || {},
+                lastUpdate: data.project.lastUpdate || data.project.LastUpdate || null,
+                automatedProgress: data.project.automatedProgress || {}
+              };
+            } else {
+              console.log('No nested project.project found, using top level');
+              // If no nested project, use the top level data
+              projectData = {
+                ...data.project,
+                progress: data.project.progress || {},
+                milestones: data.project.milestones || [],
+                compiledReport: data.project.compiledReport || {}
+              };
+            }
+          } else if (data.id) {
+            console.log('Found flat project structure');
+            console.log('Flat project data:', data);
+            // If data is the project directly
+            projectData = data;
+          } else {
+            console.log('No valid project structure found');
+            console.log('Available data:', data);
+            throw new Error('Invalid project data structure');
+          }
+          
+          console.log('=== FINAL PROJECT DATA ===');
+          console.log('Final project data to render:', projectData);
+          console.log('Project data keys:', Object.keys(projectData));
+          if (projectData.progress) {
+            console.log('Progress object keys:', Object.keys(projectData.progress));
+            console.log('Progress object:', projectData.progress);
+          }
+          if (projectData.milestones) {
+            console.log('Milestones array length:', projectData.milestones.length);
+            console.log('Milestones:', projectData.milestones);
+          }
+          showSubmissionModal(projectData);
+        } else {
+          throw new Error('Failed to load project data');
+        }
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error viewing submission:', error);
+      // Show error state
+      modalLoading.classList.add('hidden');
+      modalError.classList.remove('hidden');
+      modalProjectContent.classList.add('hidden');
+    }
+  }
+
+  // Show submission modal
+  function showSubmissionModal(submission) {
+    // Check if submission data is valid
+    if (!submission) {
+      console.error('Invalid submission data:', submission);
+      // Don't show alert, just log the error
+      return;
+    }
+
+    const modal = document.getElementById('submissionModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const modalLoading = document.getElementById('modalLoading');
+    const modalError = document.getElementById('modalError');
+    const modalProjectContent = document.getElementById('modalProjectContent');
+    
+    // Set modal title and subtitle
+    modalTitle.textContent = submission.name || submission.projectName || 'Project Details';
+    modalSubtitle.textContent = `Comprehensive project information and progress tracking for ${submission.name || submission.projectName || 'this project'}`;
+    
+    // Store submission ID for retry functionality
+    modal.dataset.submissionId = submission.id;
+    
+    // Show modal first
+    modal.classList.remove('hidden');
+    
+    // Hide loading and error states, show project content directly
+    modalLoading.classList.add('hidden');
+    modalError.classList.add('hidden');
+    modalProjectContent.classList.remove('hidden');
+
+    // Render project details directly with the data we already have
+    renderProjectDetails(submission);
+  }
+
+  // Close submission modal
+  function closeSubmissionModal() {
+    const modal = document.getElementById('submissionModal');
+    modal.classList.add('hidden');
+    document.getElementById('modalLoading').classList.add('hidden');
+    document.getElementById('modalError').classList.add('hidden');
+    document.getElementById('modalProjectContent').classList.add('hidden');
+  }
+
+  // Approve submission
+  async function approveSubmission(submissionId) {
+    if (confirm('Are you sure you want to approve this project?')) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login/lgu-pmt';
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/projects/${submissionId}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ approved: true })
+        });
+        
+        if (response.ok) {
+          alert('Project approved successfully!');
+          loadSubmissions();
+        } else {
+          alert('Error approving project. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error approving submission:', error);
+        alert('Error approving project. Please try again.');
+      }
+    }
+  }
+
+  // Reject submission
+  async function rejectSubmission(submissionId) {
+    const comments = prompt('Please provide a reason for rejection:');
+    if (comments !== null) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login/lgu-pmt';
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/projects/${submissionId}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ approved: false, comments })
+        });
+        
+        if (response.ok) {
+          alert('Project rejected successfully!');
+          loadSubmissions();
+        } else {
+          alert('Error rejecting project. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error rejecting submission:', error);
+        alert('Error rejecting project. Please try again.');
+      }
+    }
+  }
+
+  // Render project details in the modal
+  function renderProjectDetails(project) {
+    const modalProjectContent = document.getElementById('modalProjectContent');
+    
+    console.log('=== RENDERING PROJECT DETAILS ===');
+    console.log('Rendering project details for:', project);
+    console.log('Project keys:', Object.keys(project));
+    
+    // Log specific fields we're looking for
+    console.log('Looking for project fields:');
+    console.log('- projectCode:', project.projectCode);
+    console.log('- code:', project.code);
+    console.log('- name:', project.name);
+    console.log('- title:', project.title);
+    console.log('- status:', project.status);
+    console.log('- category:', project.category);
+    console.log('- implementingOffice:', project.implementingOffice);
+    console.log('- implementingOfficeName:', project.implementingOfficeName);
+    console.log('- totalBudget:', project.totalBudget);
+    console.log('- budget:', project.budget);
+    console.log('- amount:', project.amount);
+    console.log('- description:', project.description);
+    
+    // Helper function to safely extract numeric progress values
+    function getProgressValue(project, field, fallback = 0) {
+      // Try direct field first
+      if (typeof project[field] === 'number') {
+        return project[field];
+      }
+      
+      // Try nested progress object
+      if (project.progress && typeof project.progress[field] === 'number') {
+        return project.progress[field];
+      }
+      
+      // Try progress as direct value
+      if (typeof project.progress === 'number' && field === 'overall') {
+        return project.progress;
+      }
+      
+      // Try other common field names
+      const alternativeFields = {
+        'overall': ['overallProgress', 'progress', 'totalProgress'],
+        'timeline': ['timelineProgress', 'scheduleProgress'],
+        'budget': ['budgetProgress', 'financialProgress'],
+        'physical': ['physicalProgress', 'completionProgress']
+      };
+      
+      for (const altField of alternativeFields[field] || []) {
+        if (typeof project[altField] === 'number') {
+          return project[altField];
+        }
+      }
+      
+      return fallback;
+    }
+    
+    // Safely handle missing or undefined data with new structure
+    const safeData = {
+      projectCode: project.projectCode || project.code || project.projectCode || project.id || 'N/A',
+      status: project.status || project.projectStatus || project.state || 'Unknown',
+      category: project.category || project.projectCategory || project.type || 'N/A',
+      implementingOfficeName: project.implementingOfficeName || project.implementingOffice || project.office || project.department || 'N/A',
+      totalBudget: parseFloat(project.totalBudget || project.budget || project.amount || project.cost || 0),
+      overallProgress: getProgressValue(project, 'overall', 0),
+      description: project.description || project.projectDescription || project.details || project.summary || 'No description available',
+      startDate: project.startDate || project.projectStartDate || project.beginDate || new Date(),
+      endDate: project.endDate || project.projectEndDate || project.finishDate || null,
+      createdAt: project.createdAt || project.created || project.dateCreated || new Date(),
+      updatedAt: project.updatedAt || project.updated || project.lastModified || new Date(),
+      timelineProgress: getProgressValue(project, 'timeline', 0),
+      budgetProgress: getProgressValue(project, 'budget', 0),
+      physicalProgress: getProgressValue(project, 'physical', 0),
+      milestones: project.milestones || [],
+      documents: project.documents || [],
+      comments: project.comments || [],
+      compiledReport: project.compiledReport || {}
+    };
+
+    console.log('=== SAFE DATA FOR RENDERING ===');
+    console.log('Safe data for rendering:', safeData);
+    console.log('Progress values:', {
+      overall: safeData.overallProgress,
+      timeline: safeData.timelineProgress,
+      budget: safeData.budgetProgress,
+      physical: safeData.physicalProgress
+    });
+
+    modalProjectContent.innerHTML = `
+      <div class="space-y-6">
+        <!-- Project Overview Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Basic Info Card -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            <h4 class="font-bold text-blue-900 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Project Overview
+            </h4>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Project Code</p>
+                <p class="text-lg font-bold text-blue-900">${safeData.projectCode}</p>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Status</p>
+                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                  safeData.status === 'complete' ? 'bg-green-100 text-green-800' :
+                  safeData.status === 'ongoing' ? 'bg-blue-100 text-blue-800' : 
+                  'bg-yellow-100 text-yellow-800'
+                }">${safeData.status.toUpperCase()}</span>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Category</p>
+                <p class="text-lg font-bold text-blue-900 capitalize">${safeData.category}</p>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Implementing Office</p>
+                <p class="text-sm font-semibold text-blue-900">${safeData.implementingOfficeName}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget & Progress Card -->
+          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+            <h4 class="font-bold text-green-900 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+              Budget & Progress
+            </h4>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-green-700 font-medium">Total Budget</p>
+                <p class="text-xl font-bold text-green-900">₱${safeData.totalBudget.toLocaleString()}</p>
+              </div>
+              <div>
+                <p class="text-sm text-green-700 font-medium">Overall Progress</p>
+                <div class="w-full bg-green-200 rounded-full h-3 mt-2">
+                  <div class="bg-green-600 h-3 rounded-full transition-all duration-500" style="width: ${safeData.overallProgress}%"></div>
+                </div>
+                <p class="text-sm font-semibold text-green-900 mt-1">${safeData.overallProgress}%</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Card -->
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+            <h4 class="font-bold text-purple-900 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              Timeline
+            </h4>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-purple-700 font-medium">Start Date</p>
+                <p class="text-sm font-semibold text-purple-900">${new Date(safeData.startDate).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p class="text-sm text-purple-700 font-medium">End Date</p>
+                <p class="text-sm font-semibold text-purple-900">${safeData.endDate ? new Date(safeData.endDate).toLocaleDateString() : 'Not set'}</p>
+              </div>
+              <div>
+                <p class="text-sm text-purple-700 font-medium">Created</p>
+                <p class="text-sm font-semibold text-purple-900">${new Date(safeData.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Project Description
+          </h4>
+          <p class="text-gray-700 leading-relaxed">${safeData.description}</p>
+        </div>
+
+        <!-- Progress Breakdown Section -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h4 class="font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            Progress Breakdown
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Timeline Progress -->
+            <div class="text-center">
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#e5e7eb"
+                    stroke-width="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#3b82f6"
+                    stroke-width="8"
+                    fill="transparent"
+                    stroke-dasharray="${2 * Math.PI * 40}"
+                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.timelineProgress / 100)}"
+                    class="transition-all duration-500"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg font-bold text-gray-800">${safeData.timelineProgress}%</span>
+                </div>
+              </div>
+              <h5 class="font-semibold text-gray-900 mb-2">Timeline Progress</h5>
+              <p class="text-sm text-gray-600">Project timeline completion</p>
+            </div>
+
+            <!-- Budget Progress -->
+            <div class="text-center">
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#e5e7eb"
+                    stroke-width="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#10b981"
+                    stroke-width="8"
+                    fill="transparent"
+                    stroke-dasharray="${2 * Math.PI * 40}"
+                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.budgetProgress / 100)}"
+                    class="transition-all duration-500"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg font-bold text-gray-800">${safeData.budgetProgress}%</span>
+                </div>
+              </div>
+              <h5 class="font-semibold text-gray-900 mb-2">Budget Progress</h5>
+              <p class="text-sm text-gray-600">Budget utilization</p>
+            </div>
+
+            <!-- Physical Progress -->
+            <div class="text-center">
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#e5e7eb"
+                    stroke-width="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#8b5cf6"
+                    stroke-width="8"
+                    fill="transparent"
+                    stroke-dasharray="${2 * Math.PI * 40}"
+                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.physicalProgress / 100)}"
+                    class="transition-all duration-500"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg font-bold text-gray-800">${safeData.physicalProgress}%</span>
+                </div>
+              </div>
+              <h5 class="font-semibold text-gray-900 mb-2">Physical Progress</h5>
+              <p class="text-sm text-gray-600">Physical completion</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-center gap-4 pt-6 border-t border-gray-200">
+          <button onclick="viewProjectTimeline('${project.id}')" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            View Timeline
+          </button>
+          <button onclick="viewProjectHistory('${project.id}')" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            View History
+          </button>
+          <button onclick="exportProjectReport('${project.id}')" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export Report
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Retry loading project details
+  function retryLoadProject() {
+    const modal = document.getElementById('submissionModal');
+    const modalLoading = document.getElementById('modalLoading');
+    const modalError = document.getElementById('modalError');
+    const modalProjectContent = document.getElementById('modalProjectContent');
+
+    // Hide error state and show loading
+    modalLoading.classList.remove('hidden');
+    modalError.classList.add('hidden');
+    modalProjectContent.classList.add('hidden');
+
+    // Re-fetch the project data
+    const submissionId = modal.dataset.submissionId;
+    if (submissionId) {
+      viewSubmission(submissionId);
+    } else {
+      modalError.classList.remove('hidden');
+      modalLoading.classList.add('hidden');
+      console.error('No submission ID found for retry');
+    }
+  }
+
+  // View project history
+  function viewProjectHistory(projectId) {
+    // Redirect to compilation page with history modal
+    window.location.href = `/dashboard/lgu-pmt-mpmec-secretariat/modules/compilation?project=${projectId}&showHistory=true`;
+  }
+
+  // Export project report
+  function exportProjectReport(projectId) {
+    // Redirect to compilation page with export functionality
+    window.location.href = `/dashboard/lgu-pmt-mpmec-secretariat/modules/compilation?project=${projectId}&exportReport=true`;
+  }
+
+  // Make functions globally available
+  window.loadSubmissions = loadSubmissions;
+  window.refreshSubmissions = refreshSubmissions;
+  window.exportData = exportData;
+  window.markAllReviewed = markAllReviewed;
+  window.bulkAction = bulkAction;
+  window.viewSubmission = viewSubmission;
+  window.closeSubmissionModal = closeSubmissionModal;
+  window.approveSubmission = approveSubmission;
+  window.rejectSubmission = rejectSubmission;
+  window.toggleDepartment = toggleDepartment;
+  window.toggleAllDepartments = toggleAllDepartments;
+  window.expandAllDepartments = expandAllDepartments;
+  window.viewProjectTimeline = viewProjectTimeline;
+  window.viewProjectHistory = viewProjectHistory;
+  window.exportProjectReport = exportProjectReport;
+  window.retryLoadProject = retryLoadProject;
+</script> 

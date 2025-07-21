@@ -1,0 +1,380 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import ExecutiveLayout from '../../../../components/ExecutiveLayout.astro';
+
+// Initialize with empty data - will be populated by client-side JavaScript
+let projects = [];
+let filters = {
+  status: 'all',
+  department: 'all',
+  risk: 'all',
+  priority: 'all'
+};
+let searchQuery = '';
+---
+
+<Layout title="All Projects - Executive Viewer">
+  <ExecutiveLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">All Projects</h1>
+          <p class="text-gray-600">Comprehensive view of all LGU projects and programs</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            {projects.length} Total Projects
+          </button>
+          <button class="px-6 py-2 bg-gradient-to-r from-[#3D50D7] to-[#2a3bb8] text-white rounded-xl font-semibold shadow-lg hover:from-[#2a3bb8] hover:to-[#3D50D7] transition-all duration-300">
+            Export Projects
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <!-- Search -->
+          <div class="lg:col-span-2">
+            <input 
+              type="text" 
+              placeholder="Search projects..." 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent"
+            />
+          </div>
+          
+          <!-- Status Filter -->
+          <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent">
+            <option value="all">All Status</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="delayed">Delayed</option>
+            <option value="pending">Pending</option>
+          </select>
+          
+          <!-- Department Filter -->
+          <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent">
+            <option value="all">All Departments</option>
+            <option value="engineering">Engineering</option>
+            <option value="public-works">Public Works</option>
+            <option value="economic-development">Economic Development</option>
+            <option value="health-services">Health Services</option>
+            <option value="education">Education</option>
+          </select>
+          
+          <!-- Risk Filter -->
+          <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent">
+            <option value="all">All Risk Levels</option>
+            <option value="high">High Risk</option>
+            <option value="medium">Medium Risk</option>
+            <option value="low">Low Risk</option>
+            <option value="none">No Risk</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Projects Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {projects.map(project => (
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <!-- Project Header -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-800 mb-1">{project.name}</h3>
+                <p class="text-sm text-gray-600">{project.department} • {project.location}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  project.status === 'completed' ? 'bg-green-100 text-green-700' :
+                  project.status === 'delayed' ? 'bg-red-100 text-red-700' :
+                  project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {project.status}
+                </span>
+                <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  project.risk === 'high' ? 'bg-red-100 text-red-700' :
+                  project.risk === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                  project.risk === 'low' ? 'bg-green-100 text-green-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {project.risk} risk
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Progress</span>
+                <span class="text-sm text-gray-600">{project.progress}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class={`h-2 rounded-full transition-all duration-300 ${
+                  project.status === 'completed' ? 'bg-green-500' :
+                  project.status === 'delayed' ? 'bg-red-500' :
+                  project.status === 'ongoing' ? 'bg-blue-500' :
+                  'bg-gray-400'
+                }`} style="width: {project.progress}%"></div>
+              </div>
+            </div>
+
+            <!-- Budget Information -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p class="text-xs text-gray-500">Total Budget</p>
+                <p class="text-sm font-semibold text-gray-800">{project.budget}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500">Utilized</p>
+                <p class="text-sm font-semibold text-gray-800">{project.utilized}</p>
+              </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="mb-4">
+              <p class="text-xs text-gray-500 mb-1">Timeline</p>
+              <p class="text-sm text-gray-700">{project.timeline}</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2">
+              <button class="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all">
+                View Details
+              </button>
+              <button class="px-3 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Summary Statistics -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="text-center">
+            <p class="text-2xl font-bold text-blue-600">{projects.filter(p => p.status === 'ongoing').length}</p>
+            <p class="text-sm text-gray-600">Ongoing Projects</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-green-600">{projects.filter(p => p.status === 'completed').length}</p>
+            <p class="text-sm text-gray-600">Completed Projects</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-red-600">{projects.filter(p => p.status === 'delayed').length}</p>
+            <p class="text-sm text-gray-600">Delayed Projects</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-purple-600">₱{projects.reduce((sum, p) => sum + parseInt(p.budget.replace(/[₱,]/g, '')), 0).toLocaleString()}</p>
+            <p class="text-sm text-gray-600">Total Budget</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </ExecutiveLayout>
+</Layout>
+
+<script>
+  import executiveService from '../../../../services/executive.js';
+  
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Load projects data
+    await loadProjects();
+    
+    // Set up event listeners
+    setupEventListeners();
+  });
+
+  async function loadProjects(filters = {}) {
+    try {
+      const projects = await executiveService.getAllProjects(filters);
+      updateProjectsDisplay(projects);
+      updateProjectCount(projects.length);
+      updateSummaryStats(projects);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      showErrorMessage('Failed to load projects. Please try again.');
+    }
+  }
+
+  function updateProjectsDisplay(projects) {
+    const projectsGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2');
+    if (!projectsGrid) return;
+
+    if (projects.length === 0) {
+      projectsGrid.innerHTML = '<div class="col-span-2 text-center py-8"><p class="text-gray-500">No projects found</p></div>';
+      return;
+    }
+
+    projectsGrid.innerHTML = projects.map(project => `
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+        <!-- Project Header -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">${project.name}</h3>
+            <p class="text-sm text-gray-600">${project.department || 'Unknown'} • ${project.location || 'Unknown'}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}">
+              ${project.status}
+            </span>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${getRiskColor(project.risk || 'low')}">
+              ${project.risk || 'low'} risk
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Progress</span>
+            <span class="text-sm text-gray-600">${project.progress?.overallProgress || project.overallProgress || 0}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="h-2 rounded-full transition-all duration-300 ${getStatusColor(project.status)}" style="width: ${project.progress?.overallProgress || project.overallProgress || 0}%"></div>
+          </div>
+        </div>
+
+        <!-- Budget Information -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <p class="text-xs text-gray-500">Total Budget</p>
+            <p class="text-sm font-semibold text-gray-800">${executiveService.formatBudget(project.totalBudget || 0)}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Utilized</p>
+            <p class="text-sm font-semibold text-gray-800">${executiveService.formatBudget(project.utilizedBudget || 0)}</p>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="mb-4">
+          <p class="text-xs text-gray-500 mb-1">Timeline</p>
+          <p class="text-sm text-gray-700">${formatTimeline(project.startDate, project.endDate)}</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2">
+          <button class="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all">
+            View Details
+          </button>
+          <button class="px-3 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateProjectCount(count) {
+    const countElement = document.querySelector('.bg-green-100');
+    if (countElement) {
+      countElement.innerHTML = `
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        ${count} Total Projects
+      `;
+    }
+  }
+
+  function updateSummaryStats(projects) {
+    const ongoingCount = projects.filter(p => p.status === 'Ongoing').length;
+    const completedCount = projects.filter(p => p.status === 'Completed').length;
+    const delayedCount = projects.filter(p => p.status === 'Delayed').length;
+    const totalBudget = projects.reduce((sum, p) => sum + (parseFloat(p.totalBudget) || 0), 0);
+
+    const statsContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-4');
+    if (statsContainer) {
+      statsContainer.innerHTML = `
+        <div class="text-center">
+          <p class="text-2xl font-bold text-blue-600">${ongoingCount}</p>
+          <p class="text-sm text-gray-600">Ongoing Projects</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl font-bold text-green-600">${completedCount}</p>
+          <p class="text-sm text-gray-600">Completed Projects</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl font-bold text-red-600">${delayedCount}</p>
+          <p class="text-sm text-gray-600">Delayed Projects</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl font-bold text-purple-600">${executiveService.formatBudget(totalBudget)}</p>
+          <p class="text-sm text-gray-600">Total Budget</p>
+        </div>
+      `;
+    }
+  }
+
+  function setupEventListeners() {
+    // Search input
+    const searchInput = document.querySelector('input[type="text"]');
+    if (searchInput) {
+      let searchTimeout;
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const query = this.value.trim();
+          loadProjects({ search: query });
+        }, 300);
+      });
+    }
+
+    // Filter selects
+    const filterSelects = document.querySelectorAll('select');
+    filterSelects.forEach(select => {
+      select.addEventListener('change', function() {
+        const filters = {
+          status: filterSelects[0]?.value || 'all',
+          department: filterSelects[1]?.value || 'all',
+          risk: filterSelects[2]?.value || 'all'
+        };
+        loadProjects(filters);
+      });
+    });
+  }
+
+  function getStatusColor(status) {
+    switch (status?.toLowerCase()) {
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'delayed': return 'bg-red-100 text-red-700';
+      case 'ongoing': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  }
+
+  function getRiskColor(risk) {
+    switch (risk?.toLowerCase()) {
+      case 'high': return 'bg-red-100 text-red-700';
+      case 'medium': return 'bg-yellow-100 text-yellow-700';
+      case 'low': return 'bg-green-100 text-green-700';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  }
+
+  function formatTimeline(startDate, endDate) {
+    if (!startDate || !endDate) return 'Timeline not set';
+    const start = new Date(startDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+    const end = new Date(endDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${start} to ${end}`;
+  }
+
+  function showErrorMessage(message) {
+    const projectsGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2');
+    if (projectsGrid) {
+      projectsGrid.innerHTML = `<div class="col-span-2 text-center py-8"><p class="text-red-500">${message}</p></div>`;
+    }
+  }
+</script> 

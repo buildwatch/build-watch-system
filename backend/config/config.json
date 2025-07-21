@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "buildwatch_123",
+    "database": "buildwatch_lgu",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "buildwatch_123",
+    "database": "buildwatch_lgu_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "buildwatch_123",
+    "database": "buildwatch_lgu",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+} 

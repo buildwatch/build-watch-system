@@ -1,0 +1,99 @@
+---
+import Layout from "../layouts/Layout.astro";
+import TopBar from "../components/TopBar.astro";
+import LGUFooter from "../components/LGUFooter.astro";
+---
+<Layout title="Contact Us | Build Watch LGU" description="Contact the Build Watch team for support or inquiries.">
+  <TopBar />
+  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-white min-h-[60vh]">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-6 text-center">Contact Us</h1>
+    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
+      Get in touch with the Build Watch team. We're here to help with any questions about project monitoring and evaluation.
+    </p>
+    <div class="w-full max-w-4xl flex flex-col gap-8">
+      <!-- Contact Information -->
+      <div class="bg-white/80 rounded-2xl px-8 py-6 shadow-lg">
+        <h2 class="text-[#EB3C3C] font-bold text-xl mb-4 flex items-center gap-2"><span class="fa fa-info-circle text-[#FE5353]"></span> Contact Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+          <div class="flex flex-col gap-2">
+            <h3 class="font-semibold text-[#7A1F1F] mb-2 flex items-center gap-2"><span class="fa fa-building"></span> LGU Santa Cruz Office</h3>
+            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-map-marker-alt"></span> Municipal Hall, Santa Cruz, Laguna</p>
+            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-phone"></span> Phone: (049) XXX-XXXX</p>
+            <p class="text-[#7A1F1F] flex items-center gap-2"><span class="fa fa-envelope"></span> Email: buildwatch@santacruz.gov.ph</p>
+          </div>
+          <div class="flex flex-col gap-2 md:border-l-4 md:border-[#EB3C3C] md:pl-6">
+            <h3 class="font-semibold text-[#7A1F1F] mb-2 flex items-center gap-2"><span class="fa fa-headset"></span> Technical Support</h3>
+            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-info-circle"></span> For system-related issues</p>
+            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-envelope"></span> Email: support@buildwatch.ph</p>
+            <p class="text-[#7A1F1F] flex items-center gap-2"><span class="fa fa-clock"></span> Hours: Mon-Fri, 8AM-5PM</p>
+          </div>
+        </div>
+        <!-- Static Map Preview -->
+        <div class="mt-6 rounded-xl overflow-hidden shadow border border-[#EB3C3C]/10">
+          <img src="/map-placeholder.png" alt="Santa Cruz Map" class="w-full h-40 object-cover object-center" />
+        </div>
+        <!-- Social/Contact Icons -->
+        <div class="flex gap-4 mt-4 justify-end">
+          <a href="#" aria-label="Facebook" class="text-[#EB3C3C] hover:text-[#FE5353] text-2xl"><i class="fab fa-facebook"></i></a>
+          <a href="#" aria-label="Twitter" class="text-[#EB3C3C] hover:text-[#FE5353] text-2xl"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Email" class="text-[#EB3C3C] hover:text-[#FE5353] text-2xl"><i class="fas fa-envelope"></i></a>
+        </div>
+      </div>
+      <!-- Contact Form -->
+      <div class="bg-white/80 rounded-2xl px-8 py-6 shadow-lg">
+        <h2 class="text-[#EB3C3C] font-bold text-xl mb-4 flex items-center gap-2"><span class="fa fa-paper-plane text-[#FE5353]"></span> Send us a Message</h2>
+        <form class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="firstName">First Name</label>
+              <div class="relative">
+                <span class="fa fa-user absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
+                <input id="firstName" type="text" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" required aria-label="First Name" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="lastName">Last Name</label>
+              <div class="relative">
+                <span class="fa fa-user absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
+                <input id="lastName" type="text" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" required aria-label="Last Name" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="email">Email</label>
+            <div class="relative">
+              <span class="fa fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
+              <input id="email" type="email" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" required aria-label="Email" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="subject">Subject</label>
+            <div class="relative">
+              <span class="fa fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
+              <select id="subject" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" aria-label="Subject">
+                <option>General Inquiry</option>
+                <option>Technical Support</option>
+                <option>Project Information</option>
+                <option>Feedback</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="message">Message</label>
+            <div class="relative">
+              <span class="fa fa-comment-dots absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
+              <textarea id="message" rows="4" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" placeholder="Please describe your inquiry or concern..." required aria-label="Message"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="w-full px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition">
+            Send Message
+          </button>
+          <!-- Feedback message placeholder -->
+          <div class="text-center text-green-600 font-semibold mt-2 hidden" id="formFeedback">Thank you for your message! We'll get back to you soon.</div>
+        </form>
+      </div>
+    </div>
+  </main>
+  <LGUFooter />
+</Layout> 

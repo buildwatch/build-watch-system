@@ -1,0 +1,188 @@
+---
+// Logout Confirmation Modal Component
+---
+
+<div id="logout-modal" class="fixed inset-0 z-50 hidden">
+  <!-- Backdrop -->
+  <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"></div>
+  
+  <!-- Modal -->
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div id="logout-modal-content" class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Confirm Logout</h3>
+            <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- User Info -->
+      <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-800" id="logoutUserName">Loading user...</p>
+            <p class="text-xs text-gray-600" id="logoutUserRole">Loading role...</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <div class="p-6">
+        <p class="text-gray-600 mb-6">
+          You will be logged out of your current session. Any unsaved changes will be lost.
+        </p>
+        
+        <!-- Action Buttons -->
+        <div class="flex gap-3">
+          <button id="logout-cancel-btn" class="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+            Cancel
+          </button>
+          <button id="logout-confirm-btn" class="flex-1 px-4 py-2.5 text-white bg-red-600 hover:bg-red-700 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 shadow-lg hover:shadow-xl">
+            Yes, Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  class LogoutModal {
+    constructor() {
+      this.modal = document.getElementById('logout-modal');
+      this.backdrop = document.getElementById('logout-modal-backdrop');
+      this.content = document.getElementById('logout-modal-content');
+      this.cancelBtn = document.getElementById('logout-cancel-btn');
+      this.confirmBtn = document.getElementById('logout-confirm-btn');
+      this.userNameElement = document.getElementById('logoutUserName');
+      this.userRoleElement = document.getElementById('logoutUserRole');
+      this.onConfirm = null;
+      
+      this.init();
+    }
+    
+    init() {
+      // Cancel button event
+      this.cancelBtn?.addEventListener('click', () => this.hide());
+      
+      // Backdrop click event
+      this.backdrop?.addEventListener('click', () => this.hide());
+      
+      // Confirm button event
+      this.confirmBtn?.addEventListener('click', () => {
+        if (this.onConfirm) {
+          this.onConfirm();
+        }
+        this.hide();
+      });
+      
+      // Escape key event
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isVisible()) {
+          this.hide();
+        }
+      });
+    }
+    
+    async show(onConfirm) {
+      this.onConfirm = onConfirm;
+      
+      // Load and display user information
+      await this.loadUserInfo();
+      
+      this.modal.classList.remove('hidden');
+      
+      // Trigger animation
+      setTimeout(() => {
+        this.backdrop.style.opacity = '1';
+        this.content.style.transform = 'scale(1)';
+        this.content.style.opacity = '1';
+      }, 10);
+    }
+    
+    async loadUserInfo() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('http://localhost:3000/api/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.user) {
+            const user = data.user;
+            
+            // Update user name
+            if (this.userNameElement) {
+              this.userNameElement.textContent = user.fullName || user.name || user.username || 'Unknown User';
+            }
+            
+            // Update user role
+            if (this.userRoleElement) {
+              if (user.role === 'iu') {
+                this.userRoleElement.textContent = user.subRole || 'Implementing Office-Officer';
+              } else if (user.role === 'eiu') {
+                this.userRoleElement.textContent = 'EIU Personnel';
+              } else if (user.role === 'secretariat') {
+                this.userRoleElement.textContent = 'Secretariat';
+              } else if (user.role === 'mpmec') {
+                this.userRoleElement.textContent = 'MPMEC';
+              } else if (user.role === 'sysadmin') {
+                this.userRoleElement.textContent = 'System Administrator';
+              } else {
+                this.userRoleElement.textContent = user.role || 'User';
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user info for logout modal:', error);
+        
+        // Set fallback values
+        if (this.userNameElement) {
+          this.userNameElement.textContent = 'Current User';
+        }
+        if (this.userRoleElement) {
+          this.userRoleElement.textContent = 'User';
+        }
+      }
+    }
+    
+    hide() {
+      this.backdrop.style.opacity = '0';
+      this.content.style.transform = 'scale(0.95)';
+      this.content.style.opacity = '0';
+      
+      setTimeout(() => {
+        this.modal.classList.add('hidden');
+        this.onConfirm = null;
+      }, 300);
+    }
+    
+    isVisible() {
+      return !this.modal.classList.contains('hidden');
+    }
+  }
+  
+  // Initialize logout modal
+  document.addEventListener('DOMContentLoaded', function() {
+    window.logoutModal = new LogoutModal();
+  });
+</script> 

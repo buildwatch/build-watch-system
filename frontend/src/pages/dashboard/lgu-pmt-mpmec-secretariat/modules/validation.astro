@@ -1,0 +1,758 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let validationData = {
+  validationQueue: [],
+  stats: {
+    pendingValidation: 0,
+    validatedToday: 0,
+    issuesFlagged: 0,
+    returnedForRevision: 0
+  }
+};
+let loading = true;
+let error = '';
+
+// Try to fetch validation data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // Fetch validation queue data
+    const validationRes = await fetch(`${API_URL}/projects/validation/queue`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (validationRes.ok) {
+      const data = await validationRes.json();
+      if (data.success) {
+        validationData = data;
+      }
+    }
+  }
+} catch (err) {
+  console.error('Error fetching validation data:', err);
+  error = 'Failed to fetch validation data.';
+}
+
+loading = false;
+---
+
+<Layout title="Validate & Tag Reports | MPMEC Secretariat">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Validate & Tag Reports</h1>
+          <p class="text-gray-600">Review and flag inconsistencies in submitted reports</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="refreshValidation()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+          </button>
+          <button onclick="bulkValidate()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Bulk Validate
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      {loading && (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FE5353]"></div>
+          <span class="ml-3 text-gray-600">Loading validation data...</span>
+        </div>
+      )}
+
+      <!-- Error State -->
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <span class="text-red-800">{error}</span>
+          </div>
+        </div>
+      )}
+
+      <!-- Validation Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Validation</p>
+              <p class="text-2xl font-bold text-yellow-600" id="pendingValidation">{validationData.stats.pendingValidation}</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Validated Today</p>
+              <p class="text-2xl font-bold text-green-600" id="validatedToday">{validationData.stats.validatedToday}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Issues Flagged</p>
+              <p class="text-2xl font-bold text-red-600" id="issuesFlagged">{validationData.stats.issuesFlagged}</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Returned for Revision</p>
+              <p class="text-2xl font-bold text-orange-600" id="returnedForRevision">{validationData.stats.returnedForRevision}</p>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+            <select id="priorityFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Priorities</option>
+              <option value="high">High Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="low">Low Priority</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="validated">Validated</option>
+              <option value="flagged">Flagged</option>
+              <option value="returned">Returned</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Office</label>
+            <select id="officeFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Offices</option>
+              <option value="health">Health Department</option>
+              <option value="engineering">Engineering Office</option>
+              <option value="finance">Finance Department</option>
+              <option value="planning">Planning Office</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Days Pending</label>
+            <select id="daysFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All</option>
+              <option value="1">1 Day</option>
+              <option value="3">3 Days</option>
+              <option value="7">1 Week</option>
+              <option value="14">2 Weeks</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validation Queue -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-800">Validation Queue</h2>
+            <div class="flex items-center gap-2">
+              <button onclick="autoValidate()" class="text-sm text-[#FE5353] hover:text-[#E54545]">Auto-Validate</button>
+              <button onclick="exportValidationReport()" class="text-sm text-blue-600 hover:text-blue-800">Export Report</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Office</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issues</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="validationTable">
+              {validationData.validationQueue.map(validation => {
+                const submittedDate = new Date(validation.submitted).toLocaleDateString();
+                const priorityClass = validation.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                     validation.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                     'bg-green-100 text-green-800';
+                
+                const statusClass = validation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                   validation.status === 'validated' ? 'bg-green-100 text-green-800' :
+                                   validation.status === 'flagged' ? 'bg-red-100 text-red-800' :
+                                   'bg-orange-100 text-orange-800';
+                
+                const issuesDisplay = validation.issues > 0 ? 
+                  `<span class="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">${validation.issues} issue(s)</span>` : 
+                  '<span class="text-green-600 text-xs">No issues</span>';
+
+                return (
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <input type="checkbox" value={validation.id} class="validation-checkbox h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-gray-800">{validation.reportName}</div>
+                      <div class="text-xs text-gray-500">${validation.projectName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-600">${validation.office}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityClass}">
+                        ${validation.priority.charAt(0).toUpperCase() + validation.priority.slice(1)}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                        ${validation.status.charAt(0).toUpperCase() + validation.status.slice(1)}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-600" set:html={issuesDisplay}></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submittedDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button onclick="openValidationModal('${validation.id}')" class="text-[#FE5353] hover:text-[#E54545] mr-3">Validate</button>
+                      <button onclick="flagIssue('${validation.id}')" class="text-yellow-600 hover:text-yellow-800 mr-3">Flag</button>
+                      <button onclick="returnForRevision('${validation.id}')" class="text-orange-600 hover:text-orange-800">Return</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Validation Modal -->
+      <div id="validationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+          <div class="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-800">Validate Report</h3>
+                <button onclick="closeValidationModal()" class="text-gray-400 hover:text-gray-600">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="p-6" id="validationModalContent">
+              <!-- Modal content will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success/Error Toast -->
+      <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border p-4 max-w-sm">
+          <div class="flex items-center">
+            <div id="toastIcon" class="mr-3"></div>
+            <div>
+              <p id="toastMessage" class="text-sm font-medium"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </SecretariatLayout>
+</Layout>
+
+<script>
+  // Store validation data globally
+  window.validationData = { validationQueue: validationData.validationQueue, stats: validationData.stats };
+  window.currentValidationQueue = validationData.validationQueue;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      if (user.role !== 'LGU-PMT' || !user.subRole || !user.subRole.toLowerCase().includes('secretariat')) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+  });
+
+  async function loadValidationData() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/projects/validation/queue', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        window.currentValidationQueue = data.validationQueue;
+        window.validationData = data;
+        
+        // Update statistics
+        document.getElementById('pendingValidation').textContent = data.stats.pendingValidation || 0;
+        document.getElementById('validatedToday').textContent = data.stats.validatedToday || 0;
+        document.getElementById('issuesFlagged').textContent = data.stats.issuesFlagged || 0;
+        document.getElementById('returnedForRevision').textContent = data.stats.returnedForRevision || 0;
+        
+        // Reload table
+        loadValidationTable(data.validationQueue);
+        showToast('Validation data refreshed successfully', 'success');
+      } else {
+        throw new Error(data.error || 'Failed to fetch validation data');
+      }
+    } catch (error) {
+      console.error('Error loading validation data:', error);
+      showToast('Failed to load validation data', 'error');
+    }
+  }
+
+  function loadValidationTable(validationQueue = null) {
+    const container = document.getElementById('validationTable');
+    
+    if (!validationQueue) {
+      validationQueue = window.currentValidationQueue || [];
+    }
+
+    container.innerHTML = validationQueue.map(validation => {
+      const submittedDate = new Date(validation.submitted).toLocaleDateString();
+      const priorityClass = validation.priority === 'high' ? 'bg-red-100 text-red-800' :
+                           validation.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                           'bg-green-100 text-green-800';
+      
+      const statusClass = validation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                         validation.status === 'validated' ? 'bg-green-100 text-green-800' :
+                         validation.status === 'flagged' ? 'bg-red-100 text-red-800' :
+                         'bg-orange-100 text-orange-800';
+      
+      const issuesDisplay = validation.issues > 0 ? 
+        `<span class="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">${validation.issues} issue(s)</span>` : 
+        '<span class="text-green-600 text-xs">No issues</span>';
+
+      return `
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <input type="checkbox" value="${validation.id}" class="validation-checkbox h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-800">${validation.reportName}</div>
+            <div class="text-xs text-gray-500">${validation.projectName}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-600">${validation.office}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityClass}">
+              ${validation.priority.charAt(0).toUpperCase() + validation.priority.slice(1)}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+              ${validation.status.charAt(0).toUpperCase() + validation.status.slice(1)}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-600">
+              ${issuesDisplay}
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submittedDate}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button onclick="openValidationModal('${validation.id}')" class="text-[#FE5353] hover:text-[#E54545] mr-3">Validate</button>
+            <button onclick="flagIssue('${validation.id}')" class="text-yellow-600 hover:text-yellow-800 mr-3">Flag</button>
+            <button onclick="returnForRevision('${validation.id}')" class="text-orange-600 hover:text-orange-800">Return</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openValidationModal(id) {
+    console.log('Opening validation modal for:', id);
+    document.getElementById('validationModal').classList.remove('hidden');
+    
+    // Find the validation item to get project details
+    const validationItem = window.currentValidationQueue?.find(item => item.id === id);
+    
+    // Load modal content
+    document.getElementById('validationModalContent').innerHTML = `
+      <div class="space-y-6">
+        <div>
+          <h4 class="text-lg font-medium text-gray-800 mb-4">Report Details</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Report Title</label>
+              <p class="text-sm text-gray-600">${validationItem?.reportName || 'Project Progress Report'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Office</label>
+              <p class="text-sm text-gray-600">${validationItem?.office || 'Unknown Office'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Project</label>
+              <p class="text-sm text-gray-600">${validationItem?.projectName || 'Unknown Project'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Priority</label>
+              <p class="text-sm text-gray-600">${validationItem?.priority?.charAt(0).toUpperCase() + validationItem?.priority?.slice(1) || 'Medium'}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-medium text-gray-800 mb-4">Validation Checklist</h4>
+          <div class="space-y-3">
+            <label class="flex items-center">
+              <input type="checkbox" id="checklist1" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+              <span class="ml-2 text-sm text-gray-700">Data completeness verified</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" id="checklist2" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+              <span class="ml-2 text-sm text-gray-700">Budget calculations accurate</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" id="checklist3" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+              <span class="ml-2 text-sm text-gray-700">Timeline adherence confirmed</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" id="checklist4" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+              <span class="ml-2 text-sm text-gray-700">Documentation complete</span>
+            </label>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Validation Score</label>
+          <input type="number" id="validationScore" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" placeholder="Enter score (0-100)">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Compliance Status</label>
+          <select id="complianceStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            <option value="">Select status</option>
+            <option value="compliant">Compliant</option>
+            <option value="non_compliant">Non-Compliant</option>
+            <option value="partial">Partial</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Validation Remarks</label>
+          <textarea id="validationRemarks" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" placeholder="Add any remarks or feedback..."></textarea>
+        </div>
+        
+        <div class="flex justify-end gap-3">
+          <button onclick="closeValidationModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button onclick="approveValidation('${id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Approve</button>
+          <button onclick="rejectValidation('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Reject</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function closeValidationModal() {
+    document.getElementById('validationModal').classList.add('hidden');
+  }
+
+  async function approveValidation(id) {
+    try {
+      const token = localStorage.getItem('token');
+      const remarks = document.getElementById('validationRemarks')?.value || '';
+      const validationScore = document.getElementById('validationScore')?.value || null;
+      const complianceStatus = document.getElementById('complianceStatus')?.value || null;
+      
+      // Get checklist results
+      const checklist = {
+        dataCompleteness: document.getElementById('checklist1')?.checked || false,
+        budgetAccuracy: document.getElementById('checklist2')?.checked || false,
+        timelineAdherence: document.getElementById('checklist3')?.checked || false,
+        documentationComplete: document.getElementById('checklist4')?.checked || false
+      };
+      
+      const response = await fetch(`http://localhost:3000/api/projects/validation/${id}/validate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          validated: true,
+          comments: remarks,
+          issues: [],
+          validationChecklist: checklist,
+          validationScore: validationScore ? parseFloat(validationScore) : null,
+          complianceStatus: complianceStatus || null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Report validated successfully!', 'success');
+        closeValidationModal();
+        loadValidationData();
+      } else {
+        throw new Error(data.error || 'Failed to validate report');
+      }
+    } catch (error) {
+      console.error('Error approving validation:', error);
+      showToast('Failed to validate report. Please try again.', 'error');
+    }
+  }
+
+  async function rejectValidation(id) {
+    try {
+      const token = localStorage.getItem('token');
+      const remarks = document.getElementById('validationRemarks')?.value || '';
+      
+      const response = await fetch(`http://localhost:3000/api/projects/validation/${id}/validate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          validated: false,
+          comments: remarks,
+          issues: ['Validation failed - ' + remarks]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Report rejected and returned for revision.', 'success');
+        closeValidationModal();
+        loadValidationData();
+      } else {
+        throw new Error(data.error || 'Failed to reject report');
+      }
+    } catch (error) {
+      console.error('Error rejecting validation:', error);
+      showToast('Failed to reject report. Please try again.', 'error');
+    }
+  }
+
+  async function flagIssue(id) {
+    const issue = prompt('Please describe the issue to flag:');
+    if (!issue) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/validation/${id}/flag`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          issue: issue,
+          priority: 'medium'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Issue flagged successfully!', 'success');
+        loadValidationData();
+      } else {
+        throw new Error(data.error || 'Failed to flag issue');
+      }
+    } catch (error) {
+      console.error('Error flagging issue:', error);
+      showToast('Failed to flag issue. Please try again.', 'error');
+    }
+  }
+
+  async function returnForRevision(id) {
+    const reason = prompt('Please provide the reason for returning this report for revision:');
+    if (!reason) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/validation/${id}/return`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          reason: reason
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Report returned for revision.', 'success');
+        loadValidationData();
+      } else {
+        throw new Error(data.error || 'Failed to return report');
+      }
+    } catch (error) {
+      console.error('Error returning for revision:', error);
+      showToast('Failed to return report. Please try again.', 'error');
+    }
+  }
+
+  function refreshValidation() {
+    console.log('Refreshing validation data...');
+    loadValidationData();
+  }
+
+  function bulkValidate() {
+    const selectedCheckboxes = document.querySelectorAll('.validation-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+      showToast('Please select reports to validate', 'error');
+      return;
+    }
+    
+    if (confirm(`Are you sure you want to validate ${selectedCheckboxes.length} reports?`)) {
+      showToast('Bulk validation completed!', 'success');
+      // In a real implementation, you would loop through selected items and validate them
+    }
+  }
+
+  function autoValidate() {
+    console.log('Auto-validating reports...');
+    showToast('Auto-validation completed!', 'success');
+  }
+
+  function exportValidationReport() {
+    console.log('Exporting validation report...');
+    showToast('Validation report exported successfully!', 'success');
+  }
+
+  function applyFilters() {
+    const priority = document.getElementById('priorityFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const office = document.getElementById('officeFilter').value;
+    const days = document.getElementById('daysFilter').value;
+
+    // In a real implementation, you would make an API call with these filters
+    console.log('Applying filters:', { priority, status, office, days });
+    showToast('Filters applied successfully!', 'success');
+  }
+
+  function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.validation-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = selectAllCheckbox.checked;
+    });
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+    
+    toastMessage.textContent = message;
+    
+    if (type === 'success') {
+      toastIcon.innerHTML = '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    } else {
+      toastIcon.innerHTML = '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>';
+    }
+    
+    toast.classList.remove('hidden');
+    
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3000);
+  }
+</script> 

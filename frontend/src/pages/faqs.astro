@@ -1,0 +1,112 @@
+---
+import Layout from "../layouts/Layout.astro";
+import TopBar from "../components/TopBar.astro";
+import LGUFooter from "../components/LGUFooter.astro";
+---
+<Layout title="FAQs | Build Watch LGU" description="Frequently asked questions about Build Watch and LGU project monitoring.">
+  <TopBar />
+  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-transparent min-h-[60vh]">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-2 text-center">Frequently Asked Questions</h1>
+    <div class="w-24 h-1 bg-[#EB3C3C] rounded-full mb-6"></div>
+    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
+      Find answers to common questions about the Build Watch system and LGU project monitoring.
+    </p>
+    <!-- Search Bar -->
+    <div class="flex flex-col sm:flex-row gap-4 items-center mb-6 w-full max-w-2xl">
+      <div class="relative w-full">
+        <span class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
+        <input type="text" placeholder="Search FAQs..." class="w-full pl-12 pr-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" />
+      </div>
+      <button class="px-6 py-3 bg-[#FE5353] text-white font-bold rounded-lg shadow hover:bg-[#EB3C3C] transition">Search</button>
+    </div>
+    <div class="w-full max-w-4xl space-y-6">
+      <!-- FAQ Categories -->
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6 flex items-center gap-2"><span class="fa fa-question-circle text-[#EB3C3C]"></span> General Questions</h2>
+        <div class="space-y-4">
+          <!-- Accordion Item -->
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>What is Build Watch?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Build Watch is a comprehensive project monitoring and evaluation system developed for the Municipality of Santa Cruz, Laguna. It provides real-time tracking of infrastructure projects and social development programs to ensure transparency and accountability in local governance.</div>
+          </div>
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>Who can access Build Watch?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Build Watch is accessible to four main user groups: LGU-PMT (Project Monitoring Team), EIU (External Implementing Units), EMS (External Monitoring Stakeholders), and IU (Internal Units). Each group has specific access levels and functionalities.</div>
+          </div>
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>Is Build Watch free to use?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Yes, Build Watch is a free public service provided by the LGU of Santa Cruz, Laguna. There are no fees or charges for accessing project information and monitoring data.</div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6 flex items-center gap-2"><span class="fa fa-tasks text-[#EB3C3C]"></span> Project Monitoring</h2>
+        <div class="space-y-4">
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>How often is project data updated?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Project data is updated in real-time as implementers submit progress reports. The frequency depends on the project type and requirements, but most projects require weekly or monthly updates.</div>
+          </div>
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>Can I report issues with projects?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Yes, you can report issues through the Build Watch system. Each user group has specific channels for reporting concerns, and the system includes escalation procedures for urgent matters.</div>
+          </div>
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>What types of projects are monitored?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Build Watch monitors both infrastructure projects (like roads, buildings, and facilities) and social development programs (like 4Ps, Social Pension, and community initiatives).</div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6 flex items-center gap-2"><span class="fa fa-cogs text-[#EB3C3C]"></span> Technical Support</h2>
+        <div class="space-y-4">
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>What if I forget my password?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">If you forget your password, contact your system administrator or the LGU IT department. They can help you reset your account credentials securely.</div>
+          </div>
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>Is my data secure?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Yes, Build Watch implements strict security measures to protect all data. User authentication, data encryption, and regular security audits ensure the safety of sensitive information.</div>
+          </div>
+          <div class="border-b border-[#EB3C3C]/20 pb-4">
+            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
+              <span>Can I access Build Watch on mobile devices?</span>
+              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+            </button>
+            <div class="text-[#7A1F1F] hidden">Yes, Build Watch is designed to be responsive and works on desktop computers, tablets, and mobile phones. The interface adapts to different screen sizes for optimal viewing.</div>
+          </div>
+        </div>
+      </div>
+      <!-- Contact Support -->
+      <div class="bg-[#EB3C3C]/10 rounded-2xl p-8 text-center">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-4">Still Have Questions?</h2>
+        <p class="text-[#7A1F1F] mb-6">If you couldn't find the answer you're looking for, our support team is here to help.</p>
+        <a href="/contact-us" class="inline-block px-8 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition"><span class="fa fa-headset mr-2"></span>Contact Support</a>
+      </div>
+    </div>
+  </main>
+  <LGUFooter />
+</Layout> 

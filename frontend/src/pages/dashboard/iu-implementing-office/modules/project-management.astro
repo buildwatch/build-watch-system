@@ -1,0 +1,2331 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let projects = [];
+let loading = true;
+let error = '';
+
+// Try to fetch projects data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // Fetch projects from the new API
+    const projectsRes = await fetch(`${API_URL}/projects`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (projectsRes.ok) {
+      const data = await projectsRes.json();
+      if (data.success) {
+        projects = data.projects;
+      }
+    }
+  }
+} catch (err) {
+  console.error('Error fetching projects data:', err);
+  error = 'Failed to fetch projects data.';
+}
+
+loading = false;
+---
+
+<Layout title="Project Management | Implementing Office Dashboard">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header Section -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Project & Program Management</h1>
+          <p class="text-gray-600">Create, manage, and track your department's projects with comprehensive monitoring across three divisions</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="openCreateProjectModal()" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create New Project
+          </button>
+          <button onclick="testModal()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+            Test Modal
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Projects</p>
+              <p class="text-2xl font-bold text-gray-800">{projects.length}</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Ongoing</p>
+              <p class="text-2xl font-bold text-green-600">{projects.filter(p => p.status === 'Ongoing').length}</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending</p>
+              <p class="text-2xl font-bold text-yellow-600">{projects.filter(p => p.status === 'Pending').length}</p>
+            </div>
+            <div class="p-3 bg-yellow-100 rounded-full">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Complete</p>
+              <p class="text-2xl font-bold text-blue-600">{projects.filter(p => p.status === 'Completed').length}</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Delayed">Delayed</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+              <option value="">All Categories</option>
+              <option value="infrastructure">Infrastructure</option>
+              <option value="health">Health</option>
+              <option value="education">Education</option>
+              <option value="agriculture">Agriculture</option>
+              <option value="social">Social Services</option>
+              <option value="environment">Environment</option>
+              <option value="transportation">Transportation</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+            <select id="priorityFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+              <option value="">All Priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <input type="text" id="searchInput" placeholder="Search projects..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#92751F]"></div>
+          <span class="ml-3 text-gray-600">Loading projects...</span>
+        </div>
+      ) : error ? (
+        <div class="text-center py-12">
+          <p class="text-red-600 mb-4">{error}</p>
+          <button onclick="loadProjects()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-all">
+            Try Again
+          </button>
+        </div>
+      ) : projects.length === 0 ? (
+        <div class="text-center py-12">
+          <svg class="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No Projects Found</h3>
+          <p class="text-gray-600 mb-6">Get started by creating your first project with comprehensive monitoring across timeline, budget, and physical divisions</p>
+          <button onclick="openCreateProjectModal()" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2 mx-auto">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create New Project
+          </button>
+        </div>
+      ) : (
+        <!-- Projects Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="projectsGrid">
+          {projects.map((project) => {
+            const progress = project.progress || {
+              timelineProgress: project.timelineProgress || 0,
+              budgetProgress: project.budgetProgress || 0,
+              physicalProgress: project.physicalProgress || 0,
+              overallProgress: project.overallProgress || 0
+            };
+            
+            return (
+              <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">{project.name}</h3>
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
+                    <div class="flex items-center gap-2 mb-3">
+                      <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                        project.category === 'infrastructure' ? 'bg-[#F8C734]/20 text-[#92751F]' :
+                        project.category === 'health' ? 'bg-blue-100 text-blue-700' :
+                        project.category === 'education' ? 'bg-purple-100 text-purple-700' :
+                        project.category === 'agriculture' ? 'bg-green-100 text-green-700' :
+                        project.category === 'environment' ? 'bg-emerald-100 text-emerald-700' :
+                        project.category === 'transportation' ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>{project.category}</span>
+                      <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                        project.status === 'ongoing' ? 'bg-green-100 text-green-700' :
+                        project.status === 'complete' ? 'bg-blue-100 text-blue-700' :
+                        project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>{project.status}</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button onclick={`editProject('${project.id}')`} class="p-2 text-gray-400 hover:text-[#92751F] transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+                    <button onclick={`deleteProject('${project.id}')`} class="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="space-y-3 mb-4">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Overall Progress:</span>
+                    <span class="font-medium text-gray-800">{progress.overallProgress}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class={`h-2 rounded-full ${project.status === 'complete' ? 'bg-green-500' : 'bg-[#F8C734]'}`} style={`width: ${progress.overallProgress}%`}></div>
+                  </div>
+                  
+                  <!-- Three Divisions Progress -->
+                  <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="text-center">
+                      <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
+                        <div class="bg-blue-500 h-1 rounded-full" style={`width: ${progress.timelineProgress}%`}></div>
+                      </div>
+                      <span class="text-gray-600">Timeline</span>
+                    </div>
+                    <div class="text-center">
+                      <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
+                        <div class="bg-green-500 h-1 rounded-full" style={`width: ${progress.budgetProgress}%`}></div>
+                      </div>
+                      <span class="text-gray-600">Budget</span>
+                    </div>
+                    <div class="text-center">
+                      <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
+                        <div class="bg-purple-500 h-1 rounded-full" style={`width: ${progress.physicalProgress}%`}></div>
+                      </div>
+                      <span class="text-gray-600">Physical</span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Budget:</span>
+                    <span class="font-medium text-gray-800">₱{project.totalBudget?.toLocaleString() || '0'}</span>
+                  </div>
+                  
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Location:</span>
+                    <span class="font-medium text-gray-800">{project.location}</span>
+                  </div>
+                  
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">{project.status === 'complete' ? 'Completion Date:' : 'Target Date:'}</span>
+                    <span class="font-medium text-gray-800">{project.status === 'complete' ? project.completionDate : project.endDate}</span>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  <button onclick={`viewProjectDetails('${project.id}')`} class="flex-1 px-4 py-2 bg-[#F8C734]/20 text-[#92751F] rounded-lg hover:bg-[#F8C734]/30 transition-colors text-sm font-medium">
+                    View Details
+                  </button>
+                  {project.status === 'complete' ? (
+                    <button onclick={`generateReport('${project.id}')`} class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                      Report
+                    </button>
+                  ) : (
+                    <button onclick={`updateProgress('${project.id}')`} class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors text-sm font-medium">
+                      Update
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+
+    <!-- Create Project Modal -->
+    <div id="createProjectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold text-gray-800">Create New Project/Program</h2>
+              <button onclick="closeCreateProjectModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <p class="text-gray-600 mt-2">Configure comprehensive monitoring across three divisions: Timeline, Budget, and Physical Updates</p>
+          </div>
+
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999]">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold text-gray-800">Edit Project/Program</h2>
+              <button onclick="closeEditProjectModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <p class="text-gray-600 mt-2">Update project information and milestones</p>
+          </div>
+          
+          <form id="editProjectForm" class="p-6 space-y-8">
+            <!-- Basic Project Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Basic Project Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Code *</label>
+                  <input type="text" name="projectCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., PRJ-2025-001">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project/Program Title *</label>
+                  <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., Installation of Solar and LED Streetlights at Various Barangays">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Implementing Office *</label>
+                  <input type="text" name="implementingOfficeName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Auto-filled based on user" readonly>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                  <select name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Category</option>
+                    <option value="infrastructure">Infrastructure</option>
+                    <option value="health">Health</option>
+                    <option value="education">Education</option>
+                    <option value="agriculture">Agriculture</option>
+                    <option value="social">Social Services</option>
+                    <option value="environment">Environment</option>
+                    <option value="transportation">Transportation</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Location/Barangay *</label>
+                  <div id="editBarangayContainer" class="space-y-2">
+                    <div class="flex gap-2">
+                      <select name="location[]" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent barangay-select">
+                        <option value="">Select Barangay</option>
+                        <option value="Various Barangay">Various Barangay</option>
+                        <option value="Alipit">Alipit</option>
+                        <option value="Bagumbayan">Bagumbayan</option>
+                        <option value="Bubukal">Bubukal</option>
+                        <option value="Calios">Calios</option>
+                        <option value="Duhat">Duhat</option>
+                        <option value="Gatid">Gatid</option>
+                        <option value="Jasaan">Jasaan</option>
+                        <option value="Labuin">Labuin</option>
+                        <option value="Malinao">Malinao</option>
+                        <option value="Oogong">Oogong</option>
+                        <option value="Pagsawitan">Pagsawitan</option>
+                        <option value="Palasan">Palasan</option>
+                        <option value="Patimbao">Patimbao</option>
+                        <option value="Poblacion I">Poblacion I</option>
+                        <option value="Poblacion II">Poblacion II</option>
+                        <option value="Poblacion III">Poblacion III</option>
+                        <option value="Poblacion IV">Poblacion IV</option>
+                        <option value="Poblacion V">Poblacion V</option>
+                        <option value="San Jose">San Jose</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Pablo Norte">San Pablo Norte</option>
+                        <option value="San Pablo Sur">San Pablo Sur</option>
+                        <option value="Santisima Cruz">Santisima Cruz</option>
+                        <option value="Santo Angel Central">Santo Angel Central</option>
+                        <option value="Santo Angel Norte">Santo Angel Norte</option>
+                        <option value="Santo Angel Sur">Santo Angel Sur</option>
+                      </select>
+                      <button type="button" onclick="addEditBarangayDropdown()" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                  <select name="priority" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Priority</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Funding Source *</label>
+                  <select name="fundingSource" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Funding Source</option>
+                    <option value="local_fund">Local Fund</option>
+                    <option value="national_fund">National Fund</option>
+                    <option value="foreign_fund">Foreign Fund</option>
+                    <option value="private_fund">Private Fund</option>
+                    <option value="mixed_fund">Mixed Fund</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Created Date *</label>
+                  <input type="date" name="createdDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Description *</label>
+                  <textarea name="description" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Detailed description of the project..."></textarea>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Expected Outputs</label>
+                  <textarea name="expectedOutputs" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Expected outputs and deliverables..."></textarea>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Target Beneficiaries</label>
+                  <textarea name="targetBeneficiaries" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Target beneficiaries and stakeholders..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- External Partner Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">🤝 External Partner Information</h3>
+              <div class="space-y-4">
+                <div class="flex items-center">
+                  <input type="checkbox" name="hasExternalPartner" id="editHasExternalPartner" class="w-4 h-4 text-[#92751F] bg-gray-100 border-gray-300 rounded focus:ring-[#92751F] focus:ring-2">
+                  <label for="editHasExternalPartner" class="ml-2 text-sm font-medium text-gray-700">Has External Implementing Unit (EIU) Partner</label>
+                </div>
+                
+                <div id="editEiuFields" class="hidden space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">EIU Personnel Account ID</label>
+                    <input type="text" name="eiuPersonnelId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Enter EIU Personnel Account ID">
+                    <p class="text-xs text-gray-500 mt-1">Enter the Account ID of the EIU personnel assigned to this project</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timeline Division -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">📅 Timeline Division</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                  <input type="date" name="startDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                  <input type="date" name="endDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Update Frequency *</label>
+                  <select name="timelineUpdateFrequency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Bi-weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Timeline Milestones</label>
+                  <textarea name="timelineMilestones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Key timeline milestones and deadlines..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Budget Division -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">💰 Budget Division</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Total Budget (₱) *</label>
+                  <input type="number" name="totalBudget" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 5000000">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Update Frequency *</label>
+                  <select name="budgetUpdateFrequency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Frequency</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Bi-weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Budget Breakdown</label>
+                  <textarea name="budgetBreakdown" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Detailed breakdown of budget allocation..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Physical Division -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">🏗️ Physical Division</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Update Frequency *</label>
+                  <select name="physicalUpdateFrequency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Frequency</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Bi-weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Required Documentation</label>
+                  <textarea name="requiredDocumentation" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Required documentation for physical progress..."></textarea>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Physical Progress Requirements</label>
+                  <textarea name="physicalProgressRequirements" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Specific requirements for physical progress tracking..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Additional Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Manager</label>
+                  <input type="text" name="projectManager" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Name of project manager">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+                  <input type="text" name="contactNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Contact number">
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Special Requirements</label>
+                  <textarea name="specialRequirements" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Any special requirements or considerations..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestone Configuration -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">🎯 Milestone Configuration</h3>
+                <button type="button" onclick="addEditMilestone()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Add Milestone
+                </button>
+              </div>
+              
+              <div class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-600">Total Weight:</span>
+                    <span id="editTotalWeight" class="ml-2 font-bold text-red-600">0.00%</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600">Total Milestone Budget:</span>
+                    <span id="editTotalMilestoneBudget" class="ml-2 font-bold">₱0.00</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="editMilestonesContainer" class="space-y-4">
+                <!-- Milestones will be added here dynamically -->
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
+              <button type="button" onclick="closeEditProjectModal()" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors">
+                Update Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Details Modal -->
+    <div id="projectDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999]">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold text-gray-800">Project Details</h2>
+              <button onclick="closeProjectDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="p-6 space-y-8">
+            <!-- Project Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Project Name</label>
+                  <p class="text-sm font-semibold text-gray-800" id="detailProjectName">-</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Project Code</label>
+                  <p class="text-sm font-semibold text-gray-800" id="detailProjectCode">-</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Implementing Office</label>
+                  <p class="text-sm font-semibold text-gray-800" id="detailImplementingOffice">-</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Location</label>
+                  <p class="text-sm font-semibold text-gray-800" id="detailLocation">-</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Status</label>
+                  <span class="inline-block px-2 py-1 text-xs font-medium rounded-full" id="detailStatus">-</span>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Created Date</label>
+                  <p class="text-sm font-semibold text-gray-800" id="detailCreatedDate">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Budget Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Total Budget</label>
+                  <p class="text-lg font-bold text-gray-800" id="detailTotalBudget">₱0</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Amount Spent</label>
+                  <p class="text-lg font-bold text-green-600" id="detailAmountSpent">₱0</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Remaining Budget</label>
+                  <p class="text-lg font-bold text-blue-600" id="detailRemainingBudget">₱0</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Budget Utilization</label>
+                  <p class="text-sm text-gray-600" id="detailBudgetUtilization">0% utilized</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Funding Source</label>
+                  <p class="text-sm font-semibold text-gray-800" id="detailFundingSource">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Progress Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="text-center p-4 bg-blue-50 rounded-lg">
+                  <div class="text-2xl font-bold text-blue-600" id="detailOverallProgress">0%</div>
+                  <p class="text-sm text-gray-600 mt-1">Overall Progress</p>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                  <div class="text-2xl font-bold text-green-600" id="detailTimelineProgress">0%</div>
+                  <p class="text-sm text-gray-600 mt-1">Timeline Progress</p>
+                </div>
+                <div class="text-center p-4 bg-purple-50 rounded-lg">
+                  <div class="text-2xl font-bold text-purple-600" id="detailBudgetProgress">0%</div>
+                  <p class="text-sm text-gray-600 mt-1">Budget Progress</p>
+                </div>
+                <div class="text-center p-4 bg-orange-50 rounded-lg">
+                  <div class="text-2xl font-bold text-orange-600" id="detailPhysicalProgress">0%</div>
+                  <p class="text-sm text-gray-600 mt-1">Physical Progress</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestones -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Milestones</h3>
+              <div id="detailMilestonesContainer">
+                <!-- Milestones will be populated here -->
+              </div>
+            </div>
+
+            <!-- Close Button -->
+            <div class="flex justify-end pt-6 border-t border-gray-200">
+              <button onclick="closeProjectDetailsModal()" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+          
+          <form id="createProjectForm" class="p-6 space-y-8">
+            <!-- Basic Project Information -->
+            <div class="bg-gray-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Basic Project Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Code *</label>
+                  <input type="text" name="projectCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., PRJ-2025-001" id="projectCodeField">
+                  <p class="text-xs text-gray-500 mt-1">Unique identifier for the project</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project/Program Title *</label>
+                  <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., Installation of Solar and LED Streetlights at Various Barangays">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Implementing Office *</label>
+                  <input type="text" name="implementingOfficeName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Auto-filled based on user" id="implementingOfficeField" readonly>
+                  <p class="text-xs text-gray-500 mt-1">Automatically set based on the creating user's department</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                  <select name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Category</option>
+                    <option value="infrastructure">Infrastructure</option>
+                    <option value="health">Health</option>
+                    <option value="education">Education</option>
+                    <option value="agriculture">Agriculture</option>
+                    <option value="social">Social Services</option>
+                    <option value="environment">Environment</option>
+                    <option value="transportation">Transportation</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Location/Barangay *</label>
+                  <div id="barangayContainer" class="space-y-2">
+                    <div class="flex gap-2">
+                      <select name="location[]" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent barangay-select">
+                        <option value="">Select Barangay</option>
+                        <option value="Various Barangay">Various Barangay</option>
+                        <option value="Alipit">Alipit</option>
+                        <option value="Bagumbayan">Bagumbayan</option>
+                        <option value="Bubukal">Bubukal</option>
+                        <option value="Calios">Calios</option>
+                        <option value="Duhat">Duhat</option>
+                        <option value="Gatid">Gatid</option>
+                        <option value="Jasaan">Jasaan</option>
+                        <option value="Labuin">Labuin</option>
+                        <option value="Malinao">Malinao</option>
+                        <option value="Oogong">Oogong</option>
+                        <option value="Pagsawitan">Pagsawitan</option>
+                        <option value="Palasan">Palasan</option>
+                        <option value="Patimbao">Patimbao</option>
+                        <option value="Poblacion I">Poblacion I</option>
+                        <option value="Poblacion II">Poblacion II</option>
+                        <option value="Poblacion III">Poblacion III</option>
+                        <option value="Poblacion IV">Poblacion IV</option>
+                        <option value="Poblacion V">Poblacion V</option>
+                        <option value="San Jose">San Jose</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Pablo Norte">San Pablo Norte</option>
+                        <option value="San Pablo Sur">San Pablo Sur</option>
+                        <option value="Santisima Cruz">Santisima Cruz</option>
+                        <option value="Santo Angel Central">Santo Angel Central</option>
+                        <option value="Santo Angel Norte">Santo Angel Norte</option>
+                        <option value="Santo Angel Sur">Santo Angel Sur</option>
+                      </select>
+                      <button type="button" onclick="addBarangayDropdown()" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm" id="addBarangayBtn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Select up to 5 barangays. Click the + button to add more locations.</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level *</label>
+                  <select name="priority" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Priority</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Funding Source *</label>
+                  <select name="fundingSource" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Funding Source</option>
+                    <option value="local_fund">Local Fund</option>
+                    <option value="national_fund">National Fund</option>
+                    <option value="foreign_fund">Foreign Fund</option>
+                    <option value="private_fund">Private Fund</option>
+                    <option value="donor_fund">Donor Fund</option>
+                    <option value="mixed_fund">Mixed Funding</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Created Date</label>
+                  <input type="date" name="createdDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" id="createdDateField" readonly>
+                  <p class="text-xs text-gray-500 mt-1">Automatically set to current date</p>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Description *</label>
+                  <textarea name="description" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Detailed description of the project/program..."></textarea>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Expected Outputs/Results</label>
+                  <textarea name="expectedOutputs" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="What are the expected outputs and results of this project?"></textarea>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Target Beneficiaries</label>
+                  <input type="text" name="targetBeneficiaries" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 500 households, 2,000 students">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">External Partner (EIU) *</label>
+                  <select name="hasExternalPartner" id="hasExternalPartner" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Option</option>
+                    <option value="true">Yes - Has External Partner</option>
+                    <option value="false">No - Internal Implementation</option>
+                  </select>
+                </div>
+                
+                <!-- EIU Personnel Account ID Field (Conditional) -->
+                <div id="eiuAccountField" class="hidden">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">EIU Personnel Account ID *</label>
+                  <div class="relative">
+                    <input type="text" name="eiuPersonnelId" id="eiuPersonnelId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Enter EIU Personnel unique user ID">
+                    <div id="eiuValidationMessage" class="mt-1 text-sm hidden"></div>
+                    <button type="button" onclick="validateEIUAccount()" class="absolute right-2 top-2 px-3 py-1 bg-[#92751F] text-white text-xs rounded hover:bg-[#7A6219] transition-colors">
+                      Verify
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">This ID determines which EIU Personnel account the project will appear under</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timeline Division Configuration -->
+            <div class="bg-blue-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">📅 Timeline Division Configuration</h3>
+              <p class="text-sm text-gray-600 mb-4">Configure timeline monitoring with milestones and update frequency requirements</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Start Date *</label>
+                  <input type="date" name="startDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project End Date *</label>
+                  <input type="date" name="endDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Timeline Update Frequency *</label>
+                  <select name="timelineUpdateFrequency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Timeline Milestones</label>
+                  <textarea name="timelineMilestones" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Key milestones and phases of the project (e.g., Phase 1: Site preparation, Phase 2: Installation, Phase 3: Testing)"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Budget/Disbursement Division Configuration -->
+            <div class="bg-green-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">💰 Budget/Disbursement Division Configuration</h3>
+              <p class="text-sm text-gray-600 mb-4">Configure budget monitoring with allocation breakdown and utilization tracking</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Total Budget Allocation (₱) *</label>
+                  <input type="number" name="totalBudget" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 5000000">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Budget Update Frequency *</label>
+                  <select name="budgetUpdateFrequency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Budget Breakdown</label>
+                  <textarea name="budgetBreakdown" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Detailed breakdown of budget allocation (e.g., Materials: 60%, Labor: 25%, Equipment: 15%)"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Physical Update Division Configuration -->
+            <div class="bg-purple-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">📸 Physical Update Division Configuration</h3>
+              <p class="text-sm text-gray-600 mb-4">Configure physical progress monitoring with documentation requirements</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Physical Update Frequency *</label>
+                  <select name="physicalUpdateFrequency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                    <option value="">Select Frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Required Documentation Types</label>
+                  <input type="text" name="requiredDocumentation" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., photos, videos, documents, reports">
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Physical Progress Requirements</label>
+                  <textarea name="physicalProgressRequirements" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Specific requirements for physical progress documentation and media uploads..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestone Configuration -->
+            <div class="bg-orange-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">🎯 Project Milestones Configuration</h3>
+              <p class="text-sm text-gray-600 mb-4">Define project milestones with weights, budgets, and timelines. Total weight must equal 100%.</p>
+              
+              <div id="milestonesContainer" class="space-y-4">
+                <!-- Milestone template will be added here -->
+              </div>
+              
+              <div class="flex items-center justify-between mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                <div class="flex items-center gap-4">
+                  <span class="text-sm font-medium text-gray-700">Total Weight:</span>
+                  <span id="totalWeight" class="text-lg font-bold text-gray-800">0%</span>
+                  <span class="text-sm font-medium text-gray-700">Total Budget:</span>
+                  <span id="totalMilestoneBudget" class="text-lg font-bold text-gray-800">₱0.00</span>
+                </div>
+                <button type="button" onclick="addMilestone()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Add Milestone
+                </button>
+              </div>
+              
+              <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <h4 class="text-sm font-semibold text-blue-800 mb-2">📋 Milestone Guidelines:</h4>
+                <ul class="text-xs text-blue-700 space-y-1">
+                  <li>• <strong>Weight:</strong> Percentage contribution to overall project progress (must total 100%)</li>
+                  <li>• <strong>Planned Budget:</strong> Budget allocation for this milestone</li>
+                  <li>• <strong>Timeline:</strong> Planned start and end dates for the milestone</li>
+                  <li>• <strong>Description:</strong> Detailed description of what this milestone accomplishes</li>
+                  <li>• <strong>Physical Requirements:</strong> Photos, videos, and documentation required for this milestone</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Additional Configuration -->
+            <div class="bg-yellow-50 rounded-lg p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">⚙️ Additional Configuration</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Project Manager/Coordinator</label>
+                  <input type="text" name="projectManager" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Name of project manager">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+                  <input type="tel" name="contactNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Contact number">
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Special Requirements/Notes</label>
+                  <textarea name="specialRequirements" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Any special requirements or additional notes..."></textarea>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+              <button type="button" onclick="closeCreateProjectModal()" class="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="px-6 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors">
+                Create Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </IUImplementingOfficeLayout>
+</Layout>
+
+<script>
+  // Project service for API calls
+  const projectService = {
+    async createProject(projectData) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return { success: false, error: 'Authentication token not found' };
+        }
+        
+        const response = await fetch('http://localhost:3000/api/projects', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(projectData)
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Error creating project:', error);
+        return { success: false, error: 'Network error' };
+      }
+    },
+
+    async getProject(projectId) {
+      try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          console.error('No authentication token found');
+          return { success: false, error: 'Authentication token not found' };
+        }
+        
+        console.log('Fetching project with ID:', projectId);
+        console.log('Using token:', token.substring(0, 20) + '...');
+        
+        const response = await fetch(`http://localhost:3000/api/projects/${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('API error:', errorData);
+          return { success: false, error: errorData.error || `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
+        const data = await response.json();
+        console.log('Project data received:', data);
+        return data;
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        return { success: false, error: 'Failed to fetch project: ' + error.message };
+      }
+    },
+
+    async updateProject(projectId, projectData) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return { success: false, error: 'Authentication token not found' };
+        }
+        
+        const response = await fetch(`http://localhost:3000/api/projects/${projectId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(projectData)
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Error updating project:', error);
+        return { success: false, error: 'Network error' };
+      }
+    },
+
+    async deleteProject(projectId) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return { success: false, error: 'Authentication token not found' };
+        }
+        
+        const response = await fetch(`http://localhost:3000/api/projects/${projectId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        return { success: false, error: 'Network error' };
+      }
+    }
+  };
+
+  // Global variables
+  let currentEditingProject = null;
+  let milestoneCounter = 0;
+
+  // Modal functions
+  function openCreateProjectModal() {
+    document.getElementById('createProjectModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Set implementing office name
+    const implementingOfficeField = document.getElementById('implementingOfficeField');
+    if (implementingOfficeField) {
+      implementingOfficeField.value = 'Municipal Disaster And Risk Reduction Management Office';
+    }
+    
+    // Generate project code
+    const projectCodeField = document.getElementById('projectCodeField');
+    if (projectCodeField) {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      projectCodeField.value = `PRJ-${year}-${random}`;
+    }
+    
+    // Set current date automatically
+    const createdDateField = document.getElementById('createdDateField');
+    if (createdDateField) {
+      const today = new Date().toISOString().split('T')[0];
+      createdDateField.value = today;
+    }
+    
+    // Add initial milestone
+    addMilestone();
+    
+    // Set up EIU partner field visibility
+    setupEIUPartnerField();
+  }
+
+  function closeCreateProjectModal() {
+    document.getElementById('createProjectModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    
+    // Reset form
+    const form = document.getElementById('createProjectForm');
+    if (form) {
+      form.reset();
+    }
+    
+    // Clear milestones
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    if (milestonesContainer) {
+      milestonesContainer.innerHTML = '';
+    }
+    
+    // Reset counter
+    milestoneCounter = 0;
+    
+    // Hide EIU field
+    const eiuField = document.getElementById('eiuAccountField');
+    if (eiuField) {
+      eiuField.classList.add('hidden');
+    }
+  }
+
+  // Set up EIU partner field visibility
+  function setupEIUPartnerField() {
+    const hasExternalPartnerSelect = document.getElementById('hasExternalPartner');
+    const eiuField = document.getElementById('eiuAccountField');
+    
+    if (hasExternalPartnerSelect && eiuField) {
+      hasExternalPartnerSelect.addEventListener('change', function() {
+        if (this.value === 'true') {
+          eiuField.classList.remove('hidden');
+          document.getElementById('eiuPersonnelId').required = true;
+        } else {
+          eiuField.classList.add('hidden');
+          document.getElementById('eiuPersonnelId').required = false;
+          document.getElementById('eiuPersonnelId').value = '';
+        }
+      });
+    }
+  }
+
+  // Validate EIU account
+  async function validateEIUAccount() {
+    const eiuPersonnelId = document.getElementById('eiuPersonnelId').value;
+    const validationMessage = document.getElementById('eiuValidationMessage');
+    
+    if (!eiuPersonnelId) {
+      showValidationMessage('Please enter an EIU Personnel Account ID', 'error');
+      return;
+    }
+    
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        showValidationMessage('❌ Authentication token not found. Please log in again.', 'error');
+        return;
+      }
+      
+      const response = await fetch(`http://localhost:3000/api/users/validate-eiu/${eiuPersonnelId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        showValidationMessage(`✅ Valid EIU account: ${data.user.name}`, 'success');
+      } else {
+        showValidationMessage(`❌ ${data.error || 'Invalid EIU Personnel Account ID'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+      showValidationMessage('❌ Error validating account. Please try again.', 'error');
+    }
+  }
+
+  function showValidationMessage(message, type) {
+    const validationMessage = document.getElementById('eiuValidationMessage');
+    if (validationMessage) {
+      validationMessage.textContent = message;
+      validationMessage.className = `mt-1 text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+      validationMessage.classList.remove('hidden');
+    }
+  }
+
+  function openEditProjectModal() {
+    console.log('Opening edit project modal...');
+    const modal = document.getElementById('editProjectModal');
+    if (!modal) {
+      console.error('Edit project modal not found');
+      return;
+    }
+    console.log('Modal found, removing hidden class...');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    console.log('Modal should now be visible');
+  }
+
+  function closeEditProjectModal() {
+    document.getElementById('editProjectModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    
+    // Reset form
+    const form = document.getElementById('editProjectForm');
+    if (form) {
+      form.reset();
+    }
+    
+    // Clear milestones
+    const milestonesContainer = document.getElementById('editMilestonesContainer');
+    if (milestonesContainer) {
+      milestonesContainer.innerHTML = '';
+    }
+    
+    // Reset counter
+    milestoneCounter = 0;
+    currentEditingProject = null;
+  }
+
+  function openProjectDetailsModal() {
+    console.log('Opening project details modal...');
+    const modal = document.getElementById('projectDetailsModal');
+    if (modal) {
+      console.log('Modal element found, removing hidden class');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      console.log('Modal should now be visible');
+    } else {
+      console.error('Project details modal element not found!');
+    }
+  }
+
+  function testModal() {
+    console.log('Testing modal...');
+    const modal = document.getElementById('projectDetailsModal');
+    if (modal) {
+      console.log('Modal found, current classes:', modal.className);
+      modal.classList.remove('hidden');
+      console.log('Hidden class removed, new classes:', modal.className);
+    } else {
+      console.error('Modal not found!');
+    }
+  }
+
+  function closeProjectDetailsModal() {
+    document.getElementById('projectDetailsModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  // Edit project function
+  async function editProject(projectId) {
+    console.log('editProject function called with ID:', projectId);
+    try {
+      const response = await projectService.getProject(projectId);
+      console.log('Project service response:', response);
+      
+      if (response.success) {
+        console.log('Project fetched successfully, setting currentEditingProject');
+        currentEditingProject = response.project;
+        console.log('Populating edit form...');
+        populateEditForm(response.project);
+        console.log('Opening edit modal...');
+        openEditProjectModal();
+      } else {
+        console.error('Error fetching project:', response.error);
+        alert('Error fetching project: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error editing project:', error);
+      alert('Error editing project. Please try again.');
+    }
+  }
+
+  // View project details function
+  async function viewProjectDetails(projectId) {
+    try {
+      console.log('Viewing project details for ID:', projectId);
+      const response = await projectService.getProject(projectId);
+      
+      console.log('Project service response:', response);
+      
+      if (response.success) {
+        console.log('Opening project details modal...');
+        populateProjectDetails(response);
+        openProjectDetailsModal();
+      } else {
+        console.error('Project service error:', response.error);
+        alert('Error fetching project details: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error viewing project details:', error);
+      alert('Error viewing project details: ' + error.message);
+    }
+  }
+
+  // Populate edit form with project data
+  function populateEditForm(project) {
+    console.log('Populating edit form with project:', project);
+    const form = document.getElementById('editProjectForm');
+    if (!form) {
+      console.error('Edit form not found');
+      return;
+    }
+
+    // Populate basic fields
+    try {
+      const fields = [
+        { selector: 'input[name="projectCode"]', value: project.projectCode },
+        { selector: 'input[name="name"]', value: project.name },
+        { selector: 'input[name="implementingOfficeName"]', value: project.implementingOfficeName },
+        { selector: 'select[name="category"]', value: project.category },
+        { selector: 'select[name="priority"]', value: project.priority },
+        { selector: 'select[name="fundingSource"]', value: project.fundingSource },
+        { selector: 'input[name="createdDate"]', value: project.createdDate },
+        { selector: 'textarea[name="description"]', value: project.description },
+        { selector: 'textarea[name="expectedOutputs"]', value: project.expectedOutputs },
+        { selector: 'textarea[name="targetBeneficiaries"]', value: project.targetBeneficiaries },
+        { selector: 'input[name="eiuPersonnelId"]', value: project.eiuPersonnelId },
+        { selector: 'input[name="startDate"]', value: project.startDate },
+        { selector: 'input[name="endDate"]', value: project.endDate },
+        { selector: 'select[name="timelineUpdateFrequency"]', value: project.timelineUpdateFrequency },
+        { selector: 'textarea[name="timelineMilestones"]', value: project.timelineMilestones },
+        { selector: 'input[name="totalBudget"]', value: project.totalBudget },
+        { selector: 'select[name="budgetUpdateFrequency"]', value: project.budgetUpdateFrequency },
+        { selector: 'textarea[name="budgetBreakdown"]', value: project.budgetBreakdown },
+        { selector: 'select[name="physicalUpdateFrequency"]', value: project.physicalUpdateFrequency },
+        { selector: 'textarea[name="requiredDocumentation"]', value: project.requiredDocumentation },
+        { selector: 'textarea[name="physicalProgressRequirements"]', value: project.physicalProgressRequirements },
+        { selector: 'input[name="projectManager"]', value: project.projectManager },
+        { selector: 'input[name="contactNumber"]', value: project.contactNumber },
+        { selector: 'textarea[name="specialRequirements"]', value: project.specialRequirements }
+      ];
+
+      fields.forEach(field => {
+        const element = form.querySelector(field.selector);
+        if (element) {
+          if (field.selector.includes('checkbox')) {
+            element.checked = field.value || false;
+          } else {
+            element.value = field.value || '';
+          }
+        } else {
+          console.warn(`Field not found: ${field.selector}`);
+        }
+      });
+
+      // Handle checkbox separately
+      const hasExternalPartnerCheckbox = form.querySelector('input[name="hasExternalPartner"]');
+      if (hasExternalPartnerCheckbox) {
+        hasExternalPartnerCheckbox.checked = project.hasExternalPartner || false;
+      }
+    } catch (error) {
+      console.error('Error populating form fields:', error);
+    }
+
+    // Populate location (barangays)
+    const locationContainer = document.getElementById('editBarangayContainer');
+    if (locationContainer && project.location) {
+      locationContainer.innerHTML = '';
+      // Handle location as comma-separated string
+      const locations = project.location.split(',').map(loc => loc.trim()).filter(loc => loc);
+      
+      if (locations.length === 0) {
+        // If no locations, add one empty dropdown
+        const locationDiv = document.createElement('div');
+        locationDiv.className = 'flex gap-2';
+        locationDiv.innerHTML = `
+          <select name="location[]" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent barangay-select">
+            <option value="">Select Barangay</option>
+            <option value="Various Barangay">Various Barangay</option>
+            <option value="Alipit">Alipit</option>
+            <option value="Bagumbayan">Bagumbayan</option>
+            <option value="Bubukal">Bubukal</option>
+            <option value="Calios">Calios</option>
+            <option value="Duhat">Duhat</option>
+            <option value="Gatid">Gatid</option>
+            <option value="Jasaan">Jasaan</option>
+            <option value="Labuin">Labuin</option>
+            <option value="Malinao">Malinao</option>
+            <option value="Oogong">Oogong</option>
+            <option value="Pagsawitan">Pagsawitan</option>
+            <option value="Palasan">Palasan</option>
+            <option value="Patimbao">Patimbao</option>
+            <option value="Poblacion I">Poblacion I</option>
+            <option value="Poblacion II">Poblacion II</option>
+            <option value="Poblacion III">Poblacion III</option>
+            <option value="Poblacion IV">Poblacion IV</option>
+            <option value="Poblacion V">Poblacion V</option>
+            <option value="San Jose">San Jose</option>
+            <option value="San Juan">San Juan</option>
+            <option value="San Pablo Norte">San Pablo Norte</option>
+            <option value="San Pablo Sur">San Pablo Sur</option>
+            <option value="Santisima Cruz">Santisima Cruz</option>
+            <option value="Santo Angel Central">Santo Angel Central</option>
+            <option value="Santo Angel Norte">Santo Angel Norte</option>
+            <option value="Santo Angel Sur">Santo Angel Sur</option>
+          </select>
+          <button type="button" onclick="addEditBarangayDropdown()" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </button>
+        `;
+        locationContainer.appendChild(locationDiv);
+      } else {
+        locations.forEach((location, index) => {
+          const locationDiv = document.createElement('div');
+          locationDiv.className = 'flex gap-2';
+          locationDiv.innerHTML = `
+            <select name="location[]" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent barangay-select">
+              <option value="">Select Barangay</option>
+              <option value="Various Barangay" ${location === 'Various Barangay' ? 'selected' : ''}>Various Barangay</option>
+              <option value="Alipit" ${location === 'Alipit' ? 'selected' : ''}>Alipit</option>
+              <option value="Bagumbayan" ${location === 'Bagumbayan' ? 'selected' : ''}>Bagumbayan</option>
+              <option value="Bubukal" ${location === 'Bubukal' ? 'selected' : ''}>Bubukal</option>
+              <option value="Calios" ${location === 'Calios' ? 'selected' : ''}>Calios</option>
+              <option value="Duhat" ${location === 'Duhat' ? 'selected' : ''}>Duhat</option>
+              <option value="Gatid" ${location === 'Gatid' ? 'selected' : ''}>Gatid</option>
+              <option value="Jasaan" ${location === 'Jasaan' ? 'selected' : ''}>Jasaan</option>
+              <option value="Labuin" ${location === 'Labuin' ? 'selected' : ''}>Labuin</option>
+              <option value="Malinao" ${location === 'Malinao' ? 'selected' : ''}>Malinao</option>
+              <option value="Oogong" ${location === 'Oogong' ? 'selected' : ''}>Oogong</option>
+              <option value="Pagsawitan" ${location === 'Pagsawitan' ? 'selected' : ''}>Pagsawitan</option>
+              <option value="Palasan" ${location === 'Palasan' ? 'selected' : ''}>Palasan</option>
+              <option value="Patimbao" ${location === 'Patimbao' ? 'selected' : ''}>Patimbao</option>
+              <option value="Poblacion I" ${location === 'Poblacion I' ? 'selected' : ''}>Poblacion I</option>
+              <option value="Poblacion II" ${location === 'Poblacion II' ? 'selected' : ''}>Poblacion II</option>
+              <option value="Poblacion III" ${location === 'Poblacion III' ? 'selected' : ''}>Poblacion III</option>
+              <option value="Poblacion IV" ${location === 'Poblacion IV' ? 'selected' : ''}>Poblacion IV</option>
+              <option value="Poblacion V" ${location === 'Poblacion V' ? 'selected' : ''}>Poblacion V</option>
+              <option value="San Jose" ${location === 'San Jose' ? 'selected' : ''}>San Jose</option>
+              <option value="San Juan" ${location === 'San Juan' ? 'selected' : ''}>San Juan</option>
+              <option value="San Pablo Norte" ${location === 'San Pablo Norte' ? 'selected' : ''}>San Pablo Norte</option>
+              <option value="San Pablo Sur" ${location === 'San Pablo Sur' ? 'selected' : ''}>San Pablo Sur</option>
+              <option value="Santisima Cruz" ${location === 'Santisima Cruz' ? 'selected' : ''}>Santisima Cruz</option>
+              <option value="Santo Angel Central" ${location === 'Santo Angel Central' ? 'selected' : ''}>Santo Angel Central</option>
+              <option value="Santo Angel Norte" ${location === 'Santo Angel Norte' ? 'selected' : ''}>Santo Angel Norte</option>
+              <option value="Santo Angel Sur" ${location === 'Santo Angel Sur' ? 'selected' : ''}>Santo Angel Sur</option>
+            </select>
+            ${index === 0 ? `
+              <button type="button" onclick="addEditBarangayDropdown()" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+              </button>
+            ` : `
+              <button type="button" onclick="removeEditBarangayDropdown(this)" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            `}
+          `;
+          locationContainer.appendChild(locationDiv);
+        });
+      }
+    }
+
+    // Populate milestones
+    const milestonesContainer = document.getElementById('editMilestonesContainer');
+    if (milestonesContainer && project.milestones && project.milestones.length > 0) {
+      milestonesContainer.innerHTML = '';
+      project.milestones.forEach((milestone, index) => {
+        addEditMilestone(milestone);
+      });
+    } else {
+      // Add at least one empty milestone
+      addEditMilestone();
+    }
+  }
+
+  // Populate project details modal
+  function populateProjectDetails(project) {
+    console.log('Populating project details with:', project);
+    
+    // Handle nested project structure from API response
+    const actualProject = project.project || project;
+    const progress = project.progress || {};
+    
+    // Basic project info
+    document.getElementById('detailProjectName').textContent = actualProject.name || '-';
+    document.getElementById('detailProjectCode').textContent = actualProject.projectCode || '-';
+    document.getElementById('detailImplementingOffice').textContent = actualProject.implementingOfficeName || actualProject.implementingOffice || '-';
+    document.getElementById('detailLocation').textContent = Array.isArray(actualProject.location) ? actualProject.location.join(', ') : actualProject.location || '-';
+    
+    // Status based on Secretariat approval
+    const isApprovedBySecretariat = actualProject.approvedBySecretariat === true;
+    const statusText = isApprovedBySecretariat ? 'SECRETARIAT APPROVED' : 'DRAFT';
+    const statusElement = document.getElementById('detailStatus');
+    statusElement.textContent = statusText;
+    statusElement.className = `inline-block px-2 py-1 text-xs font-medium rounded-full ${
+      isApprovedBySecretariat ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+    }`;
+    
+    document.getElementById('detailCreatedDate').textContent = actualProject.createdDate || '-';
+    
+    // Budget info - calculate from actual project data
+    const totalBudget = actualProject.totalBudget || 0;
+    const amountSpent = actualProject.amountSpent || 0;
+    const remainingBudget = totalBudget - amountSpent;
+    const budgetUtilization = totalBudget > 0 ? (amountSpent / totalBudget) * 100 : 0;
+    
+    document.getElementById('detailTotalBudget').textContent = `₱${totalBudget.toLocaleString()}`;
+    document.getElementById('detailAmountSpent').textContent = `₱${amountSpent.toLocaleString()}`;
+    document.getElementById('detailRemainingBudget').textContent = `₱${remainingBudget.toLocaleString()}`;
+    document.getElementById('detailBudgetUtilization').textContent = `${budgetUtilization.toFixed(2)}% utilized`;
+    document.getElementById('detailFundingSource').textContent = actualProject.fundingSource || '-';
+    
+    // Progress info - use calculated progress from ProgressCalculationService
+    document.getElementById('detailOverallProgress').textContent = `${progress.overall || progress.overallProgress || actualProject.automatedProgress || 0}%`;
+    document.getElementById('detailTimelineProgress').textContent = `${progress.timeline || progress.timelineProgress || actualProject.timelineProgress || 0}%`;
+    document.getElementById('detailBudgetProgress').textContent = `${progress.budget || progress.budgetProgress || actualProject.budgetProgress || 0}%`;
+    document.getElementById('detailPhysicalProgress').textContent = `${progress.physical || progress.physicalProgress || actualProject.physicalProgress || 0}%`;
+    
+    // Milestones
+    const milestonesContainer = document.getElementById('detailMilestonesContainer');
+    if (milestonesContainer) {
+      const milestones = project.milestones || [];
+      if (milestones.length > 0) {
+        milestonesContainer.innerHTML = milestones.map(milestone => `
+          <div class="border border-gray-200 rounded-lg p-4 mb-3">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-semibold text-gray-800">${milestone.title}</h4>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
+                milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                'bg-gray-100 text-gray-700'
+              }">${milestone.status || 'pending'}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-600">Weight:</span>
+                <span class="font-medium">${milestone.weight}%</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Budget:</span>
+                <span class="font-medium">₱${(milestone.plannedBudget || 0).toLocaleString()}</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Start Date:</span>
+                <span class="font-medium">${milestone.plannedStartDate || '-'}</span>
+              </div>
+              <div>
+                <span class="text-gray-600">End Date:</span>
+                <span class="font-medium">${milestone.plannedEndDate || '-'}</span>
+              </div>
+            </div>
+            ${milestone.description ? `
+              <div class="mt-2">
+                <span class="text-gray-600">Description:</span>
+                <p class="text-sm mt-1">${milestone.description}</p>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } else {
+        milestonesContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No milestones defined for this project.</p>';
+      }
+    }
+  }
+
+  // Add milestone to edit form
+  function addEditMilestone(existingMilestone = null) {
+    const container = document.getElementById('editMilestonesContainer');
+    if (!container) return;
+
+    milestoneCounter++;
+    const milestoneHtml = `
+      <div id="edit-milestone-${milestoneCounter}" class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="font-semibold text-gray-800">Milestone ${milestoneCounter}</h4>
+          <button type="button" onclick="removeEditMilestone(${milestoneCounter})" class="text-red-500 hover:text-red-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Milestone Name *</label>
+            <input type="text" name="editMilestones[${milestoneCounter}][title]" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., Site Preparation" value="${existingMilestone ? existingMilestone.title : ''}">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Weight (%) *</label>
+            <input type="number" name="editMilestones[${milestoneCounter}][weight]" required min="0" max="100" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 25.00" onchange="calculateEditTotals()" value="${existingMilestone ? existingMilestone.weight : ''}">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Planned Budget (₱) *</label>
+            <input type="number" name="editMilestones[${milestoneCounter}][plannedBudget]" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 1250000" onchange="calculateEditTotals()" value="${existingMilestone ? existingMilestone.plannedBudget : ''}">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Planned Start Date</label>
+            <input type="date" name="editMilestones[${milestoneCounter}][plannedStartDate]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" value="${existingMilestone ? existingMilestone.plannedStartDate : ''}">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Planned End Date</label>
+            <input type="date" name="editMilestones[${milestoneCounter}][plannedEndDate]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" value="${existingMilestone ? existingMilestone.plannedEndDate : ''}">
+          </div>
+          
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea name="editMilestones[${milestoneCounter}][description]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Detailed description of what this milestone accomplishes...">${existingMilestone ? existingMilestone.description : ''}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', milestoneHtml);
+    calculateEditTotals();
+  }
+
+  function removeEditMilestone(id) {
+    const milestone = document.getElementById(`edit-milestone-${id}`);
+    if (milestone) {
+      milestone.remove();
+      calculateEditTotals();
+    }
+  }
+
+  function calculateEditTotals() {
+    const weightInputs = document.querySelectorAll('input[name*="editMilestones"][name*="[weight]"]');
+    const budgetInputs = document.querySelectorAll('input[name*="editMilestones"][name*="[plannedBudget]"]');
+    
+    let totalWeight = 0;
+    let totalBudget = 0;
+    
+    weightInputs.forEach(input => {
+      totalWeight += parseFloat(input.value) || 0;
+    });
+    
+    budgetInputs.forEach(input => {
+      totalBudget += parseFloat(input.value) || 0;
+    });
+    
+    const totalWeightElement = document.getElementById('editTotalWeight');
+    const totalBudgetElement = document.getElementById('editTotalMilestoneBudget');
+    
+    if (totalWeightElement) {
+      totalWeightElement.textContent = `${totalWeight.toFixed(2)}%`;
+      totalWeightElement.className = totalWeight === 100 ? 'text-lg font-bold text-green-600' : 'text-lg font-bold text-red-600';
+    }
+    
+    if (totalBudgetElement) {
+      totalBudgetElement.textContent = `₱${totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  }
+
+  // Get edit milestones data
+  function getEditMilestonesData() {
+    const milestones = [];
+    const milestoneElements = document.querySelectorAll('[id^="edit-milestone-"]');
+    
+    milestoneElements.forEach(element => {
+      const id = element.id.replace('edit-milestone-', '');
+      const title = element.querySelector(`input[name="editMilestones[${id}][title]"]`)?.value;
+      const weight = element.querySelector(`input[name="editMilestones[${id}][weight]"]`)?.value;
+      const plannedBudget = element.querySelector(`input[name="editMilestones[${id}][plannedBudget]"]`)?.value;
+      const plannedStartDate = element.querySelector(`input[name="editMilestones[${id}][plannedStartDate]"]`)?.value;
+      const plannedEndDate = element.querySelector(`input[name="editMilestones[${id}][plannedEndDate]"]`)?.value;
+      const description = element.querySelector(`textarea[name="editMilestones[${id}][description]"]`)?.value;
+      
+      if (title && weight && plannedBudget) {
+        milestones.push({
+          title,
+          weight: parseFloat(weight),
+          plannedBudget: parseFloat(plannedBudget),
+          plannedStartDate: plannedStartDate || null,
+          plannedEndDate: plannedEndDate || null,
+          description: description || ''
+        });
+      }
+    });
+    
+    return milestones;
+  }
+
+  // Handle form submissions
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle create form submission
+    const createForm = document.getElementById('createProjectForm');
+    if (createForm) {
+      createForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        try {
+          const formData = new FormData(createForm);
+          
+          // Get milestones data
+          const milestones = getMilestonesData();
+          
+          // Validate milestones
+          if (milestones.length === 0) {
+            alert('Please add at least one milestone to the project.');
+            return;
+          }
+          
+          const totalWeight = milestones.reduce((sum, m) => sum + m.weight, 0);
+          if (Math.abs(totalWeight - 100) > 0.01) {
+            alert(`Total milestone weight must equal 100%. Current total: ${totalWeight.toFixed(2)}%`);
+            return;
+          }
+          
+          // Validate EIU Personnel ID if external partner is selected
+          const hasExternalPartner = formData.get('hasExternalPartner') === 'true';
+          const eiuPersonnelId = formData.get('eiuPersonnelId');
+          
+          if (hasExternalPartner && !eiuPersonnelId) {
+            alert('Please enter the EIU Personnel Account ID when external partner is selected.');
+            return;
+          }
+          
+          const projectData = {
+            projectCode: formData.get('projectCode'),
+            name: formData.get('name'),
+            implementingOfficeName: formData.get('implementingOfficeName'),
+            category: formData.get('category'),
+            location: getSelectedBarangays(),
+            priority: formData.get('priority'),
+            fundingSource: formData.get('fundingSource'),
+            createdDate: formData.get('createdDate'),
+            description: formData.get('description'),
+            expectedOutputs: formData.get('expectedOutputs'),
+            targetBeneficiaries: formData.get('targetBeneficiaries'),
+            hasExternalPartner: hasExternalPartner,
+            eiuPersonnelId: hasExternalPartner ? eiuPersonnelId : null,
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            timelineUpdateFrequency: formData.get('timelineUpdateFrequency'),
+            timelineMilestones: formData.get('timelineMilestones'),
+            totalBudget: parseFloat(formData.get('totalBudget')) || 0,
+            budgetUpdateFrequency: formData.get('budgetUpdateFrequency'),
+            budgetBreakdown: formData.get('budgetBreakdown'),
+            physicalUpdateFrequency: formData.get('physicalUpdateFrequency'),
+            requiredDocumentation: formData.get('requiredDocumentation'),
+            physicalProgressRequirements: formData.get('physicalProgressRequirements'),
+            projectManager: formData.get('projectManager'),
+            contactNumber: formData.get('contactNumber'),
+            specialRequirements: formData.get('specialRequirements'),
+            milestones: milestones
+          };
+
+          // Create project
+          const response = await projectService.createProject(projectData);
+          
+          if (response.success) {
+            closeCreateProjectModal();
+            loadProjects();
+            alert('Project created successfully! The project has been automatically forwarded to the Secretariat and all relevant users for review and approval.');
+          } else {
+            alert('Error creating project: ' + response.error);
+          }
+        } catch (error) {
+          console.error('Error creating project:', error);
+          alert('Error creating project. Please try again.');
+        }
+      });
+    }
+
+    // Handle edit form submission
+    const editForm = document.getElementById('editProjectForm');
+    if (editForm) {
+      editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!currentEditingProject) {
+          alert('No project selected for editing.');
+          return;
+        }
+        
+        try {
+          const formData = new FormData(editForm);
+          
+          // Get milestones data
+          const milestones = getEditMilestonesData();
+          
+          // Validate milestones
+          if (milestones.length === 0) {
+            alert('Please add at least one milestone to the project.');
+            return;
+          }
+          
+          const totalWeight = milestones.reduce((sum, m) => sum + m.weight, 0);
+          if (Math.abs(totalWeight - 100) > 0.01) {
+            alert(`Total milestone weight must equal 100%. Current total: ${totalWeight.toFixed(2)}%`);
+            return;
+          }
+          
+          const projectData = {
+            projectCode: formData.get('projectCode'),
+            name: formData.get('name'),
+            implementingOfficeName: formData.get('implementingOfficeName'),
+            category: formData.get('category'),
+            location: getSelectedEditBarangays(),
+            priority: formData.get('priority'),
+            fundingSource: formData.get('fundingSource'),
+            createdDate: formData.get('createdDate'),
+            description: formData.get('description'),
+            expectedOutputs: formData.get('expectedOutputs'),
+            targetBeneficiaries: formData.get('targetBeneficiaries'),
+            hasExternalPartner: formData.get('hasExternalPartner') === 'true',
+            eiuPersonnelId: formData.get('eiuPersonnelId'),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            timelineUpdateFrequency: formData.get('timelineUpdateFrequency'),
+            timelineMilestones: formData.get('timelineMilestones'),
+            totalBudget: parseFloat(formData.get('totalBudget')) || 0,
+            budgetUpdateFrequency: formData.get('budgetUpdateFrequency'),
+            budgetBreakdown: formData.get('budgetBreakdown'),
+            physicalUpdateFrequency: formData.get('physicalUpdateFrequency'),
+            requiredDocumentation: formData.get('requiredDocumentation'),
+            physicalProgressRequirements: formData.get('physicalProgressRequirements'),
+            projectManager: formData.get('projectManager'),
+            contactNumber: formData.get('contactNumber'),
+            specialRequirements: formData.get('specialRequirements'),
+            milestones: milestones
+          };
+
+          // Update project
+          const response = await projectService.updateProject(currentEditingProject.id, projectData);
+          
+          if (response.success) {
+            closeEditProjectModal();
+            loadProjects();
+            alert('Project updated successfully!');
+          } else {
+            alert('Error updating project: ' + response.error);
+          }
+        } catch (error) {
+          console.error('Error updating project:', error);
+          alert('Error updating project. Please try again.');
+        }
+      });
+    }
+  });
+
+  // Helper functions
+  function getSelectedBarangays() {
+    const barangaySelects = document.querySelectorAll('.barangay-select');
+    const selectedBarangays = [];
+    barangaySelects.forEach(select => {
+      if (select.value) {
+        selectedBarangays.push(select.value);
+      }
+    });
+    return selectedBarangays.join(', ');
+  }
+
+  function getSelectedEditBarangays() {
+    const barangaySelects = document.querySelectorAll('#editBarangayContainer .barangay-select');
+    const selectedBarangays = [];
+    barangaySelects.forEach(select => {
+      if (select.value) {
+        selectedBarangays.push(select.value);
+      }
+    });
+    return selectedBarangays.join(', ');
+  }
+
+  function addBarangayDropdown() {
+    const container = document.getElementById('barangayContainer');
+    const newDiv = document.createElement('div');
+    newDiv.className = 'flex gap-2';
+    newDiv.innerHTML = `
+      <select name="location[]" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent barangay-select">
+        <option value="">Select Barangay</option>
+        <option value="Various Barangay">Various Barangay</option>
+        <option value="Alipit">Alipit</option>
+        <option value="Bagumbayan">Bagumbayan</option>
+        <option value="Bubukal">Bubukal</option>
+        <option value="Calios">Calios</option>
+        <option value="Duhat">Duhat</option>
+        <option value="Gatid">Gatid</option>
+        <option value="Jasaan">Jasaan</option>
+        <option value="Labuin">Labuin</option>
+        <option value="Malinao">Malinao</option>
+        <option value="Oogong">Oogong</option>
+        <option value="Pagsawitan">Pagsawitan</option>
+        <option value="Palasan">Palasan</option>
+        <option value="Patimbao">Patimbao</option>
+        <option value="Poblacion I">Poblacion I</option>
+        <option value="Poblacion II">Poblacion II</option>
+        <option value="Poblacion III">Poblacion III</option>
+        <option value="Poblacion IV">Poblacion IV</option>
+        <option value="Poblacion V">Poblacion V</option>
+        <option value="San Jose">San Jose</option>
+        <option value="San Juan">San Juan</option>
+        <option value="San Pablo Norte">San Pablo Norte</option>
+        <option value="San Pablo Sur">San Pablo Sur</option>
+        <option value="Santisima Cruz">Santisima Cruz</option>
+        <option value="Santo Angel Central">Santo Angel Central</option>
+        <option value="Santo Angel Norte">Santo Angel Norte</option>
+        <option value="Santo Angel Sur">Santo Angel Sur</option>
+      </select>
+      <button type="button" onclick="removeBarangayDropdown(this)" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    `;
+    container.appendChild(newDiv);
+  }
+
+  function removeBarangayDropdown(button) {
+    button.parentElement.remove();
+  }
+
+  function addEditBarangayDropdown() {
+    const container = document.getElementById('editBarangayContainer');
+    const newDiv = document.createElement('div');
+    newDiv.className = 'flex gap-2';
+    newDiv.innerHTML = `
+      <select name="location[]" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent barangay-select">
+        <option value="">Select Barangay</option>
+        <option value="Various Barangay">Various Barangay</option>
+        <option value="Alipit">Alipit</option>
+        <option value="Bagumbayan">Bagumbayan</option>
+        <option value="Bubukal">Bubukal</option>
+        <option value="Calios">Calios</option>
+        <option value="Duhat">Duhat</option>
+        <option value="Gatid">Gatid</option>
+        <option value="Jasaan">Jasaan</option>
+        <option value="Labuin">Labuin</option>
+        <option value="Malinao">Malinao</option>
+        <option value="Oogong">Oogong</option>
+        <option value="Pagsawitan">Pagsawitan</option>
+        <option value="Palasan">Palasan</option>
+        <option value="Patimbao">Patimbao</option>
+        <option value="Poblacion I">Poblacion I</option>
+        <option value="Poblacion II">Poblacion II</option>
+        <option value="Poblacion III">Poblacion III</option>
+        <option value="Poblacion IV">Poblacion IV</option>
+        <option value="Poblacion V">Poblacion V</option>
+        <option value="San Jose">San Jose</option>
+        <option value="San Juan">San Juan</option>
+        <option value="San Pablo Norte">San Pablo Norte</option>
+        <option value="San Pablo Sur">San Pablo Sur</option>
+        <option value="Santisima Cruz">Santisima Cruz</option>
+        <option value="Santo Angel Central">Santo Angel Central</option>
+        <option value="Santo Angel Norte">Santo Angel Norte</option>
+        <option value="Santo Angel Sur">Santo Angel Sur</option>
+      </select>
+      <button type="button" onclick="removeEditBarangayDropdown(this)" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    `;
+    container.appendChild(newDiv);
+  }
+
+  function removeEditBarangayDropdown(button) {
+    button.parentElement.remove();
+  }
+
+  // Delete project function
+  async function deleteProject(projectId) {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await projectService.deleteProject(projectId);
+      
+      if (response.success) {
+        loadProjects();
+        alert('Project deleted successfully!');
+      } else {
+        alert('Error deleting project: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Error deleting project. Please try again.');
+    }
+  }
+
+  // Update progress function
+  function updateProgress(projectId) {
+    // Redirect to progress timeline with project selected
+    window.location.href = `/dashboard/iu-implementing-office/modules/progress-timeline?project=${projectId}`;
+  }
+
+  // Generate report function
+  function generateReport(projectId) {
+    // Redirect to report generation page
+    window.location.href = `/dashboard/iu-implementing-office/modules/reports?project=${projectId}`;
+  }
+
+  // Load projects function
+  async function loadProjects() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const response = await fetch('http://localhost:3000/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Refresh the page to show updated projects
+          window.location.reload();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  }
+
+
+
+  // Filter and search functionality
+  function filterProjects() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const priorityFilter = document.getElementById('priorityFilter').value;
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    
+    const projectCards = document.querySelectorAll('#projectsGrid > div');
+    
+    projectCards.forEach(card => {
+      const projectName = card.querySelector('h3').textContent.toLowerCase();
+      const projectStatus = card.querySelector('span:last-child').textContent.toLowerCase();
+      const projectCategory = card.querySelector('span:first-child').textContent.toLowerCase();
+      
+      const matchesStatus = !statusFilter || projectStatus === statusFilter.toLowerCase();
+      const matchesCategory = !categoryFilter || projectCategory === categoryFilter.toLowerCase();
+      const matchesSearch = !searchInput || projectName.includes(searchInput);
+      
+      if (matchesStatus && matchesCategory && matchesSearch) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // Add event listeners for filters
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('statusFilter')?.addEventListener('change', filterProjects);
+    document.getElementById('categoryFilter')?.addEventListener('change', filterProjects);
+    document.getElementById('priorityFilter')?.addEventListener('change', filterProjects);
+    document.getElementById('searchInput')?.addEventListener('input', filterProjects);
+  });
+
+  // Milestone management functions
+  function addMilestone() {
+    const container = document.getElementById('milestonesContainer');
+    if (!container) return;
+
+    milestoneCounter++;
+    const milestoneHtml = `
+      <div id="milestone-${milestoneCounter}" class="bg-white border border-gray-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="font-semibold text-gray-800">Milestone ${milestoneCounter}</h4>
+          <button type="button" onclick="removeMilestone(${milestoneCounter})" class="text-red-500 hover:text-red-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Milestone Name *</label>
+            <input type="text" name="milestones[${milestoneCounter}][title]" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., Site Preparation" onchange="calculateTotals()">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Weight (%) *</label>
+            <input type="number" name="milestones[${milestoneCounter}][weight]" required min="0" max="100" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 25.00" onchange="calculateTotals()">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Planned Budget (₱) *</label>
+            <input type="number" name="milestones[${milestoneCounter}][plannedBudget]" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., 1250000" onchange="calculateTotals()">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+            <input type="date" name="milestones[${milestoneCounter}][dueDate]" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Planned Start Date</label>
+            <input type="date" name="milestones[${milestoneCounter}][plannedStartDate]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Planned End Date</label>
+            <input type="date" name="milestones[${milestoneCounter}][plannedEndDate]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select name="milestones[${milestoneCounter}][priority]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea name="milestones[${milestoneCounter}][description]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Detailed description of what this milestone accomplishes..."></textarea>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', milestoneHtml);
+    calculateTotals();
+  }
+
+  function removeMilestone(id) {
+    const milestone = document.getElementById(`milestone-${id}`);
+    if (milestone) {
+      milestone.remove();
+      calculateTotals();
+    }
+  }
+
+  function calculateTotals() {
+    const weightInputs = document.querySelectorAll('input[name*="milestones"][name*="[weight]"]');
+    const budgetInputs = document.querySelectorAll('input[name*="milestones"][name*="[plannedBudget]"]');
+    
+    let totalWeight = 0;
+    let totalBudget = 0;
+    
+    weightInputs.forEach(input => {
+      totalWeight += parseFloat(input.value) || 0;
+    });
+    
+    budgetInputs.forEach(input => {
+      totalBudget += parseFloat(input.value) || 0;
+    });
+    
+    const totalWeightElement = document.getElementById('totalWeight');
+    const totalBudgetElement = document.getElementById('totalMilestoneBudget');
+    
+    if (totalWeightElement) {
+      totalWeightElement.textContent = `${totalWeight.toFixed(2)}%`;
+      totalWeightElement.className = totalWeight === 100 ? 'text-lg font-bold text-green-600' : 'text-lg font-bold text-red-600';
+    }
+    
+    if (totalBudgetElement) {
+      totalBudgetElement.textContent = `₱${totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  }
+
+  // Get milestones data
+  function getMilestonesData() {
+    const milestones = [];
+    const milestoneElements = document.querySelectorAll('[id^="milestone-"]');
+    
+    milestoneElements.forEach(element => {
+      const id = element.id.replace('milestone-', '');
+      const title = element.querySelector(`input[name="milestones[${id}][title]"]`)?.value;
+      const weight = element.querySelector(`input[name="milestones[${id}][weight]"]`)?.value;
+      const plannedBudget = element.querySelector(`input[name="milestones[${id}][plannedBudget]"]`)?.value;
+      const dueDate = element.querySelector(`input[name="milestones[${id}][dueDate]"]`)?.value;
+      const plannedStartDate = element.querySelector(`input[name="milestones[${id}][plannedStartDate]"]`)?.value;
+      const plannedEndDate = element.querySelector(`input[name="milestones[${id}][plannedEndDate]"]`)?.value;
+      const priority = element.querySelector(`select[name="milestones[${id}][priority]"]`)?.value;
+      const description = element.querySelector(`textarea[name="milestones[${id}][description]"]`)?.value;
+      
+      if (title && weight && plannedBudget && dueDate) {
+        milestones.push({
+          title,
+          weight: parseFloat(weight),
+          plannedBudget: parseFloat(plannedBudget),
+          dueDate,
+          plannedStartDate: plannedStartDate || null,
+          plannedEndDate: plannedEndDate || null,
+          priority: priority || 'medium',
+          description: description || ''
+        });
+      }
+    });
+    
+    return milestones;
+  }
+
+  // Make functions globally available
+  window.openCreateProjectModal = openCreateProjectModal;
+  window.closeCreateProjectModal = closeCreateProjectModal;
+  window.openEditProjectModal = openEditProjectModal;
+  window.closeEditProjectModal = closeEditProjectModal;
+  window.openProjectDetailsModal = openProjectDetailsModal;
+  window.closeProjectDetailsModal = closeProjectDetailsModal;
+  window.editProject = editProject;
+  window.viewProjectDetails = viewProjectDetails;
+  window.deleteProject = deleteProject;
+  window.updateProgress = updateProgress;
+  window.generateReport = generateReport;
+  window.loadProjects = loadProjects;
+  window.addBarangayDropdown = addBarangayDropdown;
+  window.removeBarangayDropdown = removeBarangayDropdown;
+  window.addEditBarangayDropdown = addEditBarangayDropdown;
+  window.removeEditBarangayDropdown = removeEditBarangayDropdown;
+  window.addMilestone = addMilestone;
+  window.removeMilestone = removeMilestone;
+  window.calculateTotals = calculateTotals;
+  window.addEditMilestone = addEditMilestone;
+  window.removeEditMilestone = removeEditMilestone;
+  window.calculateEditTotals = calculateEditTotals;
+  window.validateEIUAccount = validateEIUAccount;
+  window.testModal = testModal;
+
+</script> 

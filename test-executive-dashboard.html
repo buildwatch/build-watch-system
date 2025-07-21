@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f6f8fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #3D50D7;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #3D50D7;
+            margin-top: 0;
+        }
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px;
+        }
+        .status.success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .status.warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .test-card {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3D50D7;
+        }
+        .test-card h4 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .test-card p {
+            margin: 5px 0;
+            color: #6b7280;
+        }
+        .button {
+            background-color: #3D50D7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #2e3aa7;
+        }
+        .button.secondary {
+            background-color: #6b7280;
+        }
+        .button.secondary:hover {
+            background-color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Build Watch LGU - Executive Dashboard Test</h1>
+            <p>Testing the Executive Viewer Dashboard Implementation</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Implementation Status</h3>
+            <div>
+                <span class="status success">✅ Executive Dashboard Complete</span>
+                <span class="status success">✅ Projects Viewer Complete</span>
+                <span class="status success">✅ Heatmap & Maps View Complete</span>
+                <span class="status success">✅ Reports & Documents Complete</span>
+                <span class="status success">✅ Export/Print Complete</span>
+                <span class="status success">✅ Advanced Filter/Search Complete</span>
+                <span class="status success">✅ Executive Notices Complete</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Technical Stack</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Frontend</h4>
+                    <p><strong>Framework:</strong> Astro + React</p>
+                    <p><strong>Styling:</strong> TailwindCSS</p>
+                    <p><strong>Icons:</strong> Material Icons</p>
+                    <p><strong>Maps:</strong> Leaflet.js</p>
+                </div>
+                <div class="test-card">
+                    <h4>Backend</h4>
+                    <p><strong>Runtime:</strong> Node.js</p>
+                    <p><strong>Framework:</strong> Express.js</p>
+                    <p><strong>Database:</strong> MySQL</p>
+                    <p><strong>ORM:</strong> Sequelize</p>
+                </div>
+                <div class="test-card">
+                    <h4>Authentication</h4>
+                    <p><strong>Method:</strong> JWT Tokens</p>
+                    <p><strong>Role-based:</strong> Executive Viewer</p>
+                    <p><strong>Access:</strong> Read-only</p>
+                    <p><strong>Security:</strong> Protected Routes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Key Features Implemented</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>📋 Projects Viewer</h4>
+                    <p>• Real-time project data display</p>
+                    <p>• Advanced filtering & search</p>
+                    <p>• Status-based color coding</p>
+                    <p>• Export functionality</p>
+                    <p>• Pagination & sorting</p>
+                </div>
+                <div class="test-card">
+                    <h4>🗺️ Heatmap & Maps</h4>
+                    <p>• Interactive geographic visualization</p>
+                    <p>• Multiple view modes (Heatmap/Clusters)</p>
+                    <p>• Project status mapping</p>
+                    <p>• Location-based filtering</p>
+                    <p>• Export map data</p>
+                </div>
+                <div class="test-card">
+                    <h4>📊 Reports & Documents</h4>
+                    <p>• Quick report generation</p>
+                    <p>• Multiple export formats</p>
+                    <p>• Document management</p>
+                    <p>• Report history tracking</p>
+                    <p>• Custom report builder</p>
+                </div>
+                <div class="test-card">
+                    <h4>📤 Export/Print Center</h4>
+                    <p>• Template-based exports</p>
+                    <p>• Custom data selection</p>
+                    <p>• Multiple formats (PDF/Excel/CSV)</p>
+                    <p>• Print-friendly layouts</p>
+                    <p>• Export history management</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 Test the Implementation</h3>
+            <p>To test the Executive Dashboard, follow these steps:</p>
+            <ol>
+                <li><strong>Start the Backend Server:</strong> Navigate to the backend directory and run <code>npm start</code></li>
+                <li><strong>Start the Frontend Server:</strong> Navigate to the frontend directory and run <code>npm run dev</code></li>
+                <li><strong>Access the Dashboard:</strong> Open your browser and go to <code>http://localhost:4321</code></li>
+                <li><strong>Login as Executive Viewer:</strong> Use the Executive Viewer credentials</li>
+                <li><strong>Test Each Module:</strong> Navigate through all dashboard modules</li>
+            </ol>
+            
+            <div style="margin-top: 20px;">
+                <a href="http://localhost:4321" class="button" target="_blank">🌐 Open Frontend (Port 4321)</a>
+                <a href="http://localhost:3000" class="button secondary" target="_blank">🔧 Open Backend (Port 3000)</a>
+                <a href="http://localhost:3000/api/projects" class="button secondary" target="_blank">📡 Test API</a>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Expected Test Results</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Navigation</h4>
+                    <p>✅ Sidebar navigation works</p>
+                    <p>✅ Active page highlighting</p>
+                    <p>✅ Responsive design</p>
+                    <p>✅ LGU branding (#3D50D7)</p>
+                </div>
+                <div class="test-card">
+                    <h4>Data Loading</h4>
+                    <p>✅ Projects load from API</p>
+                    <p>✅ Statistics display correctly</p>
+                    <p>✅ Loading states work</p>
+                    <p>✅ Error handling functional</p>
+                </div>
+                <div class="test-card">
+                    <h4>Interactivity</h4>
+                    <p>✅ Filters apply correctly</p>
+                    <p>✅ Search functionality works</p>
+                    <p>✅ Export features functional</p>
+                    <p>✅ Modal dialogs work</p>
+                </div>
+                <div class="test-card">
+                    <h4>Performance</h4>
+                    <p>✅ Fast page loading</p>
+                    <p>✅ Smooth interactions</p>
+                    <p>✅ Responsive UI</p>
+                    <p>✅ No console errors</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Troubleshooting</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Common Issues</h4>
+                    <p><strong>Port conflicts:</strong> Check if ports 3000/4321 are available</p>
+                    <p><strong>Database connection:</strong> Ensure MySQL is running</p>
+                    <p><strong>Dependencies:</strong> Run <code>npm install</code> in both directories</p>
+                    <p><strong>CORS issues:</strong> Check backend CORS configuration</p>
+                </div>
+                <div class="test-card">
+                    <h4>Quick Fixes</h4>
+                    <p><strong>Clear cache:</strong> Hard refresh browser (Ctrl+F5)</p>
+                    <p><strong>Restart servers:</strong> Stop and restart both servers</p>
+                    <p><strong>Check logs:</strong> Monitor terminal output for errors</p>
+                    <p><strong>Database:</strong> Verify database connection settings</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎉 Success Criteria</h3>
+            <p>The Executive Dashboard implementation is successful when:</p>
+            <ul>
+                <li>✅ All 6 modules load without errors</li>
+                <li>✅ Navigation between modules works smoothly</li>
+                <li>✅ Data displays correctly from the backend API</li>
+                <li>✅ All interactive features (filters, search, export) function</li>
+                <li>✅ Responsive design works on different screen sizes</li>
+                <li>✅ LGU branding and styling is consistent</li>
+                <li>✅ No JavaScript errors in browser console</li>
+                <li>✅ Export and print functionality works</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Simple test script to check if servers are running
+        async function testServers() {
+            const servers = [
+                { name: 'Frontend (Astro)', url: 'http://localhost:4321' },
+                { name: 'Backend (Express)', url: 'http://localhost:3000' },
+                { name: 'API Endpoint', url: 'http://localhost:3000/api/projects' }
+            ];
+
+            for (const server of servers) {
+                try {
+                    const response = await fetch(server.url, { method: 'HEAD' });
+                    console.log(`✅ ${server.name} is running`);
+                } catch (error) {
+                    console.log(`❌ ${server.name} is not running: ${error.message}`);
+                }
+            }
+        }
+
+        // Test servers when page loads
+        window.addEventListener('load', testServers);
+    </script>
+</body>
+</html> 

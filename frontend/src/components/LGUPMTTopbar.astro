@@ -1,0 +1,266 @@
+---
+// LGU-PMT Topbar Component
+// Theme Color: #FE5353
+---
+
+<header class="bg-white shadow-lg border-b border-gray-200 px-6 py-4">
+  <div class="flex items-center justify-between">
+    <!-- Left Section -->
+    <div class="flex items-center gap-4">
+      <!-- Page Title -->
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">LGU-PMT Dashboard</h1>
+        <p class="text-sm text-gray-600">Municipal Project Monitoring and Evaluation Committee</p>
+      </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="flex items-center gap-4">
+      <!-- Notifications -->
+      <div class="relative" id="lgu-pmt-notification-container">
+        <button class="relative p-2 text-gray-600 hover:text-[#FE5353] transition-colors" id="lgu-pmt-notification-btn">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          </svg>
+          <span class="absolute -top-1 -right-1 w-4 h-4 bg-[#FE5353] text-white text-xs rounded-full flex items-center justify-center hidden" id="lgu-pmt-notification-badge">0</span>
+        </button>
+        
+        <!-- Notification Dropdown -->
+        <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden" id="lgu-pmt-notification-dropdown">
+          <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-800">Notifications</h3>
+              <button class="text-sm text-[#FE5353] hover:text-[#e63939]" id="lgu-pmt-mark-all-read">Mark all read</button>
+            </div>
+          </div>
+          <div class="max-h-96 overflow-y-auto" id="lgu-pmt-notification-list">
+            <div class="p-4 text-center text-gray-500">Loading notifications...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="relative">
+        <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+        <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+
+      <!-- User Profile -->
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <p id="lgu-pmt-user-name" class="text-sm font-medium text-gray-800">Loading...</p>
+          <p id="lgu-pmt-user-role" class="text-xs text-gray-600">MPMEC Member</p>
+          <p id="lgu-pmt-user-status" class="text-xs text-gray-500">Status: <span id="lgu-pmt-status-text">Loading...</span></p>
+        </div>
+        <div class="w-10 h-10 bg-gradient-to-r from-[#FE5353] to-[#e63939] rounded-full flex items-center justify-center">
+          <span id="lgu-pmt-user-initials" class="text-white font-bold text-sm">M</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  import authService from '../services/auth.js';
+  import notificationService from '../services/notifications.js';
+  
+  // Make services available globally
+  window.authService = authService;
+  window.notificationService = notificationService;
+  
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      // Get current user data
+      const currentUser = authService.getCurrentUser();
+      
+      if (currentUser) {
+        updateLGUPMTUserData(currentUser);
+      } else {
+        // If no user data, try to fetch from API
+        try {
+          const response = await fetch('http://localhost:3000/api/auth/profile', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            updateLGUPMTUserData(userData);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user profile for LGU-PMT:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user data for LGU-PMT:', error);
+    }
+
+    // Initialize notifications
+    initializeNotifications();
+  });
+  
+  // Function to update LGU-PMT user data
+  function updateLGUPMTUserData(userData) {
+    // Update user name
+    const userNameElement = document.getElementById('lgu-pmt-user-name');
+    if (userNameElement) {
+      userNameElement.textContent = userData.fullName || userData.name || 'MPMEC Member';
+    }
+    
+    // Update user role
+    const userRoleElement = document.getElementById('lgu-pmt-user-role');
+    if (userRoleElement) {
+      const roleDisplay = userData.role === 'LGU-PMT' ? 'MPMEC Member' : 
+                         userData.subRole ? `${userData.role} - ${userData.subRole}` : 
+                         userData.role || 'MPMEC Member';
+      userRoleElement.textContent = roleDisplay;
+    }
+    
+    // Update user initials
+    const userInitialsElement = document.getElementById('lgu-pmt-user-initials');
+    if (userInitialsElement) {
+      const fullName = userData.fullName || userData.name || '';
+      const initials = fullName.split(' ')
+        .map(name => name.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+      userInitialsElement.textContent = initials || 'M';
+    }
+    
+    // Update user status
+    const statusTextElement = document.getElementById('lgu-pmt-status-text');
+    if (statusTextElement) {
+      const status = userData.status || 'active';
+      const statusText = status === 'active' ? 'Active' : 
+                       status === 'blocked' ? 'Blocked' : 
+                       status === 'deactivated' ? 'Deactivated' : 'Active';
+      const statusColor = status === 'active' ? 'text-green-600' : 'text-red-600';
+      statusTextElement.textContent = statusText;
+      statusTextElement.className = `font-medium ${statusColor}`;
+    }
+  }
+
+  // Notification functionality
+  function initializeNotifications() {
+    const notificationBtn = document.getElementById('lgu-pmt-notification-btn');
+    const notificationDropdown = document.getElementById('lgu-pmt-notification-dropdown');
+    const notificationBadge = document.getElementById('lgu-pmt-notification-badge');
+    const notificationList = document.getElementById('lgu-pmt-notification-list');
+    const markAllReadBtn = document.getElementById('lgu-pmt-mark-all-read');
+
+    // Toggle dropdown
+    notificationBtn.addEventListener('click', () => {
+      notificationDropdown.classList.toggle('hidden');
+      if (!notificationDropdown.classList.contains('hidden')) {
+        loadNotifications();
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#lgu-pmt-notification-container')) {
+        notificationDropdown.classList.add('hidden');
+      }
+    });
+
+    // Mark all as read
+    markAllReadBtn.addEventListener('click', async () => {
+      await notificationService.markAllAsRead();
+      updateNotificationBadge();
+      loadNotifications();
+    });
+
+    // Load initial notification count
+    updateNotificationBadge();
+
+    // Subscribe to notification updates
+    notificationService.onUpdate(({ count }) => {
+      updateNotificationBadge(count);
+    });
+  }
+
+  async function updateNotificationBadge(count) {
+    const badge = document.getElementById('lgu-pmt-notification-badge');
+    const currentCount = count !== undefined ? count : await notificationService.getNotificationCount();
+    
+    if (currentCount > 0) {
+      badge.textContent = currentCount > 99 ? '99+' : currentCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
+  async function loadNotifications() {
+    const notificationList = document.getElementById('lgu-pmt-notification-list');
+    
+    try {
+      const data = await notificationService.getNotifications();
+      const notifications = data.notifications;
+
+      if (notifications.length === 0) {
+        notificationList.innerHTML = `
+          <div class="p-4 text-center text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <p>No notifications</p>
+          </div>
+        `;
+        return;
+      }
+
+      const notificationsHtml = notifications.map(notification => `
+        <div class="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${notification.isRead ? 'opacity-75' : ''}" 
+             data-notification-id="${notification.id}">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              ${notificationService.getNotificationIcon(notification.type)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-gray-900">${notification.title}</p>
+                <span class="text-xs text-gray-500">${notificationService.formatTime(notification.createdAt)}</span>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+              ${notification.actionUrl ? `
+                <a href="${notification.actionUrl}" class="text-xs text-[#FE5353] hover:text-[#e63939] mt-2 inline-block">
+                  ${notification.actionText || 'View Details'}
+                </a>
+              ` : ''}
+            </div>
+            ${!notification.isRead ? `
+              <button class="text-gray-400 hover:text-gray-600" onclick="markLGUPMTNotificationAsRead('${notification.id}')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      notificationList.innerHTML = notificationsHtml;
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      notificationList.innerHTML = `
+        <div class="p-4 text-center text-red-500">
+          <p>Failed to load notifications</p>
+        </div>
+      `;
+    }
+  }
+
+  // Global function for marking notification as read
+  window.markLGUPMTNotificationAsRead = async function(notificationId) {
+    await notificationService.markAsRead(notificationId);
+    updateNotificationBadge();
+    loadNotifications();
+  };
+</script> 

@@ -1,0 +1,572 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let projects = [];
+let selectedProject = null;
+let disbursementData = {
+  budget: {
+    total: 0,
+    disbursed: 0,
+    remaining: 0,
+    utilizationRate: 0
+  },
+  breakdown: {
+    materials: 0,
+    labor: 0,
+    equipment: 0,
+    other: 0
+  },
+  monthlyTrend: [],
+  disbursements: []
+};
+let loading = true;
+let error = '';
+
+// Try to fetch data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // TODO: Replace with actual projects API endpoint
+    // const projectsRes = await fetch(`${API_URL}/iu/projects`, {
+    //   headers: { 'Authorization': `Bearer ${token}` }
+    // });
+    // if (projectsRes.ok) {
+    //   const data = await projectsRes.json();
+    //   if (data.success) {
+    //     projects = data.projects;
+    //   }
+    // }
+
+    // For now, use empty projects array
+    projects = [];
+  }
+} catch (err) {
+  console.error('Error fetching data:', err);
+  error = 'Failed to fetch data.';
+}
+
+loading = false;
+---
+
+<Layout title="Disbursement Tracker | Implementing Office Dashboard">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header Section -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Disbursement Tracker</h1>
+          <p class="text-gray-600">Track budget usage and financial disbursements</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="openLogDisbursementModal()" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Log Disbursement
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#92751F]"></div>
+          <span class="ml-3 text-gray-600">Loading disbursement data...</span>
+        </div>
+      ) : error ? (
+        <div class="text-center py-12">
+          <p class="text-red-600 mb-4">{error}</p>
+          <button onclick="loadData()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-all">
+            Try Again
+          </button>
+        </div>
+      ) : projects.length === 0 ? (
+        <div class="text-center py-12">
+          <svg class="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No Projects Available</h3>
+          <p class="text-gray-600 mb-6">Create a project first to track disbursements</p>
+          <a href="/dashboard/iu-implementing-office/modules/project-management" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create Project
+          </a>
+        </div>
+      ) : (
+        <>
+          <!-- Project Selection -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+            <div class="flex items-center gap-4">
+              <label class="text-sm font-medium text-gray-700">Select Project:</label>
+              <select id="projectSelector" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                <option value="">Choose a project...</option>
+                {projects.map((project) => (
+                  <option value={project.id}>{project.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <!-- Budget Overview -->
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Total Budget</p>
+                  <p class="text-2xl font-bold text-gray-800" id="totalBudget">₱{disbursementData.budget.total.toLocaleString()}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Total Disbursed</p>
+                  <p class="text-2xl font-bold text-gray-800" id="totalDisbursed">₱{disbursementData.budget.disbursed.toLocaleString()}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Remaining Budget</p>
+                  <p class="text-2xl font-bold text-gray-800" id="remainingBudget">₱{disbursementData.budget.remaining.toLocaleString()}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Utilization Rate</p>
+                  <p class="text-2xl font-bold text-gray-800" id="utilizationRate">{disbursementData.budget.utilizationRate}%</p>
+                </div>
+                <div class="bg-[#F8C734]/20 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-[#92751F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget Visualization -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Budget Progress Chart -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <h2 class="text-xl font-semibold text-gray-800 mb-6">Budget Utilization</h2>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Allocated Budget</span>
+                  <span class="text-sm font-medium text-gray-800">₱{disbursementData.budget.total.toLocaleString()}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                  <div class="bg-[#F8C734] h-4 rounded-full" style={`width: ${disbursementData.budget.utilizationRate}%`}></div>
+                </div>
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                  <span>₱0</span>
+                  <span>₱{disbursementData.budget.disbursed.toLocaleString()} ({disbursementData.budget.utilizationRate}%)</span>
+                  <span>₱{disbursementData.budget.total.toLocaleString()}</span>
+                </div>
+              </div>
+              
+              <!-- Budget Breakdown -->
+              <div class="mt-6 space-y-3">
+                <h3 class="text-lg font-medium text-gray-800 mb-3">Budget Breakdown</h3>
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Materials & Supplies</span>
+                    <span class="text-sm font-medium text-gray-800">₱{disbursementData.breakdown.materials.toLocaleString()}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Labor & Services</span>
+                    <span class="text-sm font-medium text-gray-800">₱{disbursementData.breakdown.labor.toLocaleString()}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Equipment & Tools</span>
+                    <span class="text-sm font-medium text-gray-800">₱{disbursementData.breakdown.equipment.toLocaleString()}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Other Expenses</span>
+                    <span class="text-sm font-medium text-gray-800">₱{disbursementData.breakdown.other.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly Disbursement Trend -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <h2 class="text-xl font-semibold text-gray-800 mb-6">Monthly Disbursement Trend</h2>
+              <div class="space-y-4">
+                {disbursementData.monthlyTrend.length === 0 ? (
+                  <div class="text-center py-8">
+                    <p class="text-gray-500 text-sm">No disbursement data available</p>
+                  </div>
+                ) : (
+                  disbursementData.monthlyTrend.map((month) => (
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-gray-600">{month.month}</span>
+                      <div class="flex items-center gap-2">
+                        <div class="w-20 bg-gray-200 rounded-full h-2">
+                          <div class="bg-[#F8C734] h-2 rounded-full" style={`width: ${month.percentage}%`}></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800">₱{month.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Disbursements -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-800">Recent Disbursements</h2>
+              <button onclick="exportDisbursements()" class="px-4 py-2 bg-[#F8C734]/20 text-[#92751F] rounded-lg hover:bg-[#F8C734]/30 transition-colors text-sm font-medium">
+                Export Report
+              </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Date</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Description</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Category</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Amount</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                    <th class="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="disbursementsTable">
+                  {disbursementData.disbursements.length === 0 ? (
+                    <tr>
+                      <td colspan="6" class="text-center py-8">
+                        <p class="text-gray-500 text-sm">No disbursements found</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    disbursementData.disbursements.map((disbursement) => (
+                      <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-3 px-4 text-sm text-gray-800">{disbursement.date}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">{disbursement.description}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">{disbursement.category}</td>
+                        <td class="py-3 px-4 text-sm font-medium text-gray-800">₱{disbursement.amount.toLocaleString()}</td>
+                        <td class="py-3 px-4">
+                          <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                            disbursement.status === 'completed' ? 'bg-green-100 text-green-700' :
+                            disbursement.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>{disbursement.status}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <button onclick={`viewDisbursement('${disbursement.id}')`} class="text-[#92751F] hover:text-[#7A6219] text-sm">View</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+
+    <!-- Log Disbursement Modal -->
+    <div id="logDisbursementModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold text-gray-800">Log Disbursement</h2>
+              <button onclick="closeLogDisbursementModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <form id="logDisbursementForm" class="p-6 space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+              <select name="projectId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                <option value="">Select Project</option>
+                {projects.map((project) => (
+                  <option value={project.id}>{project.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Disbursement Date</label>
+              <input type="date" name="disbursementDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea name="description" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="Describe the disbursement..."></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <select name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                <option value="">Select Category</option>
+                <option value="materials">Materials & Supplies</option>
+                <option value="labor">Labor & Services</option>
+                <option value="equipment">Equipment & Tools</option>
+                <option value="other">Other Expenses</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₱)</label>
+              <input type="number" name="amount" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Reference Number</label>
+              <input type="text" name="referenceNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent" placeholder="e.g., OR-2025-001">
+            </div>
+            
+            <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+              <button type="button" onclick="closeLogDisbursementModal()" class="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="px-6 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors">
+                Log Disbursement
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </IUImplementingOfficeLayout>
+</Layout>
+
+<script>
+  // Modal functions
+  function openLogDisbursementModal() {
+    document.getElementById('logDisbursementModal').classList.remove('hidden');
+  }
+  
+  function closeLogDisbursementModal() {
+    document.getElementById('logDisbursementModal').classList.add('hidden');
+  }
+  
+  // Project selector functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const projectSelector = document.getElementById('projectSelector');
+    if (projectSelector) {
+      projectSelector.addEventListener('change', function() {
+        updateDisbursementData(this.value);
+      });
+    }
+  });
+  
+  async function updateDisbursementData(projectId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      if (!projectId) {
+        // Reset disbursement data
+        updateDisbursementUI({
+          budget: {
+            total: 0,
+            disbursed: 0,
+            remaining: 0,
+            utilizationRate: 0
+          },
+          breakdown: {
+            materials: 0,
+            labor: 0,
+            equipment: 0,
+            other: 0
+          },
+          monthlyTrend: [],
+          disbursements: []
+        });
+        return;
+      }
+
+      // TODO: Replace with actual API call
+      // const response = await fetch(`http://localhost:3000/api/iu/projects/${projectId}/disbursements`, {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      // 
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   if (data.success) {
+      //     updateDisbursementUI(data.disbursements);
+      //   }
+      // }
+
+      console.log('Loading disbursement data for project:', projectId);
+    } catch (error) {
+      console.error('Error loading disbursement data:', error);
+    }
+  }
+
+  function updateDisbursementUI(data) {
+    // Update budget information
+    const totalBudget = document.getElementById('totalBudget');
+    const totalDisbursed = document.getElementById('totalDisbursed');
+    const remainingBudget = document.getElementById('remainingBudget');
+    const utilizationRate = document.getElementById('utilizationRate');
+    
+    if (totalBudget) totalBudget.textContent = `₱${data.budget.total.toLocaleString()}`;
+    if (totalDisbursed) totalDisbursed.textContent = `₱${data.budget.disbursed.toLocaleString()}`;
+    if (remainingBudget) remainingBudget.textContent = `₱${data.budget.remaining.toLocaleString()}`;
+    if (utilizationRate) utilizationRate.textContent = `${data.budget.utilizationRate}%`;
+  }
+
+  async function loadData() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      // TODO: Replace with actual API call
+      // const response = await fetch('http://localhost:3000/api/iu/projects', {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      // 
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   if (data.success) {
+      //     // Update projects list
+      //     updateProjectsUI(data.projects);
+      //   }
+      // }
+
+      console.log('Loading data...');
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+  
+  // Form submission
+  document.getElementById('logDisbursementForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      const disbursementData = Object.fromEntries(formData);
+      
+      // TODO: Implement disbursement logging
+      // const response = await fetch('http://localhost:3000/api/iu/disbursements', {
+      //   method: 'POST',
+      //   headers: { 
+      //     'Authorization': `Bearer ${token}`,
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify(disbursementData)
+      // });
+      
+      console.log('Log disbursement:', disbursementData);
+      
+      // Close modal and refresh
+      closeLogDisbursementModal();
+      e.target.reset();
+      
+      // Refresh disbursement data
+      const projectSelector = document.getElementById('projectSelector');
+      if (projectSelector && projectSelector.value) {
+        updateDisbursementData(projectSelector.value);
+      }
+      
+      // Show success message
+      alert('Disbursement logged successfully!');
+    } catch (error) {
+      console.error('Error logging disbursement:', error);
+    }
+  });
+  
+  // View disbursement details
+  async function viewDisbursement(disbursementId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      // TODO: Implement view functionality
+      // const response = await fetch(`http://localhost:3000/api/iu/disbursements/${disbursementId}`, {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      
+      console.log('View disbursement details:', disbursementId);
+    } catch (error) {
+      console.error('Error viewing disbursement details:', error);
+    }
+  }
+  
+  // Export disbursements
+  async function exportDisbursements() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      // TODO: Implement export functionality
+      // const response = await fetch('http://localhost:3000/api/iu/disbursements/export', {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      
+      console.log('Exporting disbursements...');
+      alert('Disbursement report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting disbursements:', error);
+    }
+  }
+</script> 

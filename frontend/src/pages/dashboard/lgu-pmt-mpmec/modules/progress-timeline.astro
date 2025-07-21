@@ -1,0 +1,746 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let projects = [];
+let milestones = [];
+let timelineEvents = [];
+let stats = {
+  activeProjects: 0,
+  completedProjects: 0,
+  delayedProjects: 0,
+  budgetUsed: '₱0',
+  onTrackPercentage: 0,
+  successRate: 0,
+  behindSchedulePercentage: 0,
+  budgetPercentage: 0,
+  completionRate: 0,
+  timelineAdherence: 0,
+  budgetEfficiency: 0
+};
+let loading = true;
+let error = '';
+
+// Try to fetch timeline data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // Fetch all projects for MPMEC
+    const projectsRes = await fetch(`${API_URL}/projects`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (projectsRes.ok) {
+      const data = await projectsRes.json();
+      if (data.success) {
+        projects = data.projects.filter(p => p.submittedToSecretariat === true);
+        
+        // Calculate statistics
+        stats.activeProjects = projects.filter(p => p.status === 'ongoing').length;
+        stats.completedProjects = projects.filter(p => p.status === 'complete').length;
+        stats.delayedProjects = projects.filter(p => p.status === 'delayed').length;
+        
+        // Calculate budget used
+        const totalBudget = projects.reduce((sum, p) => sum + (parseFloat(p.totalBudget) || 0), 0);
+        const usedBudget = projects.reduce((sum, p) => {
+          const budget = parseFloat(p.totalBudget) || 0;
+          const progress = parseFloat(p.budgetProgress) || 0;
+          return sum + (budget * progress / 100);
+        }, 0);
+        stats.budgetUsed = `₱${(usedBudget / 1000000).toFixed(1)}M`;
+        
+        // Calculate percentages
+        const totalProjects = projects.length;
+        if (totalProjects > 0) {
+          stats.onTrackPercentage = Math.round((stats.activeProjects / totalProjects) * 100);
+          stats.successRate = Math.round((stats.completedProjects / totalProjects) * 100);
+          stats.behindSchedulePercentage = Math.round((stats.delayedProjects / totalProjects) * 100);
+          stats.budgetPercentage = Math.round((usedBudget / totalBudget) * 100);
+          
+          // Calculate completion rate
+          const avgProgress = projects.reduce((sum, p) => sum + (parseFloat(p.overallProgress) || 0), 0) / totalProjects;
+          stats.completionRate = Math.round(avgProgress);
+          
+          // Calculate timeline adherence
+          const avgTimelineProgress = projects.reduce((sum, p) => sum + (parseFloat(p.timelineProgress) || 0), 0) / totalProjects;
+          stats.timelineAdherence = Math.round(avgTimelineProgress);
+          
+          // Calculate budget efficiency
+          const avgBudgetProgress = projects.reduce((sum, p) => sum + (parseFloat(p.budgetProgress) || 0), 0) / totalProjects;
+          stats.budgetEfficiency = Math.round(avgBudgetProgress);
+        }
+      }
+    }
+
+    // Fetch milestones
+    const milestonesRes = await fetch(`${API_URL}/projects/milestones`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (milestonesRes.ok) {
+      const data = await milestonesRes.json();
+      if (data.success) {
+        milestones = data.milestones || [];
+      }
+    }
+
+    // Generate timeline events from projects and milestones
+    timelineEvents = generateTimelineEvents(projects, milestones);
+  }
+} catch (err) {
+  console.error('Error fetching timeline data:', err);
+  error = 'Failed to fetch timeline data.';
+}
+
+loading = false;
+
+// Helper function to generate timeline events
+function generateTimelineEvents(projects, milestones) {
+  const events = [];
+  
+  // Add project events
+  projects.forEach(project => {
+    if (project.submittedToSecretariatDate) {
+      events.push({
+        date: project.submittedToSecretariatDate,
+        title: 'Project Submitted to Secretariat',
+        description: `Project "${project.name}" was submitted for Secretariat review`,
+        status: 'completed',
+        project: project.name,
+        type: 'submission'
+      });
+    }
+    
+    if (project.secretariatApprovalDate) {
+      events.push({
+        date: project.secretariatApprovalDate,
+        title: 'Project Approved by Secretariat',
+        description: `Project "${project.name}" was approved by the Secretariat`,
+        status: 'completed',
+        project: project.name,
+        type: 'approval'
+      });
+    }
+    
+    if (project.startDate) {
+      events.push({
+        date: project.startDate,
+        title: 'Project Started',
+        description: `Implementation of "${project.name}" began`,
+        status: project.status === 'ongoing' ? 'active' : project.status === 'complete' ? 'completed' : 'pending',
+        project: project.name,
+        type: 'start'
+      });
+    }
+  });
+  
+  // Add milestone events
+  milestones.forEach(milestone => {
+    if (milestone.completedAt) {
+      events.push({
+        date: milestone.completedAt,
+        title: `Milestone: ${milestone.title}`,
+        description: milestone.description || `Milestone "${milestone.title}" was completed`,
+        status: 'completed',
+        project: milestone.projectName || 'Unknown Project',
+        type: 'milestone'
+      });
+    }
+  });
+  
+  // Sort events by date (newest first)
+  return events.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+}
+---
+
+<Layout title="Progress & Timeline | MPMEC Dashboard">
+  <LGUPMTLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Progress & Timeline</h1>
+          <p class="text-gray-600">Project progress tracking and timeline visualization</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="addMilestone()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Milestone
+          </button>
+          <button onclick="exportTimeline()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE5353]"></div>
+          <span class="ml-3 text-gray-600">Loading timeline data...</span>
+        </div>
+      ) : error ? (
+        <div class="text-center py-12">
+          <p class="text-red-600 mb-4">{error}</p>
+          <button onclick="loadTimelineData()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-all">
+            Try Again
+          </button>
+        </div>
+      ) : (
+        <>
+          <!-- Progress Overview Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Active Projects</p>
+                  <p class="text-2xl font-bold text-blue-600" id="activeProjects">{stats.activeProjects}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style={`width: ${stats.onTrackPercentage}%`}></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{stats.onTrackPercentage}% on track</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Completed</p>
+                  <p class="text-2xl font-bold text-green-600" id="completedProjects">{stats.completedProjects}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-green-600 h-2 rounded-full" style={`width: ${stats.successRate}%`}></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{stats.successRate}% success rate</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Delayed</p>
+                  <p class="text-2xl font-bold text-red-600" id="delayedProjects">{stats.delayedProjects}</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-red-600 h-2 rounded-full" style={`width: ${stats.behindSchedulePercentage}%`}></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{stats.behindSchedulePercentage}% behind schedule</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-gray-600">Budget Used</p>
+                  <p class="text-2xl font-bold text-purple-600" id="budgetUsed">{stats.budgetUsed}</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-xl">
+                  <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-purple-600 h-2 rounded-full" style={`width: ${stats.budgetPercentage}%`}></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{stats.budgetPercentage}% of total budget</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Timeline -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-800">Project Timeline</h2>
+              <div class="flex items-center gap-2">
+                <select id="timelineFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" onchange="filterTimeline()">
+                  <option value="all">All Projects</option>
+                  <option value="active">Active Only</option>
+                  <option value="completed">Completed Only</option>
+                  <option value="delayed">Delayed Only</option>
+                </select>
+                <button onclick="refreshTimeline()" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="relative">
+              <!-- Timeline Line -->
+              <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+              
+              <!-- Timeline Items -->
+              <div class="space-y-8" id="timelineContainer">
+                {timelineEvents.length === 0 ? (
+                  <div class="text-center py-8">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-gray-500">No timeline events available</p>
+                  </div>
+                ) : (
+                  timelineEvents.map(event => {
+                    const eventDate = new Date(event.date);
+                    const statusColor = event.status === 'completed' ? 'green' : 
+                                      event.status === 'active' ? 'blue' : 'yellow';
+                    
+                    return (
+                      <div class="relative flex items-start">
+                        <div class={`absolute left-6 top-4 w-4 h-4 bg-${statusColor}-500 rounded-full border-4 border-white shadow-lg`}></div>
+                        <div class="ml-16 bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex-1">
+                          <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-800">{event.title}</h4>
+                            <span class="text-sm text-gray-500">{eventDate.toLocaleDateString()}</span>
+                          </div>
+                          <p class="text-gray-600 mb-2">{event.description}</p>
+                          <span class={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`}>
+                            {event.project}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Progress Details -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Recent Milestones -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Milestones</h3>
+                <a href="#" class="text-[#FE5353] hover:text-[#E54545] text-sm font-medium">View All</a>
+              </div>
+              <div class="space-y-4" id="recentMilestones">
+                {milestones.filter(m => m.completedAt).slice(0, 3).map(milestone => {
+                  const completedDate = new Date(milestone.completedAt);
+                  const daysAgo = Math.floor((new Date() - completedDate) / (1000 * 60 * 60 * 24));
+                  
+                  return (
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                      <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-800">{milestone.title}</p>
+                        <p class="text-xs text-gray-500">{milestone.projectName || 'Unknown Project'}</p>
+                      </div>
+                      <span class="text-xs text-gray-400">{daysAgo === 0 ? 'Today' : `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`}</span>
+                    </div>
+                  );
+                })}
+                {milestones.filter(m => m.completedAt).length === 0 && (
+                  <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">No recent milestones</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <!-- Upcoming Deadlines -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Upcoming Deadlines</h3>
+                <a href="#" class="text-[#FE5353] hover:text-[#E54545] text-sm font-medium">View All</a>
+              </div>
+              <div class="space-y-4" id="upcomingDeadlines">
+                {milestones.filter(m => !m.completedAt && m.dueDate).slice(0, 3).map(milestone => {
+                  const dueDate = new Date(milestone.dueDate);
+                  const daysUntil = Math.floor((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+                  const isOverdue = daysUntil < 0;
+                  
+                  return (
+                    <div class={`flex items-center gap-3 p-3 rounded-lg ${isOverdue ? 'bg-red-50' : 'bg-yellow-50'}`}>
+                      <div class={`w-2 h-2 rounded-full ${isOverdue ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-800">{milestone.title}</p>
+                        <p class="text-xs text-gray-500">{milestone.projectName || 'Unknown Project'}</p>
+                      </div>
+                      <span class={`text-xs ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
+                        {isOverdue ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) > 1 ? 's' : ''} overdue` : `${daysUntil} day${daysUntil > 1 ? 's' : ''}`}
+                      </span>
+                    </div>
+                  );
+                })}
+                {milestones.filter(m => !m.completedAt && m.dueDate).length === 0 && (
+                  <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">No upcoming deadlines</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Analytics -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-6">Progress Analytics</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Project Completion Rate</h4>
+                <div class="relative">
+                  <svg class="w-24 h-24 mx-auto" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray={`${stats.completionRate}, 100`}/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-lg font-bold text-gray-800">{stats.completionRate}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Timeline Adherence</h4>
+                <div class="relative">
+                  <svg class="w-24 h-24 mx-auto" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray={`${stats.timelineAdherence}, 100`}/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-lg font-bold text-gray-800">{stats.timelineAdherence}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Budget Efficiency</h4>
+                <div class="relative">
+                  <svg class="w-24 h-24 mx-auto" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray={`${stats.budgetEfficiency}, 100`}/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-lg font-bold text-gray-800">{stats.budgetEfficiency}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  </LGUPMTLayout>
+</Layout>
+
+<script>
+  // API Configuration
+  const API_URL = 'http://localhost:3000/api';
+  
+  // Global variables
+  let projects = [];
+  let milestones = [];
+  let timelineEvents = [];
+  let currentUser = null;
+
+  // Initialize the page
+  async function initializePage() {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Fetch user data for authentication
+        const userRes = await fetch(`${API_URL}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (userRes.ok) {
+          const userDataResponse = await userRes.json();
+          if (userDataResponse.success && userDataResponse.user) {
+            currentUser = userDataResponse.user;
+          }
+        }
+
+        // Fetch all projects from the API
+        const projectsRes = await fetch(`${API_URL}/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (projectsRes.ok) {
+          const data = await projectsRes.json();
+          if (data.success) {
+            projects = data.projects.filter(p => p.submittedToSecretariat === true);
+          }
+        }
+
+        // Fetch milestones
+        const milestonesRes = await fetch(`${API_URL}/projects/milestones`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (milestonesRes.ok) {
+          const data = await milestonesRes.json();
+          if (data.success) {
+            milestones = data.milestones || [];
+          }
+        }
+
+        // Generate timeline events
+        timelineEvents = generateTimelineEvents(projects, milestones);
+        updateTimelineUI();
+      }
+    } catch (error) {
+      console.error('Error fetching timeline data:', error);
+    }
+  }
+
+  // Initialize the page when the script loads
+  initializePage();
+
+  // Generate timeline events
+  function generateTimelineEvents(projects, milestones) {
+    const events = [];
+    
+    // Add project events
+    projects.forEach(project => {
+      if (project.submittedToSecretariatDate) {
+        events.push({
+          date: project.submittedToSecretariatDate,
+          title: 'Project Submitted to Secretariat',
+          description: `Project "${project.name}" was submitted for Secretariat review`,
+          status: 'completed',
+          project: project.name,
+          type: 'submission'
+        });
+      }
+      
+      if (project.secretariatApprovalDate) {
+        events.push({
+          date: project.secretariatApprovalDate,
+          title: 'Project Approved by Secretariat',
+          description: `Project "${project.name}" was approved by the Secretariat`,
+          status: 'completed',
+          project: project.name,
+          type: 'approval'
+        });
+      }
+      
+      if (project.startDate) {
+        events.push({
+          date: project.startDate,
+          title: 'Project Started',
+          description: `Implementation of "${project.name}" began`,
+          status: project.status === 'ongoing' ? 'active' : project.status === 'complete' ? 'completed' : 'pending',
+          project: project.name,
+          type: 'start'
+        });
+      }
+    });
+    
+    // Add milestone events
+    milestones.forEach(milestone => {
+      if (milestone.completedAt) {
+        events.push({
+          date: milestone.completedAt,
+          title: `Milestone: ${milestone.title}`,
+          description: milestone.description || `Milestone "${milestone.title}" was completed`,
+          status: 'completed',
+          project: milestone.projectName || 'Unknown Project',
+          type: 'milestone'
+        });
+      }
+    });
+    
+    // Sort events by date (newest first)
+    return events.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+  }
+
+  // Update timeline UI
+  function updateTimelineUI() {
+    updateTimelineContainer();
+    updateRecentMilestones();
+    updateUpcomingDeadlines();
+  }
+
+  // Update timeline container
+  function updateTimelineContainer() {
+    const container = document.getElementById('timelineContainer');
+    if (!container) return;
+
+    if (timelineEvents.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-gray-500">No timeline events available</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = timelineEvents.map(event => {
+      const eventDate = new Date(event.date);
+      const statusColor = event.status === 'completed' ? 'green' : 
+                        event.status === 'active' ? 'blue' : 'yellow';
+      
+      return `
+        <div class="relative flex items-start">
+          <div class="absolute left-6 top-4 w-4 h-4 bg-${statusColor}-500 rounded-full border-4 border-white shadow-lg"></div>
+          <div class="ml-16 bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex-1">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-semibold text-gray-800">${event.title}</h4>
+              <span class="text-sm text-gray-500">${eventDate.toLocaleDateString()}</span>
+            </div>
+            <p class="text-gray-600 mb-2">${event.description}</p>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800">
+              ${event.project}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Update recent milestones
+  function updateRecentMilestones() {
+    const container = document.getElementById('recentMilestones');
+    if (!container) return;
+
+    const recentMilestones = milestones.filter(m => m.completedAt).slice(0, 3);
+    
+    if (recentMilestones.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-4">
+          <p class="text-gray-500 text-sm">No recent milestones</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = recentMilestones.map(milestone => {
+      const completedDate = new Date(milestone.completedAt);
+      const daysAgo = Math.floor((new Date() - completedDate) / (1000 * 60 * 60 * 24));
+      
+      return `
+        <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+          <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-800">${milestone.title}</p>
+            <p class="text-xs text-gray-500">${milestone.projectName || 'Unknown Project'}</p>
+          </div>
+          <span class="text-xs text-gray-400">${daysAgo === 0 ? 'Today' : `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Update upcoming deadlines
+  function updateUpcomingDeadlines() {
+    const container = document.getElementById('upcomingDeadlines');
+    if (!container) return;
+
+    const upcomingDeadlines = milestones.filter(m => !m.completedAt && m.dueDate).slice(0, 3);
+    
+    if (upcomingDeadlines.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-4">
+          <p class="text-gray-500 text-sm">No upcoming deadlines</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = upcomingDeadlines.map(milestone => {
+      const dueDate = new Date(milestone.dueDate);
+      const daysUntil = Math.floor((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+      const isOverdue = daysUntil < 0;
+      
+      return `
+        <div class="flex items-center gap-3 p-3 rounded-lg ${isOverdue ? 'bg-red-50' : 'bg-yellow-50'}">
+          <div class="w-2 h-2 rounded-full ${isOverdue ? 'bg-red-500' : 'bg-yellow-500'}"></div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-800">${milestone.title}</p>
+            <p class="text-xs text-gray-500">${milestone.projectName || 'Unknown Project'}</p>
+          </div>
+          <span class="text-xs ${isOverdue ? 'text-red-400' : 'text-gray-400'}">
+            ${isOverdue ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) > 1 ? 's' : ''} overdue` : `${daysUntil} day${daysUntil > 1 ? 's' : ''}`}
+          </span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Filter timeline
+  function filterTimeline() {
+    const filter = document.getElementById('timelineFilter').value;
+    let filteredEvents = timelineEvents;
+    
+    if (filter !== 'all') {
+      filteredEvents = timelineEvents.filter(event => {
+        if (filter === 'active') return event.status === 'active';
+        if (filter === 'completed') return event.status === 'completed';
+        if (filter === 'delayed') return event.status === 'delayed';
+        return true;
+      });
+    }
+    
+    updateTimelineContainer(filteredEvents);
+  }
+
+  // Load timeline data
+  async function loadTimelineData() {
+    await initializePage();
+  }
+
+  // Add milestone
+  function addMilestone() {
+    // TODO: Implement add milestone functionality
+    console.log('Adding milestone...');
+    alert('Milestone added successfully!');
+  }
+
+  // Export timeline
+  function exportTimeline() {
+    // TODO: Implement export functionality
+    console.log('Exporting timeline...');
+    alert('Timeline exported successfully!');
+  }
+
+  // Refresh timeline
+  async function refreshTimeline() {
+    await loadTimelineData();
+  }
+
+  // Make functions globally available
+  window.loadTimelineData = loadTimelineData;
+  window.addMilestone = addMilestone;
+  window.exportTimeline = exportTimeline;
+  window.refreshTimeline = refreshTimeline;
+  window.filterTimeline = filterTimeline;
+</script> 

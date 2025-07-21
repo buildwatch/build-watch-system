@@ -1,0 +1,2216 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
+
+const API_URL = 'http://localhost:3000/api/users';
+const page = Astro.url.searchParams.get('page') || 1;
+const search = Astro.url.searchParams.get('search') || '';
+const sortBy = Astro.url.searchParams.get('sortBy') || 'createdAt';
+const sortOrder = Astro.url.searchParams.get('sortOrder') || 'desc';
+const filterGroup = Astro.url.searchParams.get('filterGroup') || '';
+const filterDepartment = Astro.url.searchParams.get('filterDepartment') || '';
+const limit = 10;
+let users = [];
+let deletedUsers = [];
+let pagination = { page: 1, limit: 10, total: 0, pages: 1 };
+let error = '';
+
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  const params = new URLSearchParams({ page, limit, sortBy, sortOrder });
+  if (search) params.append('search', search);
+  if (filterGroup) params.append('filterGroup', filterGroup);
+  if (filterDepartment) params.append('filterDepartment', filterDepartment);
+  const res = await fetch(`${API_URL}?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+  if (data.success) {
+    users = data.users;
+    pagination = data.pagination;
+  } else {
+    error = data.error || 'Failed to fetch users.';
+  }
+  
+  // Fetch deleted users
+  const deletedRes = await fetch(`${API_URL}/deleted`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const deletedData = await deletedRes.json();
+  if (deletedData.success) {
+    deletedUsers = deletedData.users || [];
+  }
+} catch (err) {
+  error = 'Failed to fetch users.';
+}
+---
+<Layout title="User Management">
+  <SysAdminLayout>
+    <style>
+      /* Ensure date picker works properly */
+      input[type="date"] {
+        appearance: auto !important;
+        -webkit-appearance: auto !important;
+        -moz-appearance: auto !important;
+        background: white !important;
+        cursor: pointer !important;
+      }
+      
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 1;
+      }
+      
+      input[type="date"]::-webkit-inner-spin-button,
+      input[type="date"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    </style>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <h1 class="text-2xl font-bold mb-6 text-gray-800 animate-fade-in-up" style="animation-delay: 0.1s;">User Management</h1>
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <!-- Filters Section -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-xl">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">Filters & Sorting</h3>
+          <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <input
+                type="text"
+                name="search"
+                value={search}
+                placeholder="Search users..."
+                class="border border-gray-300 rounded-lg px-3 py-2 w-full shadow-sm focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Group Filter</label>
+              <select name="filterGroup" class="border border-gray-300 rounded-lg px-3 py-2 w-full shadow-sm focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent transition-all">
+                <option value="">All Groups</option>
+                <option value="LGU-PMT" selected={filterGroup === 'LGU-PMT'}>LGU-PMT</option>
+                <option value="LGU-IU" selected={filterGroup === 'LGU-IU'}>LGU-IU</option>
+                <option value="EIU" selected={filterGroup === 'EIU'}>EIU</option>
+                <option value="EMS" selected={filterGroup === 'EMS'}>EMS</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Department Filter</label>
+              <select name="filterDepartment" class="border border-gray-300 rounded-lg px-3 py-2 w-full shadow-sm focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent transition-all">
+                <option value="">All Departments</option>
+                <option value="Municipal Engineer's Office" selected={filterDepartment === "Municipal Engineer's Office"}>Municipal Engineer's Office</option>
+                <option value="Municipal Agriculturist's Office" selected={filterDepartment === "Municipal Agriculturist's Office"}>Municipal Agriculturist's Office</option>
+                <option value="Municipal General Services Office" selected={filterDepartment === "Municipal General Services Office"}>Municipal General Services Office</option>
+                <option value="Municipal Social Welfare and Development Office" selected={filterDepartment === "Municipal Social Welfare and Development Office"}>Municipal Social Welfare and Development Office</option>
+                <option value="Municipal Disaster and Risk Reduction Management Office" selected={filterDepartment === "Municipal Disaster and Risk Reduction Management Office"}>Municipal Disaster and Risk Reduction Management Office</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+              <select name="sortBy" class="border border-gray-300 rounded-lg px-3 py-2 w-full shadow-sm focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent transition-all">
+                <option value="createdAt" selected={sortBy === 'createdAt'}>Date Created</option>
+                <option value="fullName" selected={sortBy === 'fullName'}>Full Name</option>
+                <option value="group" selected={sortBy === 'group'}>Group</option>
+                <option value="department" selected={sortBy === 'department'}>Department</option>
+                <option value="role" selected={sortBy === 'role'}>Role</option>
+              </select>
+            </div>
+            <input type="hidden" name="sortOrder" value={sortOrder} />
+            <input type="hidden" name="page" value="1" />
+            <div class="md:col-span-2 lg:col-span-4 flex gap-2">
+              <button type="submit" class="px-4 py-2 bg-[#3D50D7] text-white rounded-lg font-semibold hover:bg-[#2a3bb8] transition-all">Apply Filters</button>
+              <a href="?" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-all">Clear Filters</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+          <h2 class="text-xl font-bold text-[#3D50D7]">Active Users</h2>
+          <div class="flex gap-2 w-full md:w-auto">
+            <button type="button" id="addUserBtn" class="px-4 py-2 bg-gradient-to-r from-[#3D50D7] to-[#2a3bb8] text-white rounded-xl font-semibold shadow hover:from-[#2a3bb8] hover:to-[#3D50D7] transition-all">Add User</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+          <table class="min-w-full table-auto border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-gray-700">
+                <th class="px-4 py-2 text-left">
+                  <a href={`?sortBy=fullName&sortOrder=${sortBy === 'fullName' && sortOrder === 'asc' ? 'desc' : 'asc'}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}`} class="flex items-center gap-1 hover:text-[#3D50D7] transition-colors">
+                    Full Name
+                    {sortBy === 'fullName' && (
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d={sortOrder === 'asc' ? "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" : "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"} clip-rule="evenodd"></path>
+                      </svg>
+                    )}
+                  </a>
+                </th>
+                <th class="px-4 py-2 text-left">Email Username</th>
+                <th class="px-4 py-2 text-left">Contact Number</th>
+                <th class="px-4 py-2 text-left">Birthdate</th>
+                <th class="px-4 py-2 text-left">
+                  <a href={`?sortBy=group&sortOrder=${sortBy === 'group' && sortOrder === 'asc' ? 'desc' : 'asc'}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}`} class="flex items-center gap-1 hover:text-[#3D50D7] transition-colors">
+                    Group
+                    {sortBy === 'group' && (
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d={sortOrder === 'asc' ? "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" : "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"} clip-rule="evenodd"></path>
+                      </svg>
+                    )}
+                  </a>
+                </th>
+                <th class="px-4 py-2 text-left">
+                  <a href={`?sortBy=department&sortOrder=${sortBy === 'department' && sortOrder === 'asc' ? 'desc' : 'asc'}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}`} class="flex items-center gap-1 hover:text-[#3D50D7] transition-colors">
+                    Office/Department
+                    {sortBy === 'department' && (
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d={sortOrder === 'asc' ? "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" : "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"} clip-rule="evenodd"></path>
+                      </svg>
+                    )}
+                  </a>
+                </th>
+                <th class="px-4 py-2 text-left">
+                  <a href={`?sortBy=role&sortOrder=${sortBy === 'role' && sortOrder === 'asc' ? 'desc' : 'asc'}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}`} class="flex items-center gap-1 hover:text-[#3D50D7] transition-colors">
+                    Role
+                    {sortBy === 'role' && (
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d={sortOrder === 'asc' ? "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" : "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"} clip-rule="evenodd"></path>
+                      </svg>
+                    )}
+                  </a>
+                </th>
+                <th class="px-4 py-2 text-left">Subrole</th>
+                <th class="px-4 py-2 text-left">Project Code</th>
+                <th class="px-4 py-2 text-left">Unique User ID</th>
+                <th class="px-4 py-2 text-left">Status</th>
+                <th class="px-4 py-2 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {error ? (
+                <tr><td colspan="12" class="text-center py-8 text-red-500">{error}</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td colspan="12" class="text-center py-8 text-gray-400">No users found.</td></tr>
+              ) : (
+                users.map(user => {
+                  const isProtected = user.role === 'SYS.AD' && user.subRole === 'EXECUTIVE';
+                  return (
+                    <tr key={user.id} class={`border-b hover:bg-gray-50 transition-all ${isProtected ? 'bg-blue-50' : ''}`}>
+                      <td class="px-4 py-2 font-medium">
+                        <div class="flex items-center gap-2">
+                          {user.fullName || user.name}
+                          {isProtected && (
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                              Protected
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td class="px-4 py-2 text-sm text-gray-600">{user.username || user.email}</td>
+                      <td class="px-4 py-2">{user.contactNumber || '-'}</td>
+                      <td class="px-4 py-2 text-sm">{user.birthdate ? new Date(user.birthdate).toLocaleDateString() : '-'}</td>
+                      <td class="px-4 py-2">{user.group || user.role}</td>
+                      <td class="px-4 py-2">{user.department || '-'}</td>
+                      <td class="px-4 py-2">{user.role}</td>
+                      <td class="px-4 py-2">{user.subRole || '-'}</td>
+                      <td class="px-4 py-2">{user.projectCode || '-'}</td>
+                      <td class="px-4 py-2 text-sm text-gray-600">{user.userId || '-'}</td>
+                      <td class="px-4 py-2">
+                        <span class={`px-2 py-1 rounded text-xs font-semibold ${user.status === 'active' ? 'bg-green-100 text-green-700' : user.status === 'blocked' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'}`}>{user.status}</span>
+                      </td>
+                      <td class="px-4 py-2">
+                        <button class="text-blue-600 hover:underline mr-2 editUserBtn transition-all" data-user={JSON.stringify(user)}>Edit</button>
+                        {isProtected ? (
+                          <button class="text-gray-400 cursor-not-allowed" title="Protected account - cannot be deleted" disabled>Delete</button>
+                        ) : (
+                          <button class="text-red-600 hover:underline deleteUserBtn transition-all" data-userid={user.id}>Delete</button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="flex justify-end items-center gap-2 mt-6">
+          <a href={`?page=${pagination.page - 1}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}${sortBy ? `&sortBy=${sortBy}` : ''}${sortOrder ? `&sortOrder=${sortOrder}` : ''}`} class={`px-3 py-1 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all ${pagination.page === 1 ? 'pointer-events-none opacity-50' : ''}`}>Prev</a>
+          <span class="text-gray-600">Page {pagination.page} of {pagination.pages}</span>
+          <a href={`?page=${pagination.page + 1}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}${sortBy ? `&sortBy=${sortBy}` : ''}${sortOrder ? `&sortOrder=${sortOrder}` : ''}`} class={`px-3 py-1 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all ${pagination.page === pagination.pages ? 'pointer-events-none opacity-50' : ''}`}>Next</a>
+        </div>
+      </div>
+
+      <!-- Notification Card for New User Requests -->
+      <div class="bg-white rounded-xl shadow p-6 mb-8 animate-fade-in-up" style="animation-delay: 0.3s;">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-[#3D50D7]">New User Requests</h3>
+          <button id="toggleNotifications" class="text-[#3D50D7] hover:text-[#2a3bb8] transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="notificationsContent" class="space-y-4">
+          <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 bg-[#3D50D7] rounded-full flex items-center justify-center text-white font-semibold">
+                JD
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="font-semibold">John Doe</h4>
+                  <span class="text-xs text-gray-500">2 hours ago</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">Requesting access as LGU-PMT - MPMEC Member</p>
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                  <span>Email: john.doe@lgu.gov.ph</span>
+                  <span>•</span>
+                  <span>Project: Santa Cruz Infrastructure</span>
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <button class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition">Approve</button>
+                  <button class="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition">Reject</button>
+                  <button class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition">View Details</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
+                MJ
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="font-semibold">Maria Santos</h4>
+                  <span class="text-xs text-gray-500">1 day ago</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">Requesting access as EIU - Member</p>
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                  <span>Email: maria.santos@eiu.gov.ph</span>
+                  <span>•</span>
+                  <span>Project: Laguna Development</span>
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <button class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition">Approve</button>
+                  <button class="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition">Reject</button>
+                  <button class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition">View Details</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Deleted Users Section -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-[#3D50D7]">Recently Deleted Users</h3>
+          <button id="toggleDeletedUsers" class="text-[#3D50D7] hover:text-[#2a3bb8] transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="deletedUsersContent" class="space-y-4">
+          {deletedUsers.length === 0 ? (
+            <div class="text-center py-8 text-gray-400">No recently deleted users.</div>
+          ) : (
+            deletedUsers.map(user => (
+              <div class="border border-red-200 rounded-lg p-4 hover:bg-red-50 transition" data-user-id={user.id} data-deleted-at={user.deletedAt}>
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                      <h4 class="font-semibold text-red-700">{user.fullName || user.name}</h4>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500">Deleted: {new Date(user.deletedAt).toLocaleDateString()}</span>
+                        <span class="text-xs text-red-600 font-medium countdown-timer" data-deleted-at={user.deletedAt}></span>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">{user.email}</p>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                      <span>Group: {user.group || user.role}</span>
+                      <span>•</span>
+                      <span>Role: {user.role}</span>
+                      {user.subRole && (
+                        <>
+                          <span>•</span>
+                          <span>Subrole: {user.subRole}</span>
+                        </>
+                      )}
+                    </div>
+                    <div class="flex gap-2">
+                      <button class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition restoreUserBtn" data-user-id={user.id}>Restore User</button>
+                      <button class="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition permanentDeleteBtn" data-user-id={user.id}>Permanent Delete</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <!-- Add User Modal -->
+      <div id="addUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-8 relative">
+          <button type="button" id="closeAddUserModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+          <h2 class="text-xl font-bold mb-4 text-[#3D50D7]">Add New User</h2>
+          <form id="addUserForm" class="flex flex-col gap-4">
+            <div class="flex gap-2">
+              <div class="w-1/3">
+                <input type="text" name="firstName" placeholder="First Name" required class="border rounded-lg px-4 py-2 w-full" />
+                <div id="firstNameError" class="text-red-500 text-xs mt-1 hidden">Numbers and special characters are not allowed.</div>
+              </div>
+              <div class="w-1/3">
+                <input type="text" name="middleName" placeholder="Middle Name" class="border rounded-lg px-4 py-2 w-full" />
+                <div id="middleNameError" class="text-red-500 text-xs mt-1 hidden">Numbers and special characters are not allowed.</div>
+              </div>
+              <div class="w-1/3">
+                <input type="text" name="lastName" placeholder="Last Name" required class="border rounded-lg px-4 py-2 w-full" />
+                <div id="lastNameError" class="text-red-500 text-xs mt-1 hidden">Numbers and special characters are not allowed.</div>
+              </div>
+            </div>
+            <input type="text" name="fullName" placeholder="Full Name (auto)" readonly class="border rounded-lg px-4 py-2 bg-gray-100" />
+            
+            <!-- Email Username field with icon and tooltip -->
+            <div class="relative">
+              <div class="flex items-center">
+                <input type="text" name="username" placeholder="Email (Username)" required class="border rounded-lg px-4 py-2 pr-10 w-full" />
+                <div class="absolute right-3 cursor-help group">
+                  <svg class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                  </svg>
+                  <div class="absolute bottom-full right-0 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                    Used for username login validation and where the Unique User ID will be sent.
+                    <div class="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <input type="tel" name="contactNumber" id="contactNumberField" placeholder="Contact Number" required class="border rounded-lg px-4 py-2" />
+            <div id="contactNumberError" class="text-red-500 text-xs mt-1 hidden">Only numbers are allowed.</div>
+            
+            <!-- Password field -->
+            <input type="password" name="password" id="passwordField" placeholder="Password" required class="border rounded-lg px-4 py-2" />
+            
+            <!-- Confirm Password field -->
+            <input type="password" name="confirmPassword" id="confirmPasswordField" placeholder="Confirm Password" required class="border rounded-lg px-4 py-2" />
+            <div id="confirmPasswordError" class="text-red-500 text-xs mt-1 hidden">Passwords do not match.</div>
+            
+            <!-- Password Strength Indicator -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-600">Password Strength:</span>
+                <span id="strengthText" class="font-medium">Weak</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="strengthBar" class="h-2 rounded-full transition-all duration-300" style="width: 0%; background-color: #ef4444;"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center gap-1">
+                  <div id="lengthCheck" class="w-3 h-3 rounded-full bg-gray-300"></div>
+                  <span class="text-gray-600">At least 8 characters</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div id="caseCheck" class="w-3 h-3 rounded-full bg-gray-300"></div>
+                  <span class="text-gray-600">Uppercase & lowercase</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div id="underscoreCheck" class="w-3 h-3 rounded-full bg-gray-300"></div>
+                  <span class="text-gray-600">Contains underscore (_)</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div id="strengthCheck" class="w-3 h-3 rounded-full bg-gray-300"></div>
+                  <span class="text-gray-600">Medium strength minimum</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="text-xs text-gray-500 -mt-2 mb-1">Password must be at least 8 characters, include uppercase & lowercase letters, and contain an underscore (_). Minimum strength: Medium.</div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Birthdate *</label>
+              <input 
+                type="date" 
+                name="birthdate" 
+                id="birthdateField" 
+                required 
+                class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent transition-all cursor-pointer" 
+                style="appearance: auto; -webkit-appearance: auto; -moz-appearance: auto;"
+              />
+              <div id="birthdateError" class="text-red-500 text-xs mt-1 hidden">User must be at least 18 years old.</div>
+              <div class="text-xs text-gray-500 mt-1">Select a date (user must be at least 18 years old)</div>
+            </div>
+            <div class="flex gap-2">
+              <select name="group" id="groupSelect" required class="border rounded-lg px-4 py-2 w-1/2">
+                <option value="">Select Group</option>
+                <option value="LGU-PMT">LGU-PMT</option>
+                <option value="LGU-IU">LGU-IU</option>
+                <option value="EIU">EIU</option>
+                <option value="EMS">EMS</option>
+              </select>
+              <select name="role" id="roleSelect" required class="border rounded-lg px-4 py-2 w-1/2">
+                <option value="">Select Role</option>
+              </select>
+            </div>
+            <div class="flex gap-2">
+              <div id="subRoleContainer" class="w-1/2">
+                <select name="subRole" id="subRoleSelect" class="border rounded-lg px-4 py-2 w-full">
+                  <option value="">Select Subrole</option>
+                </select>
+              </div>
+              <div id="projectCodeContainer" class="w-1/2 hidden">
+                <input type="text" name="projectCode" placeholder="Project Code" class="border rounded-lg px-4 py-2 w-full" />
+              </div>
+            </div>
+            
+            <!-- Office/Department dropdown for LGU-IU Implementing Office - Officer -->
+            <div id="officeDepartmentContainer" class="hidden">
+              <select name="officeDepartment" id="officeDepartmentSelect" class="border rounded-lg px-4 py-2 w-full">
+                <option value="">Select Office/Department</option>
+                <option value="Municipal Engineer's Office">Municipal Engineer's Office</option>
+                <option value="Municipal Agriculturist's Office">Municipal Agriculturist's Office</option>
+                <option value="Municipal General Services Office">Municipal General Services Office</option>
+                <option value="Municipal Social Welfare and Development Office">Municipal Social Welfare and Development Office</option>
+                <option value="Municipal Disaster and Risk Reduction Management Office">Municipal Disaster and Risk Reduction Management Office</option>
+              </select>
+            </div>
+            
+            <!-- Unique User ID field -->
+            <div class="relative">
+              <input type="text" name="userId" id="userIdField" placeholder="Unique User ID (Auto-generated)" required class="border rounded-lg px-4 py-2 w-full" readonly />
+              <div class="text-xs text-gray-500 mt-1">This field will be auto-generated after email verification.</div>
+            </div>
+            
+            <!-- Generate User ID button -->
+            <div class="relative">
+              <button type="button" id="generateUserIdBtn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                Generate User ID
+              </button>
+              <div class="text-xs text-gray-500 mt-1">Click to generate Unique User ID based on User Group.</div>
+            </div>
+            
+            <!-- Create User (Direct) button only -->
+            <button type="button" id="createUserBtn" onclick="testCreateUser()" class="px-4 py-2 bg-[#3D50D7] text-white rounded-lg font-semibold hover:bg-[#2a3bb8] transition">Create User (Direct)</button>
+            <div id="addUserError" class="text-red-500 text-sm mt-2 hidden"></div>
+          </form>
+          <script>
+            // Single, clean implementation of user creation functionality
+            async function createUserDirect() {
+              console.log('createUserDirect function called');
+              
+              try {
+                // Get form data directly
+                const firstName = document.querySelector('input[name="firstName"]').value;
+                const middleName = document.querySelector('input[name="middleName"]').value;
+                const lastName = document.querySelector('input[name="lastName"]').value;
+                const fullName = document.querySelector('input[name="fullName"]').value;
+                const username = document.querySelector('input[name="username"]').value;
+                const password = document.getElementById('passwordField').value;
+                const confirmPassword = document.getElementById('confirmPasswordField').value;
+                const birthdate = document.getElementById('birthdateField').value;
+                const contactNumber = document.getElementById('contactNumberField').value;
+                const group = document.getElementById('groupSelect').value;
+                const role = document.getElementById('roleSelect').value;
+                const subRole = document.getElementById('subRoleSelect').value;
+                const projectCode = document.querySelector('input[name="projectCode"]').value;
+                const officeDepartment = document.getElementById('officeDepartmentSelect')?.value || '';
+                const userId = document.getElementById('userIdField').value;
+                
+                console.log('Form data collected:', {
+                  firstName, middleName, lastName, fullName, username, 
+                  password: password ? '***' : 'empty',
+                  confirmPassword: confirmPassword ? '***' : 'empty',
+                  birthdate, contactNumber, group, role, subRole, projectCode, officeDepartment, userId
+                });
+                
+                // Validate required fields
+                if (!firstName || !lastName || !username || !password || !birthdate || !contactNumber || !group) {
+                  alert('Please fill in all required fields (First Name, Last Name, Email, Password, Birthdate, Contact Number, Group).');
+                  return;
+                }
+                
+                // Validate password confirmation
+                if (password !== confirmPassword) {
+                  alert('Passwords do not match. Please enter the same password in both fields.');
+                  return;
+                }
+                
+                // Validate age requirement
+                const today = new Date();
+                const birthDate = new Date(birthdate);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                  age--;
+                }
+                
+                if (age < 18) {
+                  alert(`User must be at least 18 years old. Current age: ${age} years.`);
+                  return;
+                }
+                
+                // Validate User ID - MUST be generated first
+                if (!userId) {
+                  alert('Please generate the Unique User ID first by clicking "Generate User ID" button.');
+                  return;
+                }
+                
+                const payload = {
+                  firstName,
+                  middleName,
+                  lastName,
+                  fullName,
+                  username,
+                  email: username,
+                  password,
+                  birthdate,
+                  contactNumber,
+                  role: group,
+                  subRole: role || subRole,
+                  projectCode,
+                  department: officeDepartment, // Add department field
+                  userId,
+                  group: group
+                };
+                
+                console.log('Sending payload to backend:', { ...payload, password: '***' });
+                
+                const token = localStorage.getItem('token') || '';
+                
+                const res = await fetch('http://localhost:3000/api/users', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify(payload)
+                });
+                
+                console.log('Backend response status:', res.status);
+                const data = await res.json();
+                console.log('Backend response data:', data);
+                
+                if (res.ok) {
+                  alert('User created successfully!');
+                  window.location.reload();
+                } else {
+                  alert('Failed to create user: ' + (data.error || 'Unknown error'));
+                }
+              } catch (err) {
+                console.error('Error creating user:', err);
+                alert('Failed to create user: ' + err.message);
+              }
+            }
+            
+            // Auto-generate full name
+            document.addEventListener('DOMContentLoaded', function() {
+              const first = document.querySelector('input[name="firstName"]');
+              const middle = document.querySelector('input[name="middleName"]');
+              const last = document.querySelector('input[name="lastName"]');
+              const full = document.querySelector('input[name="fullName"]');
+              
+              // Error elements
+              const firstNameError = document.getElementById('firstNameError');
+              const middleNameError = document.getElementById('middleNameError');
+              const lastNameError = document.getElementById('lastNameError');
+              
+              // Birthday validation elements
+              const birthdateField = document.getElementById('birthdateField');
+              const birthdateError = document.getElementById('birthdateError');
+              
+              // Contact number validation elements
+              const contactNumberField = document.getElementById('contactNumberField');
+              const contactNumberError = document.getElementById('contactNumberError');
+              
+              // Password validation elements
+              const passwordField = document.getElementById('passwordField');
+              const confirmPasswordField = document.getElementById('confirmPasswordField');
+              const confirmPasswordError = document.getElementById('confirmPasswordError');
+              const strengthText = document.getElementById('strengthText');
+              const strengthBar = document.getElementById('strengthBar');
+              const lengthCheck = document.getElementById('lengthCheck');
+              const caseCheck = document.getElementById('caseCheck');
+              const underscoreCheck = document.getElementById('underscoreCheck');
+              const strengthCheck = document.getElementById('strengthCheck');
+              
+              // Office/Department container
+              const officeDepartmentContainer = document.getElementById('officeDepartmentContainer');
+              
+              // Password validation function
+              function validatePassword(password) {
+                const checks = {
+                  length: password.length >= 8,
+                  case: /[a-z]/.test(password) && /[A-Z]/.test(password),
+                  underscore: /_/.test(password)
+                };
+                
+                // Calculate strength score
+                let score = 0;
+                if (checks.length) score += 25;
+                if (checks.case) score += 25;
+                if (checks.underscore) score += 25;
+                
+                // Additional complexity points
+                if (/[0-9]/.test(password)) score += 15;
+                if (/[^a-zA-Z0-9_]/.test(password)) score += 10;
+                
+                // Determine strength level
+                let strength = 'Weak';
+                let color = '#ef4444'; // red
+                
+                if (score >= 90) {
+                  strength = 'Very Strong';
+                  color = '#059669'; // emerald
+                } else if (score >= 70) {
+                  strength = 'Strong';
+                  color = '#10b981'; // green
+                } else if (score >= 50) {
+                  strength = 'Medium';
+                  color = '#f59e0b'; // amber
+                } else {
+                  strength = 'Weak';
+                  color = '#ef4444'; // red
+                }
+                
+                // Update UI
+                strengthText.textContent = strength;
+                strengthText.className = 'font-medium';
+                
+                // Set text color based on strength
+                if (strength === 'Very Strong') {
+                  strengthText.classList.add('text-emerald-600');
+                  strengthText.classList.remove('text-green-600', 'text-amber-600', 'text-red-600');
+                } else if (strength === 'Strong') {
+                  strengthText.classList.add('text-green-600');
+                  strengthText.classList.remove('text-emerald-600', 'text-amber-600', 'text-red-600');
+                } else if (strength === 'Medium') {
+                  strengthText.classList.add('text-amber-600');
+                  strengthText.classList.remove('text-emerald-600', 'text-green-600', 'text-red-600');
+                } else {
+                  strengthText.classList.add('text-red-600');
+                  strengthText.classList.remove('text-emerald-600', 'text-green-600', 'text-amber-600');
+                }
+                
+                strengthBar.style.width = score + '%';
+                strengthBar.style.backgroundColor = color;
+                
+                // Update checkmarks
+                lengthCheck.innerHTML = checks.length ? '✓' : '✗';
+                lengthCheck.className = checks.length ? 'text-green-500' : 'text-red-500';
+                
+                caseCheck.innerHTML = checks.case ? '✓' : '✗';
+                caseCheck.className = checks.case ? 'text-green-500' : 'text-red-500';
+                
+                underscoreCheck.innerHTML = checks.underscore ? '✓' : '✗';
+                underscoreCheck.className = checks.underscore ? 'text-green-500' : 'text-red-500';
+                
+                strengthCheck.innerHTML = score >= 50 ? '✓' : '✗';
+                strengthCheck.className = score >= 50 ? 'text-green-500' : 'text-red-500';
+                
+                return score >= 50;
+              }
+              
+              // Password field event listeners
+              passwordField.addEventListener('input', function() {
+                const isValid = validatePassword(this.value);
+                confirmPasswordField.disabled = !isValid;
+                
+                if (confirmPasswordField.value && this.value !== confirmPasswordField.value) {
+                  confirmPasswordError.textContent = 'Passwords do not match';
+                  confirmPasswordError.classList.remove('hidden');
+                } else {
+                  confirmPasswordError.classList.add('hidden');
+                }
+              });
+              
+              confirmPasswordField.addEventListener('input', function() {
+                if (this.value !== passwordField.value) {
+                  confirmPasswordError.textContent = 'Passwords do not match';
+                  confirmPasswordError.classList.remove('hidden');
+                } else {
+                  confirmPasswordError.classList.add('hidden');
+                }
+              });
+              
+              // Name validation function
+              function validateNameField(field, errorElement) {
+                const value = field.value.trim();
+                if (value.length < 2) {
+                  errorElement.textContent = 'Name must be at least 2 characters long';
+                  errorElement.classList.remove('hidden');
+                  return false;
+                } else if (!/^[a-zA-Z\s]+$/.test(value)) {
+                  errorElement.textContent = 'Name can only contain letters and spaces';
+                  errorElement.classList.remove('hidden');
+                  return false;
+                } else {
+                  errorElement.classList.add('hidden');
+                  return true;
+                }
+              }
+              
+              // Capitalize words function
+              function capitalizeWords(str) {
+                return str.replace(/\b\w/g, l => l.toUpperCase());
+              }
+              
+              // Birthday validation
+              birthdateField.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const today = new Date();
+                const age = today.getFullYear() - selectedDate.getFullYear();
+                const monthDiff = today.getMonth() - selectedDate.getMonth();
+                const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < selectedDate.getDate()) ? age - 1 : age;
+                
+                if (actualAge < 18) {
+                  birthdateError.textContent = `User must be at least 18 years old. Current age: ${actualAge} years.`;
+                  birthdateError.classList.remove('hidden');
+                } else {
+                  birthdateError.classList.add('hidden');
+                }
+              });
+              
+              // Set maximum date for birthdate field (18 years ago from today)
+              function setMaxBirthdate() {
+                const today = new Date();
+                const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+                const maxDateString = maxDate.toISOString().split('T')[0];
+                birthdateField.setAttribute('max', maxDateString);
+              }
+              
+              // Initialize max date
+              setMaxBirthdate();
+              
+              // Contact number validation
+              contactNumberField.addEventListener('input', function() {
+                const value = this.value.replace(/\D/g, '');
+                if (value.length < 11) {
+                  contactNumberError.textContent = 'Contact number must be at least 11 digits';
+                  contactNumberError.classList.remove('hidden');
+                } else {
+                  contactNumberError.classList.add('hidden');
+                }
+                this.value = value;
+              });
+              
+              // User ID generation functionality
+              const generateUserIdBtn = document.getElementById('generateUserIdBtn');
+              const userIdField = document.getElementById('userIdField');
+              const usernameField = document.querySelector('input[name="username"]');
+              const groupSelect = document.getElementById('groupSelect');
+              
+              // Store the generated User ID for validation
+              let generatedUserId = null;
+              
+              generateUserIdBtn.addEventListener('click', function() {
+                const email = usernameField.value.trim();
+                const selectedGroup = groupSelect.value;
+                
+                if (!email) {
+                  showVerificationMessage('Please enter an email address first.', 'error');
+                  return;
+                }
+                
+                if (!selectedGroup) {
+                  showVerificationMessage('Please select a User Group first.', 'error');
+                  return;
+                }
+                
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                  showVerificationMessage('Please enter a valid email address.', 'error');
+                  return;
+                }
+                
+                // Show loading state
+                generateUserIdBtn.disabled = true;
+                generateUserIdBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...';
+                
+                // Generate Unique User ID based on group and sequential count
+                generateUniqueUserId(selectedGroup, email);
+              });
+              
+              // Function to generate Unique User ID
+              async function generateUniqueUserId(group, email) {
+                try {
+                  // Get the count of existing users in this group
+                  const response = await fetch(`http://localhost:3000/api/users/count-by-group?group=${encodeURIComponent(group)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${getCookie('token')}`
+                    }
+                  });
+                  
+                  let userCount = 0;
+                  if (response.ok) {
+                    const data = await response.json();
+                    userCount = data.count || 0;
+                  }
+                  
+                  // Generate the next sequential number
+                  const nextNumber = userCount + 1;
+                  const paddedNumber = nextNumber.toString().padStart(4, '0');
+                  
+                  // Create Unique User ID based on group
+                  const userId = `${group}-${paddedNumber}`;
+                  generatedUserId = userId;
+                  
+                  // Update the UI - auto-fill the field with the generated ID
+                  userIdField.value = userId;
+                  userIdField.classList.remove('border-red-500', 'border-gray-300');
+                  userIdField.classList.add('border-green-500');
+                  userIdField.readOnly = true;
+                  userIdField.classList.add('bg-gray-100');
+                  
+                  showVerificationMessage(`Unique User ID ${userId} has been generated successfully!`, 'success');
+                  
+                  // Enable the Create User button
+                  const createUserBtn = document.getElementById('createUserBtn');
+                  if (createUserBtn) {
+                    createUserBtn.disabled = false;
+                    createUserBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    createUserBtn.classList.add('hover:bg-[#2a3bb8]');
+                  }
+                  
+                } catch (error) {
+                  console.error('Error generating User ID:', error);
+                  showVerificationMessage('Failed to generate User ID. Please try again.', 'error');
+                } finally {
+                  // Reset button state
+                  generateUserIdBtn.disabled = false;
+                  generateUserIdBtn.innerHTML = 'Generate User ID';
+                }
+              }
+              
+              // Function to validate entered User ID
+              function validateEnteredUserId() {
+                const enteredUserId = this.value.trim();
+                
+                if (enteredUserId === generatedUserId) {
+                  this.classList.remove('border-red-500', 'border-gray-300');
+                  this.classList.add('border-green-500');
+                  showVerificationMessage('User ID verified successfully!', 'success');
+                } else if (enteredUserId && enteredUserId !== generatedUserId) {
+                  this.classList.remove('border-green-500', 'border-gray-300');
+                  this.classList.add('border-red-500');
+                  showVerificationMessage('Invalid User ID. Please check your email and try again.', 'error');
+                } else {
+                  this.classList.remove('border-green-500', 'border-red-500');
+                  this.classList.add('border-gray-300');
+                }
+              }
+              
+              // Helper function to get cookie value
+              function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return '';
+              }
+              
+              function showVerificationMessage(message, type) {
+                // Remove existing message
+                const existingMessage = document.querySelector('.verification-message');
+                if (existingMessage) {
+                  existingMessage.remove();
+                }
+                
+                // Create new message
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `verification-message mt-2 px-3 py-2 text-xs rounded-lg ${
+                  type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 
+                  type === 'error' ? 'bg-red-100 text-red-700 border border-red-200' : 
+                  'bg-blue-100 text-blue-700 border border-blue-200'
+                }`;
+                messageDiv.textContent = message;
+                
+                // Insert after the generate button
+                generateUserIdBtn.parentNode.insertBefore(messageDiv, generateUserIdBtn.nextSibling);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                  if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                  }
+                }, 5000);
+              }
+              
+              // Add validation event listeners
+              first.addEventListener('input', () => validateNameField(first, firstNameError));
+              middle.addEventListener('input', () => validateNameField(middle, middleNameError));
+              last.addEventListener('input', () => validateNameField(last, lastNameError));
+              
+              function updateFullName() {
+                const firstName = capitalizeWords(first.value);
+                const middleName = capitalizeWords(middle.value);
+                const lastName = capitalizeWords(last.value);
+                full.value = [firstName, middleName, lastName].filter(Boolean).join(' ');
+              }
+              [first, middle, last].forEach(f => f.addEventListener('input', updateFullName));
+
+              // Role/Subrole logic
+              const roleSelect = document.getElementById('roleSelect');
+              const subRoleSelect = document.getElementById('subRoleSelect');
+              const subRoleContainer = document.getElementById('subRoleContainer');
+              const projectCodeContainer = document.getElementById('projectCodeContainer');
+
+              const roleOptions = {
+                'LGU-PMT': ['MPMEC', 'MPMEC Secretariat'],
+                'LGU-IU': ['MDC Personnel', 'LGU Oversight Officer', 'Implementing Office-Officer'],
+                'EIU': ['Member'],
+                'EMS': ['NGO Personnel', 'CSO Personnel', 'PPMC']
+              };
+
+              const subRoleOptions = {
+                'MPMEC': ['Chairperson', 'Vice-chairperson', 'Member'],
+                'MPMEC Secretariat': ['Chairperson', 'Focal Person', 'Member'],
+                'Member': [],
+                'NGO Personnel': [],
+                'CSO Personnel': [],
+                'PPMC': []
+              };
+
+              groupSelect.addEventListener('change', function() {
+                const selectedGroup = this.value;
+                roleSelect.innerHTML = '<option value="">Select Role</option>';
+                subRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
+                projectCodeContainer.classList.add('hidden');
+                officeDepartmentContainer.classList.add('hidden');
+                
+                // Reset sub-role visibility
+                subRoleContainer.classList.remove('hidden');
+
+                if (selectedGroup && roleOptions[selectedGroup]) {
+                  roleOptions[selectedGroup].forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role;
+                    option.textContent = role;
+                    roleSelect.appendChild(option);
+                  });
+
+                  // Auto-fill role for EIU
+                  if (selectedGroup === 'EIU') {
+                    roleSelect.value = 'Member';
+                    roleSelect.dispatchEvent(new Event('change'));
+                  }
+                }
+              });
+
+              roleSelect.addEventListener('change', function() {
+                const selectedRole = this.value;
+                const selectedGroup = groupSelect.value;
+                
+                subRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
+                projectCodeContainer.classList.add('hidden');
+                officeDepartmentContainer.classList.add('hidden');
+
+                // Hide sub-role for EIU, LGU-IU, and EMS groups
+                if (selectedGroup === 'EIU' || selectedGroup === 'LGU-IU' || selectedGroup === 'EMS') {
+                  subRoleContainer.classList.add('hidden');
+                } else {
+                  subRoleContainer.classList.remove('hidden');
+                }
+
+                if (selectedRole && subRoleOptions[selectedRole]) {
+                  subRoleOptions[selectedRole].forEach(subRole => {
+                    const option = document.createElement('option');
+                    option.value = subRole;
+                    option.textContent = subRole;
+                    subRoleSelect.appendChild(option);
+                  });
+                }
+
+                // Show project code for EIU only
+                if (selectedGroup === 'EIU') {
+                  projectCodeContainer.classList.remove('hidden');
+                }
+
+                // Show office/department for specific LGU-IU roles
+                if (selectedGroup === 'LGU-IU' && (selectedRole === 'MDC Personnel' || selectedRole === 'LGU Oversight Officer' || selectedRole === 'Implementing Office-Officer')) {
+                  officeDepartmentContainer.classList.remove('hidden');
+                }
+              });
+
+              // Set up Create User button with clean event listener
+              const createUserBtn = document.getElementById('createUserBtn');
+              if (createUserBtn) {
+                console.log('Create User button found, setting up event listener...');
+                
+                // Remove any existing event listeners
+                const newBtn = createUserBtn.cloneNode(true);
+                createUserBtn.parentNode.replaceChild(newBtn, createUserBtn);
+                
+                // Add the correct event listener
+                newBtn.addEventListener('click', async function() {
+                  console.log('Create User (Direct) button clicked!');
+                  await createUserDirect();
+                });
+              } else {
+                console.error('Create User button not found!');
+              }
+            });
+          </script>
+        </div>
+      </div>
+      <!-- Edit User Modal -->
+      <div id="editUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-8 relative">
+          <button type="button" id="closeEditUserModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+          <h2 class="text-xl font-bold mb-4 text-[#3D50D7]">Edit User</h2>
+          <form id="editUserForm" class="flex flex-col gap-4">
+            <input type="hidden" name="id" />
+            <div class="flex gap-2">
+              <div class="w-1/3">
+                <input type="text" name="firstName" placeholder="First Name" required class="border rounded-lg px-4 py-2 w-full" />
+                <div id="editFirstNameError" class="text-red-500 text-xs mt-1 hidden">Numbers and special characters are not allowed.</div>
+              </div>
+              <div class="w-1/3">
+                <input type="text" name="middleName" placeholder="Middle Name" class="border rounded-lg px-4 py-2 w-full" />
+                <div id="editMiddleNameError" class="text-red-500 text-xs mt-1 hidden">Numbers and special characters are not allowed.</div>
+              </div>
+              <div class="w-1/3">
+                <input type="text" name="lastName" placeholder="Last Name" required class="border rounded-lg px-4 py-2 w-full" />
+                <div id="editLastNameError" class="text-red-500 text-xs mt-1 hidden">Numbers and special characters are not allowed.</div>
+              </div>
+            </div>
+            <input type="text" name="fullName" placeholder="Full Name (auto)" readonly class="border rounded-lg px-4 py-2 bg-gray-100" />
+            
+            <!-- Email Username field with icon and tooltip -->
+            <div class="relative">
+              <div class="flex items-center">
+                <input type="text" name="username" placeholder="Email (Username)" required class="border rounded-lg px-4 py-2 pr-10 w-full" />
+                <div class="absolute right-3 cursor-help group">
+                  <svg class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                  </svg>
+                  <div class="absolute bottom-full right-0 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                    Used for username login validation and where the Unique User ID will be sent.
+                    <div class="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </div>
+              </div>
+              <button type="button" id="editVerifyEmailBtn" class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors">
+                Verify Email
+              </button>
+            </div>
+            
+
+            
+            <input type="tel" name="contactNumber" id="editContactNumberField" placeholder="Contact Number" required class="border rounded-lg px-4 py-2" />
+            <div id="editContactNumberError" class="text-red-500 text-xs mt-1 hidden">Only numbers are allowed.</div>
+            
+            <div>
+              <input type="date" name="birthdate" id="editBirthdateField" placeholder="Birthdate" required class="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent transition-all" />
+              <div id="editBirthdateError" class="text-red-500 text-xs mt-1 hidden">User must be at least 18 years old.</div>
+            </div>
+            
+            <div class="flex gap-2">
+              <select name="group" id="editGroupSelect" required class="border rounded-lg px-4 py-2 w-1/2">
+                <option value="">Select Group</option>
+                <option value="LGU-PMT">LGU-PMT</option>
+                <option value="LGU-IU">LGU-IU</option>
+                <option value="EIU">EIU</option>
+                <option value="EMS">EMS</option>
+              </select>
+              <select name="role" id="editRoleSelect" required class="border rounded-lg px-4 py-2 w-1/2">
+                <option value="">Select Role</option>
+              </select>
+            </div>
+            <div class="flex gap-2">
+              <div id="editSubRoleContainer" class="w-1/2">
+                <select name="subRole" id="editSubRoleSelect" class="border rounded-lg px-4 py-2 w-full">
+                  <option value="">Select Subrole</option>
+                </select>
+              </div>
+              <div id="editProjectCodeContainer" class="w-1/2 hidden">
+                <input type="text" name="projectCode" placeholder="Project Code" class="border rounded-lg px-4 py-2 w-full" />
+              </div>
+            </div>
+            
+            <!-- Office/Department dropdown for LGU-IU Implementing Office - Officer -->
+            <div id="editOfficeDepartmentContainer" class="hidden">
+              <select name="officeDepartment" id="editOfficeDepartmentSelect" class="border rounded-lg px-4 py-2 w-full">
+                <option value="">Select Office/Department</option>
+                <option value="Municipal Engineer's Office">Municipal Engineer's Office</option>
+                <option value="Municipal Agriculturist's Office">Municipal Agriculturist's Office</option>
+                <option value="Municipal General Services Office">Municipal General Services Office</option>
+                <option value="Municipal Social Welfare and Development Office">Municipal Social Welfare and Development Office</option>
+                <option value="Municipal Disaster and Risk Reduction Management Office">Municipal Disaster and Risk Reduction Management Office</option>
+              </select>
+            </div>
+            <input type="text" name="userId" placeholder="Unique User ID" required class="border rounded-lg px-4 py-2" />
+            <select name="status" required class="border rounded-lg px-4 py-2">
+              <option value="active">Active</option>
+              <option value="blocked">Blocked</option>
+              <option value="deactivated">Deactivated</option>
+            </select>
+            <button type="submit" class="px-4 py-2 bg-[#3D50D7] text-white rounded-lg font-semibold hover:bg-[#2a3bb8] transition">Update User</button>
+            <div id="editUserError" class="text-red-500 text-sm mt-2 hidden"></div>
+          </form>
+        </div>
+      </div>
+      <!-- Delete User Modal -->
+      <div id="deleteUserModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-8 relative">
+          <button type="button" id="closeDeleteUserModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+          <h2 class="text-xl font-bold mb-4 text-[#3D50D7]">Delete User</h2>
+          <p class="mb-6">Are you sure you want to delete this user?</p>
+          <form id="deleteUserForm">
+            <input type="hidden" name="id" />
+            <div class="flex gap-4 justify-end">
+              <button type="button" id="cancelDeleteUser" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition">Cancel</button>
+              <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">Delete</button>
+            </div>
+            <div id="deleteUserError" class="text-red-500 text-sm mt-2 hidden"></div>
+          </form>
+        </div>
+      </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const addUserBtn = document.getElementById('addUserBtn');
+          const addUserModal = document.getElementById('addUserModal');
+          const closeAddUserModal = document.getElementById('closeAddUserModal');
+          const addUserForm = document.getElementById('addUserForm');
+          const addUserError = document.getElementById('addUserError');
+          const firstNameError = document.getElementById('firstNameError');
+          const middleNameError = document.getElementById('middleNameError');
+          const lastNameError = document.getElementById('lastNameError');
+
+          addUserBtn.addEventListener('click', () => {
+            addUserModal.classList.remove('hidden');
+          });
+          closeAddUserModal.addEventListener('click', () => {
+            addUserModal.classList.add('hidden');
+            addUserForm.reset();
+            addUserError.classList.add('hidden');
+            
+            // Clear validation errors and reset field styling
+            const firstNameError = document.getElementById('firstNameError');
+            const middleNameError = document.getElementById('middleNameError');
+            const lastNameError = document.getElementById('lastNameError');
+            const birthdateError = document.getElementById('birthdateError');
+            const contactNumberError = document.getElementById('contactNumberError');
+            const first = document.querySelector('input[name="firstName"]');
+            const middle = document.querySelector('input[name="middleName"]');
+            const last = document.querySelector('input[name="lastName"]');
+            const passwordField = document.getElementById('passwordField');
+            const birthdateField = document.getElementById('birthdateField');
+            const contactNumberField = document.getElementById('contactNumberField');
+            
+            // Hide error messages
+            firstNameError.classList.add('hidden');
+            middleNameError.classList.add('hidden');
+            lastNameError.classList.add('hidden');
+            birthdateError.classList.add('hidden');
+            contactNumberError.classList.add('hidden');
+            
+            // Reset field styling
+            [first, middle, last, passwordField, birthdateField, contactNumberField].forEach(field => {
+              field.classList.remove('border-red-500');
+              field.classList.add('border-gray-300');
+            });
+            
+            // Reset password strength indicator
+            const strengthText = document.getElementById('strengthText');
+            const strengthBar = document.getElementById('strengthBar');
+            const lengthCheck = document.getElementById('lengthCheck');
+            const caseCheck = document.getElementById('caseCheck');
+            const underscoreCheck = document.getElementById('underscoreCheck');
+            const strengthCheck = document.getElementById('strengthCheck');
+            
+            strengthText.textContent = 'Weak';
+            strengthText.className = 'font-medium text-red-600';
+            strengthBar.style.width = '0%';
+            strengthBar.style.backgroundColor = '#ef4444';
+            
+            [lengthCheck, caseCheck, underscoreCheck, strengthCheck].forEach(check => {
+              check.style.backgroundColor = '#d1d5db';
+            });
+            
+            // Clear verification messages
+            const verificationMessage = document.querySelector('.verification-message');
+            if (verificationMessage) {
+              verificationMessage.remove();
+            }
+            
+            // Reset verify email button
+            const verifyEmailBtn = document.getElementById('verifyEmailBtn');
+            if (verifyEmailBtn) {
+              verifyEmailBtn.disabled = false;
+              verifyEmailBtn.innerHTML = 'Verify Email';
+            }
+          });
+          
+          addUserForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('Form submission started');
+            addUserError.classList.add('hidden');
+            
+            // Validate name fields before submission
+            const first = document.querySelector('input[name="firstName"]');
+            const middle = document.querySelector('input[name="middleName"]');
+            const last = document.querySelector('input[name="lastName"]');
+            
+            console.log('Name fields:', {
+              firstName: first.value,
+              middleName: middle.value,
+              lastName: last.value
+            });
+            
+            const firstNameError = document.getElementById('firstNameError');
+            const middleNameError = document.getElementById('middleNameError');
+            const lastNameError = document.getElementById('lastNameError');
+            
+            // Check for numbers in name fields
+            const hasFirstNameNumbers = /\d/.test(first.value);
+            const hasMiddleNameNumbers = /\d/.test(middle.value);
+            const hasLastNameNumbers = /\d/.test(last.value);
+            
+            // Check for special characters in name fields
+            const hasFirstNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(first.value);
+            const hasMiddleNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(middle.value);
+            const hasLastNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(last.value);
+            
+            console.log('Name validation:', {
+              hasFirstNameNumbers,
+              hasFirstNameSpecialChars,
+              hasMiddleNameNumbers,
+              hasMiddleNameSpecialChars,
+              hasLastNameNumbers,
+              hasLastNameSpecialChars
+            });
+            
+            if (hasFirstNameNumbers || hasFirstNameSpecialChars) {
+              firstNameError.classList.remove('hidden');
+              first.classList.add('border-red-500');
+              first.classList.remove('border-gray-300');
+            }
+            
+            if (hasMiddleNameNumbers || hasMiddleNameSpecialChars) {
+              middleNameError.classList.remove('hidden');
+              middle.classList.add('border-red-500');
+              middle.classList.remove('border-gray-300');
+            }
+            
+            if (hasLastNameNumbers || hasLastNameSpecialChars) {
+              lastNameError.classList.remove('hidden');
+              last.classList.add('border-red-500');
+              last.classList.remove('border-gray-300');
+            }
+            
+            // If any name field has numbers or special characters, prevent form submission
+            if (hasFirstNameNumbers || hasFirstNameSpecialChars || hasMiddleNameNumbers || hasMiddleNameSpecialChars || hasLastNameNumbers || hasLastNameSpecialChars) {
+              addUserError.textContent = 'Please remove numbers and special characters from name fields before submitting.';
+              addUserError.classList.remove('hidden');
+              console.log('Form submission blocked: Name validation failed');
+              return;
+            }
+            
+            // Validate password before submission
+            const password = document.getElementById('passwordField').value;
+            const passwordValidation = validatePassword(password);
+            
+            console.log('Password validation:', passwordValidation);
+            
+            if (!passwordValidation.isValid) {
+              addUserError.textContent = 'Password must meet all requirements: at least 8 characters, include uppercase & lowercase letters, contain an underscore (_), and have Medium strength or higher.';
+              addUserError.classList.remove('hidden');
+              console.log('Form submission blocked: Password validation failed');
+              return;
+            }
+            
+            // Validate age before submission
+            const birthdate = document.getElementById('birthdateField').value;
+            const ageValidation = validateAge(birthdate);
+            
+            console.log('Age validation:', { birthdate, ageValidation });
+            
+            if (!ageValidation.isValid) {
+              addUserError.textContent = 'User must be at least 18 years old.';
+              addUserError.classList.remove('hidden');
+              console.log('Form submission blocked: Age validation failed');
+              return;
+            }
+
+            // Validate contact number before submission
+            const contactNumber = document.getElementById('contactNumberField').value;
+            const contactNumberRegex = /^[0-9]*$/; // Only allows numbers
+            if (!contactNumberRegex.test(contactNumber)) {
+              contactNumberError.classList.remove('hidden');
+              document.getElementById('contactNumberField').classList.add('border-red-500');
+              document.getElementById('contactNumberField').classList.remove('border-gray-300');
+              addUserError.textContent = 'Contact number must only contain numbers.';
+              addUserError.classList.remove('hidden');
+              console.log('Form submission blocked: Contact number validation failed');
+              return;
+            }
+            
+            // Validate Unique User ID before submission
+            const enteredUserId = document.getElementById('userIdField').value.trim();
+            console.log('User ID validation:', { enteredUserId, generatedUserId });
+            
+            if (!enteredUserId) {
+              addUserError.textContent = 'Please verify your email and generate a Unique User ID first.';
+              addUserError.classList.remove('hidden');
+              console.log('Form submission blocked: No User ID entered');
+              return;
+            }
+            
+            // Check if User ID has been verified (matches the generated one)
+            if (generatedUserId && enteredUserId !== generatedUserId) {
+              addUserError.textContent = 'The entered Unique User ID does not match the one sent to your email. Please check your Gmail and enter the correct ID.';
+              addUserError.classList.remove('hidden');
+              document.getElementById('userIdField').classList.add('border-red-500', 'shake-animation');
+              document.getElementById('userIdField').classList.remove('border-green-500');
+              
+              // Remove shake animation class after animation completes
+              setTimeout(() => {
+                document.getElementById('userIdField').classList.remove('shake-animation');
+              }, 500);
+              console.log('Form submission blocked: User ID mismatch');
+              return;
+            }
+            
+            // If no generatedUserId exists, allow submission (for cases where email verification was skipped)
+            if (!generatedUserId) {
+              console.log('No generated User ID found, allowing submission with entered ID:', enteredUserId);
+            }
+            
+            console.log('All validations passed, proceeding with form submission');
+            
+            const formData = new FormData(addUserForm);
+            const payload = Object.fromEntries(formData.entries());
+            
+            console.log('Form payload:', payload);
+            
+            // Map roles correctly for backend
+            const group = payload.group;
+            const role = payload.role;
+            
+            // Set the main role to the group, and the specific role as subRole
+            payload.role = group;
+            payload.subRole = role;
+            
+            // Handle conditional fields
+            if (role === 'Member') {
+              payload.subRole = 'Member';
+            } else if (['NGO Personnel', 'CSO Personnel', 'PPMC'].includes(role)) {
+              payload.subRole = role;
+            }
+            
+            // Ensure name field is set to fullName for backend compatibility
+            if (payload.fullName && !payload.name) {
+              payload.name = payload.fullName;
+            }
+            
+            // Fix field names to match backend expectations
+            const correctedPayload = {
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              username: payload.username,
+              email: payload.email,
+              password: payload.password,
+              role: payload.role,
+              subRole: payload.subRole,
+              middleName: payload.middleName,
+              fullName: payload.fullName,
+              birthdate: payload.birthdate,
+              contactNumber: payload.contactNumber,
+              userId: payload.userId
+            };
+          
+          try {
+            const token = localStorage.getItem('token') || '';
+            console.log('Sending request to backend with token:', token ? 'Present' : 'Missing');
+            
+            const res = await fetch('http://localhost:3000/api/users', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(correctedPayload)
+            });
+            
+            console.log('Backend response status:', res.status);
+            const data = await res.json();
+            console.log('Backend response data:', data);
+            
+            if (res.ok) {
+              console.log('User created successfully, reloading page');
+              // Show success message before reload
+              addUserError.textContent = data.message || 'User created successfully!';
+              addUserError.classList.remove('hidden');
+              addUserError.classList.remove('text-red-500');
+              addUserError.classList.add('text-green-500');
+              
+              // Close modal and reload after a short delay
+              setTimeout(() => {
+                document.getElementById('addUserModal').classList.add('hidden');
+                window.location.reload();
+              }, 1500);
+            } else {
+              addUserError.textContent = data.error || 'Failed to create user.';
+              addUserError.classList.remove('hidden');
+              addUserError.classList.remove('text-green-500');
+              addUserError.classList.add('text-red-500');
+              console.log('Backend error:', data.error);
+            }
+          } catch (err) {
+            console.error('Network error:', err);
+            addUserError.textContent = 'Failed to create user.';
+            addUserError.classList.remove('hidden');
+          }
+        });
+        
+
+
+        // Edit User Modal Functionality
+        const editUserModal = document.getElementById('editUserModal');
+        const closeEditUserModal = document.getElementById('closeEditUserModal');
+        const editUserForm = document.getElementById('editUserForm');
+        const editUserError = document.getElementById('editUserError');
+
+        // Edit modal role/subrole logic
+        const editGroupSelect = document.getElementById('editGroupSelect');
+        const editRoleSelect = document.getElementById('editRoleSelect');
+        const editSubRoleSelect = document.getElementById('editSubRoleSelect');
+        const editSubRoleContainer = document.getElementById('editSubRoleContainer');
+        const editProjectCodeContainer = document.getElementById('editProjectCodeContainer');
+        const editOfficeDepartmentContainer = document.getElementById('editOfficeDepartmentContainer');
+
+        const roleOptions = {
+          'LGU-PMT': ['MPMEC', 'MPMEC Secretariat'],
+          'LGU-IU': ['MDC Personnel', 'LGU Oversight Officer', 'Implementing Office-Officer'],
+          'EIU': ['Member'],
+          'EMS': ['NGO Personnel', 'CSO Personnel', 'PPMC']
+        };
+
+        const subRoleOptions = {
+          'MPMEC': ['Chairperson', 'Vice-chairperson', 'Member'],
+          'MPMEC Secretariat': ['Chairperson', 'Focal Person', 'Member'],
+          'Member': [],
+          'NGO Personnel': [],
+          'CSO Personnel': [],
+          'PPMC': []
+        };
+
+        editGroupSelect.addEventListener('change', function() {
+          const selectedGroup = this.value;
+          editRoleSelect.innerHTML = '<option value="">Select Role</option>';
+          editSubRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
+          editProjectCodeContainer.classList.add('hidden');
+          editOfficeDepartmentContainer.classList.add('hidden');
+          
+          // Reset sub-role visibility
+          editSubRoleContainer.classList.remove('hidden');
+
+          if (selectedGroup && roleOptions[selectedGroup]) {
+            roleOptions[selectedGroup].forEach(role => {
+              const option = document.createElement('option');
+              option.value = role;
+              option.textContent = role;
+              editRoleSelect.appendChild(option);
+            });
+
+            // Auto-fill role for EIU
+            if (selectedGroup === 'EIU') {
+              editRoleSelect.value = 'Member';
+              editRoleSelect.dispatchEvent(new Event('change'));
+            }
+          }
+        });
+
+        editRoleSelect.addEventListener('change', function() {
+          const selectedRole = this.value;
+          const selectedGroup = editGroupSelect.value;
+          editSubRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
+          editProjectCodeContainer.classList.add('hidden');
+          editOfficeDepartmentContainer.classList.add('hidden');
+          
+          // Always show sub-role container initially
+          editSubRoleContainer.classList.remove('hidden');
+
+          if (selectedRole === 'Member') {
+            // For EIU Member, show project code and hide sub-role
+            editProjectCodeContainer.classList.remove('hidden');
+            editSubRoleContainer.classList.add('hidden');
+          } else if (selectedRole === 'Implementing Office-Officer' && selectedGroup === 'LGU-IU') {
+            // For LGU-IU Implementing Office-Officer, show office/department dropdown
+            editOfficeDepartmentContainer.classList.remove('hidden');
+            editSubRoleContainer.classList.add('hidden');
+          } else if (selectedRole && subRoleOptions[selectedRole]) {
+            // For roles that have sub-role options (LGU-PMT roles), populate them
+            editSubRoleContainer.classList.remove('hidden');
+            subRoleOptions[selectedRole].forEach(subRole => {
+              const option = document.createElement('option');
+              option.value = subRole;
+              option.textContent = subRole;
+              editSubRoleSelect.appendChild(option);
+            });
+          } else {
+            // Hide sub-role for all other roles (LGU-IU, EMS, or no role selected)
+            editSubRoleContainer.classList.add('hidden');
+          }
+        });
+
+        // Edit user button click handler
+        document.querySelectorAll('.editUserBtn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const user = JSON.parse(btn.getAttribute('data-user'));
+            
+            // Populate form fields
+            editUserForm.id.value = user.id;
+            
+            // Split full name into components
+            const nameParts = (user.fullName || user.name || '').split(' ');
+            editUserForm.firstName.value = nameParts[0] || '';
+            editUserForm.middleName.value = nameParts[1] || '';
+            editUserForm.lastName.value = nameParts[2] || '';
+            editUserForm.fullName.value = user.fullName || user.name || '';
+            
+            editUserForm.username.value = user.username || user.email || '';
+            editUserForm.contactNumber.value = user.contactNumber || '';
+            editUserForm.birthdate.value = user.birthdate ? user.birthdate.split('T')[0] : '';
+            editUserForm.userId.value = user.userId || '';
+            editUserForm.status.value = user.status || 'active';
+            
+            // Set group and role
+            editUserForm.group.value = user.group || user.role || '';
+            editGroupSelect.dispatchEvent(new Event('change'));
+            
+            // Set role after group is populated
+            setTimeout(() => {
+              editUserForm.role.value = user.role || '';
+              editRoleSelect.dispatchEvent(new Event('change'));
+              
+              // Set subrole, project code, and office department
+              setTimeout(() => {
+                editUserForm.subRole.value = user.subRole || '';
+                editUserForm.projectCode.value = user.projectCode || '';
+                editUserForm.officeDepartment.value = user.department || '';
+              }, 100);
+            }, 100);
+            
+            editUserModal.classList.remove('hidden');
+            editUserError.classList.add('hidden');
+          });
+        });
+
+        closeEditUserModal.addEventListener('click', () => {
+          editUserModal.classList.add('hidden');
+          editUserForm.reset();
+          editUserError.classList.add('hidden');
+          
+          // Clear validation errors
+          const editFirstNameError = document.getElementById('editFirstNameError');
+          const editMiddleNameError = document.getElementById('editMiddleNameError');
+          const editLastNameError = document.getElementById('editLastNameError');
+          const editBirthdateError = document.getElementById('editBirthdateError');
+          const editContactNumberError = document.getElementById('editContactNumberError');
+          
+          [editFirstNameError, editMiddleNameError, editLastNameError, editBirthdateError, editContactNumberError].forEach(error => {
+            if (error) error.classList.add('hidden');
+          });
+          
+          // Clear verification messages
+          const editVerificationMessage = document.querySelector('.edit-verification-message');
+          if (editVerificationMessage) {
+            editVerificationMessage.remove();
+          }
+          
+          // Reset verify email button
+          const editVerifyEmailBtn = document.getElementById('editVerifyEmailBtn');
+          if (editVerifyEmailBtn) {
+            editVerifyEmailBtn.disabled = false;
+            editVerifyEmailBtn.innerHTML = 'Verify Email';
+          }
+        });
+
+        // Edit form validation and submission
+        editUserForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          editUserError.classList.add('hidden');
+          
+          // Validate name fields
+          const first = editUserForm.querySelector('input[name="firstName"]');
+          const middle = editUserForm.querySelector('input[name="middleName"]');
+          const last = editUserForm.querySelector('input[name="lastName"]');
+          
+          const hasFirstNameNumbers = /\d/.test(first.value);
+          const hasMiddleNameNumbers = /\d/.test(middle.value);
+          const hasLastNameNumbers = /\d/.test(last.value);
+          
+          const hasFirstNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(first.value);
+          const hasMiddleNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(middle.value);
+          const hasLastNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(last.value);
+          
+          if (hasFirstNameNumbers || hasFirstNameSpecialChars || hasMiddleNameNumbers || hasMiddleNameSpecialChars || hasLastNameNumbers || hasLastNameSpecialChars) {
+            editUserError.textContent = 'Please remove numbers and special characters from name fields.';
+            editUserError.classList.remove('hidden');
+            return;
+          }
+          
+          // Validate age
+          const birthdate = editUserForm.querySelector('input[name="birthdate"]').value;
+          const ageValidation = validateAge(birthdate);
+          
+          if (!ageValidation.isValid) {
+            editUserError.textContent = 'User must be at least 18 years old.';
+            editUserError.classList.remove('hidden');
+            return;
+          }
+
+          // Validate contact number
+          const contactNumber = editUserForm.querySelector('input[name="contactNumber"]').value;
+          const contactNumberRegex = /^[0-9]*$/;
+          if (!contactNumberRegex.test(contactNumber)) {
+            editUserError.textContent = 'Contact number must only contain numbers.';
+            editUserError.classList.remove('hidden');
+            return;
+          }
+          
+          const formData = new FormData(editUserForm);
+          const payload = Object.fromEntries(formData.entries());
+          
+          // Map roles correctly for backend
+          const group = payload.group;
+          const role = payload.role;
+          
+          payload.role = group;
+          payload.subRole = role;
+          
+          if (role === 'Member') {
+            payload.subRole = 'Member';
+          } else if (['NGO Personnel', 'CSO Personnel', 'PPMC'].includes(role)) {
+            payload.subRole = role;
+          }
+          
+          if (payload.fullName && !payload.name) {
+            payload.name = payload.fullName;
+          }
+          
+          try {
+            const token = localStorage.getItem('token') || '';
+            const res = await fetch(`http://localhost:3000/api/users/${payload.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              window.location.reload();
+            } else {
+              editUserError.textContent = data.error || 'Failed to update user.';
+              editUserError.classList.remove('hidden');
+            }
+          } catch (err) {
+            editUserError.textContent = 'Failed to update user.';
+            editUserError.classList.remove('hidden');
+          }
+        });
+
+        // Delete User Modal (Soft Delete)
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        const closeDeleteUserModal = document.getElementById('closeDeleteUserModal');
+        const deleteUserForm = document.getElementById('deleteUserForm');
+        const deleteUserError = document.getElementById('deleteUserError');
+        const cancelDeleteUser = document.getElementById('cancelDeleteUser');
+        
+        document.querySelectorAll('.deleteUserBtn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            deleteUserForm.id.value = btn.getAttribute('data-userid');
+            deleteUserModal.classList.remove('hidden');
+            deleteUserError.classList.add('hidden');
+          });
+        });
+        
+        closeDeleteUserModal.addEventListener('click', () => {
+          deleteUserModal.classList.add('hidden');
+          deleteUserForm.reset();
+          deleteUserError.classList.add('hidden');
+        });
+        
+        cancelDeleteUser.addEventListener('click', () => {
+          deleteUserModal.classList.add('hidden');
+          deleteUserForm.reset();
+          deleteUserError.classList.add('hidden');
+        });
+        
+        deleteUserForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          deleteUserError.classList.add('hidden');
+          const id = deleteUserForm.id.value;
+          try {
+            const token = localStorage.getItem('token') || '';
+            const res = await fetch(`http://localhost:3000/api/users/${id}/soft-delete`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              window.location.reload();
+            } else {
+              deleteUserError.textContent = data.error || 'Failed to delete user.';
+              deleteUserError.classList.remove('hidden');
+            }
+          } catch (err) {
+            deleteUserError.textContent = 'Failed to delete user.';
+            deleteUserError.classList.remove('hidden');
+          }
+        });
+
+        // Recently Deleted Users Functionality
+        const toggleDeletedUsers = document.getElementById('toggleDeletedUsers');
+        const deletedUsersContent = document.getElementById('deletedUsersContent');
+        let deletedUsersExpanded = true;
+
+        if (toggleDeletedUsers && deletedUsersContent) {
+          toggleDeletedUsers.addEventListener('click', function() {
+            deletedUsersExpanded = !deletedUsersExpanded;
+            deletedUsersContent.style.display = deletedUsersExpanded ? 'block' : 'none';
+            toggleDeletedUsers.innerHTML = deletedUsersExpanded ? 
+              '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' :
+              '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+          });
+        }
+
+        // Countdown Timer for Deleted Users
+        function updateCountdownTimers() {
+          const countdownElements = document.querySelectorAll('.countdown-timer');
+          
+          countdownElements.forEach(element => {
+            const deletedAt = new Date(element.getAttribute('data-deleted-at'));
+            const now = new Date();
+            const timeDiff = deletedAt.getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime(); // 30 days
+            
+            if (timeDiff <= 0) {
+              element.textContent = 'Permanently deleted';
+              element.classList.add('text-red-600', 'font-bold');
+            } else {
+              const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+              const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+              const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+              
+              element.textContent = `${days}d ${hours}h ${minutes}m remaining`;
+              
+              if (days <= 1) {
+                element.classList.add('text-red-600', 'font-bold');
+              } else if (days <= 7) {
+                element.classList.add('text-orange-600', 'font-medium');
+              } else {
+                element.classList.add('text-gray-600');
+              }
+            }
+          });
+        }
+
+        // Update countdown every minute
+        updateCountdownTimers();
+        setInterval(updateCountdownTimers, 60000);
+
+        // Restore User Functionality
+        document.querySelectorAll('.restoreUserBtn').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const userId = this.getAttribute('data-user-id');
+            if (confirm('Are you sure you want to restore this user?')) {
+              try {
+                const token = localStorage.getItem('token') || '';
+                const res = await fetch(`http://localhost:3000/api/users/${userId}/restore`, {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                  window.location.reload();
+                } else {
+                  alert('Failed to restore user: ' + (data.error || 'Unknown error'));
+                }
+              } catch (err) {
+                alert('Failed to restore user: ' + err.message);
+              }
+            }
+          });
+        });
+
+        // Permanent Delete Functionality
+        document.querySelectorAll('.permanentDeleteBtn').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const userId = this.getAttribute('data-user-id');
+            if (confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) {
+              try {
+                const token = localStorage.getItem('token') || '';
+                const res = await fetch(`http://localhost:3000/api/users/${userId}/permanent-delete`, {
+                  method: 'DELETE',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                  window.location.reload();
+                } else {
+                  alert('Failed to permanently delete user: ' + (data.error || 'Unknown error'));
+                }
+              } catch (err) {
+                alert('Failed to permanently delete user: ' + err.message);
+              }
+            }
+          });
+        });
+
+        // Edit modal validation functions
+        function validateNameField(input, errorElement) {
+          const value = input.value;
+          const hasNumbers = /\d/.test(value);
+          const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
+          
+          if (hasNumbers || hasSpecialChars) {
+            errorElement.classList.remove('hidden');
+            input.classList.add('border-red-500', 'shake-animation');
+            input.classList.remove('border-gray-300');
+            
+            setTimeout(() => {
+              input.classList.remove('shake-animation');
+            }, 500);
+          } else {
+            errorElement.classList.add('hidden');
+            input.classList.remove('border-red-500', 'shake-animation');
+            input.classList.add('border-gray-300');
+          }
+          
+          return !hasNumbers && !hasSpecialChars;
+        }
+
+        function capitalizeWords(str) {
+          return str.replace(/\b\w/g, function(char) {
+            return char.toUpperCase();
+          });
+        }
+
+        function validateAge(birthdate) {
+          if (!birthdate) return { isValid: false, age: 0 };
+          
+          const today = new Date();
+          const birthDate = new Date(birthdate);
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          
+          return {
+            isValid: age >= 18,
+            age: age
+          };
+        }
+
+        // Add validation event listeners for edit modal
+        const editFirst = editUserForm.querySelector('input[name="firstName"]');
+        const editMiddle = editUserForm.querySelector('input[name="middleName"]');
+        const editLast = editUserForm.querySelector('input[name="lastName"]');
+        const editFull = editUserForm.querySelector('input[name="fullName"]');
+        const editBirthdateField = document.getElementById('editBirthdateField');
+        const editContactNumberField = document.getElementById('editContactNumberField');
+        const editFirstNameError = document.getElementById('editFirstNameError');
+        const editMiddleNameError = document.getElementById('editMiddleNameError');
+        const editLastNameError = document.getElementById('editLastNameError');
+        const editBirthdateError = document.getElementById('editBirthdateError');
+        const editContactNumberError = document.getElementById('editContactNumberError');
+
+        if (editFirst) editFirst.addEventListener('input', () => validateNameField(editFirst, editFirstNameError));
+        if (editMiddle) editMiddle.addEventListener('input', () => validateNameField(editMiddle, editMiddleNameError));
+        if (editLast) editLast.addEventListener('input', () => validateNameField(editLast, editLastNameError));
+
+        function updateEditFullName() {
+          const firstName = capitalizeWords(editFirst.value);
+          const middleName = capitalizeWords(editMiddle.value);
+          const lastName = capitalizeWords(editLast.value);
+          editFull.value = [firstName, middleName, lastName].filter(Boolean).join(' ');
+        }
+        
+        [editFirst, editMiddle, editLast].forEach(f => {
+          if (f) f.addEventListener('input', updateEditFullName);
+        });
+
+        if (editBirthdateField) {
+          editBirthdateField.addEventListener('input', function() {
+            const validation = validateAge(this.value);
+            
+            if (this.value && !validation.isValid) {
+              editBirthdateError.classList.remove('hidden');
+              this.classList.add('border-red-500', 'shake-animation');
+              this.classList.remove('border-gray-300');
+              
+              setTimeout(() => {
+                this.classList.remove('shake-animation');
+              }, 500);
+            } else {
+              editBirthdateError.classList.add('hidden');
+              this.classList.remove('border-red-500', 'shake-animation');
+              this.classList.add('border-gray-300');
+            }
+          });
+        }
+
+        if (editContactNumberField) {
+          editContactNumberField.addEventListener('input', function() {
+            const value = this.value;
+            const hasNonNumbers = /[^0-9]/.test(value);
+            
+            if (hasNonNumbers) {
+              editContactNumberError.classList.remove('hidden');
+              this.classList.add('border-red-500', 'shake-animation');
+              this.classList.remove('border-gray-300');
+              
+              setTimeout(() => {
+                this.classList.remove('shake-animation');
+              }, 500);
+            } else {
+              editContactNumberError.classList.add('hidden');
+              this.classList.remove('border-red-500', 'shake-animation');
+              this.classList.add('border-gray-300');
+            }
+          });
+        }
+
+        // Edit verify email functionality
+        const editVerifyEmailBtn = document.getElementById('editVerifyEmailBtn');
+        const editUsernameField = editUserForm.querySelector('input[name="username"]');
+        
+        if (editVerifyEmailBtn && editUsernameField) {
+          editVerifyEmailBtn.addEventListener('click', function() {
+            const email = editUsernameField.value.trim();
+            
+            if (!email) {
+              showEditVerificationMessage('Please enter an email address first.', 'error');
+              return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              showEditVerificationMessage('Please enter a valid email address.', 'error');
+              return;
+            }
+            
+            editVerifyEmailBtn.disabled = true;
+            editVerifyEmailBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Verifying...';
+            
+            setTimeout(() => {
+              showEditVerificationMessage('Email format is valid.', 'success');
+              
+              editVerifyEmailBtn.disabled = false;
+              editVerifyEmailBtn.innerHTML = 'Verify Email';
+            }, 1500);
+          });
+        }
+        
+        function showEditVerificationMessage(message, type) {
+          const existingMessage = document.querySelector('.edit-verification-message');
+          if (existingMessage) {
+            existingMessage.remove();
+          }
+          
+          const messageDiv = document.createElement('div');
+          messageDiv.className = `edit-verification-message mt-2 px-3 py-2 text-xs rounded-lg ${
+            type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 
+            type === 'error' ? 'bg-red-100 text-red-700 border border-red-200' : 
+            'bg-blue-100 text-blue-700 border border-blue-200'
+          }`;
+          messageDiv.textContent = message;
+          
+          editVerifyEmailBtn.parentNode.insertBefore(messageDiv, editVerifyEmailBtn.nextSibling);
+          
+          setTimeout(() => {
+            if (messageDiv.parentNode) {
+              messageDiv.remove();
+            }
+          }, 5000);
+        }
+        });
+
+        // Notification card toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+          const toggleBtn = document.getElementById('toggleNotifications');
+          const content = document.getElementById('notificationsContent');
+          let isExpanded = true;
+
+          if (toggleBtn && content) {
+            toggleBtn.addEventListener('click', function() {
+              isExpanded = !isExpanded;
+              content.style.display = isExpanded ? 'block' : 'none';
+              toggleBtn.innerHTML = isExpanded ? 
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' :
+                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+            });
+          }
+        });
+
+        // Debug functionality
+        const debugBtn = document.getElementById('debugBtn');
+        const debugInfo = document.getElementById('debugInfo');
+        
+        debugBtn.addEventListener('click', async function() {
+          debugInfo.classList.remove('hidden');
+          debugInfo.innerHTML = '<div class="text-blue-600">Testing API connection...</div>';
+          
+          try {
+            // Check token
+            const token = localStorage.getItem('token') || '';
+            debugInfo.innerHTML += `<div class="mt-2">Token: ${token ? 'Present' : 'Missing'}</div>`;
+            
+            if (!token) {
+              debugInfo.innerHTML += '<div class="text-red-600 mt-2">❌ No authentication token found!</div>';
+              return;
+            }
+            
+            // Test API connection
+            const res = await fetch('http://localhost:3000/api/users', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            debugInfo.innerHTML += `<div class="mt-2">API Status: ${res.status}</div>`;
+            
+            if (res.ok) {
+              const data = await res.json();
+              debugInfo.innerHTML += `<div class="text-green-600 mt-2">✅ API connection successful! Found ${data.users?.length || 0} users</div>`;
+            } else {
+              const errorData = await res.json();
+              debugInfo.innerHTML += `<div class="text-red-600 mt-2">❌ API Error: ${errorData.error || 'Unknown error'}</div>`;
+            }
+            
+          } catch (error) {
+            debugInfo.innerHTML += `<div class="text-red-600 mt-2">❌ Network Error: ${error.message}</div>`;
+          }
+        });
+
+
+      </script>
+    </section>
+  </SysAdminLayout>
+</Layout>
+
+<style>
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  
+  .shake-animation {
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  /* Modern date input styling */
+  input[type="date"] {
+    position: relative;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+  
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  /* Tooltip styling */
+  .tooltip-container {
+    position: relative;
+  }
+  
+  .tooltip {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background-color: #1f2937;
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease-in-out;
+    z-index: 50;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 1rem;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #1f2937;
+  }
+  
+  .tooltip-container:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Verify button styling */
+  #verifyEmailBtn {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  #verifyEmailBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  /* Verification message animations */
+  .verification-message {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+  }
+</style> 

@@ -1,0 +1,205 @@
+---
+import Layout from "../layouts/Layout.astro";
+import TopBar from "../components/TopBar.astro";
+import LGUFooter from "../components/LGUFooter.astro";
+---
+<Layout title="Open Data | Build Watch LGU" description="Access public data, reports, and analytics about LGU projects and programs in Santa Cruz, Laguna.">
+  <TopBar />
+  <main class="flex flex-col items-center w-full px-4 pt-36 pb-12 bg-transparent min-h-[60vh]">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-2 text-center">Open Data Portal</h1>
+    <div class="w-24 h-1 bg-[#FE5353] rounded-full mb-6 mx-auto"></div>
+    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
+      Access public data, reports, and analytics about LGU projects and programs in Santa Cruz, Laguna.
+    </p>
+    <!-- Search/Filter Bar -->
+    <div class="w-full max-w-2xl flex items-center gap-2 bg-white/90 border border-[#EB3C3C] rounded-lg px-4 py-2 mb-8 shadow focus-within:ring-2 focus-within:ring-[#EB3C3C]">
+      <svg class="w-5 h-5 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search datasets, categories..." class="flex-1 bg-transparent outline-none text-[#7A1F1F] placeholder-[#7A1F1F]/60 text-base" aria-label="Search datasets" />
+    </div>
+    <div class="w-full max-w-6xl flex flex-col gap-8">
+      <!-- Data Categories -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Card 1 -->
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.025] focus-within:ring-2 focus-within:ring-[#EB3C3C] group" tabindex="0">
+          <div class="text-[#EB3C3C] text-4xl mb-4">📊</div>
+          <h3 class="text-xl font-bold text-[#7A1F1F] mb-2">Project Statistics</h3>
+          <p class="text-[#7A1F1F] text-sm mb-4">Comprehensive statistics on project completion rates, budgets, and timelines.</p>
+          <a href="#" class="flex items-center gap-2 text-[#EB3C3C] font-bold text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+            View Data
+          </a>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.025] focus-within:ring-2 focus-within:ring-[#EB3C3C] group" tabindex="0">
+          <div class="text-[#EB3C3C] text-4xl mb-4">🏗️</div>
+          <h3 class="text-xl font-bold text-[#7A1F1F] mb-2">Infrastructure Reports</h3>
+          <p class="text-[#7A1F1F] text-sm mb-4">Detailed reports on road construction, building projects, and facility development.</p>
+          <a href="#" class="flex items-center gap-2 text-[#EB3C3C] font-bold text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+            View Data
+          </a>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.025] focus-within:ring-2 focus-within:ring-[#EB3C3C] group" tabindex="0">
+          <div class="text-[#EB3C3C] text-4xl mb-4">👥</div>
+          <h3 class="text-xl font-bold text-[#7A1F1F] mb-2">Social Programs</h3>
+          <p class="text-[#7A1F1F] text-sm mb-4">Data on 4Ps, Social Pension, and other community development initiatives.</p>
+          <a href="#" class="flex items-center gap-2 text-[#EB3C3C] font-bold text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+            View Data
+          </a>
+        </div>
+        <!-- Card 4 -->
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.025] focus-within:ring-2 focus-within:ring-[#EB3C3C] group" tabindex="0">
+          <div class="text-[#EB3C3C] text-4xl mb-4">💰</div>
+          <h3 class="text-xl font-bold text-[#7A1F1F] mb-2">Budget Information</h3>
+          <p class="text-[#7A1F1F] text-sm mb-4">Transparent budget allocation and expenditure data for all projects.</p>
+          <a href="#" class="flex items-center gap-2 text-[#EB3C3C] font-bold text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+            View Data
+          </a>
+        </div>
+        <!-- Card 5 -->
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.025] focus-within:ring-2 focus-within:ring-[#EB3C3C] group" tabindex="0">
+          <div class="text-[#EB3C3C] text-4xl mb-4">📈</div>
+          <h3 class="text-xl font-bold text-[#7A1F1F] mb-2">Performance Metrics</h3>
+          <p class="text-[#7A1F1F] text-sm mb-4">Key performance indicators and evaluation metrics for project success.</p>
+          <a href="#" class="flex items-center gap-2 text-[#EB3C3C] font-bold text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+            View Data
+          </a>
+        </div>
+        <!-- Card 6 -->
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.025] focus-within:ring-2 focus-within:ring-[#EB3C3C] group" tabindex="0">
+          <div class="text-[#EB3C3C] text-4xl mb-4">📋</div>
+          <h3 class="text-xl font-bold text-[#7A1F1F] mb-2">Public Records</h3>
+          <p class="text-[#7A1F1F] text-sm mb-4">Official documents, contracts, and public records related to projects.</p>
+          <a href="#" class="flex items-center gap-2 text-[#EB3C3C] font-bold text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+            View Data
+          </a>
+        </div>
+      </div>
+      <!-- Data Download Section -->
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8 border border-[#FE5353]/40 mt-2">
+        <h2 class="flex items-center gap-2 text-2xl font-bold text-[#7A1F1F] mb-6">
+          <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+          Download Data
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-bold text-[#7A1F1F] mb-3">Available Formats</h3>
+            <ul class="space-y-2 text-[#7A1F1F]">
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
+                Excel (.xlsx) - For detailed analysis
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
+                CSV (.csv) - For data processing
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
+                PDF (.pdf) - For reports and presentations
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
+                JSON (.json) - For developers and APIs
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-[#7A1F1F] mb-3">Data Updates</h3>
+            <ul class="space-y-2 text-[#7A1F1F]">
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                Project data: Updated weekly
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                Financial reports: Updated monthly
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                Performance metrics: Updated quarterly
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                Annual reports: Updated yearly
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- API Documentation -->
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8 mt-2">
+        <h2 class="flex items-center gap-2 text-2xl font-bold text-[#7A1F1F] mb-6">
+          <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4"/></svg>
+          API Access
+        </h2>
+        <p class="text-[#7A1F1F] mb-6">
+          Developers and researchers can access Build Watch data programmatically through our REST API. 
+          The API provides real-time access to project data, statistics, and reports.
+        </p>
+        <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-4 mb-4">
+          <code class="text-sm text-[#7A1F1F] select-all">GET https://api.buildwatch.ph/v1/projects</code>
+          <button type="button" class="ml-2 px-2 py-1 bg-[#EB3C3C] text-white rounded hover:bg-[#d32f2f] focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]" aria-label="Copy API endpoint" onclick="navigator.clipboard.writeText('GET https://api.buildwatch.ph/v1/projects')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          </button>
+        </div>
+        <a href="#" class="inline-block px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">View API Documentation</a>
+      </div>
+      <!-- Data Request Form -->
+      <div class="bg-[#EB3C3C]/10 rounded-2xl p-8 mt-2">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-4">Request Custom Data</h2>
+        <p class="text-[#7A1F1F] mb-6">
+          Need specific data that's not available here? Submit a data request and we'll work to make it available.
+        </p>
+        <form class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[#7A1F1F] font-medium mb-2">Name</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 8 0v2"/></svg>
+                </span>
+                <input type="text" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#EB3C3C]" required aria-label="Name" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[#7A1F1F] font-medium mb-2">Email</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
+                </span>
+                <input type="email" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#EB3C3C]" required aria-label="Email" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[#7A1F1F] font-medium mb-2">Data Description</label>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-[#EB3C3C]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 2v4M16 2v4"/></svg>
+              </span>
+              <textarea rows="4" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#EB3C3C]" placeholder="Describe the data you need..." required aria-label="Data Description"></textarea>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[#7A1F1F] font-medium mb-2">Intended Use</label>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-[#EB3C3C]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M12 4v16"/><path d="M4 4h16v16H4z"/></svg>
+              </span>
+              <textarea rows="3" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#EB3C3C]" placeholder="How will you use this data?" required aria-label="Intended Use"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+  <LGUFooter />
+</Layout> 

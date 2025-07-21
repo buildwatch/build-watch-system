@@ -1,0 +1,398 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
+
+// Enhanced stub data for system health
+let systemMetrics = {
+  overallStatus: 'Healthy',
+  uptime: '99.8%',
+  responseTime: '245ms',
+  activeUsers: 47,
+  cpuUsage: 23,
+  memoryUsage: 67,
+  diskUsage: 42,
+  networkLatency: 12
+};
+
+let healthChecks = [
+  { 
+    id: 1, 
+    time: '2025-07-14 10:00', 
+    status: 'OK', 
+    severity: 'low',
+    component: 'Database',
+    details: 'All database connections healthy. Query response time: 45ms',
+    duration: '2.3s'
+  },
+  { 
+    id: 2, 
+    time: '2025-07-14 09:45', 
+    status: 'Warning', 
+    severity: 'medium',
+    component: 'Memory',
+    details: 'Memory usage at 85%. Consider optimization.',
+    duration: '1.8s'
+  },
+  { 
+    id: 3, 
+    time: '2025-07-14 09:30', 
+    status: 'OK', 
+    severity: 'low',
+    component: 'API',
+    details: 'All API endpoints responding normally.',
+    duration: '1.2s'
+  },
+  { 
+    id: 4, 
+    time: '2025-07-14 09:15', 
+    status: 'Error', 
+    severity: 'high',
+    component: 'File Storage',
+    details: 'Storage service timeout. Investigating...',
+    duration: '5.1s'
+  }
+];
+
+let alerts = [
+  {
+    id: 1,
+    type: 'warning',
+    title: 'High Memory Usage',
+    message: 'Server memory usage exceeded 80% threshold',
+    time: '2 minutes ago',
+    acknowledged: false
+  },
+  {
+    id: 2,
+    type: 'error',
+    title: 'Database Connection Pool Exhausted',
+    message: 'Connection pool at 95% capacity',
+    time: '5 minutes ago',
+    acknowledged: true
+  },
+  {
+    id: 3,
+    type: 'info',
+    title: 'Scheduled Maintenance',
+    message: 'System maintenance scheduled for tonight at 2:00 AM',
+    time: '1 hour ago',
+    acknowledged: false
+  }
+];
+
+let performanceData = {
+  hourly: [65, 72, 68, 75, 82, 79, 85, 88, 92, 89, 87, 84],
+  daily: [78, 82, 79, 85, 88, 92, 89],
+  weekly: [82, 85, 88, 91, 89, 87, 84]
+};
+
+let error = '';
+---
+
+<Layout title="System Health">
+  <SysAdminLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">System Health</h1>
+          <p class="text-gray-600">Monitor system performance and health status</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {systemMetrics.overallStatus}
+          </button>
+          <button class="px-6 py-2 bg-gradient-to-r from-[#3D50D7] to-[#2a3bb8] text-white rounded-xl font-semibold shadow-lg hover:from-[#2a3bb8] hover:to-[#3D50D7] transition-all duration-300">
+            Run Health Check
+          </button>
+        </div>
+      </div>
+
+            <!-- System Overview Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm font-medium text-gray-600">System Uptime</p>
+              <p class="text-2xl font-bold text-green-600">{systemMetrics.uptime}</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-xl">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-green-600 h-2 rounded-full" style="width: 99.8%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.3s;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Response Time</p>
+              <p class="text-2xl font-bold text-blue-600">{systemMetrics.responseTime}</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-xl">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.4s;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Active Users</p>
+              <p class="text-2xl font-bold text-purple-600">{systemMetrics.activeUsers}</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-xl">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-purple-600 h-2 rounded-full" style="width: 47%"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.5s;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Network Latency</p>
+              <p class="text-2xl font-bold text-orange-600">{systemMetrics.networkLatency}ms</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-xl">
+              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-orange-600 h-2 rounded-full" style="width: 12%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Usage -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.6s;">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">CPU Usage</h3>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl font-bold text-gray-800">{systemMetrics.cpuUsage}%</span>
+            <span class="text-sm text-gray-500">of 100%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: {systemMetrics.cpuUsage}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-2">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Memory Usage</h3>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl font-bold text-gray-800">{systemMetrics.memoryUsage}%</span>
+            <span class="text-sm text-gray-500">of 16GB</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-yellow-600 h-3 rounded-full transition-all duration-300" style="width: {systemMetrics.memoryUsage}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-2">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Disk Usage</h3>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-2xl font-bold text-gray-800">{systemMetrics.diskUsage}%</span>
+            <span class="text-sm text-gray-500">of 500GB</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-green-600 h-3 rounded-full transition-all duration-300" style="width: {systemMetrics.diskUsage}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-2">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts and Health Checks -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Active Alerts -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Active Alerts</h3>
+            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+              {alerts.filter(a => !a.acknowledged).length} New
+            </span>
+          </div>
+          <div class="space-y-3">
+            {alerts.map(alert => (
+              <div class={`p-4 rounded-lg border-l-4 ${
+                alert.type === 'error' ? 'bg-red-50 border-red-400' :
+                alert.type === 'warning' ? 'bg-yellow-50 border-yellow-400' :
+                'bg-blue-50 border-blue-400'
+              }`}>
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class={`w-2 h-2 rounded-full ${
+                        alert.type === 'error' ? 'bg-red-500' :
+                        alert.type === 'warning' ? 'bg-yellow-500' :
+                        'bg-blue-500'
+                      }`}></span>
+                      <h4 class="font-medium text-gray-800">{alert.title}</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">{alert.message}</p>
+                    <p class="text-xs text-gray-500">{alert.time}</p>
+                  </div>
+                  {!alert.acknowledged && (
+                    <button class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      Acknowledge
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Recent Health Checks -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Health Checks</h3>
+          <div class="space-y-3">
+            {healthChecks.map(check => (
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class={`w-3 h-3 rounded-full ${
+                    check.status === 'OK' ? 'bg-green-500' :
+                    check.status === 'Warning' ? 'bg-yellow-500' :
+                    'bg-red-500'
+                  }`}></div>
+                  <div>
+                    <p class="font-medium text-gray-800">{check.component}</p>
+                    <p class="text-sm text-gray-600">{check.details}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-gray-500">{check.time}</p>
+                  <p class="text-xs text-gray-400">{check.duration}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-800">System Performance (Last 24 Hours)</h3>
+          <div class="flex gap-2">
+            <button class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">Hourly</button>
+            <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">Daily</button>
+            <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">Weekly</button>
+          </div>
+        </div>
+        <div class="h-64 bg-gray-50 rounded-lg flex items-end justify-between p-4">
+          {performanceData.hourly.map((value, index) => (
+            <div class="flex flex-col items-center">
+              <div class="w-8 bg-blue-500 rounded-t transition-all duration-300" style="height: {value}%"></div>
+              <span class="text-xs text-gray-500 mt-2">{index}:00</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- System Actions -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">System Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button class="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span class="font-medium text-blue-700">Restart Services</span>
+          </button>
+          <button class="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span class="font-medium text-green-700">Generate Report</span>
+          </button>
+          <button class="flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+            </svg>
+            <span class="font-medium text-purple-700">Optimize System</span>
+          </button>
+          <button class="flex items-center gap-3 p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="font-medium text-orange-700">System Settings</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </SysAdminLayout>
+</Layout>
+
+<style>
+  /* Custom animations for progress bars */
+  .transition-all {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Hover effects for interactive elements */
+  .hover\:bg-blue-100:hover {
+    background-color: #dbeafe;
+  }
+  
+  .hover\:bg-green-100:hover {
+    background-color: #dcfce7;
+  }
+  
+  .hover\:bg-purple-100:hover {
+    background-color: #f3e8ff;
+  }
+  
+  .hover\:bg-orange-100:hover {
+    background-color: #fed7aa;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+  }
+</style> 

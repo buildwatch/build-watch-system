@@ -1,0 +1,95 @@
+---
+// LGUFooter.astro: Improved for 1:1 alignment, borders, and spacing
+---
+<footer class="w-full bg-white pt-6">
+  {/* Partnerships Row */}
+  <div class="w-full border-b border-gray-200 pb-4">
+    <div class="text-center text-xl font-bold text-[#EB3C3C] mb-4">Collaborative partnerships with the following NGAs, NGOs, and PPMCs and more to come</div>
+    <div class="flex flex-row justify-center items-stretch divide-x divide-gray-200 bg-[#F7F7F7] rounded-t-xl overflow-x-auto">
+      {/* Agency logos and names, boxed and separated */}
+      <div class="flex flex-col items-center w-56 px-4 py-6 bg-white">
+        <div class="w-20 h-20 flex items-center justify-center bg-white border border-gray-300 rounded-xl mb-2"><img src="/agency-dpwh.png" alt="DPWH" class="w-14 h-14 object-contain" /></div>
+        <span class="font-bold text-[#1A56DB] mt-1">DPWH</span>
+        <span class="text-xs text-black text-center">Department of Public Works and Highways</span>
+      </div>
+      <div class="flex flex-col items-center w-56 px-4 py-6 bg-white">
+        <div class="w-20 h-20 flex items-center justify-center bg-white border border-gray-300 rounded-xl mb-2"><img src="/agency-philsa.png" alt="PHILSA" class="w-14 h-14 object-contain" /></div>
+        <span class="font-bold text-[#1A56DB] mt-1">PHILSA</span>
+        <span class="text-xs text-black text-center">Philippine Space Agency</span>
+      </div>
+      <div class="flex flex-col items-center w-56 px-4 py-6 bg-white">
+        <div class="w-20 h-20 flex items-center justify-center bg-white border border-gray-300 rounded-xl mb-2"><img src="/agency-dotr.png" alt="DOTr" class="w-14 h-14 object-contain" /></div>
+        <span class="font-bold text-[#1A56DB] mt-1">DOTr</span>
+        <span class="text-xs text-black text-center">Department of Transportation</span>
+      </div>
+      <div class="flex flex-col items-center w-56 px-4 py-6 bg-white">
+        <div class="w-20 h-20 flex items-center justify-center bg-white border border-gray-300 rounded-xl mb-2"><img src="/agency-namria.png" alt="NAMRIA" class="w-14 h-14 object-contain" /></div>
+        <span class="font-bold text-[#1A56DB] mt-1">NAMRIA</span>
+        <span class="text-xs text-black text-center">National Mapping and Resource Information Authority</span>
+      </div>
+      <div class="flex flex-col items-center w-56 px-4 py-6 bg-white">
+        <div class="w-20 h-20 flex items-center justify-center bg-white border border-gray-300 rounded-xl mb-2"><img src="/agency-neda.png" alt="NEDA" class="w-14 h-14 object-contain" /></div>
+        <span class="font-bold text-[#1A56DB] mt-1">NEDA</span>
+        <span class="text-xs text-black text-center">Nation Economic and Development Authority</span>
+      </div>
+      <div class="flex flex-col items-center w-56 px-4 py-6 bg-white">
+        <div class="w-20 h-20 flex items-center justify-center bg-white border border-gray-300 rounded-xl mb-2"><img src="/agency-lra.png" alt="LRA" class="w-14 h-14 object-contain" /></div>
+        <span class="font-bold text-[#1A56DB] mt-1">LRA</span>
+        <span class="text-xs text-black text-center">Land Registration Authority</span>
+      </div>
+    </div>
+  </div>
+
+  {/* Red Info/Contact Section */}
+  <div class="w-full bg-[#EB3C3C] text-white py-8 px-4 border-t-4 border-white flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+    <div class="flex flex-col items-center md:items-start gap-2 w-full md:w-1/3">
+      <img src="/santa-cruz-seal.png" alt="Santa Cruz Seal" class="w-20 h-20 mb-2" />
+      <div class="text-sm font-bold">7CJ7+MQ3, Gen. Cailles St, Santa Cruz, Laguna, Philippines</div>
+      <div class="text-sm">Phone No. (049) 808 2788</div>
+      <div class="text-sm">Email: santacruzlaguna@gmail.com</div>
+    </div>
+    <div class="flex-1 flex flex-col gap-1 text-sm font-semibold border-l border-white pl-8">
+      <a href="#" class="hover:underline">Government Directory</a>
+      <a href="#" class="hover:underline">Procurement Service</a>
+      <a href="#" class="hover:underline">Philippine Government Electronic Procurement System</a>
+      <a href="#" class="hover:underline">Government Procurement Policy Board - Technical Support Office</a>
+      <a href="#" class="hover:underline">Budget and Treasury Management System</a>
+      <a href="#" class="hover:underline">Unified Accounts Code Structure</a>
+      <a href="#" class="hover:underline">LGU 360</a>
+      <a href="#" class="hover:underline">BSP Financial Inclusion</a>
+      <a href="#" class="hover:underline">Privacy Policy</a>
+    </div>
+    <div class="flex flex-col gap-1 text-sm font-semibold border-l border-white pl-8 w-full md:w-1/4">
+      <a href="#" class="hover:underline">BW Official Facebook Page</a>
+      <a href="#" class="hover:underline">BW Official X</a>
+      <a href="#" class="hover:underline">BW Official Instagram Page</a>
+      <a href="#" class="hover:underline">Santa Cruz Official Web Page</a>
+    </div>
+  </div>
+
+  {/* White Bottom Section */}
+  <div class="w-full bg-white py-8 px-4 border-t-4 border-[#EB3C3C] flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+    <div class="flex flex-col items-center md:items-start gap-2 w-full md:w-1/4 border-r border-gray-200 pr-6">
+      <img src="/ph-seal.png" alt="Republic of the Philippines" class="w-16 h-16 mb-2" />
+      <div class="font-bold">REPUBLIC OF THE PHILIPPINES</div>
+      <div class="text-xs">All content is in the public domain unless otherwise stated</div>
+    </div>
+    <div class="flex flex-col gap-2 w-full md:w-1/4 border-r border-gray-200 px-6">
+      <div class="font-bold">ABOUT GOVPH</div>
+      <div class="text-xs">Learn more about the Philippine government, its structure, how government works and the people behind it.</div>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">GOV.PH</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Open Data Portal</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Official Gazette</a>
+    </div>
+    <div class="flex flex-col gap-1 w-full md:w-2/4 px-6">
+      <div class="font-bold">GOVERNMENT LINKS</div>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Office of the President</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Office of the Vice President</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Senate of the Philippines</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">House of the Representatives</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Supreme Court</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Court of Appeals</a>
+      <a href="#" class="text-[#1A56DB] text-xs hover:underline">Sandiganbayan</a>
+    </div>
+  </div>
+</footer> 

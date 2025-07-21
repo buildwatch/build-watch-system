@@ -1,0 +1,1071 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let projects = [];
+let selectedProject = null;
+let projectUpdates = [];
+let loading = true;
+let error = '';
+
+// Try to fetch progress timeline data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // Fetch projects for this Implementing Office
+    const timestamp = new Date().getTime();
+    const projectsRes = await fetch(`${API_URL}/projects?_t=${timestamp}`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (projectsRes.ok) {
+      const data = await projectsRes.json();
+      if (data.success) {
+        projects = data.projects;
+      }
+    }
+  }
+} catch (err) {
+  console.error('Error fetching progress timeline data:', err);
+  error = 'Failed to fetch progress timeline data.';
+}
+
+loading = false;
+---
+
+<Layout title="Progress Timeline | Implementing Office Dashboard">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header Section -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Progress Timeline</h1>
+          <p class="text-gray-600">Update and monitor project progress across timeline, budget, and physical divisions</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- Compilation button moved to workflow section -->
+        </div>
+      </div>
+
+      <!-- Project Selection -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Project</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map(project => {
+            // Use calculated progress from ProgressCalculationService
+            const overallProgress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
+            const timelineProgress = parseFloat(project.progress?.timelineProgress || project.timelineProgress || 0);
+            const budgetProgress = parseFloat(project.progress?.budgetProgress || project.budgetProgress || 0);
+            const physicalProgress = parseFloat(project.progress?.physicalProgress || project.physicalProgress || 0);
+            const workflowStatus = project.workflowStatus || 'draft';
+            
+            return (
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer project-card" data-project-id={project.id}>
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1">
+                    <h4 class="font-semibold text-gray-800 mb-1">{project.name}</h4>
+                    <p class="text-sm text-gray-600">{project.projectCode}</p>
+                  </div>
+                  <div class="flex flex-col items-end gap-1">
+                    <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                      workflowStatus === 'ongoing' ? 'bg-green-100 text-green-700' :
+                      workflowStatus === 'completed' ? 'bg-blue-100 text-blue-700' :
+                      workflowStatus === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
+                      workflowStatus === 'draft' ? 'bg-gray-100 text-gray-700' :
+                      workflowStatus === 'secretariat_approved' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {workflowStatus.replace('_', ' ').toUpperCase()}
+                    </span>
+                    {project.submittedToSecretariat && (
+                      <span class="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                        PENDING SECRETARIAT
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm text-gray-600">Overall Progress</span>
+                    <span class="text-sm font-medium text-gray-800">{overallProgress.toFixed(2)}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class={`h-2 rounded-full ${
+                      overallProgress >= 100 ? 'bg-green-500' : 'bg-[#92751F]'
+                    }`} style={`width: ${overallProgress}%`}></div>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                  <div class="text-center">
+                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
+                      <div class="bg-blue-500 h-1 rounded-full" style={`width: ${timelineProgress}%`}></div>
+                    </div>
+                    <span class="text-gray-600">Timeline</span>
+                  </div>
+                  <div class="text-center">
+                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
+                      <div class="bg-green-500 h-1 rounded-full" style={`width: ${budgetProgress}%`}></div>
+                    </div>
+                    <span class="text-gray-600">Budget</span>
+                  </div>
+                  <div class="text-center">
+                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
+                      <div class="bg-purple-500 h-1 rounded-full" style={`width: ${physicalProgress}%`}></div>
+                    </div>
+                    <span class="text-gray-600">Physical</span>
+                  </div>
+                </div>
+                
+                {project.milestones && project.milestones.length > 0 && (
+                  <div class="mt-3 pt-3 border-t border-gray-100">
+                    <p class="text-xs text-gray-500 mb-2">Milestones: {project.milestones.length}</p>
+                    <div class="space-y-1">
+                      {project.milestones.slice(0, 2).map(milestone => (
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="text-gray-600 truncate">{milestone.title}</span>
+                          <span class={`px-1 py-0.5 rounded text-xs ${
+                            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
+                            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {milestone.status}
+                          </span>
+                        </div>
+                      ))}
+                      {project.milestones.length > 2 && (
+                        <p class="text-xs text-gray-500">+{project.milestones.length - 2} more</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {loading ? (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#92751F]"></div>
+          <span class="ml-3 text-gray-600">Loading progress timeline...</span>
+        </div>
+      ) : error ? (
+        <div class="text-center py-12">
+          <p class="text-red-600 mb-4">{error}</p>
+          <button onclick="loadProgressTimeline()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-all">
+            Try Again
+          </button>
+        </div>
+      ) : projects.length === 0 ? (
+        <div class="text-center py-12">
+          <svg class="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">No Projects Available</h3>
+          <p class="text-gray-600 mb-6">You don't have any projects to update. Create a project first to start monitoring progress.</p>
+          <button onclick="window.location.href='/dashboard/iu-implementing-office/modules/project-management'" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2 mx-auto">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create New Project
+          </button>
+        </div>
+      ) : (
+        <!-- Selected Project Info -->
+        <div id="selectedProjectInfo" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8" style="display: none;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800" id="selectedProjectName">No project selected</h3>
+              <p class="text-sm text-gray-600" id="selectedProjectCode"></p>
+            </div>
+            <span id="projectWorkflowStatus" class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700">DRAFT</span>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-blue-600" id="overallProgressText" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+              <p class="text-sm text-gray-600">Overall Progress</p>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-blue-500 h-2 rounded-full" id="overallProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-green-600" id="timelineProgressText" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+              <p class="text-sm text-gray-600">Timeline</p>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-green-500 h-2 rounded-full" id="timelineProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-purple-600" id="budgetProgressText" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+              <p class="text-sm text-gray-600">Budget</p>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-purple-500 h-2 rounded-full" id="budgetProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-orange-600" id="physicalProgressText" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+              <p class="text-sm text-gray-600">Physical</p>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div class="bg-orange-500 h-2 rounded-full" id="physicalProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Draft Message -->
+        <div id="draftMessage" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8" style="display: none;">
+          <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <div>
+              <h3 class="text-lg font-semibold text-yellow-800">Project in Draft Status</h3>
+              <p class="text-yellow-700">This project is currently in draft status. You need to submit it to the Secretariat for approval before you can start updating progress.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Milestones Section -->
+        <div id="milestonesSection" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8" style="display: none;">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Milestones</h3>
+          <div id="milestonesContainer">
+            <!-- Milestones will be displayed here -->
+          </div>
+        </div>
+
+        <!-- Updates History -->
+        <div id="updatesHistory" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8" style="display: none;">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              Updates History
+            </h3>
+            <button onclick="refreshUpdates()" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Refresh
+            </button>
+          </div>
+          <div id="updatesContainer">
+            <!-- Updates will be displayed here -->
+          </div>
+        </div>
+
+        <!-- EIU Updates Review & Compilation Section -->
+        <div id="eiuUpdatesReview" class="space-y-8">
+          <!-- Workflow Instructions -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h4 class="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Correct Workflow: EIU Updates → IU Review → Compilation → Secretariat
+            </h4>
+            <div class="text-sm text-blue-700">
+              <p class="mb-3">As the Implementing Office, your role follows this <strong>correct workflow</strong>:</p>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div class="bg-white p-3 rounded-lg border border-blue-100">
+                  <h5 class="font-medium text-blue-800 mb-1">1️⃣ EIU Submits</h5>
+                  <p>EIU personnel submit Timeline, Budget, and Physical Accomplishment updates with supporting documents.</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-blue-100">
+                  <h5 class="font-medium text-blue-800 mb-1">2️⃣ IU Reviews</h5>
+                  <p>You review and verify EIU updates. Approve valid updates or reject with remarks for revision.</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-blue-100">
+                  <h5 class="font-medium text-blue-800 mb-1">3️⃣ IU Compiles</h5>
+                  <p>Once all 3 divisions are updated and validated, compile into a final progress report.</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-blue-100">
+                  <h5 class="font-medium text-blue-800 mb-1">4️⃣ Secretariat</h5>
+                  <p>Submit compiled report to Secretariat for final review and system progress updates.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Progress Status -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="p-3 bg-green-100 rounded-full">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800">Current Progress Status</h3>
+                <p class="text-sm text-gray-600">Based on approved EIU milestone updates</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600" id="autoOverallProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+                <div class="text-sm text-gray-600">Overall Progress</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600" id="autoTimelineProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+                <div class="text-sm text-gray-600">Timeline Progress</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-purple-600" id="autoBudgetProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+                <div class="text-sm text-gray-600">Budget Progress</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-orange-600" id="autoPhysicalProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0%</div>
+                <div class="text-sm text-gray-600">Physical Progress</div>
+              </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p class="text-sm text-yellow-800">
+                <strong>Important:</strong> Progress is calculated from <strong>approved EIU milestone updates</strong>. 
+                No manual input required. Review EIU submissions below and approve valid updates.
+              </p>
+            </div>
+          </div>
+
+          <!-- Compilation Status -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="p-3 bg-purple-100 rounded-full">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800">Compilation Status</h3>
+                <p class="text-sm text-gray-600">Ready to compile when all divisions are updated</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="text-center p-4 border rounded-lg">
+                <div class="text-lg font-semibold text-gray-800 mb-2">Timeline Division</div>
+                <div class="text-sm text-gray-600" id="timelineStatus">Pending EIU Updates</div>
+              </div>
+              <div class="text-center p-4 border rounded-lg">
+                <div class="text-lg font-semibold text-gray-800 mb-2">Budget Division</div>
+                <div class="text-sm text-gray-600" id="budgetStatus">Pending EIU Updates</div>
+              </div>
+              <div class="text-center p-4 border rounded-lg">
+                <div class="text-lg font-semibold text-gray-800 mb-2">Physical Division</div>
+                <div class="text-sm text-gray-600" id="physicalStatus">Pending EIU Updates</div>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-center">
+              <button onclick="compileAndSubmitToSecretariat()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2" disabled>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Compile & Submit to Secretariat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  </IUImplementingOfficeLayout>
+</Layout>
+
+<script>
+  let selectedProject = null;
+  let projectUpdates = [];
+
+  // Project selection functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Progress Timeline page loaded');
+    
+    const projectCards = document.querySelectorAll('.project-card');
+    console.log('Found project cards:', projectCards.length);
+    
+    projectCards.forEach(card => {
+      const projectId = card.getAttribute('data-project-id');
+      console.log('Project card found with ID:', projectId);
+      
+      card.addEventListener('click', function() {
+        console.log('Project card clicked:', projectId);
+        selectProject(projectId);
+      });
+    });
+
+    // Check for project parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectParam = urlParams.get('project');
+    if (projectParam) {
+      console.log('Project parameter found in URL:', projectParam);
+      selectProject(projectParam);
+    }
+    
+    // Auto-select the first project if available
+    if (projectCards.length > 0) {
+      console.log('Auto-selecting first project');
+      const firstProjectId = projectCards[0].getAttribute('data-project-id');
+      console.log('First project ID:', firstProjectId);
+      selectProject(firstProjectId);
+    } else {
+      console.log('No project cards found for auto-selection');
+    }
+  });
+
+  // Select project and load details
+  async function selectProject(projectId) {
+    try {
+      console.log('selectProject called with ID:', projectId);
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const timestamp = new Date().getTime();
+      const response = await fetch(`http://localhost:3000/api/projects/${projectId}?_t=${timestamp}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Project API response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Project API response data:', data);
+        
+        if (data.success) {
+          selectedProject = data.project;
+          console.log('Selected project:', data.project);
+          displayProjectUpdates(data.project);
+          loadProjectUpdates(projectId);
+          
+          // Update active state
+          document.querySelectorAll('.project-card').forEach(card => {
+            card.classList.remove('ring-2', 'ring-[#92751F]');
+          });
+          const activeCard = document.querySelector(`[data-project-id="${projectId}"]`);
+          if (activeCard) {
+            activeCard.classList.add('ring-2', 'ring-[#92751F]');
+            console.log('Updated active card styling');
+          }
+        } else {
+          console.error('Project API returned success: false');
+        }
+      } else {
+        console.error('Project API request failed with status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+  }
+
+  // Load project updates
+  async function loadProjectUpdates(projectId) {
+    try {
+      console.log('Loading project updates for project:', projectId);
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const timestamp = new Date().getTime();
+      const response = await fetch(`http://localhost:3000/api/projects/${projectId}/updates?_t=${timestamp}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Project updates API response:', data);
+        if (data.success) {
+          projectUpdates = data.updates;
+          console.log('Project updates loaded:', projectUpdates.length, 'updates');
+          displayUpdates(data.updates);
+        }
+      } else {
+        console.error('Failed to fetch project updates:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching project updates:', error);
+    }
+  }
+
+  // Display project updates
+  function displayProjectUpdates(project) {
+    console.log('displayProjectUpdates called with project:', project);
+    console.log('Project object keys:', Object.keys(project));
+    
+    // Handle nested project structure from API response
+    const actualProject = project.project || project;
+    console.log('Actual project data:', actualProject);
+    console.log('Project name:', actualProject.name);
+    console.log('Project approvedBySecretariat:', actualProject.approvedBySecretariat);
+    console.log('Project progress:', project.progress);
+    console.log('Project progress keys:', project.progress ? Object.keys(project.progress) : 'No progress object');
+    
+    // Show selected project info
+    const selectedProjectInfo = document.getElementById('selectedProjectInfo');
+    const milestonesSection = document.getElementById('milestonesSection');
+    const updatesHistory = document.getElementById('updatesHistory');
+    
+    if (selectedProjectInfo) {
+      selectedProjectInfo.style.display = 'block';
+      console.log('Selected project info section shown');
+    } else {
+      console.error('selectedProjectInfo element not found');
+    }
+    
+    if (milestonesSection) {
+      milestonesSection.style.display = 'block';
+      console.log('Milestones section shown');
+    } else {
+      console.error('milestonesSection element not found');
+    }
+    
+    if (updatesHistory) {
+      updatesHistory.style.display = 'block';
+      console.log('Updates history section shown');
+    } else {
+      console.error('updatesHistory element not found');
+    }
+    
+    // Update project info
+    document.getElementById('selectedProjectName').textContent = actualProject.name || 'No project selected';
+    document.getElementById('selectedProjectCode').textContent = actualProject.projectCode || '';
+    
+    // Update workflow status based on Secretariat approval
+    const isApprovedBySecretariat = actualProject.approvedBySecretariat === true;
+    const statusText = isApprovedBySecretariat ? 'VALIDATED BY SECRETARIAT' : 'DRAFT';
+    const statusElement = document.getElementById('projectWorkflowStatus');
+    statusElement.textContent = statusText;
+    statusElement.className = `px-3 py-1 text-sm font-medium rounded-full ${
+      isApprovedBySecretariat ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+    }`;
+
+    // Update progress bars using calculated progress from ProgressCalculationService
+    const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+    const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.timelineProgress || project.timelineProgress || 0);
+    const budgetProgress = parseFloat(project.progress?.budget || project.progress?.budgetProgress || project.budgetProgress || 0);
+    const physicalProgress = parseFloat(project.progress?.physical || project.progress?.physicalProgress || project.physicalProgress || 0);
+    
+    document.getElementById('overallProgressBar').style.width = `${overallProgress}%`;
+    document.getElementById('overallProgressText').textContent = `${overallProgress.toFixed(2)}%`;
+    
+    document.getElementById('timelineProgressBar').style.width = `${timelineProgress}%`;
+    document.getElementById('timelineProgressText').textContent = `${timelineProgress}%`;
+    
+    document.getElementById('budgetProgressBar').style.width = `${budgetProgress}%`;
+    document.getElementById('budgetProgressText').textContent = `${budgetProgress}%`;
+    
+    document.getElementById('physicalProgressBar').style.width = `${physicalProgress}%`;
+    document.getElementById('physicalProgressText').textContent = `${physicalProgress}%`;
+
+    // Show/hide review section based on Secretariat approval status
+    const reviewSection = document.getElementById('eiuUpdatesReview');
+    const draftMessage = document.getElementById('draftMessage');
+    
+    if (!isApprovedBySecretariat) {
+      if (reviewSection) reviewSection.style.display = 'none';
+      if (draftMessage) draftMessage.style.display = 'block';
+    } else {
+      if (reviewSection) reviewSection.style.display = 'block';
+      if (draftMessage) draftMessage.style.display = 'none';
+    }
+    
+    // Update automatic progress summary
+    updateAutomaticProgress(project);
+
+    // Display milestones if available
+    if (project.milestones && project.milestones.length > 0) {
+      displayMilestones(project.milestones);
+    }
+  }
+
+  // Display milestones
+  function displayMilestones(milestones) {
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    if (!milestonesContainer) return;
+
+    milestonesContainer.innerHTML = milestones.map(milestone => `
+      <div class="border border-gray-200 rounded-lg p-4 mb-3">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-semibold text-gray-800">${milestone.title}</h4>
+          <span class="px-2 py-1 text-xs font-medium rounded-full ${
+            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
+            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+            'bg-gray-100 text-gray-700'
+          }">${milestone.status || 'pending'}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm mb-3">
+          <div>
+            <span class="text-gray-600">Weight:</span>
+            <span class="font-medium">${milestone.weight}%</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Budget:</span>
+            <span class="font-medium">₱${(milestone.plannedBudget || 0).toLocaleString()}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Start Date:</span>
+            <span class="font-medium">${milestone.plannedStartDate || '-'}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">End Date:</span>
+            <span class="font-medium">${milestone.plannedEndDate || '-'}</span>
+          </div>
+        </div>
+        ${milestone.description ? `
+          <div class="mb-3">
+            <span class="text-gray-600">Description:</span>
+            <p class="text-sm mt-1">${milestone.description}</p>
+          </div>
+        ` : ''}
+        <div class="flex items-center justify-between">
+          <div class="flex-1 mr-4">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-[#92751F] h-2 rounded-full" style="width: ${milestone.progress || 0}%"></div>
+            </div>
+          </div>
+          <span class="text-sm font-medium">${milestone.progress || 0}%</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Display updates
+  function displayUpdates(updates) {
+    console.log('Displaying updates:', updates);
+    const updatesContainer = document.getElementById('updatesContainer');
+    if (!updatesContainer) {
+      console.error('Updates container not found!');
+      return;
+    }
+
+    if (!updates || updates.length === 0) {
+      updatesContainer.innerHTML = `
+        <div class="text-center py-8">
+          <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-gray-500 text-lg font-medium">No milestone updates available</p>
+          <p class="text-gray-400 text-sm mt-2">Milestone updates from EIU personnel will appear here once submitted.</p>
+        </div>
+      `;
+      updateCompilationStatus();
+      return;
+    }
+
+    updatesContainer.innerHTML = updates.map(update => `
+      <div class="border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-semibold text-gray-800">${update.title || 'Milestone Update'}</h4>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 text-xs font-medium rounded-full ${
+              update.status === 'iu_approved' ? 'bg-green-100 text-green-700' :
+              update.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
+              update.status === 'iu_rejected' ? 'bg-red-100 text-red-700' :
+              'bg-gray-100 text-gray-700'
+            }">${update.status || 'submitted'}</span>
+            
+            ${update.status === 'submitted' ? `
+              <div class="flex gap-2">
+                <button onclick="approveUpdate('${update.id}')" class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                  Approve
+                </button>
+                <button onclick="rejectUpdate('${update.id}')" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                  Reject
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm mb-3">
+          <div>
+            <span class="text-gray-600">Submitted by:</span>
+            <span class="font-medium">${update.submitter?.name || update.submittedBy || 'EIU Personnel'}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Date:</span>
+            <span class="font-medium">${new Date(update.createdAt).toLocaleDateString()}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Progress:</span>
+            <span class="font-medium">${update.currentProgress || 0}%</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Update Type:</span>
+            <span class="font-medium">${update.updateType || 'Milestone'}</span>
+          </div>
+        </div>
+        <div class="mb-3">
+          <span class="text-gray-600">Description:</span>
+          <p class="text-sm mt-1">${update.description || 'No description provided'}</p>
+        </div>
+        ${update.milestoneUpdates ? `
+          <div class="mb-3">
+            <span class="text-gray-600">Milestone Details:</span>
+            <div class="bg-gray-50 p-3 rounded-lg mt-1">
+              ${(() => {
+                try {
+                  const milestones = update.milestoneUpdates;
+                  
+                  if (Array.isArray(milestones)) {
+                    return milestones.map((milestone, index) => `
+                      <div class="border-l-4 border-blue-500 pl-3 mb-3">
+                        <div class="flex items-center justify-between mb-2">
+                          <h5 class="font-medium text-gray-800">Milestone ${index + 1}</h5>
+                          <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
+                            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                            milestone.status === 'delayed' ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-700'
+                          }">${milestone.status || 'not_started'}</span>
+                        </div>
+                        ${milestone.physicalDescription ? `
+                          <div class="mb-2">
+                            <span class="text-sm text-gray-600">Physical Accomplishments:</span>
+                            <p class="text-sm mt-1">${milestone.physicalDescription}</p>
+                          </div>
+                        ` : ''}
+                        ${milestone.budgetAllocation > 0 ? `
+                          <div class="mb-2">
+                            <span class="text-sm text-gray-600">Budget Allocation:</span>
+                            <p class="text-sm mt-1">₱${milestone.budgetAllocation.toLocaleString()}</p>
+                          </div>
+                        ` : ''}
+                        ${milestone.budgetBreakdown ? `
+                          <div class="mb-2">
+                            <span class="text-sm text-gray-600">Budget Breakdown:</span>
+                            <p class="text-sm mt-1">${milestone.budgetBreakdown}</p>
+                          </div>
+                        ` : ''}
+                        ${milestone.notes ? `
+                          <div class="mb-2">
+                            <span class="text-sm text-gray-600">Notes:</span>
+                            <p class="text-sm mt-1">${milestone.notes}</p>
+                          </div>
+                        ` : ''}
+                        ${milestone.uploadedFiles && milestone.uploadedFiles.length > 0 ? `
+                          <div class="mb-2">
+                            <span class="text-sm text-gray-600">Attachments:</span>
+                            <div class="flex flex-wrap gap-2 mt-1">
+                              ${milestone.uploadedFiles.map(file => `
+                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                  ${file.originalName || 'File'}
+                                </span>
+                              `).join('')}
+                            </div>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `).join('');
+                  } else {
+                    return `<pre class="text-sm whitespace-pre-wrap">${JSON.stringify(milestones, null, 2)}</pre>`;
+                  }
+                } catch (e) {
+                  return `<pre class="text-sm whitespace-pre-wrap">${update.milestoneUpdates}</pre>`;
+                }
+              })()}
+            </div>
+          </div>
+        ` : ''}
+        ${update.remarks ? `
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600">Additional Notes:</span>
+            <p class="text-sm mt-1">${update.remarks}</p>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+    
+    // Update compilation status after displaying updates
+    updateCompilationStatus();
+  }
+
+  // Update automatic progress summary
+  function updateAutomaticProgress(project) {
+    // Handle nested project structure from API response
+    const actualProject = project.project || project;
+    
+    // Use calculated progress from ProgressCalculationService
+    const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || actualProject.automatedProgress || 0);
+    const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.timelineProgress || actualProject.timelineProgress || 0);
+    const budgetProgress = parseFloat(project.progress?.budget || project.progress?.budgetProgress || actualProject.budgetProgress || 0);
+    const physicalProgress = parseFloat(project.progress?.physical || project.progress?.physicalProgress || actualProject.physicalProgress || 0);
+    
+    // Update display
+    const autoOverallElement = document.getElementById('autoOverallProgress');
+    const autoTimelineElement = document.getElementById('autoTimelineProgress');
+    const autoBudgetElement = document.getElementById('autoBudgetProgress');
+    const autoPhysicalElement = document.getElementById('autoPhysicalProgress');
+    
+    if (autoOverallElement) autoOverallElement.textContent = `${overallProgress.toFixed(1)}%`;
+    if (autoTimelineElement) autoTimelineElement.textContent = `${timelineProgress}%`;
+    if (autoBudgetElement) autoBudgetElement.textContent = `${budgetProgress}%`;
+    if (autoPhysicalElement) autoPhysicalElement.textContent = `${physicalProgress}%`;
+  }
+
+  // Approve update
+  async function approveUpdate(updateId) {
+    if (!confirm('Are you sure you want to approve this milestone update?')) {
+      return;
+    }
+
+    try {
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const response = await fetch(`http://localhost:3000/api/projects/project-updates/${updateId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'iu_approved',
+          iuReviewRemarks: 'Approved by Implementing Office'
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          alert('Milestone update approved successfully!');
+          // Refresh updates and project data
+          if (selectedProject) {
+            loadProjectUpdates(selectedProject.id);
+            selectProject(selectedProject.id);
+          }
+        } else {
+          alert('Error approving update: ' + data.error);
+        }
+      } else {
+        alert('Error approving update. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error approving update:', error);
+      alert('Error approving update. Please try again.');
+    }
+  }
+
+  // Reject update
+  async function rejectUpdate(updateId) {
+    const remarks = prompt('Please provide rejection remarks:');
+    if (!remarks) {
+      alert('Rejection remarks are required.');
+      return;
+    }
+
+    try {
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const response = await fetch(`http://localhost:3000/api/projects/project-updates/${updateId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'iu_rejected',
+          iuReviewRemarks: remarks
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          alert('Milestone update rejected successfully!');
+          // Refresh updates and project data
+          if (selectedProject) {
+            loadProjectUpdates(selectedProject.id);
+            selectProject(selectedProject.id);
+          }
+        } else {
+          alert('Error rejecting update: ' + data.error);
+        }
+      } else {
+        alert('Error rejecting update. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error rejecting update:', error);
+      alert('Error rejecting update. Please try again.');
+    }
+  }
+
+  // Compile and submit to Secretariat
+  async function compileAndSubmitToSecretariat() {
+    if (!selectedProject) {
+      alert('Please select a project first.');
+      return;
+    }
+
+    // Check if there's an approved milestone update that contains all required divisions
+    const approvedUpdates = projectUpdates.filter(update => update.status === 'iu_approved');
+    const approvedMilestone = approvedUpdates.find(update => update.updateType === 'milestone');
+    
+    if (!approvedMilestone) {
+      alert('No approved milestone update found. Please approve a milestone update first.');
+      return;
+    }
+    
+    // If we have an approved milestone update, consider it complete
+    // since milestone updates inherently contain timeline, budget, and physical info
+    if (approvedMilestone.milestoneUpdates) {
+      try {
+        const milestones = approvedMilestone.milestoneUpdates;
+        if (milestones && milestones.length > 0) {
+          // Milestone updates inherently contain all required divisions
+          console.log('Approved milestone update contains milestone data, proceeding with compilation');
+        } else {
+          alert('The approved milestone update does not contain milestone data.');
+          return;
+        }
+      } catch (e) {
+        console.error('Error parsing milestone updates:', e);
+        alert('Error parsing milestone data. Please try again.');
+        return;
+      }
+    } else {
+      alert('The approved milestone update does not contain milestone data.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to compile and submit this progress report to the Secretariat?')) {
+      return;
+    }
+
+    try {
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const response = await fetch(`http://localhost:3000/api/projects/${selectedProject.id}/compile-and-submit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          compiledReport: `Compiled progress report for ${selectedProject.name} with approved EIU updates.`,
+          submittedAt: new Date().toISOString()
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          alert('Progress report compiled and submitted to Secretariat successfully!');
+          // Refresh project data
+          selectProject(selectedProject.id);
+        } else {
+          alert('Error submitting to Secretariat: ' + data.error);
+        }
+      } else {
+        alert('Error submitting to Secretariat. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting to Secretariat:', error);
+      alert('Error submitting to Secretariat. Please try again.');
+    }
+  }
+
+  // Update compilation status
+  function updateCompilationStatus() {
+    if (!projectUpdates || projectUpdates.length === 0) {
+      document.getElementById('timelineStatus').textContent = 'Pending EIU Updates';
+      document.getElementById('budgetStatus').textContent = 'Pending EIU Updates';
+      document.getElementById('physicalStatus').textContent = 'Pending EIU Updates';
+      return;
+    }
+
+    // For milestone updates, we need to check if there's at least one approved milestone update
+    // that contains all three divisions (timeline, budget, physical)
+    const approvedUpdates = projectUpdates.filter(update => update.status === 'iu_approved');
+    const hasApprovedMilestone = approvedUpdates.some(update => update.updateType === 'milestone');
+    
+    // Check if the approved milestone update contains all required divisions
+    let hasTimeline = false;
+    let hasBudget = false;
+    let hasPhysical = false;
+    
+    if (hasApprovedMilestone) {
+      const milestoneUpdate = approvedUpdates.find(update => update.updateType === 'milestone');
+      console.log('Found approved milestone update:', milestoneUpdate);
+      if (milestoneUpdate && milestoneUpdate.milestoneUpdates) {
+        try {
+          const milestones = milestoneUpdate.milestoneUpdates;
+          console.log('Milestone data:', milestones);
+          
+          // If we have milestone data, consider it as having all divisions
+          // since milestone updates typically contain timeline, budget, and physical info
+          if (milestones && milestones.length > 0) {
+            hasTimeline = true; // Milestone updates inherently contain timeline info
+            hasBudget = true;   // Milestone updates inherently contain budget info  
+            hasPhysical = true; // Milestone updates inherently contain physical info
+          } else {
+            // Fallback to specific field checking
+            hasTimeline = milestones.some(m => 
+              (m.plannedStartDate && m.plannedEndDate) || 
+              (m.startDate && m.endDate) ||
+              (m.dueDate) ||
+              (m.actualStartDate && m.actualEndDate)
+            );
+            hasBudget = milestones.some(m => m.budgetAllocation > 0);
+            hasPhysical = milestones.some(m => m.physicalDescription);
+          }
+          
+          console.log('Division checks:', { hasTimeline, hasBudget, hasPhysical });
+        } catch (e) {
+          console.error('Error parsing milestone updates:', e);
+        }
+      }
+    }
+
+    document.getElementById('timelineStatus').textContent = hasTimeline ? '✅ Updated & Approved' : '⏳ Pending Approval';
+    document.getElementById('budgetStatus').textContent = hasBudget ? '✅ Updated & Approved' : '⏳ Pending Approval';
+    document.getElementById('physicalStatus').textContent = hasPhysical ? '✅ Updated & Approved' : '⏳ Pending Approval';
+
+    // Enable/disable compile button
+    const compileButton = document.querySelector('button[onclick="compileAndSubmitToSecretariat()"]');
+    if (compileButton) {
+      if (hasTimeline && hasBudget && hasPhysical) {
+        compileButton.disabled = false;
+        compileButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        compileButton.classList.add('bg-green-600', 'hover:bg-green-700');
+      } else {
+        compileButton.disabled = true;
+        compileButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+        compileButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+      }
+    }
+  }
+
+  // Refresh updates function
+  function refreshUpdates() {
+    if (selectedProject) {
+      console.log('Refreshing updates for project:', selectedProject.id);
+      loadProjectUpdates(selectedProject.id);
+    } else {
+      console.log('No project selected for refresh');
+    }
+  }
+
+  // Load progress timeline function
+  function loadProgressTimeline() {
+    window.location.reload();
+  }
+
+  // Make functions globally available
+  window.selectProject = selectProject;
+  window.approveUpdate = approveUpdate;
+  window.rejectUpdate = rejectUpdate;
+  window.compileAndSubmitToSecretariat = compileAndSubmitToSecretariat;
+  window.loadProgressTimeline = loadProgressTimeline;
+  window.refreshUpdates = refreshUpdates;
+</script> 

@@ -1,0 +1,383 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let eiuActivities = [];
+let error = '';
+let loading = true;
+
+// Default placeholder data - will be replaced with real data from API
+let activityStats = {
+  totalActivities: 0,
+  todayActivities: 0,
+  pendingReviews: 0,
+  completedReviews: 0
+};
+
+// Sample EIU activities data
+let sampleActivities = [
+  {
+    id: 1,
+    type: 'site_visit',
+    title: 'Site Visit Conducted',
+    description: 'EIU conducted site visit for Municipal Hall Renovation Project',
+    projectName: 'Municipal Hall Renovation Project',
+    eiuMember: 'Engr. Maria Santos',
+    date: '2025-07-17T10:30:00Z',
+    status: 'completed',
+    priority: 'high',
+    attachments: 3
+  },
+  {
+    id: 2,
+    type: 'document_review',
+    title: 'Document Review Completed',
+    description: 'Reviewed project documentation and provided feedback',
+    projectName: 'Barangay Road Network Improvement',
+    eiuMember: 'Engr. Roberto Javier',
+    date: '2025-07-16T14:15:00Z',
+    status: 'completed',
+    priority: 'medium',
+    attachments: 1
+  },
+  {
+    id: 3,
+    type: 'progress_report',
+    title: 'Progress Report Submitted',
+    description: 'Monthly progress report submitted for review',
+    projectName: 'Public Market Modernization',
+    eiuMember: 'Engr. Juan Dela Cruz',
+    date: '2025-07-15T09:45:00Z',
+    status: 'pending',
+    priority: 'low',
+    attachments: 2
+  },
+  {
+    id: 4,
+    type: 'issue_identified',
+    title: 'Quality Issue Identified',
+    description: 'Identified quality control issue in construction materials',
+    projectName: 'Municipal Hall Renovation Project',
+    eiuMember: 'Engr. Maria Santos',
+    date: '2025-07-14T16:20:00Z',
+    status: 'in_progress',
+    priority: 'high',
+    attachments: 4
+  }
+];
+
+// Try to fetch EIU activities from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // TODO: Replace with actual EIU activities API endpoint
+    // const activitiesRes = await fetch(`${API_URL}/eiu/activities`, {
+    //   headers: { 'Authorization': `Bearer ${token}` }
+    // });
+    // if (activitiesRes.ok) {
+    //   const data = await activitiesRes.json();
+    //   if (data.success) {
+    //     eiuActivities = data.activities;
+    //     activityStats = data.stats;
+    //   }
+    // }
+
+    // For now, use sample data
+    eiuActivities = sampleActivities;
+    activityStats = {
+      totalActivities: eiuActivities.length,
+      todayActivities: eiuActivities.filter(a => new Date(a.date).toDateString() === new Date().toDateString()).length,
+      pendingReviews: eiuActivities.filter(a => a.status === 'pending').length,
+      completedReviews: eiuActivities.filter(a => a.status === 'completed').length
+    };
+  }
+} catch (err) {
+  console.error('Error fetching EIU activities:', err);
+  error = 'Failed to fetch EIU activities.';
+  eiuActivities = sampleActivities;
+}
+
+loading = false;
+---
+
+<Layout title="EIU Activity Feed - Implementing Office Dashboard">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">EIU Activity Feed</h1>
+          <p class="text-gray-600">Monitor EIU activities and project oversight</p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="refreshActivities()" class="px-4 py-2 bg-[#F8C734] text-white rounded-lg hover:bg-[#92751F] transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+          </button>
+          <button onclick="exportActivities()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Activities</p>
+              <p class="text-2xl font-bold text-gray-800">{activityStats.totalActivities}</p>
+            </div>
+            <div class="bg-[#F8C734]/20 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-[#92751F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.3s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Today's Activities</p>
+              <p class="text-2xl font-bold text-blue-600">{activityStats.todayActivities}</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.4s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Reviews</p>
+              <p class="text-2xl font-bold text-orange-600">{activityStats.pendingReviews}</p>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.5s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Completed Reviews</p>
+              <p class="text-2xl font-bold text-green-600">{activityStats.completedReviews}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.6s;">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">Recent EIU Activities</h2>
+          <div class="flex gap-2">
+            <select id="filterType" onchange="filterActivities()" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+              <option value="">All Types</option>
+              <option value="site_visit">Site Visits</option>
+              <option value="document_review">Document Reviews</option>
+              <option value="progress_report">Progress Reports</option>
+              <option value="issue_identified">Issues Identified</option>
+            </select>
+            <select id="filterStatus" onchange="filterActivities()" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="completed">Completed</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+            </select>
+          </div>
+        </div>
+
+        {loading ? (
+          <div class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#92751F]"></div>
+            <span class="ml-3 text-gray-600">Loading activities...</span>
+          </div>
+        ) : error ? (
+          <div class="text-center py-12">
+            <p class="text-red-600 mb-4">{error}</p>
+            <button onclick="refreshActivities()" class="px-4 py-2 bg-[#F8C734] text-white rounded-lg hover:bg-[#92751F] transition-all">
+              Try Again
+            </button>
+          </div>
+        ) : eiuActivities.length === 0 ? (
+          <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <p class="text-gray-600">No EIU activities found</p>
+          </div>
+        ) : (
+          <div class="space-y-4">
+            {eiuActivities.map(activity => (
+              <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-all cursor-pointer" onclick="viewActivityDetails('{activity.id}')">
+                <div class="flex items-start gap-4">
+                  <div class="flex-shrink-0">
+                    <div class={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      activity.type === 'site_visit' ? 'bg-blue-100' :
+                      activity.type === 'document_review' ? 'bg-green-100' :
+                      activity.type === 'progress_report' ? 'bg-purple-100' :
+                      'bg-red-100'
+                    }`}>
+                      <svg class={`w-6 h-6 ${
+                        activity.type === 'site_visit' ? 'text-blue-600' :
+                        activity.type === 'document_review' ? 'text-green-600' :
+                        activity.type === 'progress_report' ? 'text-purple-600' :
+                        'text-red-600'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {activity.type === 'site_visit' && (
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        )}
+                        {activity.type === 'document_review' && (
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        )}
+                        {activity.type === 'progress_report' && (
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        )}
+                        {activity.type === 'issue_identified' && (
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        )}
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                      <h3 class="text-lg font-semibold text-gray-800">{activity.title}</h3>
+                      <div class="flex items-center gap-2">
+                        <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          activity.priority === 'high' ? 'bg-red-100 text-red-700' :
+                          activity.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {activity.priority}
+                        </span>
+                        <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          activity.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          activity.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {activity.status}
+                        </span>
+                      </div>
+                    </div>
+                    <p class="text-gray-600 mb-2">{activity.description}</p>
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                      <div class="flex items-center gap-4">
+                        <span><strong>Project:</strong> {activity.projectName}</span>
+                        <span><strong>EIU Member:</strong> {activity.eiuMember}</span>
+                        <span><strong>Attachments:</strong> {activity.attachments}</span>
+                      </div>
+                      <span>{new Date(activity.date).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </IUImplementingOfficeLayout>
+</Layout>
+
+<script>
+  // Authentication check for LGU-IU Implementing Office Officer
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      
+      // Check if user is LGU-IU
+      if (user.role !== 'LGU-IU') {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+      
+      console.log('EIU Activity Feed module loaded for user:', user.username);
+      
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+  });
+
+  // Activity functions
+  function refreshActivities() {
+    console.log('Refreshing activities...');
+    // TODO: Implement refresh functionality
+    location.reload();
+  }
+
+  function exportActivities() {
+    console.log('Exporting activities...');
+    // TODO: Implement export functionality
+    alert('Export functionality will be implemented soon.');
+  }
+
+  function filterActivities() {
+    const typeFilter = document.getElementById('filterType').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    
+    console.log('Filtering activities:', { typeFilter, statusFilter });
+    // TODO: Implement filtering functionality
+  }
+
+  function viewActivityDetails(activityId) {
+    console.log('Viewing activity details:', activityId);
+    // TODO: Navigate to activity details page or show modal
+    alert(`Viewing activity details for ID: ${activityId}`);
+  }
+</script>
+
+<style>
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style> 

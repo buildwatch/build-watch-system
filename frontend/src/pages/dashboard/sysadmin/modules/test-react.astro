@@ -1,0 +1,10 @@
+---
+import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
+import TestIsland from '../../../islands/TestIsland.jsx';
+---
+<SysAdminLayout>
+  <section class="p-8">
+    <h1 class="text-2xl font-bold mb-4">Test React Island</h1>
+    <TestIsland client:load />
+  </section>
+</SysAdminLayout> 

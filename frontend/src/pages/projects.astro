@@ -1,0 +1,104 @@
+---
+import Layout from "../layouts/Layout.astro";
+import TopBar from "../components/TopBar.astro";
+import LGUFooter from "../components/LGUFooter.astro";
+import ProjectsIsland from "../islands/ProjectsIsland.jsx";
+// TODO: Import ProjectsIsland.jsx once created
+---
+<Layout title="Projects | Build Watch LGU" description="View and monitor all LGU projects in Santa Cruz, Laguna.">
+  <TopBar />
+  <main class="flex flex-col items-center w-full px-4 pb-12 bg-transparent min-h-[60vh]">
+    <!-- Add extra top margin before header image -->
+    <div class="w-full h-[520px] md:h-[600px] relative overflow-hidden mt-28">
+      <img src="/projects-page-header-bg.png" alt="Santa Cruz Aerial" class="absolute inset-0 w-full h-full object-cover object-top select-none" draggable="false" />
+    </div>
+    <!-- Overlapping Search/Filter Card (restored) -->
+    <div class="w-full flex justify-center relative z-30 -mt-16">
+      <div class="w-full max-w-7xl bg-white rounded-2xl shadow-2xl px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 border border-[#EB3C3C]/10">
+        <!-- Left: Filter Icon -->
+        <button id="filterToggle" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-[#EB3C3C] text-[#EB3C3C] shadow hover:bg-[#EB3C3C]/10 transition mr-2">
+          <span class="sr-only">Filter</span>
+          <!-- Filter icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0013 13.414V19a1 1 0 01-1.447.894l-2-1A1 1 0 019 18v-4.586a1 1 0 00-.293-.707L2.293 6.707A1 1 0 012 6V4z" /></svg>
+        </button>
+        <!-- Center: Controls -->
+        <div class="flex-1 flex flex-row gap-2 items-center">
+          <select id="barangayFilter" class="px-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#EB3C3C] font-bold w-56">
+            <option value="">All Barangays</option>
+            <option value="Barangay 1">Barangay 1</option>
+            <option value="Barangay 2">Barangay 2</option>
+            <option value="Barangay 3">Barangay 3</option>
+            <option value="Barangay 4">Barangay 4</option>
+            <option value="Barangay 5">Barangay 5</option>
+            <option value="Barangay 6">Barangay 6</option>
+            <option value="Barangay 7">Barangay 7</option>
+            <option value="Barangay 8">Barangay 8</option>
+            <option value="Barangay 9">Barangay 9</option>
+            <option value="Barangay 10">Barangay 10</option>
+            <option value="Various">Various Barangays</option>
+          </select>
+          <input type="text" id="searchInput" placeholder="Search for Project Name or Code" class="flex-1 px-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#7A1F1F] font-medium" />
+          <button id="searchBtn" class="px-8 py-3 bg-[#FE5353] text-white font-bold rounded-lg shadow hover:bg-[#EB3C3C] transition">Search</button>
+        </div>
+      </div>
+    </div>
+    <!-- View switcher -->
+    <div class="w-full flex justify-center mt-2">
+      <div class="w-full max-w-7xl">
+        <slot name="view-switcher" />
+      </div>
+    </div>
+    <!-- Main content area -->
+    <div class="w-full max-w-7xl mx-auto mt-8">
+      <ProjectsIsland client:only="react" />
+    </div>
+  </main>
+  <LGUFooter />
+</Layout>
+
+<script>
+  // Search and filter functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const barangayFilter = document.getElementById('barangayFilter');
+    const filterToggle = document.getElementById('filterToggle');
+
+    // Search functionality
+    function performSearch() {
+      const searchTerm = searchInput.value.trim();
+      const barangay = barangayFilter.value;
+      
+      // Call the searchProjects function on the window object
+      if (window.searchProjects) {
+        window.searchProjects(searchTerm, barangay);
+      } else {
+        // Fallback: wait a bit for the React component to load
+        setTimeout(() => {
+          if (window.searchProjects) {
+            window.searchProjects(searchTerm, barangay);
+          }
+        }, 1000);
+      }
+    }
+
+    // Search button click
+    searchBtn.addEventListener('click', performSearch);
+
+    // Enter key in search input
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+
+    // Barangay filter change
+    barangayFilter.addEventListener('change', performSearch);
+
+    // Filter toggle (for future advanced filters)
+    filterToggle.addEventListener('click', function() {
+      // TODO: Implement advanced filter panel
+      console.log('Advanced filters coming soon...');
+    });
+  });
+</script> 

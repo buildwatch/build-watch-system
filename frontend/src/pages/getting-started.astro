@@ -1,0 +1,216 @@
+---
+import Layout from "../layouts/Layout.astro";
+import TopBar from "../components/TopBar.astro";
+import LGUFooter from "../components/LGUFooter.astro";
+---
+<Layout title="Getting Started | Build Watch LGU" description="Learn how to use Build Watch and get started with project monitoring.">
+  <TopBar />
+  <main class="flex flex-col items-center w-full px-4 pt-36 pb-12 bg-transparent min-h-[60vh]">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-2 text-center">Getting Started</h1>
+    <div class="w-24 h-1 bg-[#FE5353] rounded-full mb-6 mx-auto"></div>
+    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
+      Learn how to use Build Watch effectively. This guide will help you navigate the system and understand your role in project monitoring.
+    </p>
+    <div class="w-full max-w-6xl flex flex-col gap-8">
+      <!-- Quick Start Guide -->
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6">Quick Start Guide</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center transition hover:scale-105 focus-within:ring-2 focus-within:ring-[#EB3C3C] rounded-lg p-2" tabindex="0">
+            <div class="w-16 h-16 bg-[#EB3C3C] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 8 0v2"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2">Choose Your Role</h3>
+            <p class="text-[#7A1F1F] text-sm">Select your user group (LGU-PMT, EIU, EMS, or IU) to access the appropriate dashboard and tools.</p>
+          </div>
+          <div class="text-center transition hover:scale-105 focus-within:ring-2 focus-within:ring-[#EB3C3C] rounded-lg p-2" tabindex="0">
+            <div class="w-16 h-16 bg-[#EB3C3C] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2">Access Your Dashboard</h3>
+            <p class="text-[#7A1F1F] text-sm">Log in to your personalized dashboard to view projects, submit reports, and monitor progress.</p>
+          </div>
+          <div class="text-center transition hover:scale-105 focus-within:ring-2 focus-within:ring-[#EB3C3C] rounded-lg p-2" tabindex="0">
+            <div class="w-16 h-16 bg-[#EB3C3C] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V5z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2">Start Monitoring</h3>
+            <p class="text-[#7A1F1F] text-sm">Begin tracking projects, submitting updates, and collaborating with other stakeholders.</p>
+          </div>
+        </div>
+      </div>
+      <!-- User Role Guides -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
+          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
+            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            For LGU-PMT Users
+          </h3>
+          <ul class="space-y-2 text-[#7A1F1F] text-sm">
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Monitor all ongoing projects and their progress</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Review and validate submitted reports</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Generate comprehensive project analytics</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Manage user accounts and permissions</span>
+            </li>
+          </ul>
+          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access LGU-PMT Dashboard</a>
+        </div>
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
+          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
+            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            For EIU Users
+          </h3>
+          <ul class="space-y-2 text-[#7A1F1F] text-sm">
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Submit project progress updates and reports</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Upload supporting documents and photos</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Track project milestones and deadlines</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Respond to monitoring team inquiries</span>
+            </li>
+          </ul>
+          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access EIU Dashboard</a>
+        </div>
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
+          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
+            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            For EMS Users
+          </h3>
+          <ul class="space-y-2 text-[#7A1F1F] text-sm">
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Monitor project compliance and quality</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Submit independent assessment reports</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Flag issues and concerns for review</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Provide stakeholder feedback</span>
+            </li>
+          </ul>
+          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access EMS Dashboard</a>
+        </div>
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
+          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
+            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            For IU Users
+          </h3>
+          <ul class="space-y-2 text-[#7A1F1F] text-sm">
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Oversee strategic project planning</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Review and approve project proposals</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Coordinate with external stakeholders</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
+              <span>Ensure policy compliance and alignment</span>
+            </li>
+          </ul>
+          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access IU Dashboard</a>
+        </div>
+      </div>
+      <!-- Training Resources -->
+      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6">Training Resources</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="flex items-center gap-2 text-lg font-bold text-[#7A1F1F] mb-3">
+              <svg class="w-5 h-5 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              Video Tutorials
+            </h3>
+            <ul class="space-y-2 text-[#7A1F1F] text-sm">
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">System Overview</a>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Dashboard Navigation</a>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Report Submission</a>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Data Analysis</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="flex items-center gap-2 text-lg font-bold text-[#7A1F1F] mb-3">
+              <svg class="w-5 h-5 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Documentation
+            </h3>
+            <ul class="space-y-2 text-[#7A1F1F] text-sm">
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">User Manual</a>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Best Practices Guide</a>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Troubleshooting Guide</a>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
+                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">API Documentation</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Support Section -->
+      <div class="bg-[#EB3C3C]/10 rounded-2xl p-8 text-center">
+        <h2 class="flex items-center justify-center gap-2 text-2xl font-bold text-[#7A1F1F] mb-4">
+          <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Need Help?
+        </h2>
+        <p class="text-[#7A1F1F] mb-6">
+          If you need assistance with Build Watch or have questions about your role, our support team is here to help.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/faqs" class="px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">View FAQs</a>
+          <a href="/contact-us" class="px-6 py-3 border border-[#EB3C3C] text-[#EB3C3C] font-bold rounded-lg hover:bg-[#EB3C3C] hover:text-white transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Contact Support</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <LGUFooter />
+</Layout> 

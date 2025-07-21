@@ -1,0 +1,503 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
+---
+
+<Layout title="Send Feedback | MPMEC Dashboard">
+  <LGUPMTLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Send Feedback to Secretariat</h1>
+          <p class="text-gray-600">Communication bridge with the MPMEC Secretariat</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="composeFeedback()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            New Feedback
+          </button>
+        </div>
+      </div>
+
+      <!-- Feedback Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Sent</p>
+              <p class="text-2xl font-bold text-blue-600" id="totalSent">0</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Response</p>
+              <p class="text-2xl font-bold text-yellow-600" id="pendingResponse">0</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Received</p>
+              <p class="text-2xl font-bold text-green-600" id="totalReceived">0</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Response Rate</p>
+              <p class="text-2xl font-bold text-purple-600" id="responseRate">0%</p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Send Feedback Form -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-6">Send New Feedback</h2>
+          <form class="space-y-4" id="feedbackForm">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <input type="text" id="subject" placeholder="Enter feedback subject..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select id="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+                <option value="">Select category...</option>
+                <option value="feedback">Feedback</option>
+                <option value="request">Request</option>
+                <option value="general">General</option>
+                <option value="alert">Alert</option>
+                <option value="meeting">Meeting</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+              <select id="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea id="message" rows="6" placeholder="Enter your feedback message..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required></textarea>
+            </div>
+            <div class="flex items-center gap-4">
+              <label class="flex items-center">
+                <input type="checkbox" id="acknowledgment" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700">Request acknowledgment</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="urgent" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700">Mark as urgent</span>
+              </label>
+            </div>
+            <div class="flex gap-3 pt-4">
+              <button type="submit" class="flex-1 px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
+                Send Feedback
+              </button>
+              <button type="button" onclick="saveDraft()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                Save Draft
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Recent Messages -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Recent Messages</h2>
+            <button onclick="loadCommunicationData()" class="text-[#FE5353] hover:text-[#E54545] text-sm font-medium">Refresh</button>
+          </div>
+          <div class="space-y-4" id="recentMessages">
+            <!-- Recent messages will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Message History -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-800">Message History</h2>
+            <div class="flex items-center gap-2">
+              <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                <option value="">All Status</option>
+                <option value="sent">Sent</option>
+                <option value="pending">Pending</option>
+                <option value="responded">Responded</option>
+              </select>
+              <button onclick="loadCommunicationData()" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="messageHistoryTable">
+              <!-- Message history will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </LGUPMTLayout>
+</Layout>
+
+<!-- Message Detail Modal -->
+<div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900" id="messageTitle">Message Details</h3>
+          <div class="flex items-center gap-2">
+            <button onclick="replyToMessage()" class="px-3 py-1 text-sm bg-[#FE5353] text-white rounded hover:bg-[#E54545]">Reply</button>
+            <button onclick="closeMessageModal()" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-6" id="messageContent">
+        <!-- Message content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+  <div class="flex items-center gap-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span id="toastMessage">Success!</span>
+  </div>
+</div>
+
+<script>
+  // Global variables
+  let currentUser = null;
+  let communications = [];
+  let availableUsers = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      currentUser = JSON.parse(userData);
+      if (currentUser.role !== 'LGU-PMT' || !currentUser.subRole || !currentUser.subRole.toLowerCase().includes('mpmec')) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+
+    // Initialize communication data
+    loadCommunicationData();
+    loadAvailableUsers();
+  });
+
+  async function loadCommunicationData() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        communications = data.communications;
+        updateCommunicationStats(data);
+        updateRecentMessages();
+        updateMessageHistory();
+      } else {
+        console.error('Failed to load communications');
+      }
+    } catch (error) {
+      console.error('Error loading communications:', error);
+    }
+  }
+
+  async function loadAvailableUsers() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications/users/available', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        availableUsers = await response.json();
+      }
+    } catch (error) {
+      console.error('Error loading available users:', error);
+    }
+  }
+
+  function updateCommunicationStats(data) {
+    const sentMessages = communications.filter(msg => msg.senderId === currentUser.id);
+    const receivedMessages = communications.filter(msg => msg.recipientId === currentUser.id);
+    const pendingMessages = sentMessages.filter(msg => msg.status === 'sent' || msg.status === 'delivered');
+    const respondedMessages = sentMessages.filter(msg => msg.status === 'responded');
+    
+    const responseRate = sentMessages.length > 0 ? Math.round((respondedMessages.length / sentMessages.length) * 100) : 0;
+
+    document.getElementById('totalSent').textContent = sentMessages.length;
+    document.getElementById('pendingResponse').textContent = pendingMessages.length;
+    document.getElementById('totalReceived').textContent = receivedMessages.length;
+    document.getElementById('responseRate').textContent = `${responseRate}%`;
+  }
+
+  function updateRecentMessages() {
+    const container = document.getElementById('recentMessages');
+    const recentMessages = communications.filter(msg => 
+      msg.senderId === currentUser.id || msg.recipientId === currentUser.id
+    ).slice(0, 3);
+
+    container.innerHTML = recentMessages.map(message => `
+      <div class="p-4 border border-gray-200 rounded-lg">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="font-medium text-gray-800">${message.subject}</h3>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            message.status === 'responded' ? 'bg-green-100 text-green-800' :
+            message.status === 'read' ? 'bg-blue-100 text-blue-800' :
+            'bg-yellow-100 text-yellow-800'
+          }">${message.status}</span>
+        </div>
+        <p class="text-sm text-gray-600 mb-2">${message.message.substring(0, 100)}...</p>
+        <div class="flex items-center justify-between text-xs text-gray-500">
+          <span>${new Date(message.createdAt).toLocaleDateString()}</span>
+          <button onclick="viewMessage('${message.id}')" class="text-[#FE5353] hover:text-[#E54545]">View</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateMessageHistory() {
+    const container = document.getElementById('messageHistoryTable');
+    const userMessages = communications.filter(msg => 
+      msg.senderId === currentUser.id || msg.recipientId === currentUser.id
+    );
+
+    container.innerHTML = userMessages.map(item => `
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(item.createdAt).toLocaleDateString()}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-800">${item.subject}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            ${item.category}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            item.status === 'responded' ? 'bg-green-100 text-green-800' :
+            item.status === 'read' ? 'bg-blue-100 text-blue-800' :
+            'bg-yellow-100 text-yellow-800'
+          }">
+            ${item.status}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="viewMessage('${item.id}')" class="text-[#FE5353] hover:text-[#E54545]">View</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function composeFeedback() {
+    // Clear form
+    document.getElementById('feedbackForm').reset();
+    document.getElementById('subject').focus();
+  }
+
+  async function sendFeedback(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const feedbackData = {
+      subject: formData.get('subject'),
+      message: formData.get('message'),
+      category: formData.get('category'),
+      priority: formData.get('priority'),
+      recipientId: availableUsers.find(u => u.subRole?.toLowerCase().includes('secretariat'))?.id,
+      isImportant: formData.get('urgent') === 'on',
+      requestAcknowledgment: formData.get('acknowledgment') === 'on'
+    };
+
+    if (!feedbackData.recipientId) {
+      showToast('No Secretariat user found', 'error');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(feedbackData)
+      });
+
+      if (response.ok) {
+        showToast('Feedback sent successfully!');
+        event.target.reset();
+        loadCommunicationData();
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to send feedback', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+      showToast('Failed to send feedback', 'error');
+    }
+  }
+
+  async function viewMessage(id) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/communications/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const message = await response.json();
+        displayMessageModal(message);
+      }
+    } catch (error) {
+      console.error('Error viewing message:', error);
+    }
+  }
+
+  function displayMessageModal(message) {
+    document.getElementById('messageTitle').textContent = message.subject;
+    document.getElementById('messageContent').innerHTML = `
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">From: ${message.sender?.name || 'Unknown'}</p>
+            <p class="text-sm text-gray-600">To: ${message.recipient?.name || 'Unknown'}</p>
+            <p class="text-sm text-gray-600">Date: ${new Date(message.createdAt).toLocaleString()}</p>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              ${message.category}
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ml-2 ${
+              message.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+              message.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+              message.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-green-100 text-green-800'
+            }">
+              ${message.priority}
+            </span>
+          </div>
+        </div>
+        <div class="border-t pt-4">
+          <p class="text-gray-800 whitespace-pre-wrap">${message.message}</p>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('messageModal').classList.remove('hidden');
+  }
+
+  function closeMessageModal() {
+    document.getElementById('messageModal').classList.add('hidden');
+  }
+
+  function replyToMessage() {
+    // Implementation for replying to messages
+    showToast('Reply feature coming soon!');
+  }
+
+  function saveDraft() {
+    showToast('Draft saved successfully!');
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50 ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    
+    toastMessage.textContent = message;
+    toast.classList.remove('translate-x-full');
+    
+    setTimeout(() => {
+      toast.classList.add('translate-x-full');
+    }, 3000);
+  }
+
+  // Form submission
+  document.getElementById('feedbackForm').addEventListener('submit', sendFeedback);
+</script> 

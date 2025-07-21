@@ -1,0 +1,267 @@
+---
+// SysAdminTopbar.astro
+---
+<header class="flex items-center justify-between px-8 py-4 bg-gradient-to-r from-white to-gray-50 shadow-lg border-b border-gray-200">
+  <!-- Left Section: Logo and Search -->
+  <div class="flex items-center space-x-6">
+    <!-- Logo -->
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+        <img src="/sys-ad-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-gray-800">Build Watch</h1>
+        <p class="text-xs text-gray-500">System Administration</p>
+      </div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+      <input 
+        type="text" 
+        placeholder="Search modules, users, reports..." 
+        class="w-96 pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#3D50D7] focus:border-transparent bg-white shadow-sm transition-all duration-200 hover:shadow-md" 
+      />
+    </div>
+  </div>
+
+  <!-- Right Section: Actions and User -->
+  <div class="flex items-center space-x-4">
+    <!-- Quick Actions -->
+    <div class="flex items-center space-x-2">
+      <button class="p-2 text-gray-500 hover:text-[#3D50D7] hover:bg-[#3D50D7]/10 rounded-lg transition-all duration-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+        </svg>
+      </button>
+      
+      <button class="p-2 text-gray-500 hover:text-[#3D50D7] hover:bg-[#3D50D7]/10 rounded-lg transition-all duration-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="relative" id="sysadmin-notification-container">
+      <button class="relative p-2.5 text-gray-500 hover:text-[#3D50D7] hover:bg-[#3D50D7]/10 rounded-lg transition-all duration-200" id="sysadmin-notification-btn">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+        </svg>
+        <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg hidden" id="sysadmin-notification-badge">0</span>
+      </button>
+      
+      <!-- Notification Dropdown -->
+      <div class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 hidden" id="sysadmin-notification-dropdown">
+        <div class="p-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-800">Notifications</h3>
+            <button class="text-sm text-[#3D50D7] hover:text-[#2a3bb8]" id="sysadmin-mark-all-read">Mark all read</button>
+          </div>
+        </div>
+        <div class="max-h-96 overflow-y-auto" id="sysadmin-notification-list">
+          <div class="p-4 text-center text-gray-500">Loading notifications...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile -->
+    <div class="relative group">
+      <button class="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200">
+        <div class="w-10 h-10 bg-gradient-to-br from-[#3D50D7] to-[#2a3bb8] rounded-xl flex items-center justify-center shadow-lg">
+          <span class="text-white font-bold text-sm">SA</span>
+        </div>
+        <div class="text-left hidden md:block">
+          <p class="text-sm font-semibold text-gray-800">System Admin</p>
+          <p class="text-xs text-gray-500">Administrator</p>
+        </div>
+        <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      
+      <!-- Dropdown Menu -->
+      <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+        <div class="py-2">
+          <a href="/dashboard/sysadmin/profile" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Profile
+          </a>
+          <a href="/dashboard/sysadmin/settings" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Settings
+          </a>
+          <hr class="my-1 border-gray-200">
+          <button id="sysadmin-dropdown-logout-btn" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  import authService from '../services/auth.js';
+  import notificationService from '../services/notifications.js';
+  
+  // Make services available globally
+  window.authService = authService;
+  window.notificationService = notificationService;
+  
+  // Add event listener for logout buttons
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle dropdown logout button
+    const dropdownLogoutBtn = document.getElementById('sysadmin-dropdown-logout-btn');
+    if (dropdownLogoutBtn) {
+      dropdownLogoutBtn.addEventListener('click', function() {
+        authService.logout();
+      });
+    }
+    
+    // Handle standalone logout button (if it exists)
+    const standaloneLogoutBtn = document.getElementById('sysadmin-topbar-logout-btn');
+    if (standaloneLogoutBtn) {
+      standaloneLogoutBtn.addEventListener('click', function() {
+        authService.logout();
+      });
+    }
+
+    // Initialize notifications
+    initializeNotifications();
+  });
+
+  // Notification functionality
+  function initializeNotifications() {
+    const notificationBtn = document.getElementById('sysadmin-notification-btn');
+    const notificationDropdown = document.getElementById('sysadmin-notification-dropdown');
+    const notificationBadge = document.getElementById('sysadmin-notification-badge');
+    const notificationList = document.getElementById('sysadmin-notification-list');
+    const markAllReadBtn = document.getElementById('sysadmin-mark-all-read');
+
+    // Toggle dropdown
+    notificationBtn.addEventListener('click', () => {
+      notificationDropdown.classList.toggle('hidden');
+      if (!notificationDropdown.classList.contains('hidden')) {
+        loadNotifications();
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#sysadmin-notification-container')) {
+        notificationDropdown.classList.add('hidden');
+      }
+    });
+
+    // Mark all as read
+    markAllReadBtn.addEventListener('click', async () => {
+      await notificationService.markAllAsRead();
+      updateNotificationBadge();
+      loadNotifications();
+    });
+
+    // Load initial notification count
+    updateNotificationBadge();
+
+    // Subscribe to notification updates
+    notificationService.onUpdate(({ count }) => {
+      updateNotificationBadge(count);
+    });
+  }
+
+  async function updateNotificationBadge(count) {
+    const badge = document.getElementById('sysadmin-notification-badge');
+    const currentCount = count !== undefined ? count : await notificationService.getNotificationCount();
+    
+    if (currentCount > 0) {
+      badge.textContent = currentCount > 99 ? '99+' : currentCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
+  async function loadNotifications() {
+    const notificationList = document.getElementById('sysadmin-notification-list');
+    
+    try {
+      const data = await notificationService.getNotifications();
+      const notifications = data.notifications;
+
+      if (notifications.length === 0) {
+        notificationList.innerHTML = `
+          <div class="p-4 text-center text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <p>No notifications</p>
+          </div>
+        `;
+        return;
+      }
+
+      const notificationsHtml = notifications.map(notification => `
+        <div class="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${notification.isRead ? 'opacity-75' : ''}" 
+             data-notification-id="${notification.id}">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              ${notificationService.getNotificationIcon(notification.type)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-gray-900">${notification.title}</p>
+                <span class="text-xs text-gray-500">${notificationService.formatTime(notification.createdAt)}</span>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+              ${notification.actionUrl ? `
+                <a href="${notification.actionUrl}" class="text-xs text-[#3D50D7] hover:text-[#2a3bb8] mt-2 inline-block">
+                  ${notification.actionText || 'View Details'}
+                </a>
+              ` : ''}
+            </div>
+            ${!notification.isRead ? `
+              <button class="text-gray-400 hover:text-gray-600" onclick="markSysAdminNotificationAsRead('${notification.id}')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      notificationList.innerHTML = notificationsHtml;
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      notificationList.innerHTML = `
+        <div class="p-4 text-center text-red-500">
+          <p>Failed to load notifications</p>
+        </div>
+      `;
+    }
+  }
+
+  // Global function for marking notification as read
+  window.markSysAdminNotificationAsRead = async function(notificationId) {
+    await notificationService.markAsRead(notificationId);
+    updateNotificationBadge();
+    loadNotifications();
+  };
+</script>

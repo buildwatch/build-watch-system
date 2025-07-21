@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2025-07-09T10:35:45.719Z",
+  "totalGroups": 2,
+  "successful": 2,
+  "failed": 0,
+  "exports": [
+    {
+      "group": "Input Forms (1-4)",
+      "filename": "RPMES-Forms-1-4-Test-Project-Santa-Cruz-2025.xlsx",
+      "filePath": "C:\\Users\\BuildWatch\\Downloads\\Build Watch\\backend\\test-exports-grouped\\RPMES-Forms-1-4-Test-Project-Santa-Cruz-2025.xlsx",
+      "fileSize": 22963,
+      "status": "✅ Generated"
+    },
+    {
+      "group": "Output Forms (5-11)",
+      "filename": "RPMES-Forms-5-11-Test-Project-Santa-Cruz-2025.xlsx",
+      "filePath": "C:\\Users\\BuildWatch\\Downloads\\Build Watch\\backend\\test-exports-grouped\\RPMES-Forms-5-11-Test-Project-Santa-Cruz-2025.xlsx",
+      "fileSize": 2723599,
+      "status": "✅ Generated"
+    }
+  ],
+  "testProject": {
+    "id": 1,
+    "name": "Test-Project-Santa-Cruz",
+    "code": "TEST-2025-001",
+    "description": "Test project for RPMES grouped export validation",
+    "location": "Santa Cruz, Laguna",
+    "budget": 1000000
+  },
+  "directory": "C:\\Users\\BuildWatch\\Downloads\\Build Watch\\backend\\test-exports-grouped",
+  "lguCompliance": {
+    "groupedExports": true,
+    "correctFilenames": true,
+    "roleBasedAccess": true,
+    "templateAlignment": true
+  }
+}

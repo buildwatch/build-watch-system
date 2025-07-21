@@ -1,0 +1,385 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
+
+// Enhanced stub data for announcements
+let announcements = [
+  { 
+    id: 1, 
+    title: 'System Maintenance Notice', 
+    content: 'Scheduled maintenance on July 20, 2025 from 2:00 AM to 6:00 AM. System will be temporarily unavailable during this period.', 
+    status: 'active', 
+    priority: 'high',
+    publishDate: '2025-07-15',
+    expiryDate: '2025-07-25',
+    targetAudience: 'all',
+    readCount: 156,
+    author: 'System Admin'
+  },
+  { 
+    id: 2, 
+    title: 'New Feature Release', 
+    content: 'User Management module now live! Enhanced user roles and permissions system available.', 
+    status: 'active', 
+    priority: 'medium',
+    publishDate: '2025-07-10',
+    expiryDate: '2025-08-10',
+    targetAudience: 'eiu',
+    readCount: 89,
+    author: 'System Admin'
+  },
+  { 
+    id: 3, 
+    title: 'Training Session Reminder', 
+    content: 'Mandatory training session for all LGU-PMT users on July 25, 2025 at 9:00 AM.', 
+    status: 'scheduled', 
+    priority: 'high',
+    publishDate: '2025-07-18',
+    expiryDate: '2025-07-26',
+    targetAudience: 'lgu-pmt',
+    readCount: 0,
+    author: 'System Admin'
+  }
+];
+
+// Metrics data
+let metrics = {
+  totalAnnouncements: 15,
+  activeAnnouncements: 8,
+  scheduledAnnouncements: 3,
+  expiredAnnouncements: 4,
+  totalReads: 1247,
+  avgReadRate: 83.1
+};
+
+let error = '';
+let showCreateModal = false;
+let showEditModal = false;
+let selectedAnnouncement = null;
+---
+
+<Layout title="System Announcements">
+  <SysAdminLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">System Announcements</h1>
+          <p class="text-gray-600">Manage system-wide announcements and notifications</p>
+        </div>
+        <button 
+          class="px-6 py-3 bg-gradient-to-r from-[#3D50D7] to-[#2a3bb8] text-white rounded-xl font-semibold shadow-lg hover:from-[#2a3bb8] hover:to-[#3D50D7] transition-all duration-300 flex items-center gap-2"
+          onclick="document.getElementById('createModal').classList.remove('hidden')"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Create Announcement
+        </button>
+      </div>
+
+      <!-- Metrics Dashboard -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Announcements</p>
+              <p class="text-2xl font-bold text-gray-800">{metrics.totalAnnouncements}</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-xl">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.3s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Active Announcements</p>
+              <p class="text-2xl font-bold text-green-600">{metrics.activeAnnouncements}</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-xl">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.4s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Reads</p>
+              <p class="text-2xl font-bold text-purple-600">{metrics.totalReads}</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-xl">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.5s;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Avg Read Rate</p>
+              <p class="text-2xl font-bold text-orange-600">{metrics.avgReadRate}%</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-xl">
+              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 animate-fade-in-up" style="animation-delay: 0.6s;">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button class="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="font-medium text-blue-700">Schedule Announcement</span>
+          </button>
+          <button class="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span class="font-medium text-green-700">View Analytics</span>
+          </button>
+          <button class="flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span class="font-medium text-purple-700">Manage Audience</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Announcements Table -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 animate-fade-in-up" style="animation-delay: 0.7s;">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-[#3D50D7]">All Announcements</h2>
+          <div class="flex gap-2">
+            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option>All Status</option>
+              <option>Active</option>
+              <option>Scheduled</option>
+              <option>Expired</option>
+            </select>
+            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option>All Audience</option>
+              <option>All Users</option>
+              <option>EIU</option>
+              <option>LGU-PMT</option>
+              <option>Executive</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+          <table class="min-w-full table-auto border-collapse">
+            <thead>
+              <tr class="bg-gray-50 text-gray-700">
+                <th class="px-6 py-4 text-left font-semibold">Title</th>
+                <th class="px-6 py-4 text-left font-semibold">Priority</th>
+                <th class="px-6 py-4 text-left font-semibold">Status</th>
+                <th class="px-6 py-4 text-left font-semibold">Target Audience</th>
+                <th class="px-6 py-4 text-left font-semibold">Publish Date</th>
+                <th class="px-6 py-4 text-left font-semibold">Reads</th>
+                <th class="px-6 py-4 text-left font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {announcements.map(ann => (
+                <tr key={ann.id} class="border-b hover:bg-gray-50 transition-all">
+                  <td class="px-6 py-4">
+                    <div>
+                      <p class="font-medium text-gray-800">{ann.title}</p>
+                      <p class="text-sm text-gray-500 mt-1">{ann.content.substring(0, 60)}...</p>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      ann.priority === 'high' ? 'bg-red-100 text-red-700' : 
+                      ann.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+                      'bg-green-100 text-green-700'
+                    }`}>
+                      {ann.priority}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      ann.status === 'active' ? 'bg-green-100 text-green-700' : 
+                      ann.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : 
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {ann.status}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                      {ann.targetAudience}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">{ann.publishDate}</td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-gray-800">{ann.readCount}</span>
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <button class="text-blue-600 hover:text-blue-800 transition-all p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      <button class="text-green-600 hover:text-green-800 transition-all p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </button>
+                      <button class="text-red-600 hover:text-red-800 transition-all p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Create Announcement Modal -->
+      <div id="createModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Create New Announcement</h3>
+            <button 
+              class="text-gray-400 hover:text-gray-600 transition-all"
+              onclick="document.getElementById('createModal').classList.add('hidden')"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <form class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+              <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter announcement title">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+              <textarea rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter announcement content"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option>All Users</option>
+                  <option>EIU</option>
+                  <option>LGU-PMT</option>
+                  <option>Executive</option>
+                  <option>System Admin</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Publish Date</label>
+                <input type="datetime-local" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                <input type="datetime-local" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <input type="checkbox" id="notifyUsers" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+              <label for="notifyUsers" class="text-sm text-gray-700">Send email notification to target users</label>
+            </div>
+            
+            <div class="flex gap-4 pt-4">
+              <button type="button" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all">
+                Cancel
+              </button>
+              <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-[#3D50D7] to-[#2a3bb8] text-white rounded-lg font-semibold hover:from-[#2a3bb8] hover:to-[#3D50D7] transition-all">
+                Create Announcement
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </SysAdminLayout>
+</Layout>
+
+<style>
+  /* Custom scrollbar for modal */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+  }
+</style> 

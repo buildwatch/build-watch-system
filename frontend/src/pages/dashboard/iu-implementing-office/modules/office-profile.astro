@@ -1,0 +1,556 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+import projectService from '../../../../services/projects.js';
+---
+
+<Layout title="My Profile - Implementing Office Officer">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">My Profile</h1>
+          <p class="text-gray-600">Personal profile and account information</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Profile Complete
+          </button>
+          <button onclick="editProfile()" class="px-6 py-2 bg-gradient-to-r from-[#F8C734] to-[#92751F] text-white rounded-xl font-semibold shadow-lg hover:from-[#92751F] hover:to-[#F8C734] transition-all duration-300">
+            Edit Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Personal Information -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Personal Details -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+          
+          <div class="space-y-4">
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <p class="text-gray-800 font-medium" id="profileFirstName">Loading...</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+                <p class="text-gray-800" id="profileMiddleName">-</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <p class="text-gray-800 font-medium" id="profileLastName">Loading...</p>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <p class="text-gray-800 font-semibold text-lg" id="profileFullName">Loading...</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username (Email)</label>
+                <p class="text-gray-800" id="profileUsername">Loading...</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
+                <p class="text-gray-800" id="profileEmail">Loading...</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
+                <p class="text-gray-800" id="profileBirthday">-</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+                <p class="text-gray-800" id="profileUserId">Loading...</p>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <p class="text-gray-800" id="profileAddress">-</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <p class="text-gray-800" id="profileContact">-</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <span class="px-2 py-1 rounded-full text-xs font-semibold" id="profileStatus">
+                  <span class="bg-green-100 text-green-700">Active</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role & Assignment Information -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.3s;">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Role & Assignment</h3>
+          
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Group</label>
+                <span class="px-2 py-1 bg-[#F8C734] text-white rounded-full text-sm font-semibold" id="profileGroup">
+                  LGU-IU
+                </span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <span class="px-2 py-1 bg-[#92751F] text-white rounded-full text-sm font-semibold" id="profileRole">
+                  LGU-IU
+                </span>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Sub Role</label>
+              <p class="text-gray-800 font-medium" id="profileSubRole">Implementing Office-Officer</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
+              <p class="text-gray-800 font-medium" id="profileProjectCode">-</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                <p class="text-gray-800" id="profileDepartment">-</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                <p class="text-gray-800" id="profilePosition">-</p>
+              </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-[#F8C734]/10 rounded-lg border border-[#F8C734]/20">
+              <h4 class="font-medium text-[#92751F] mb-2">Account Information</h4>
+              <div class="space-y-1 text-sm text-[#92751F]">
+                <p><strong>Login Username:</strong> <span id="accountUsername">Loading...</span></p>
+                <p><strong>Default Password:</strong> LGU_Pass</p>
+                <p><strong>Last Login:</strong> <span id="accountLastLogin">Never</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project History -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 animate-fade-in-up" style="animation-delay: 0.4s;">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Project History</h3>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full table-auto">
+            <thead>
+              <tr class="bg-gray-50 text-gray-700">
+                <th class="px-6 py-3 text-left font-semibold">Project Name</th>
+                <th class="px-6 py-3 text-left font-semibold">Year</th>
+                <th class="px-6 py-3 text-left font-semibold">Status</th>
+                <th class="px-6 py-3 text-left font-semibold">Progress</th>
+                <th class="px-6 py-3 text-left font-semibold">Budget</th>
+                <th class="px-6 py-3 text-left font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="projectHistoryTable">
+              <tr class="border-b">
+                <td class="px-6 py-4 text-gray-500" colspan="6">Loading project history...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.5s;">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Profile Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <button onclick="editProfile()" class="flex items-center gap-3 p-4 bg-[#F8C734]/10 hover:bg-[#F8C734]/20 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-[#92751F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            <span class="font-medium text-[#92751F]">Edit Profile</span>
+          </button>
+          <button onclick="downloadProfile()" class="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span class="font-medium text-green-700">Download Profile</span>
+          </button>
+          <button onclick="changePassword()" class="flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+            </svg>
+            <span class="font-medium text-purple-700">Change Password</span>
+          </button>
+          <button onclick="contactSupport()" class="flex items-center gap-3 p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-all duration-300">
+            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+            <span class="font-medium text-orange-700">Contact Support</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </IUImplementingOfficeLayout>
+</Layout>
+
+<!-- Edit Profile Modal -->
+<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Edit Profile</h3>
+        <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <form id="editForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <input type="text" id="editName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C734] focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+          <input type="tel" id="editContact" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C734] focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+          <input type="date" id="editBirthday" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F8C734] focus:border-transparent">
+        </div>
+        
+        <div class="flex gap-3 pt-4">
+          <button type="submit" class="flex-1 px-4 py-2 bg-[#F8C734] text-white rounded-lg hover:bg-[#92751F] transition-colors">
+            Save Changes
+          </button>
+          <button type="button" onclick="closeEditModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Authentication check for LGU-IU Implementing Office Officer
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      
+      // Check if user is LGU-IU
+      if (user.role !== 'LGU-IU') {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+      
+      console.log('LGU-IU Profile module loaded for user:', user.username);
+      
+      // Load user profile data
+      loadUserProfile();
+      
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+  });
+
+  async function loadUserProfile() {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          updateProfileDisplay(data.user);
+        }
+      } else {
+        console.error('Failed to fetch user profile');
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  }
+
+  function updateProfileDisplay(user) {
+    // Update personal information
+    document.getElementById('profileFirstName').textContent = user.firstName || user.name?.split(' ')[0] || 'Loading...';
+    document.getElementById('profileMiddleName').textContent = user.middleName || '-';
+    document.getElementById('profileLastName').textContent = user.lastName || user.name?.split(' ').slice(-1)[0] || 'Loading...';
+    document.getElementById('profileFullName').textContent = user.fullName || user.name || 'Loading...';
+    document.getElementById('profileUsername').textContent = user.username || 'Loading...';
+    document.getElementById('profileEmail').textContent = user.email || 'Loading...';
+    document.getElementById('profileBirthday').textContent = user.birthdate ? new Date(user.birthdate).toLocaleDateString() : '-';
+    document.getElementById('profileUserId').textContent = user.userId || 'Loading...';
+    document.getElementById('profileAddress').textContent = user.address || '-';
+    document.getElementById('profileContact').textContent = user.contactNumber || '-';
+
+    // Update status
+    const statusElement = document.getElementById('profileStatus');
+    if (statusElement) {
+      const statusText = user.status === 'active' ? 'Active' : user.status || 'Active';
+      const statusColor = user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+      statusElement.innerHTML = `<span class="${statusColor}">${statusText}</span>`;
+    }
+
+    // Update role information
+    document.getElementById('profileGroup').textContent = user.group || 'LGU-IU';
+    document.getElementById('profileRole').textContent = user.role || 'LGU-IU';
+    document.getElementById('profileSubRole').textContent = user.subRole || 'Implementing Office-Officer';
+    document.getElementById('profileProjectCode').textContent = user.projectCode || '-';
+    document.getElementById('profileDepartment').textContent = user.department || '-';
+    document.getElementById('profilePosition').textContent = user.position || '-';
+
+    // Update account information
+    document.getElementById('accountUsername').textContent = user.username || 'Loading...';
+    document.getElementById('accountLastLogin').textContent = user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never';
+
+    // Load project history (mock data for now)
+    loadProjectHistory();
+  }
+
+  async function loadProjectHistory() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      // Fetch projects for this implementing office
+      const response = await fetch('http://localhost:3000/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.projects) {
+          updateProjectHistoryTable(data.projects);
+        } else {
+          console.error('Failed to fetch projects:', data.message);
+          showProjectHistoryError('Failed to load project history');
+        }
+      } else {
+        console.error('Failed to fetch projects:', response.status);
+        showProjectHistoryError('Failed to load project history');
+      }
+    } catch (error) {
+      console.error('Error fetching project history:', error);
+      showProjectHistoryError('Error loading project history');
+    }
+  }
+
+  function updateProjectHistoryTable(projects) {
+    const tableBody = document.getElementById('projectHistoryTable');
+    if (!tableBody) return;
+
+    if (projects.length === 0) {
+      tableBody.innerHTML = `
+        <tr class="border-b">
+          <td class="px-6 py-4 text-gray-500 text-center" colspan="6">
+            No projects found for this implementing office
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tableBody.innerHTML = projects.map(project => {
+      const year = project.startDate ? new Date(project.startDate).getFullYear() : 'N/A';
+      const progress = parseFloat(project.overallProgress) || 0;
+      const budget = projectService.formatBudget(project.totalBudget);
+      
+      return `
+        <tr class="border-b hover:bg-gray-50 transition-all">
+          <td class="px-6 py-4 font-medium text-gray-800">${project.name}</td>
+          <td class="px-6 py-4">${year}</td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}">
+              ${project.status}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-2">
+              <div class="w-16 bg-gray-200 rounded-full h-2">
+                <div class="h-2 rounded-full ${getProgressColor(progress)}" style="width: ${progress}%"></div>
+              </div>
+              <span class="text-sm text-gray-600">${progress}%</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-gray-800">${budget}</td>
+          <td class="px-6 py-4">
+            <button onclick="viewProjectDetails('${project.id}')" class="px-3 py-1 bg-[#F8C734] text-white rounded-lg text-sm font-medium hover:bg-[#92751F] transition-all">
+              View Details
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function getStatusColor(status) {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-700';
+      case 'ongoing':
+        return 'bg-blue-100 text-blue-700';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'delayed':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  }
+
+  function getProgressColor(progress) {
+    if (progress >= 100) return 'bg-green-500';
+    if (progress >= 75) return 'bg-blue-500';
+    if (progress >= 50) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  function showProjectHistoryError(message) {
+    const tableBody = document.getElementById('projectHistoryTable');
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr class="border-b">
+          <td class="px-6 py-4 text-red-500 text-center" colspan="6">
+            ${message}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  function viewProjectDetails(projectId) {
+    // Navigate to project management page with the specific project
+    window.location.href = `/dashboard/iu-implementing-office/modules/project-management?projectId=${projectId}`;
+  }
+
+  // Profile action functions
+  function editProfile() {
+    const modal = document.getElementById('editModal');
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // Populate form fields
+    document.getElementById('editName').value = userData.fullName || userData.name || '';
+    document.getElementById('editContact').value = userData.contactNumber || '';
+    document.getElementById('editBirthday').value = userData.birthdate ? userData.birthdate.split('T')[0] : '';
+    
+    modal.classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+  }
+
+  document.getElementById('editForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+      fullName: document.getElementById('editName').value,
+      contactNumber: document.getElementById('editContact').value,
+      birthdate: document.getElementById('editBirthday').value
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        // Update local storage
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = { ...currentUser, ...formData };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Reload profile
+        updateProfileDisplay(updatedUser);
+        closeEditModal();
+        
+        // Show success message
+        alert('Profile updated successfully!');
+      } else {
+        alert('Failed to update profile. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error updating profile. Please try again.');
+    }
+  });
+
+  function downloadProfile() {
+    console.log('Download profile clicked');
+    // TODO: Implement profile download functionality
+    alert('Profile download functionality will be implemented soon.');
+  }
+
+  function changePassword() {
+    console.log('Change password clicked');
+    // TODO: Implement password change functionality
+    alert('Password change functionality will be implemented soon.');
+  }
+
+  function contactSupport() {
+    console.log('Contact support clicked');
+    // TODO: Implement contact support functionality
+    alert('Contact support functionality will be implemented soon.');
+  }
+
+  function viewProjectDetails(projectId) {
+    console.log('View project details clicked:', projectId);
+    // TODO: Navigate to project details page
+    alert(`Viewing project details for project ID: ${projectId}`);
+  }
+</script>
+
+<style>
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style> 

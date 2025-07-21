@@ -1,0 +1,810 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+---
+
+<Layout title="Coordination Calendar | MPMEC Secretariat">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Coordination Calendar</h1>
+          <p class="text-gray-600">Maintain LGU-wide monitoring calendar and track meetings, deadlines, and field inspections</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="openAddEventModal()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Event
+          </button>
+          <button onclick="openScheduleInspectionModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Schedule Inspection
+          </button>
+        </div>
+      </div>
+
+      <!-- Calendar Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Upcoming Events</p>
+              <p class="text-2xl font-bold text-blue-600" id="upcomingEvents">0</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Field Inspections</p>
+              <p class="text-2xl font-bold text-green-600" id="fieldInspections">0</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Meetings Scheduled</p>
+              <p class="text-2xl font-bold text-purple-600" id="meetingsScheduled">0</p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Deadlines This Week</p>
+              <p class="text-2xl font-bold text-red-600" id="deadlinesThisWeek">0</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar View -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Calendar -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">LGU Monitoring Calendar</h2>
+            <div class="flex items-center gap-2">
+              <button onclick="previousMonth()" class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+              <span class="text-lg font-medium text-gray-800" id="currentMonth">January 2025</span>
+              <button onclick="nextMonth()" class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-7 gap-1 mb-4">
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Sun</div>
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Mon</div>
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Tue</div>
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Wed</div>
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Thu</div>
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Fri</div>
+            <div class="text-center text-sm font-medium text-gray-500 py-2">Sat</div>
+          </div>
+          <div class="grid grid-cols-7 gap-1" id="calendarGrid">
+            <!-- Calendar days will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-6">Upcoming Events</h2>
+          <div class="space-y-4" id="upcomingEventsList">
+            <!-- Upcoming events will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Management -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-800">Event Management</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="eventsTable">
+              <!-- Events will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add Event Modal -->
+    <div id="addEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-800">Add New Event</h3>
+          <button onclick="closeAddEventModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <form id="addEventForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Event Title *</label>
+              <input type="text" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Event Type *</label>
+              <select name="eventType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                <option value="">Select Type</option>
+                <option value="meeting">Meeting</option>
+                <option value="field_inspection">Field Inspection</option>
+                <option value="deadline">Deadline</option>
+                <option value="training">Training</option>
+                <option value="review">Review</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent"></textarea>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
+              <input type="datetime-local" name="startDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">End Date & Time</label>
+              <input type="datetime-local" name="endDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <input type="text" name="location" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <label class="flex items-center">
+              <input type="checkbox" name="isRecurring" class="rounded border-gray-300 text-[#FE5353] focus:ring-[#FE5353]">
+              <span class="ml-2 text-sm text-gray-700">Recurring Event</span>
+            </label>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+            <textarea name="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent"></textarea>
+          </div>
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" onclick="closeAddEventModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
+              Create Event
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-800" id="eventDetailsTitle">Event Details</h3>
+          <button onclick="closeEventDetailsModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="eventDetailsContent">
+          <!-- Event details will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span id="toastMessage">Success!</span>
+      </div>
+    </div>
+  </SecretariatLayout>
+</Layout>
+
+<script>
+  let currentUser = null;
+  let currentDate = new Date();
+  let events = [];
+  let projects = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      currentUser = JSON.parse(userData);
+      if (currentUser.role !== 'LGU-PMT' || !currentUser.subRole || !currentUser.subRole.toLowerCase().includes('secretariat')) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+
+    // Initialize coordination data
+    loadCoordinationData();
+    loadProjects();
+  });
+
+  async function loadCoordinationData() {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Load statistics
+      const statsResponse = await fetch('/api/coordination/stats/overview', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        updateStatistics(statsData.stats);
+      }
+
+      // Load upcoming events
+      const upcomingResponse = await fetch('/api/coordination/upcoming/events?limit=5', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (upcomingResponse.ok) {
+        const upcomingData = await upcomingResponse.json();
+        updateUpcomingEvents(upcomingData.events);
+      }
+
+      // Load all events for table
+      const eventsResponse = await fetch('/api/coordination', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (eventsResponse.ok) {
+        const eventsData = await eventsResponse.json();
+        events = eventsData.events;
+        updateEventsTable();
+      }
+
+      // Load calendar
+      loadCalendar();
+
+    } catch (error) {
+      console.error('Error loading coordination data:', error);
+      showToast('Failed to load coordination data', 'error');
+    }
+  }
+
+  async function loadProjects() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        projects = data.projects || [];
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  }
+
+  function updateStatistics(stats) {
+    document.getElementById('upcomingEvents').textContent = stats.upcomingEvents || 0;
+    document.getElementById('fieldInspections').textContent = stats.fieldInspections || 0;
+    document.getElementById('meetingsScheduled').textContent = stats.meetingsScheduled || 0;
+    document.getElementById('deadlinesThisWeek').textContent = stats.deadlinesThisWeek || 0;
+  }
+
+  function updateUpcomingEvents(upcomingEvents) {
+    const container = document.getElementById('upcomingEventsList');
+    
+    if (upcomingEvents.length === 0) {
+      container.innerHTML = '<p class="text-gray-500 text-center py-4">No upcoming events</p>';
+      return;
+    }
+
+    container.innerHTML = upcomingEvents.map(event => `
+      <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-medium text-gray-800">${event.title}</h4>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getEventTypeColor(event.eventType)}">
+            ${formatEventType(event.eventType)}
+          </span>
+        </div>
+        <p class="text-xs text-gray-600 mb-2">${formatDateTime(event.startDate)}</p>
+        <p class="text-xs text-gray-500 mb-2">${event.location || 'No location specified'}</p>
+        <div class="flex gap-2">
+          <button onclick="viewEvent('${event.id}')" class="text-xs text-[#FE5353] hover:text-[#E54545]">View</button>
+          <button onclick="editEvent('${event.id}')" class="text-xs text-blue-600 hover:text-blue-800">Edit</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateEventsTable() {
+    const container = document.getElementById('eventsTable');
+    
+    if (events.length === 0) {
+      container.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No events found</td></tr>';
+      return;
+    }
+
+    container.innerHTML = events.map(event => `
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-800">${event.title}</div>
+          <div class="text-xs text-gray-500">${event.description ? event.description.substring(0, 50) + '...' : 'No description'}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+          ${formatDateTime(event.startDate)}
+          ${event.endDate ? `<br><span class="text-xs text-gray-400">to ${formatDateTime(event.endDate)}</span>` : ''}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEventTypeColor(event.eventType)}">
+            ${formatEventType(event.eventType)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${event.location || 'N/A'}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}">
+            ${formatStatus(event.status)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="viewEvent('${event.id}')" class="text-[#FE5353] hover:text-[#E54545] mr-3">View</button>
+          <button onclick="editEvent('${event.id}')" class="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
+          <button onclick="deleteEvent('${event.id}')" class="text-red-600 hover:text-red-800">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function loadCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    document.getElementById('currentMonth').textContent = new Date(year, month).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+    const container = document.getElementById('calendarGrid');
+    container.innerHTML = '';
+
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      
+      const isCurrentMonth = date.getMonth() === month;
+      const isToday = date.toDateString() === new Date().toDateString();
+      
+      const dayEvents = events.filter(event => {
+        const eventDate = new Date(event.startDate);
+        return eventDate.toDateString() === date.toDateString();
+      });
+
+      const dayElement = document.createElement('div');
+      dayElement.className = `h-20 border border-gray-200 p-1 ${isCurrentMonth ? 'bg-white' : 'bg-gray-50'} ${isToday ? 'ring-2 ring-[#FE5353]' : ''}`;
+      
+      dayElement.innerHTML = `
+        <div class="text-sm ${isCurrentMonth ? 'text-gray-600' : 'text-gray-400'} ${isToday ? 'font-bold' : ''}">${date.getDate()}</div>
+        ${dayEvents.length > 0 ? `<div class="w-2 h-2 bg-[#FE5353] rounded-full mt-1"></div>` : ''}
+        ${dayEvents.length > 1 ? `<div class="text-xs text-gray-500 mt-1">+${dayEvents.length - 1} more</div>` : ''}
+      `;
+
+      if (dayEvents.length > 0) {
+        dayElement.onclick = () => showDayEvents(date, dayEvents);
+        dayElement.style.cursor = 'pointer';
+      }
+
+      container.appendChild(dayElement);
+    }
+  }
+
+  function showDayEvents(date, dayEvents) {
+    const modal = document.getElementById('eventDetailsModal');
+    const title = document.getElementById('eventDetailsTitle');
+    const content = document.getElementById('eventDetailsContent');
+
+    title.textContent = `Events on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+    
+    content.innerHTML = dayEvents.map(event => `
+      <div class="border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-lg font-medium text-gray-800">${event.title}</h4>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.eventType)}">
+            ${formatEventType(event.eventType)}
+          </span>
+        </div>
+        <p class="text-sm text-gray-600 mb-2">${event.description || 'No description'}</p>
+        <p class="text-sm text-gray-500 mb-2"><strong>Time:</strong> ${formatDateTime(event.startDate)}</p>
+        <p class="text-sm text-gray-500 mb-2"><strong>Location:</strong> ${event.location || 'No location specified'}</p>
+        <p class="text-sm text-gray-500 mb-2"><strong>Status:</strong> ${formatStatus(event.status)}</p>
+        <div class="flex gap-2 mt-3">
+          <button onclick="viewEvent('${event.id}')" class="px-3 py-1 text-sm bg-[#FE5353] text-white rounded hover:bg-[#E54545]">View Details</button>
+        </div>
+      </div>
+    `).join('');
+
+    modal.classList.remove('hidden');
+  }
+
+  // Modal functions
+  function openAddEventModal() {
+    document.getElementById('addEventModal').classList.remove('hidden');
+  }
+
+  function closeAddEventModal() {
+    document.getElementById('addEventModal').classList.add('hidden');
+    document.getElementById('addEventForm').reset();
+  }
+
+  function closeEventDetailsModal() {
+    document.getElementById('eventDetailsModal').classList.add('hidden');
+  }
+
+  function openScheduleInspectionModal() {
+    // Pre-fill the form for field inspection
+    const form = document.getElementById('addEventForm');
+    form.querySelector('[name="eventType"]').value = 'field_inspection';
+    form.querySelector('[name="priority"]').value = 'high';
+    openAddEventModal();
+  }
+
+  // Event handlers
+  document.getElementById('addEventForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const eventData = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      eventType: formData.get('eventType'),
+      startDate: formData.get('startDate'),
+      endDate: formData.get('endDate') || null,
+      location: formData.get('location'),
+      priority: formData.get('priority'),
+      isRecurring: formData.get('isRecurring') === 'on',
+      notes: formData.get('notes')
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/coordination', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(eventData)
+      });
+
+      if (response.ok) {
+        showToast('Event created successfully!');
+        closeAddEventModal();
+        loadCoordinationData();
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to create event', 'error');
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+      showToast('Failed to create event', 'error');
+    }
+  });
+
+  async function viewEvent(id) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/coordination/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const event = await response.json();
+        displayEventModal(event.event);
+      }
+    } catch (error) {
+      console.error('Error viewing event:', error);
+      showToast('Failed to load event details', 'error');
+    }
+  }
+
+  function displayEventModal(event) {
+    const modal = document.getElementById('eventDetailsModal');
+    const title = document.getElementById('eventDetailsTitle');
+    const content = document.getElementById('eventDetailsContent');
+
+    title.textContent = event.title;
+    
+    content.innerHTML = `
+      <div class="space-y-4">
+        <div>
+          <h4 class="text-sm font-medium text-gray-700">Description</h4>
+          <p class="text-sm text-gray-600 mt-1">${event.description || 'No description provided'}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <h4 class="text-sm font-medium text-gray-700">Event Type</h4>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.eventType)} mt-1">
+              ${formatEventType(event.eventType)}
+            </span>
+          </div>
+          <div>
+            <h4 class="text-sm font-medium text-gray-700">Priority</h4>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(event.priority)} mt-1">
+              ${formatPriority(event.priority)}
+            </span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <h4 class="text-sm font-medium text-gray-700">Start Date</h4>
+            <p class="text-sm text-gray-600 mt-1">${formatDateTime(event.startDate)}</p>
+          </div>
+          <div>
+            <h4 class="text-sm font-medium text-gray-700">End Date</h4>
+            <p class="text-sm text-gray-600 mt-1">${event.endDate ? formatDateTime(event.endDate) : 'Not specified'}</p>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-700">Location</h4>
+          <p class="text-sm text-gray-600 mt-1">${event.location || 'No location specified'}</p>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-700">Status</h4>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)} mt-1">
+            ${formatStatus(event.status)}
+          </span>
+        </div>
+        ${event.notes ? `
+          <div>
+            <h4 class="text-sm font-medium text-gray-700">Notes</h4>
+            <p class="text-sm text-gray-600 mt-1">${event.notes}</p>
+          </div>
+        ` : ''}
+        <div class="flex gap-3 pt-4">
+          <button onclick="editEvent('${event.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Edit Event
+          </button>
+          <button onclick="deleteEvent('${event.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            Delete Event
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+  }
+
+  async function editEvent(id) {
+    // For now, just show the event details
+    // In a full implementation, you would open an edit modal
+    await viewEvent(id);
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm('Are you sure you want to delete this event?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/coordination/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        showToast('Event deleted successfully!');
+        loadCoordinationData();
+        closeEventDetailsModal();
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to delete event', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      showToast('Failed to delete event', 'error');
+    }
+  }
+
+  function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    loadCalendar();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    loadCalendar();
+  }
+
+  // Utility functions
+  function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  function formatEventType(type) {
+    const types = {
+      'meeting': 'Meeting',
+      'field_inspection': 'Field Inspection',
+      'deadline': 'Deadline',
+      'training': 'Training',
+      'review': 'Review',
+      'other': 'Other'
+    };
+    return types[type] || type;
+  }
+
+  function formatStatus(status) {
+    const statuses = {
+      'scheduled': 'Scheduled',
+      'confirmed': 'Confirmed',
+      'in_progress': 'In Progress',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+      'postponed': 'Postponed'
+    };
+    return statuses[status] || status;
+  }
+
+  function formatPriority(priority) {
+    const priorities = {
+      'low': 'Low',
+      'medium': 'Medium',
+      'high': 'High',
+      'urgent': 'Urgent'
+    };
+    return priorities[priority] || priority;
+  }
+
+  function getEventTypeColor(type) {
+    const colors = {
+      'meeting': 'bg-purple-100 text-purple-800',
+      'field_inspection': 'bg-green-100 text-green-800',
+      'deadline': 'bg-red-100 text-red-800',
+      'training': 'bg-blue-100 text-blue-800',
+      'review': 'bg-yellow-100 text-yellow-800',
+      'other': 'bg-gray-100 text-gray-800'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
+  }
+
+  function getStatusColor(status) {
+    const colors = {
+      'scheduled': 'bg-blue-100 text-blue-800',
+      'confirmed': 'bg-green-100 text-green-800',
+      'in_progress': 'bg-yellow-100 text-yellow-800',
+      'completed': 'bg-gray-100 text-gray-800',
+      'cancelled': 'bg-red-100 text-red-800',
+      'postponed': 'bg-orange-100 text-orange-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  }
+
+  function getPriorityColor(priority) {
+    const colors = {
+      'low': 'bg-gray-100 text-gray-800',
+      'medium': 'bg-blue-100 text-blue-800',
+      'high': 'bg-orange-100 text-orange-800',
+      'urgent': 'bg-red-100 text-red-800'
+    };
+    return colors[priority] || 'bg-gray-100 text-gray-800';
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50 ${
+      type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    } text-white`;
+    
+    toastMessage.textContent = message;
+    
+    // Show toast
+    setTimeout(() => {
+      toast.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Hide toast after 3 seconds
+    setTimeout(() => {
+      toast.classList.add('translate-x-full');
+    }, 3000);
+  }
+</script> 

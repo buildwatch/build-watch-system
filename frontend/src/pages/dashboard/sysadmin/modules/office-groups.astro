@@ -1,0 +1,904 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
+
+// API configuration
+const API_URL = 'http://localhost:3000/api';
+// Note: For server-side rendering, we'll use a default token approach
+// The client-side JavaScript will handle the actual authentication
+const token = Astro.cookies.get('token')?.value || '';
+
+// Fetch real data from backend
+let departments = [];
+let groups = [];
+let totalUsers = 0;
+let totalDepartments = 0;
+let activeGroups = 0;
+let pendingRequests = 0;
+let error = '';
+
+// For server-side rendering, we'll set default values
+// The client-side JavaScript will fetch real-time data
+totalDepartments = 0; // Start with 0, let client-side update
+activeGroups = 0; // Start with 0, let client-side update
+totalUsers = 0; // Start with 0, let client-side update
+pendingRequests = 0;
+
+// Organizational metrics data with real values
+const orgMetrics = [
+  { 
+    title: 'Total Departments', 
+    value: totalDepartments.toString(), 
+    change: '+0', 
+    icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', 
+    color: 'blue' 
+  },
+  { 
+    title: 'Active Groups', 
+    value: activeGroups.toString(), 
+    change: '+0', 
+    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z', 
+    color: 'green' 
+  },
+  { 
+    title: 'Total Users', 
+    value: totalUsers.toString(), 
+    change: '+0', 
+    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 
+    color: 'purple' 
+  },
+  { 
+    title: 'Pending Requests', 
+    value: pendingRequests.toString(), 
+    change: '+0', 
+    icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', 
+    color: 'orange' 
+  }
+];
+---
+
+<Layout title="Departments & User Groups">
+  <SysAdminLayout>
+    <style>
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+      }
+      
+      .animate-delay-100 { animation-delay: 0.1s; }
+      .animate-delay-200 { animation-delay: 0.2s; }
+      .animate-delay-300 { animation-delay: 0.3s; }
+      .animate-delay-400 { animation-delay: 0.4s; }
+      .animate-delay-500 { animation-delay: 0.5s; }
+      .animate-delay-600 { animation-delay: 0.6s; }
+      .animate-delay-700 { animation-delay: 0.7s; }
+      .animate-delay-800 { animation-delay: 0.8s; }
+      .animate-delay-900 { animation-delay: 0.9s; }
+      .animate-delay-1000 { animation-delay: 1.0s; }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+      }
+
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+    </style>
+
+    <div class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="mb-8 animate-fade-in-up">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Departments & User Groups</h1>
+        <p class="text-gray-600">Manage organizational structure, departments, and user group assignments</p>
+      </div>
+
+      {error && (
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-fade-in-up">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {error}
+          </div>
+        </div>
+      )}
+
+      <!-- Organizational Metrics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {orgMetrics.map((metric, index) => (
+          <div class={`bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 animate-fade-in-up animate-delay-${(index + 1) * 100}`}>
+            <div class="flex items-center justify-between mb-4">
+              <div class={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
+                metric.color === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
+                metric.color === 'green' ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                metric.color === 'purple' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
+                'bg-gradient-to-br from-orange-500 to-orange-600'
+              }`}>
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={metric.icon}></path>
+                </svg>
+              </div>
+              <span class={`text-sm font-semibold px-2 py-1 rounded-full ${
+                metric.change.startsWith('+') ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
+              }`}>
+                {metric.change}
+              </span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-1" data-metric={metric.title.toLowerCase().replace(/\s+/g, '-')}>{metric.value}</h3>
+            <p class="text-gray-600 text-sm">{metric.title}</p>
+          </div>
+        ))}
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Departments Management -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up animate-delay-500">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              Departments
+            </h2>
+            <button 
+              id="addDepartmentBtn"
+              class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-500 transition-all text-sm">
+              Add Department
+            </button>
+          </div>
+          
+          <div id="departmentsContainer" class="space-y-4 max-h-96 overflow-y-auto">
+            {departments.length > 0 ? (
+              departments.map((dept, index) => (
+                <div class={`bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all animate-fade-in-up animate-delay-${600 + (index * 50)}`}>
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center">
+                      <div class={`w-3 h-3 rounded-full mr-3 ${dept.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <h3 class="font-semibold text-gray-800">{dept.name}</h3>
+                    </div>
+                    <span class={`px-2 py-1 rounded text-xs font-semibold ${
+                      dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>{dept.status}</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                    <div>
+                      <span class="font-medium">Code:</span> {dept.code}
+                    </div>
+                    <div>
+                      <span class="font-medium">Head:</span> {dept.head || 'Not assigned'}
+                    </div>
+                    <div>
+                      <span class="font-medium">Contact:</span> {dept.contactNumber || 'N/A'}
+                    </div>
+                    <div>
+                      <span class="font-medium">Email:</span> {dept.email || 'N/A'}
+                    </div>
+                  </div>
+                  {dept.description && (
+                    <p class="text-sm text-gray-600 mb-3">{dept.description}</p>
+                  )}
+                  <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span>Created: {new Date(dept.createdAt).toLocaleDateString()}</span>
+                    <div class="flex space-x-2">
+                      <button class="text-blue-600 hover:text-blue-800 transition-all">Edit</button>
+                      <button class="text-red-600 hover:text-red-800 transition-all">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div class="text-center py-8 text-gray-500 animate-fade-in-up animate-delay-600">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                <p class="text-lg font-medium mb-2">No Departments Found</p>
+                <p class="text-sm">Click "Add Department" to create your first department</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- User Groups Management -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up animate-delay-600">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+              User Groups
+            </h2>
+            <button 
+              id="addGroupBtn"
+              class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-500 transition-all text-sm">
+              Add Group
+            </button>
+          </div>
+          
+          <div id="groupsContainer" class="space-y-4 max-h-96 overflow-y-auto">
+            {groups.length > 0 ? (
+              groups.map((group, index) => (
+                <div class={`bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all animate-fade-in-up animate-delay-${700 + (index * 50)}`}>
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center">
+                      <div class={`w-3 h-3 rounded-full mr-3 ${group.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <h3 class="font-semibold text-gray-800">{group.name}</h3>
+                    </div>
+                    <span class={`px-2 py-1 rounded text-xs font-semibold ${
+                      group.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>{group.status}</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                    <div>
+                      <span class="font-medium">Code:</span> {group.code}
+                    </div>
+                    <div>
+                      <span class="font-medium">Leader:</span> {group.leader || 'Not assigned'}
+                    </div>
+                    <div>
+                      <span class="font-medium">Members:</span> {group.memberCount || 0}
+                    </div>
+                    <div>
+                      <span class="font-medium">Department:</span> {group.department?.name || 'Not assigned'}
+                    </div>
+                  </div>
+                  {group.description && (
+                    <p class="text-sm text-gray-600 mb-3">{group.description}</p>
+                  )}
+                  <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span>Created: {new Date(group.createdAt).toLocaleDateString()}</span>
+                    <div class="flex space-x-2">
+                      <button class="text-blue-600 hover:text-blue-800 transition-all">Edit</button>
+                      <button class="text-red-600 hover:text-red-800 transition-all">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div class="text-center py-8 text-gray-500 animate-fade-in-up animate-delay-700">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                <p class="text-lg font-medium mb-2">No User Groups Found</p>
+                <p class="text-sm">Click "Add Group" to create your first user group</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <!-- Organizational Actions -->
+      <div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-6 animate-fade-in-up animate-delay-1000">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Organizational Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-500 transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Generate Report
+          </button>
+          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-500 transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Sync Structure
+          </button>
+          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold shadow hover:from-purple-600 hover:to-purple-500 transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            View Chart
+          </button>
+          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold shadow hover:from-orange-600 hover:to-orange-500 transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+            </svg>
+            Bulk Actions
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Department Modal -->
+    <div id="addDepartmentModal" class="modal">
+      <div class="modal-content">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Add New Department</h2>
+          <button id="closeDepartmentModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form id="addDepartmentForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department Name *</label>
+            <input 
+              type="text" 
+              id="deptName" 
+              name="name" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter department name">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department Code *</label>
+            <input 
+              type="text" 
+              id="deptCode" 
+              name="code" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., ENG, FIN, SWD">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea 
+              id="deptDescription" 
+              name="description"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter department description"></textarea>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department Head</label>
+            <input 
+              type="text" 
+              id="deptHead" 
+              name="head"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter department head name">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+              <input 
+                type="tel" 
+                id="deptContact" 
+                name="contactNumber"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter contact number">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input 
+                type="email" 
+                id="deptEmail" 
+                name="email"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter email address">
+            </div>
+          </div>
+          
+          <div class="flex space-x-4 pt-4">
+            <button 
+              type="submit"
+              class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-500 transition-all">
+              Create Department
+            </button>
+            <button 
+              type="button"
+              id="cancelDepartmentBtn"
+              class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Group Modal -->
+    <div id="addGroupModal" class="modal">
+      <div class="modal-content">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Add New User Group</h2>
+          <button id="closeGroupModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form id="addGroupForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Group Name *</label>
+            <input 
+              type="text" 
+              id="groupName" 
+              name="name" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter group name">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Group Code *</label>
+            <input 
+              type="text" 
+              id="groupCode" 
+              name="code" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="e.g., MPMEC, TWG, SEC">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+            <select 
+              id="groupDepartment" 
+              name="departmentId"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+              <option value="">Select Department (Optional)</option>
+              {departments.map(dept => (
+                <option value={dept.id}>{dept.name} ({dept.code})</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea 
+              id="groupDescription" 
+              name="description"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter group description"></textarea>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Group Leader</label>
+            <input 
+              type="text" 
+              id="groupLeader" 
+              name="leader"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter group leader name">
+          </div>
+          
+          <div class="flex space-x-4 pt-4">
+            <button 
+              type="submit"
+              class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-500 transition-all">
+              Create Group
+            </button>
+            <button 
+              type="button"
+              id="cancelGroupBtn"
+              class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      console.log('Office Groups JavaScript loaded');
+      
+      // Global variables for data
+      let departments = [];
+      let groups = [];
+      let users = [];
+
+      // Function to fetch real-time data
+      async function fetchRealTimeData() {
+        try {
+          const token = localStorage.getItem('token');
+          
+          if (!token) {
+            console.error('No authentication token found');
+            return;
+          }
+
+          console.log('Fetching real-time data with token:', token.substring(0, 20) + '...');
+
+          // Fetch departments
+          console.log('Fetching departments...');
+          const deptRes = await fetch('http://localhost:3000/api/admin/departments', {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          console.log('Departments response status:', deptRes.status);
+          if (deptRes.ok) {
+            const deptData = await deptRes.json();
+            console.log('Departments data:', deptData);
+            departments = deptData.departments || [];
+            updateDepartmentDisplay();
+          } else {
+            const errorText = await deptRes.text();
+            console.error('Departments API error:', errorText);
+          }
+
+          // Fetch groups
+          console.log('Fetching groups...');
+          const groupRes = await fetch('http://localhost:3000/api/admin/groups', {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          console.log('Groups response status:', groupRes.status);
+          if (groupRes.ok) {
+            const groupData = await groupRes.json();
+            console.log('Groups data:', groupData);
+            groups = groupData.groups || [];
+            updateGroupDisplay();
+          } else {
+            const errorText = await groupRes.text();
+            console.error('Groups API error:', errorText);
+          }
+
+          // Fetch users for counting
+          console.log('Fetching users...');
+          const usersRes = await fetch('http://localhost:3000/api/users?limit=1000', {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          console.log('Users response status:', usersRes.status);
+          if (usersRes.ok) {
+            const usersData = await usersRes.json();
+            console.log('Users data count:', usersData.users?.length || 0);
+            users = usersData.users?.filter(user => 
+              user.role !== 'SYS.AD' && user.status !== 'deleted'
+            ) || [];
+            updateMetrics();
+          } else {
+            const errorText = await usersRes.text();
+            console.error('Users API error:', errorText);
+          }
+
+        } catch (error) {
+          console.error('Error fetching real-time data:', error);
+        }
+      }
+
+      // Function to update metrics display
+      function updateMetrics() {
+        const totalUsersElement = document.querySelector('[data-metric="total-users"]');
+        const totalDeptsElement = document.querySelector('[data-metric="total-departments"]');
+        const activeGroupsElement = document.querySelector('[data-metric="active-groups"]');
+        
+        if (totalUsersElement) totalUsersElement.textContent = users.length;
+        if (totalDeptsElement) totalDeptsElement.textContent = departments.length;
+        if (activeGroupsElement) activeGroupsElement.textContent = groups.filter(g => g.status === 'active').length;
+      }
+
+      // Function to update department display
+      function updateDepartmentDisplay() {
+        console.log('Updating department display with', departments.length, 'departments');
+        const deptContainer = document.getElementById('departmentsContainer');
+        if (!deptContainer) {
+          console.error('Department container not found');
+          return;
+        }
+
+        if (departments.length === 0) {
+          deptContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              <p class="text-lg font-medium">No Departments Found</p>
+              <p class="text-sm">Create your first department to get started</p>
+            </div>
+          `;
+          return;
+        }
+
+        const deptHtml = departments.map(dept => {
+          const userCount = users.filter(user => user.department === dept.name).length;
+          return `
+            <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-gray-800">${dept.name}</h3>
+                    <p class="text-sm text-gray-500">${dept.code}</p>
+                  </div>
+                </div>
+                <span class="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  ${userCount} users
+                </span>
+              </div>
+              <p class="text-gray-600 text-sm mb-3">${dept.description || 'No description available'}</p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>Head: ${dept.head || 'Not assigned'}</span>
+                <span class="capitalize">${dept.status}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        deptContainer.innerHTML = deptHtml;
+      }
+
+      // Function to update group display
+      function updateGroupDisplay() {
+        console.log('Updating group display with', groups.length, 'groups');
+        const groupContainer = document.getElementById('groupsContainer');
+        if (!groupContainer) {
+          console.error('Group container not found');
+          return;
+        }
+
+        if (groups.length === 0) {
+          groupContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+              <p class="text-lg font-medium">No User Groups Found</p>
+              <p class="text-sm">Create your first user group to get started</p>
+            </div>
+          `;
+          return;
+        }
+
+        const groupHtml = groups.map(group => {
+          const userCount = users.filter(user => user.group === group.name).length;
+          return `
+            <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-gray-800">${group.name}</h3>
+                    <p class="text-sm text-gray-500">${group.code}</p>
+                  </div>
+                </div>
+                <span class="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                  ${userCount} users
+                </span>
+              </div>
+              <p class="text-gray-600 text-sm mb-3">${group.description || 'No description available'}</p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>Leader: ${group.leader || 'Not assigned'}</span>
+                <span class="capitalize">${group.status}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        groupContainer.innerHTML = groupHtml;
+      }
+
+      // Modal functionality
+      const addDepartmentBtn = document.getElementById('addDepartmentBtn');
+      const addDepartmentModal = document.getElementById('addDepartmentModal');
+      const closeDepartmentModal = document.getElementById('closeDepartmentModal');
+      const cancelDepartmentBtn = document.getElementById('cancelDepartmentBtn');
+      const addDepartmentForm = document.getElementById('addDepartmentForm');
+
+      const addGroupBtn = document.getElementById('addGroupBtn');
+      const addGroupModal = document.getElementById('addGroupModal');
+      const closeGroupModal = document.getElementById('closeGroupModal');
+      const cancelGroupBtn = document.getElementById('cancelGroupBtn');
+      const addGroupForm = document.getElementById('addGroupForm');
+
+      // Department modal
+      addDepartmentBtn.addEventListener('click', () => {
+        addDepartmentModal.classList.add('show');
+      });
+
+      [closeDepartmentModal, cancelDepartmentBtn].forEach(btn => {
+        btn.addEventListener('click', () => {
+          addDepartmentModal.classList.remove('show');
+          addDepartmentForm.reset();
+        });
+      });
+
+      // Group modal
+      addGroupBtn.addEventListener('click', () => {
+        addGroupModal.classList.add('show');
+      });
+
+      [closeGroupModal, cancelGroupBtn].forEach(btn => {
+        btn.addEventListener('click', () => {
+          addGroupModal.classList.remove('show');
+          addGroupForm.reset();
+        });
+      });
+
+      // Close modals when clicking outside
+      [addDepartmentModal, addGroupModal].forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.remove('show');
+            modal.querySelector('form').reset();
+          }
+        });
+      });
+
+      // Initialize the page with real-time data
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM Content Loaded - Initializing office groups module');
+        fetchRealTimeData();
+      });
+
+      // Also try to run immediately if DOM is already loaded
+      if (document.readyState === 'loading') {
+        console.log('DOM still loading, waiting...');
+      } else {
+        console.log('DOM already loaded, running immediately');
+        fetchRealTimeData();
+      }
+
+             // Function to verify and refresh token if needed
+       async function verifyAndGetToken() {
+         const token = localStorage.getItem('token');
+         
+         if (!token) {
+           alert('Authentication token not found. Please log in again.');
+           window.location.href = '/login/lgu-pmt';
+           return null;
+         }
+
+         // Try to verify the token
+         try {
+           const verifyResponse = await fetch('http://localhost:3000/api/auth/verify', {
+             method: 'GET',
+             headers: {
+               'Authorization': `Bearer ${token}`
+             }
+           });
+
+           if (!verifyResponse.ok) {
+             // Token is invalid, redirect to login
+             localStorage.removeItem('token');
+             localStorage.removeItem('user');
+             alert('Session expired. Please log in again.');
+             window.location.href = '/login/lgu-pmt';
+             return null;
+           }
+
+           return token;
+         } catch (error) {
+           console.error('Token verification error:', error);
+           return token; // Return token anyway, let the actual request handle the error
+         }
+       }
+
+       // Form submissions
+       addDepartmentForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         
+         const formData = new FormData(addDepartmentForm);
+         const data = Object.fromEntries(formData.entries());
+         
+         try {
+           // Verify and get token
+           const token = await verifyAndGetToken();
+           
+           if (!token) {
+             return; // verifyAndGetToken already handled the error
+           }
+           
+           console.log('Department creation - Token verified successfully');
+
+           const response = await fetch('http://localhost:3000/api/admin/departments', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${token}`
+             },
+             body: JSON.stringify(data)
+           });
+
+                     if (response.ok) {
+             addDepartmentModal.classList.remove('show');
+             addDepartmentForm.reset();
+             // Refresh data instead of reloading page
+             fetchRealTimeData();
+           } else {
+             const errorData = await response.json();
+             console.error('Department creation error:', errorData);
+             alert('Error creating department: ' + (errorData.error || 'Unknown error'));
+           }
+         } catch (error) {
+           console.error('Network error:', error);
+           alert('Network error creating department. Please check your connection and try again.');
+         }
+      });
+
+             addGroupForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         
+         const formData = new FormData(addGroupForm);
+         const data = Object.fromEntries(formData.entries());
+         
+         // Convert empty string to null for departmentId
+         if (data.departmentId === '') {
+           data.departmentId = null;
+         }
+         
+         try {
+           // Verify and get token
+           const token = await verifyAndGetToken();
+           
+           if (!token) {
+             return; // verifyAndGetToken already handled the error
+           }
+           
+           console.log('Group creation - Token verified successfully');
+
+           const response = await fetch('http://localhost:3000/api/admin/groups', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${token}`
+             },
+             body: JSON.stringify(data)
+           });
+
+                     if (response.ok) {
+             addGroupModal.classList.remove('show');
+             addGroupForm.reset();
+             // Refresh data instead of reloading page
+             fetchRealTimeData();
+           } else {
+             const errorData = await response.json();
+             console.error('Group creation error:', errorData);
+             alert('Error creating group: ' + (errorData.error || 'Unknown error'));
+           }
+         } catch (error) {
+           console.error('Network error:', error);
+           alert('Network error creating group. Please check your connection and try again.');
+         }
+      });
+    </script>
+  </SysAdminLayout>
+</Layout> 

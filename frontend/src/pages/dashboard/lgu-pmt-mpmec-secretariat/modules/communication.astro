@@ -1,0 +1,665 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+---
+
+<Layout title="MPMEC Communication | MPMEC Secretariat">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">MPMEC Communication</h1>
+          <p class="text-gray-600">Exchange summary reports, directives, and feedback with MPMEC</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="composeMessage()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Compose Message
+          </button>
+          <button onclick="sendReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Send Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Communication Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Messages</p>
+              <p class="text-2xl font-bold text-blue-600" id="totalMessages">0</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Unread Messages</p>
+              <p class="text-2xl font-bold text-red-600" id="unreadMessages">0</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Reports Sent</p>
+              <p class="text-2xl font-bold text-green-600" id="reportsSent">0</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Responses</p>
+              <p class="text-2xl font-bold text-yellow-600" id="pendingResponses">0</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Communication Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Inbox -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Inbox</h2>
+            <span class="text-sm text-gray-500" id="inboxCount">0 messages</span>
+          </div>
+          <div class="space-y-4" id="inboxMessages">
+            <!-- Inbox messages will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Sent Messages -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Sent Messages</h2>
+            <span class="text-sm text-gray-500" id="sentCount">0 messages</span>
+          </div>
+          <div class="space-y-4" id="sentMessages">
+            <!-- Sent messages will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-6">Quick Actions</h2>
+          <div class="space-y-4">
+            <button onclick="sendWeeklyReport()" class="w-full p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors text-left">
+              <div class="flex items-center gap-3">
+                <div class="bg-blue-100 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-800">Send Weekly Report</h3>
+                  <p class="text-xs text-gray-600">Submit weekly progress summary</p>
+                </div>
+              </div>
+            </button>
+
+            <button onclick="requestFeedback()" class="w-full p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors text-left">
+              <div class="flex items-center gap-3">
+                <div class="bg-green-100 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-800">Request Feedback</h3>
+                  <p class="text-xs text-gray-600">Ask for MPMEC input</p>
+                </div>
+              </div>
+            </button>
+
+            <button onclick="scheduleMeeting()" class="w-full p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors text-left">
+              <div class="flex items-center gap-3">
+                <div class="bg-purple-100 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-800">Schedule Meeting</h3>
+                  <p class="text-xs text-gray-600">Arrange MPMEC session</p>
+                </div>
+              </div>
+            </button>
+
+            <button onclick="sendAlert()" class="w-full p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-left">
+              <div class="flex items-center gap-3">
+                <div class="bg-red-100 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-800">Send Alert</h3>
+                  <p class="text-xs text-gray-600">Urgent notification</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Communication History -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-800">Communication History</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="communicationHistoryTable">
+              <!-- Communication history will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </SecretariatLayout>
+</Layout>
+
+<!-- Compose Message Modal -->
+<div id="composeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900">Compose Message</h3>
+          <button onclick="closeComposeModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <form id="composeForm" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
+          <select id="recipientId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+            <option value="">Select MPMEC member...</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+          <input type="text" id="subject" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <select id="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+            <option value="general">General</option>
+            <option value="report">Report</option>
+            <option value="feedback">Feedback</option>
+            <option value="request">Request</option>
+            <option value="alert">Alert</option>
+            <option value="meeting">Meeting</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <select id="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+          <textarea id="message" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required></textarea>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <label class="flex items-center">
+            <input type="checkbox" id="isImportant" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Mark as important</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" id="requestAcknowledgment" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+            <span class="ml-2 text-sm text-gray-700">Request acknowledgment</span>
+          </label>
+        </div>
+        
+        <div class="flex gap-3 pt-4">
+          <button type="submit" class="flex-1 px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
+            Send Message
+          </button>
+          <button type="button" onclick="closeComposeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Message Detail Modal -->
+<div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900" id="messageTitle">Message Details</h3>
+          <div class="flex items-center gap-2">
+            <button onclick="replyToMessage()" class="px-3 py-1 text-sm bg-[#FE5353] text-white rounded hover:bg-[#E54545]">Reply</button>
+            <button onclick="closeMessageModal()" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-6" id="messageContent">
+        <!-- Message content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+  <div class="flex items-center gap-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span id="toastMessage">Success!</span>
+  </div>
+</div>
+
+<script>
+  // Global variables
+  let currentUser = null;
+  let communications = [];
+  let availableUsers = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      currentUser = JSON.parse(userData);
+      if (currentUser.role !== 'LGU-PMT' || !currentUser.subRole || !currentUser.subRole.toLowerCase().includes('secretariat')) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+
+    // Initialize communication data
+    loadCommunicationData();
+    loadAvailableUsers();
+  });
+
+  async function loadCommunicationData() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        communications = data.communications;
+        updateCommunicationStats(data);
+        updateInboxMessages();
+        updateSentMessages();
+        updateCommunicationHistory();
+      } else {
+        console.error('Failed to load communications');
+      }
+    } catch (error) {
+      console.error('Error loading communications:', error);
+    }
+  }
+
+  async function loadAvailableUsers() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications/users/available', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        availableUsers = await response.json();
+        updateRecipientOptions();
+      }
+    } catch (error) {
+      console.error('Error loading available users:', error);
+    }
+  }
+
+  function updateCommunicationStats(data) {
+    document.getElementById('totalMessages').textContent = data.total || 0;
+    document.getElementById('unreadMessages').textContent = data.unreadMessages || 0;
+    document.getElementById('reportsSent').textContent = data.reportsSent || 0;
+    document.getElementById('pendingResponses').textContent = data.pendingResponses || 0;
+  }
+
+  function updateInboxMessages() {
+    const container = document.getElementById('inboxMessages');
+    const inboxMessages = communications.filter(msg => 
+      msg.recipientId === currentUser.id && msg.type === 'incoming'
+    ).slice(0, 5);
+
+    container.innerHTML = inboxMessages.map(message => `
+      <div class="border border-gray-200 rounded-lg p-3 ${!message.isRead ? 'bg-blue-50' : ''}">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-medium text-gray-800">${message.subject}</h4>
+          ${!message.isRead ? '<span class="w-2 h-2 bg-blue-600 rounded-full"></span>' : ''}
+        </div>
+        <p class="text-xs text-gray-600 mb-1">From: ${message.sender?.name || 'Unknown'}</p>
+        <p class="text-xs text-gray-500">${new Date(message.createdAt).toLocaleDateString()}</p>
+        <div class="flex gap-2 mt-2">
+          <button onclick="viewMessage('${message.id}')" class="text-xs text-[#FE5353] hover:text-[#E54545]">View</button>
+          <button onclick="replyToMessage('${message.id}')" class="text-xs text-blue-600 hover:text-blue-800">Reply</button>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('inboxCount').textContent = `${inboxMessages.length} messages`;
+  }
+
+  function updateSentMessages() {
+    const container = document.getElementById('sentMessages');
+    const sentMessages = communications.filter(msg => 
+      msg.senderId === currentUser.id && msg.type === 'outgoing'
+    ).slice(0, 5);
+
+    container.innerHTML = sentMessages.map(message => `
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-sm font-medium text-gray-800">${message.subject}</h4>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+            message.status === 'read' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+          }">
+            ${message.status}
+          </span>
+        </div>
+        <p class="text-xs text-gray-600 mb-1">To: ${message.recipient?.name || 'Unknown'}</p>
+        <p class="text-xs text-gray-500">${new Date(message.createdAt).toLocaleDateString()}</p>
+        <div class="flex gap-2 mt-2">
+          <button onclick="viewSentMessage('${message.id}')" class="text-xs text-[#FE5353] hover:text-[#E54545]">View</button>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('sentCount').textContent = `${sentMessages.length} messages`;
+  }
+
+  function updateCommunicationHistory() {
+    const container = document.getElementById('communicationHistoryTable');
+    const recentCommunications = communications.slice(0, 10);
+
+    container.innerHTML = recentCommunications.map(item => `
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${new Date(item.createdAt).toLocaleDateString()}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-800">${item.subject}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            ${item.category}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            item.status === 'responded' ? 'bg-green-100 text-green-800' :
+            item.status === 'read' ? 'bg-blue-100 text-blue-800' :
+            'bg-yellow-100 text-yellow-800'
+          }">
+            ${item.status}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="viewHistoryItem('${item.id}')" class="text-[#FE5353] hover:text-[#E54545]">View</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function updateRecipientOptions() {
+    const select = document.getElementById('recipientId');
+    select.innerHTML = '<option value="">Select MPMEC member...</option>';
+    
+    availableUsers.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.id;
+      option.textContent = `${user.name} (${user.subRole})`;
+      select.appendChild(option);
+    });
+  }
+
+  function composeMessage() {
+    document.getElementById('composeModal').classList.remove('hidden');
+  }
+
+  function closeComposeModal() {
+    document.getElementById('composeModal').classList.add('hidden');
+    document.getElementById('composeForm').reset();
+  }
+
+  async function sendMessage(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const messageData = {
+      subject: formData.get('subject'),
+      message: formData.get('message'),
+      category: formData.get('category'),
+      priority: formData.get('priority'),
+      recipientId: formData.get('recipientId'),
+      isImportant: formData.get('isImportant') === 'on',
+      requestAcknowledgment: formData.get('requestAcknowledgment') === 'on'
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(messageData)
+      });
+
+      if (response.ok) {
+        showToast('Message sent successfully!');
+        closeComposeModal();
+        loadCommunicationData();
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to send message', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showToast('Failed to send message', 'error');
+    }
+  }
+
+  async function viewMessage(id) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/communications/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const message = await response.json();
+        displayMessageModal(message);
+      }
+    } catch (error) {
+      console.error('Error viewing message:', error);
+    }
+  }
+
+  function displayMessageModal(message) {
+    document.getElementById('messageTitle').textContent = message.subject;
+    document.getElementById('messageContent').innerHTML = `
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">From: ${message.sender?.name || 'Unknown'}</p>
+            <p class="text-sm text-gray-600">To: ${message.recipient?.name || 'Unknown'}</p>
+            <p class="text-sm text-gray-600">Date: ${new Date(message.createdAt).toLocaleString()}</p>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              ${message.category}
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ml-2 ${
+              message.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+              message.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+              message.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-green-100 text-green-800'
+            }">
+              ${message.priority}
+            </span>
+          </div>
+        </div>
+        <div class="border-t pt-4">
+          <p class="text-gray-800 whitespace-pre-wrap">${message.message}</p>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('messageModal').classList.remove('hidden');
+  }
+
+  function closeMessageModal() {
+    document.getElementById('messageModal').classList.add('hidden');
+  }
+
+  function replyToMessage(id) {
+    const message = communications.find(m => m.id === id);
+    if (message) {
+      composeMessage();
+      document.getElementById('recipientId').value = message.senderId;
+      document.getElementById('subject').value = `Re: ${message.subject}`;
+      document.getElementById('message').focus();
+    }
+  }
+
+  function viewSentMessage(id) {
+    viewMessage(id);
+  }
+
+  function viewHistoryItem(id) {
+    viewMessage(id);
+  }
+
+  function sendWeeklyReport() {
+    composeMessage();
+    document.getElementById('subject').value = 'Weekly Progress Report';
+    document.getElementById('category').value = 'report';
+    document.getElementById('message').value = 'Dear MPMEC Members,\n\nPlease find attached the weekly progress report.\n\nBest regards,\nSecretariat';
+  }
+
+  function requestFeedback() {
+    composeMessage();
+    document.getElementById('subject').value = 'Feedback Request';
+    document.getElementById('category').value = 'feedback';
+    document.getElementById('message').value = 'Dear MPMEC Members,\n\nWe would appreciate your feedback on the following matter:\n\nThank you,\nSecretariat';
+  }
+
+  function scheduleMeeting() {
+    composeMessage();
+    document.getElementById('subject').value = 'Meeting Schedule Request';
+    document.getElementById('category').value = 'meeting';
+    document.getElementById('message').value = 'Dear MPMEC Members,\n\nWe would like to schedule a meeting to discuss:\n\nPlease indicate your availability.\n\nBest regards,\nSecretariat';
+  }
+
+  function sendAlert() {
+    composeMessage();
+    document.getElementById('subject').value = 'URGENT: Important Notice';
+    document.getElementById('category').value = 'alert';
+    document.getElementById('priority').value = 'urgent';
+    document.getElementById('isImportant').checked = true;
+    document.getElementById('message').value = 'Dear MPMEC Members,\n\nThis is an urgent notice regarding:\n\nPlease respond immediately.\n\nBest regards,\nSecretariat';
+  }
+
+  function sendReport() {
+    sendWeeklyReport();
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50 ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    
+    toastMessage.textContent = message;
+    toast.classList.remove('translate-x-full');
+    
+    setTimeout(() => {
+      toast.classList.add('translate-x-full');
+    }, 3000);
+  }
+
+  // Form submission
+  document.getElementById('composeForm').addEventListener('submit', sendMessage);
+</script> 

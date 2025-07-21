@@ -1,0 +1,716 @@
+export const prerender = false;
+---
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+
+const API_URL = 'http://localhost:3000/api';
+let userData = null;
+let templatesData = {
+  templates: [],
+  templatesByDepartment: {},
+  stats: {
+    totalTemplates: 0,
+    activeTemplates: 0,
+    draftTemplates: 0,
+    monthlyDownloads: 0
+  }
+};
+let loading = true;
+let error = '';
+
+// Try to fetch templates data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    // Fetch user data for authentication
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+
+    // Fetch templates data
+    const templatesRes = await fetch(`${API_URL}/templates`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (templatesRes.ok) {
+      const data = await templatesRes.json();
+      if (data.success) {
+        templatesData.stats = data.stats;
+        templatesData.templates = data.templates;
+      }
+    }
+
+    // Fetch templates by department
+    const deptRes = await fetch(`${API_URL}/templates/by-department`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (deptRes.ok) {
+      const deptData = await deptRes.json();
+      if (deptData.success) {
+        templatesData.templatesByDepartment = deptData.templatesByDepartment;
+      }
+    }
+  }
+} catch (err) {
+  console.error('Error fetching templates data:', err);
+  error = 'Failed to fetch templates data.';
+}
+
+loading = false;
+---
+
+<Layout title="Templates & Forms | MPMEC Secretariat">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <!-- Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">Templates & Forms</h1>
+          <p class="text-gray-600">Upload and manage standard forms and templates for project reporting</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="uploadTemplate()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            Upload Template
+          </button>
+          <button onclick="createTemplate()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create Template
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      {loading && (
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FE5353]"></div>
+          <span class="ml-3 text-gray-600">Loading templates data...</span>
+        </div>
+      )}
+
+      <!-- Error State -->
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <span class="text-red-800">{error}</span>
+          </div>
+        </div>
+      )}
+
+      <!-- Template Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Templates</p>
+              <p class="text-2xl font-bold text-blue-600" id="totalTemplates">{templatesData.stats.totalTemplates}</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Active Templates</p>
+              <p class="text-2xl font-bold text-green-600" id="activeTemplates">{templatesData.stats.activeTemplates}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Draft Templates</p>
+              <p class="text-2xl font-bold text-yellow-600" id="draftTemplates">{templatesData.stats.draftTemplates}</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Downloads This Month</p>
+              <p class="text-2xl font-bold text-purple-600" id="monthlyDownloads">{templatesData.stats.monthlyDownloads}</p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <select id="categoryFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Categories</option>
+              <option value="rpmes_forms">RPMES Forms</option>
+              <option value="progress_reports">Progress Reports</option>
+              <option value="specialized_forms">Specialized Forms</option>
+              <option value="compliance_forms">Compliance Forms</option>
+              <option value="monitoring_forms">Monitoring Forms</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+            <select id="departmentFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Departments</option>
+              <option value="All Departments">All Departments</option>
+              <option value="Engineering Office">Engineering Office</option>
+              <option value="Finance Department">Finance Department</option>
+              <option value="Planning Office">Planning Office</option>
+              <option value="Environment Office">Environment Office</option>
+              <option value="Health Department">Health Department</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <input type="text" id="searchFilter" onkeyup="applyFilters()" placeholder="Search templates..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+          </div>
+        </div>
+      </div>
+
+      <!-- Templates by Department -->
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Templates by Department</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {Object.entries(templatesData.templatesByDepartment).map(([department, templates]) => (
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">{department}</h3>
+              <div class="space-y-3">
+                {templates.slice(0, 4).map(template => (
+                  <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div class="flex-1 min-w-0">
+                      <span class="text-sm text-gray-700 truncate block">{template.name}</span>
+                      <span class="text-xs text-gray-500">{template.category.replace('_', ' ').toUpperCase()}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-gray-500">{template.downloadCount} downloads</span>
+                      <button onclick="downloadTemplate('{template.id}')" class="text-[#FE5353] hover:text-[#E54545] text-sm">Download</button>
+                    </div>
+                  </div>
+                ))}
+                {templates.length > 4 && (
+                  <div class="text-center">
+                    <button onclick="viewAllDepartmentTemplates('{department}')" class="text-[#FE5353] hover:text-[#E54545] text-sm">
+                      View all {templates.length} templates
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Template Management -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-800">Template Management</h2>
+            <div class="flex items-center gap-2">
+              <button onclick="refreshTemplates()" class="text-sm text-[#FE5353] hover:text-[#E54545]">Refresh</button>
+              <button onclick="exportTemplates()" class="text-sm text-blue-600 hover:text-blue-800">Export List</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Downloads</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="templatesTable">
+              {templatesData.templates.map(template => {
+                const lastUpdated = new Date(template.updatedAt).toLocaleDateString();
+                const statusClass = template.status === 'active' ? 'bg-green-100 text-green-800' :
+                                   template.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                                   template.status === 'archived' ? 'bg-gray-100 text-gray-800' :
+                                   'bg-red-100 text-red-800';
+
+                return (
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-gray-800">{template.name}</div>
+                      <div class="text-xs text-gray-500">{template.description}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-600">{template.category.replace('_', ' ').toUpperCase()}</div>
+                      {template.subCategory && (
+                        <div class="text-xs text-gray-500">{template.subCategory.replace('_', ' ')}</div>
+                      )}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-600">{template.department}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-600">v{template.version}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{lastUpdated}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {statusClass}">
+                        {template.status.charAt(0).toUpperCase() + template.status.slice(1)}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{template.downloadCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button onclick="downloadTemplate('{template.id}')" class="text-[#FE5353] hover:text-[#E54545] mr-3">Download</button>
+                      <button onclick="editTemplate('{template.id}')" class="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
+                      <button onclick="deleteTemplate('{template.id}')" class="text-red-600 hover:text-red-800">Delete</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Upload Modal -->
+      <div id="uploadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+          <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-800">Upload Template</h3>
+                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="p-6">
+              <form id="uploadForm" enctype="multipart/form-data">
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Template Name</label>
+                    <input type="text" id="templateName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="templateDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent"></textarea>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                      <select id="templateCategory" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                        <option value="">Select Category</option>
+                        <option value="rpmes_forms">RPMES Forms</option>
+                        <option value="progress_reports">Progress Reports</option>
+                        <option value="specialized_forms">Specialized Forms</option>
+                        <option value="compliance_forms">Compliance Forms</option>
+                        <option value="monitoring_forms">Monitoring Forms</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                      <select id="templateDepartment" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                        <option value="">Select Department</option>
+                        <option value="All Departments">All Departments</option>
+                        <option value="Engineering Office">Engineering Office</option>
+                        <option value="Finance Department">Finance Department</option>
+                        <option value="Planning Office">Planning Office</option>
+                        <option value="Environment Office">Environment Office</option>
+                        <option value="Health Department">Health Department</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Template File</label>
+                    <input type="file" id="templateFile" accept=".pdf,.docx,.xlsx,.doc,.xls" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Supported formats: PDF, DOCX, XLSX, DOC, XLS (Max 10MB)</p>
+                  </div>
+                  <div class="flex items-center">
+                    <input type="checkbox" id="templateRequired" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
+                    <label for="templateRequired" class="ml-2 text-sm text-gray-700">Required template for projects</label>
+                  </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                  <button type="button" onclick="closeUploadModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="submit" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545]">Upload Template</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success/Error Toast -->
+      <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border p-4 max-w-sm">
+          <div class="flex items-center">
+            <div id="toastIcon" class="mr-3"></div>
+            <div>
+              <p id="toastMessage" class="text-sm font-medium"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </SecretariatLayout>
+</Layout>
+
+<script>
+  // Store templates data globally
+  window.templatesData = { 
+    templates: [], 
+    templatesByDepartment: {}, 
+    stats: {
+      totalTemplates: 0,
+      activeTemplates: 0,
+      draftTemplates: 0,
+      monthlyDownloads: 0
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      window.location.href = '/login/lgu-pmt';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      if (user.role !== 'LGU-PMT' || !user.subRole || !user.subRole.toLowerCase().includes('secretariat')) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+
+    // Load initial data
+    loadTemplatesData();
+  });
+
+  async function loadTemplatesData() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/templates', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        window.templatesData = data;
+        
+        // Update statistics
+        document.getElementById('totalTemplates').textContent = data.stats.totalTemplates || 0;
+        document.getElementById('activeTemplates').textContent = data.stats.activeTemplates || 0;
+        document.getElementById('draftTemplates').textContent = data.stats.draftTemplates || 0;
+        document.getElementById('monthlyDownloads').textContent = data.stats.monthlyDownloads || 0;
+        
+        // Reload table
+        loadTemplatesTable(data.templates);
+        showToast('Templates data refreshed successfully', 'success');
+      } else {
+        throw new Error(data.error || 'Failed to fetch templates data');
+      }
+    } catch (error) {
+      console.error('Error loading templates data:', error);
+      showToast('Failed to load templates data', 'error');
+    }
+  }
+
+  function loadTemplatesTable(templates = null) {
+    const container = document.getElementById('templatesTable');
+    
+    if (!templates) {
+      templates = window.templatesData.templates || [];
+    }
+
+    container.innerHTML = templates.map(template => {
+      const lastUpdated = new Date(template.updatedAt).toLocaleDateString();
+      const statusClass = template.status === 'active' ? 'bg-green-100 text-green-800' :
+                         template.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                         template.status === 'archived' ? 'bg-gray-100 text-gray-800' :
+                         'bg-red-100 text-red-800';
+
+      return `
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-800">${template.name}</div>
+            <div class="text-xs text-gray-500">${template.description || ''}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-600">${template.category.replace('_', ' ').toUpperCase()}</div>
+            ${template.subCategory ? `<div class="text-xs text-gray-500">${template.subCategory.replace('_', ' ')}</div>` : ''}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-600">${template.department}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-600">v${template.version}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${lastUpdated}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+              ${template.status.charAt(0).toUpperCase() + template.status.slice(1)}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${template.downloadCount}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button onclick="downloadTemplate('${template.id}')" class="text-[#FE5353] hover:text-[#E54545] mr-3">Download</button>
+            <button onclick="editTemplate('${template.id}')" class="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
+            <button onclick="deleteTemplate('${template.id}')" class="text-red-600 hover:text-red-800">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function downloadTemplate(templateId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/templates/${templateId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'template';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast('Template downloaded successfully!', 'success');
+      loadTemplatesData(); // Refresh to update download count
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      showToast('Failed to download template', 'error');
+    }
+  }
+
+  async function editTemplate(templateId) {
+    console.log('Editing template:', templateId);
+    showToast('Template editing feature coming soon!', 'info');
+  }
+
+  async function deleteTemplate(templateId) {
+    if (!confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/templates/${templateId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Template deleted successfully!', 'success');
+        loadTemplatesData();
+      } else {
+        throw new Error(data.error || 'Failed to delete template');
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      showToast('Failed to delete template', 'error');
+    }
+  }
+
+  function uploadTemplate() {
+    document.getElementById('uploadModal').classList.remove('hidden');
+  }
+
+  function closeUploadModal() {
+    document.getElementById('uploadModal').classList.add('hidden');
+    document.getElementById('uploadForm').reset();
+  }
+
+  function createTemplate() {
+    console.log('Creating new template...');
+    showToast('Template creation feature coming soon!', 'info');
+  }
+
+  function refreshTemplates() {
+    console.log('Refreshing templates data...');
+    loadTemplatesData();
+  }
+
+  function exportTemplates() {
+    console.log('Exporting templates list...');
+    showToast('Template export feature coming soon!', 'info');
+  }
+
+  function applyFilters() {
+    const category = document.getElementById('categoryFilter').value;
+    const department = document.getElementById('departmentFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const search = document.getElementById('searchFilter').value;
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (department) params.append('department', department);
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+
+    // In a real implementation, you would make an API call with these filters
+    console.log('Applying filters:', { category, department, status, search });
+    showToast('Filters applied successfully!', 'success');
+  }
+
+  function viewAllDepartmentTemplates(department) {
+    console.log('Viewing all templates for department:', department);
+    showToast(`Viewing all templates for ${department}`, 'info');
+  }
+
+  // Handle form submission
+  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      
+      formData.append('name', document.getElementById('templateName').value);
+      formData.append('description', document.getElementById('templateDescription').value);
+      formData.append('category', document.getElementById('templateCategory').value);
+      formData.append('department', document.getElementById('templateDepartment').value);
+      formData.append('isRequired', document.getElementById('templateRequired').checked);
+      formData.append('templateFile', document.getElementById('templateFile').files[0]);
+
+      const response = await fetch('http://localhost:3000/api/templates', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Template uploaded successfully!', 'success');
+        closeUploadModal();
+        loadTemplatesData();
+      } else {
+        throw new Error(data.error || 'Failed to upload template');
+      }
+    } catch (error) {
+      console.error('Error uploading template:', error);
+      showToast('Failed to upload template', 'error');
+    }
+  });
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+    
+    toastMessage.textContent = message;
+    
+    if (type === 'success') {
+      toastIcon.innerHTML = '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    } else if (type === 'error') {
+      toastIcon.innerHTML = '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>';
+    } else {
+      toastIcon.innerHTML = '<svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    }
+    
+    toast.classList.remove('hidden');
+    
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3000);
+  }
+</script> 
