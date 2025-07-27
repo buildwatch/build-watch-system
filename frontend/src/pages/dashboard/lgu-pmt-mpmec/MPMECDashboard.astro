@@ -57,11 +57,12 @@ try {
         }, 0);
         stats.totalBudget = `₱${totalBudget.toLocaleString()}`;
         
-        // Calculate utilized budget based on progress
+        // Calculate utilized budget based on approved budget divisions only
         const utilizedBudget = projects.reduce((sum, p) => {
           const budget = parseFloat(p.totalBudget) || 0;
-          const progress = parseFloat(p.progress?.overallProgress || p.overallProgress || 0);
-          return sum + (budget * progress / 100);
+          // Use budget division progress for utilized budget calculation (only approved divisions)
+          const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+          return sum + (budget * budgetProgress / 100);
         }, 0);
         stats.utilizedBudget = `₱${utilizedBudget.toLocaleString()}`;
         
@@ -70,6 +71,10 @@ try {
           ? projects.reduce((sum, p) => sum + (parseFloat(p.progress?.overallProgress || p.overallProgress || 0)), 0) / projects.length
           : 0;
         stats.averageProgress = Math.round(avgProgress);
+        
+        // Calculate budget utilization percentage for progress bar
+        const budgetUtilizationPercentage = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
+        stats.budgetUtilizationPercentage = Math.round(budgetUtilizationPercentage);
       }
     }
   }
@@ -173,7 +178,7 @@ loading = false;
               <span class="font-semibold text-gray-800">{stats.utilizedBudget}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-[#92751F] h-2 rounded-full" style={`width: ${Math.min(stats.averageProgress, 100)}%`}></div>
+              <div class="bg-[#92751F] h-2 rounded-full" style={`width: ${stats.budgetUtilizationPercentage}%`}></div>
             </div>
           </div>
         </div>

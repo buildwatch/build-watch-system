@@ -14,30 +14,38 @@ const getAuthHeaders = () => {
 export const auditTrailAPI = {
   // Get audit trail logs
   async getLogs(params = {}) {
-    const queryParams = new URLSearchParams(params).toString();
-    const response = await fetch(`${apiBaseUrl}/admin/audit-trail?${queryParams}`, {
-      headers: getAuthHeaders()
-    });
-    
-    if (!response.ok) {
+    try {
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await fetch(`${apiBaseUrl}/admin/audit-trail?${queryParams}`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch audit trail');
+      }
+      
+      return response.json();
+    } catch (error) {
       throw new Error('Failed to fetch audit trail');
     }
-    
-    return response.json();
   },
 
   // Export audit trail as CSV
   async exportLogs(params = {}) {
-    const queryParams = new URLSearchParams(params).toString();
-    const response = await fetch(`${apiBaseUrl}/admin/audit-trail/export?${queryParams}`, {
-      headers: getAuthHeaders()
-    });
-    
-    if (!response.ok) {
+    try {
+      const queryParams = new URLSearchParams(params).toString();
+      const response = await fetch(`${apiBaseUrl}/admin/audit-trail/export?${queryParams}`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to export audit trail');
+      }
+      
+      return response.blob();
+    } catch (error) {
       throw new Error('Failed to export audit trail');
     }
-    
-    return response.blob();
   }
 };
 
@@ -46,30 +54,38 @@ export const auditTrailAPI = {
 export const configurationAPI = {
   // Get system configuration
   async getConfiguration() {
-    const response = await fetch(`${apiBaseUrl}/admin/configuration`, {
-      headers: getAuthHeaders()
-    });
-    
-    if (!response.ok) {
+    try {
+      const response = await fetch(`${apiBaseUrl}/admin/configuration`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch configuration');
+      }
+      
+      return response.json();
+    } catch (error) {
       throw new Error('Failed to fetch configuration');
     }
-    
-    return response.json();
   },
 
   // Update system configuration
   async updateConfiguration(config) {
-    const response = await fetch(`${apiBaseUrl}/admin/configuration`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(config)
-    });
-    
-    if (!response.ok) {
+    try {
+      const response = await fetch(`${apiBaseUrl}/admin/configuration`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(config)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update configuration');
+      }
+      
+      return response.json();
+    } catch (error) {
       throw new Error('Failed to update configuration');
     }
-    
-    return response.json();
   }
 };
 

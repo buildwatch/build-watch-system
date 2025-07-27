@@ -82,91 +82,184 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         </div>
       </div>
 
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Send Feedback Form -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h2 class="text-xl font-semibold text-gray-800 mb-6">Send New Feedback</h2>
-          <form class="space-y-4" id="feedbackForm">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-              <input type="text" id="subject" placeholder="Enter feedback subject..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select id="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
-                <option value="">Select category...</option>
-                <option value="feedback">Feedback</option>
-                <option value="request">Request</option>
-                <option value="general">General</option>
-                <option value="alert">Alert</option>
-                <option value="meeting">Meeting</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-              <select id="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required>
-                <option value="low">Low</option>
-                <option value="medium" selected>Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <textarea id="message" rows="6" placeholder="Enter your feedback message..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" required></textarea>
-            </div>
-            <div class="flex items-center gap-4">
-              <label class="flex items-center">
-                <input type="checkbox" id="acknowledgment" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700">Request acknowledgment</span>
-              </label>
-              <label class="flex items-center">
-                <input type="checkbox" id="urgent" class="h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700">Mark as urgent</span>
-              </label>
-            </div>
-            <div class="flex gap-3 pt-4">
-              <button type="submit" class="flex-1 px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
-                Send Feedback
-              </button>
-              <button type="button" onclick="saveDraft()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
-                Save Draft
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Recent Messages -->
+      <!-- Chat Interface for Secretariat -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Secretariat Contacts List -->
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-800">Recent Messages</h2>
-            <button onclick="loadCommunicationData()" class="text-[#FE5353] hover:text-[#E54545] text-sm font-medium">Refresh</button>
+            <h2 class="text-xl font-semibold text-gray-800">Secretariat Members</h2>
+            <button id="addSecretariatContactBtn" class="px-3 py-1 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors text-sm">
+              Add Member
+            </button>
           </div>
-          <div class="space-y-4" id="recentMessages">
-            <!-- Recent messages will be loaded here -->
+          
+          <!-- Search Secretariat Contacts -->
+          <div class="relative mb-4">
+            <input type="text" id="secretariatContactSearch" placeholder="Search Secretariat members..." class="w-full pl-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+            <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          
+          <!-- Secretariat Contacts List -->
+          <div class="space-y-2 max-h-96 overflow-y-auto" id="secretariatContactsList">
+            <!-- Secretariat contacts will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Secretariat Chat Area -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Secretariat Chat</h2>
+          </div>
+          
+          <!-- Secretariat Chat Messages -->
+          <div class="space-y-4 mb-4 max-h-96 overflow-y-auto" id="secretariatChatMessages">
+            <!-- Secretariat chat messages will be loaded here -->
+          </div>
+          
+          <!-- Secretariat Message Input -->
+          <div class="flex items-center gap-3">
+            <div class="flex-1 relative">
+              <input type="text" id="secretariatMessageInput" placeholder="Type your message to Secretariat..." class="w-full pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <button id="sendSecretariatMessageBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#FE5353] hover:text-[#E54545]">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+              </button>
+            </div>
+            <button id="attachSecretariatFileBtn" class="px-3 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Message History -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-800">Message History</h2>
-            <div class="flex items-center gap-2">
-              <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
-                <option value="">All Status</option>
-                <option value="sent">Sent</option>
-                <option value="pending">Pending</option>
-                <option value="responded">Responded</option>
-              </select>
-              <button onclick="loadCommunicationData()" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      <!-- Structured Communications Section -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">Structured Communications</h2>
+          <button id="composeStructuredBtn" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
+            + New Communication
+          </button>
+        </div>
+        
+        <!-- Communication Categories Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Project Communications -->
+          <button id="projectCommBtn" class="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <div class="bg-blue-100 p-2 rounded-lg">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
-              </button>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-800">Project Discussions</h3>
+                <p class="text-xs text-gray-600">Discuss specific projects</p>
+              </div>
             </div>
+          </button>
+
+          <!-- Policy Feedback -->
+          <button id="policyFeedbackBtn" class="p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <div class="bg-green-100 p-2 rounded-lg">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-800">Policy Feedback</h3>
+                <p class="text-xs text-gray-600">MPMEC feedback on policies</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Budget Discussions -->
+          <button id="budgetDiscussionsBtn" class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <div class="bg-yellow-100 p-2 rounded-lg">
+                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-800">Budget Discussions</h3>
+                <p class="text-xs text-gray-600">Financial matters</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Compliance Notifications -->
+          <button id="complianceNotificationsBtn" class="p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <div class="bg-purple-100 p-2 rounded-lg">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-800">Compliance Updates</h3>
+                <p class="text-xs text-gray-600">Regulatory notifications</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Training Announcements -->
+          <button id="trainingAnnouncementsBtn" class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <div class="bg-indigo-100 p-2 rounded-lg">
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-800">Training Announcements</h3>
+                <p class="text-xs text-gray-600">Capacity building</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Document Reviews -->
+          <button id="documentReviewsBtn" class="p-4 bg-pink-50 border border-pink-200 rounded-lg hover:bg-pink-100 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <div class="bg-pink-100 p-2 rounded-lg">
+                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-800">Document Reviews</h3>
+                <p class="text-xs text-gray-600">Policy/procedure reviews</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Communication History -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">Communication History</h2>
+          <div class="flex items-center gap-2">
+            <select id="secretariatStatusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+              <option value="">All Types</option>
+              <option value="chat">Chat Messages</option>
+              <option value="project">Project Discussions</option>
+              <option value="policy">Policy Feedback</option>
+              <option value="budget">Budget Discussions</option>
+              <option value="compliance">Compliance Updates</option>
+              <option value="training">Training Announcements</option>
+              <option value="document">Document Reviews</option>
+            </select>
+            <button onclick="loadSecretariatCommunicationData()" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -174,14 +267,14 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200" id="messageHistoryTable">
-              <!-- Message history will be loaded here -->
+            <tbody class="bg-white divide-y divide-gray-200" id="secretariatHistoryTable">
+              <!-- Secretariat communication history will be loaded here -->
             </tbody>
           </table>
         </div>
@@ -230,6 +323,16 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
   let currentUser = null;
   let communications = [];
   let availableUsers = [];
+  let selectedSecretariatContactId = null;
+
+  // Function to calculate unread message count for a specific contact
+  function getUnreadMessageCount(contactId, communications) {
+    return communications.filter(msg => 
+      msg.recipientId === currentUser.id && 
+      msg.senderId === contactId && 
+      !msg.isRead
+    ).length;
+  }
 
   document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('token');
@@ -254,12 +357,16 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
     // Initialize communication data
     loadCommunicationData();
     loadAvailableUsers();
+    
+    // Set up periodic refresh and notification checking
+    setInterval(loadCommunicationData, 30000); // Refresh every 30 seconds
+    setInterval(checkForNewNotifications, 10000); // Check notifications every 10 seconds
   });
 
   async function loadCommunicationData() {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/communications', {
+      const response = await fetch('/api/communications?limit=1000', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -267,10 +374,61 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
 
       if (response.ok) {
         const data = await response.json();
-        communications = data.communications;
+        // Filter communications between MPMEC and Secretariat only
+        communications = data.communications.filter(msg => {
+          const isMPMEC = msg.sender?.role === 'LGU-PMT' && msg.sender?.subRole && msg.sender?.subRole.toLowerCase().includes('mpmec');
+          const isSecretariat = msg.sender?.role === 'LGU-PMT' && msg.sender?.subRole && msg.sender?.subRole.toLowerCase().includes('secretariat');
+          const isRecipientMPMEC = msg.recipient?.role === 'LGU-PMT' && msg.recipient?.subRole && msg.recipient?.subRole.toLowerCase().includes('mpmec');
+          const isRecipientSecretariat = msg.recipient?.role === 'LGU-PMT' && msg.recipient?.subRole && msg.recipient?.subRole.toLowerCase().includes('secretariat');
+          
+          return (isMPMEC && isRecipientSecretariat) || (isSecretariat && isRecipientMPMEC);
+        });
+        
         updateCommunicationStats(data);
-        updateRecentMessages();
-        updateMessageHistory();
+        updateSecretariatHistory(communications);
+        
+        // Update Secretariat contacts list with notification counts
+        const secretariatContactsList = document.getElementById('secretariatContactsList');
+        if (secretariatContactsList && window.secretariatUsers && window.secretariatUsers.length > 0) {
+          secretariatContactsList.innerHTML = window.secretariatUsers.map(user => {
+            const unreadCount = getUnreadMessageCount(user.id, communications);
+            return `
+              <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors secretariat-contact-item" data-contact-id="${user.id}">
+                <div class="w-10 h-10 bg-[#FE5353] rounded-full flex items-center justify-center relative">
+                  <span class="text-white font-medium">${user.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+                  ${unreadCount > 0 ? `<div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">${unreadCount}</div>` : ''}
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-800">${user.name}</p>
+                  <p class="text-xs text-gray-600">${user.subRole || user.role}</p>
+                </div>
+                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+              </div>
+            `;
+          }).join('');
+          
+          // Auto-select the first Secretariat contact
+          selectedSecretariatContactId = window.secretariatUsers[0].id;
+          console.log('MPMEC - Auto-selected Secretariat contact:', selectedSecretariatContactId);
+          
+          // Highlight the first contact
+          const firstContact = document.querySelector('.secretariat-contact-item');
+          if (firstContact) {
+            firstContact.classList.add('bg-gray-100');
+          }
+          
+          // Load conversation with the auto-selected contact
+          loadSecretariatConversationWithContact(selectedSecretariatContactId);
+        } else if (secretariatContactsList) {
+          secretariatContactsList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <p class="text-sm">No Secretariat members available</p>
+            </div>
+          `;
+        }
       } else {
         console.error('Failed to load communications');
       }
@@ -289,7 +447,19 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
       });
 
       if (response.ok) {
-        availableUsers = await response.json();
+        const data = await response.json();
+        availableUsers = data.users;
+        
+        // Store Secretariat users for later use
+        const secretariatUsers = data.users.filter(user => 
+          user.role === 'LGU-PMT' && 
+          user.subRole && 
+          user.subRole.toLowerCase().includes('secretariat') &&
+          user.id !== currentUser.id // Exclude current user from contacts
+        );
+        
+        // Store users globally for later use
+        window.secretariatUsers = secretariatUsers;
       }
     } catch (error) {
       console.error('Error loading available users:', error);
@@ -297,21 +467,406 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
   }
 
   function updateCommunicationStats(data) {
-    const sentMessages = communications.filter(msg => msg.senderId === currentUser.id);
-    const receivedMessages = communications.filter(msg => msg.recipientId === currentUser.id);
+    // Filter communications between MPMEC and Secretariat only
+    const mpmecSecretariatCommunications = communications.filter(msg => {
+      const isMPMEC = msg.sender?.role === 'LGU-PMT' && msg.sender?.subRole && msg.sender?.subRole.toLowerCase().includes('mpmec');
+      const isSecretariat = msg.sender?.role === 'LGU-PMT' && msg.sender?.subRole && msg.sender?.subRole.toLowerCase().includes('secretariat');
+      const isRecipientMPMEC = msg.recipient?.role === 'LGU-PMT' && msg.recipient?.subRole && msg.recipient?.subRole.toLowerCase().includes('mpmec');
+      const isRecipientSecretariat = msg.recipient?.role === 'LGU-PMT' && msg.recipient?.subRole && msg.recipient?.subRole.toLowerCase().includes('secretariat');
+      
+      return (isMPMEC && isRecipientSecretariat) || (isSecretariat && isRecipientMPMEC);
+    });
+
+    const sentMessages = mpmecSecretariatCommunications.filter(msg => msg.senderId === currentUser.id);
+    const receivedMessages = mpmecSecretariatCommunications.filter(msg => msg.recipientId === currentUser.id);
     const pendingMessages = sentMessages.filter(msg => msg.status === 'sent' || msg.status === 'delivered');
     const respondedMessages = sentMessages.filter(msg => msg.status === 'responded');
     
     const responseRate = sentMessages.length > 0 ? Math.round((respondedMessages.length / sentMessages.length) * 100) : 0;
 
-    document.getElementById('totalSent').textContent = sentMessages.length;
-    document.getElementById('pendingResponse').textContent = pendingMessages.length;
-    document.getElementById('totalReceived').textContent = receivedMessages.length;
-    document.getElementById('responseRate').textContent = `${responseRate}%`;
+    // Update stats with null checks
+    const totalSentElement = document.getElementById('totalSent');
+    const pendingResponseElement = document.getElementById('pendingResponse');
+    const totalReceivedElement = document.getElementById('totalReceived');
+    const responseRateElement = document.getElementById('responseRate');
+    
+    if (totalSentElement) totalSentElement.textContent = sentMessages.length;
+    if (pendingResponseElement) pendingResponseElement.textContent = pendingMessages.length;
+    if (totalReceivedElement) totalReceivedElement.textContent = receivedMessages.length;
+    if (responseRateElement) responseRateElement.textContent = `${responseRate}%`;
+  }
+
+  // Function to mark messages as read
+  async function markMessagesAsRead(contactId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          senderId: contactId,
+          recipientId: currentUser.id
+        })
+      });
+
+      if (response.ok) {
+        console.log('MPMEC - Messages marked as read for contact:', contactId);
+        // Refresh the data to update notification badges
+        await loadCommunicationData();
+      } else {
+        console.error('MPMEC - Failed to mark messages as read');
+      }
+    } catch (error) {
+      console.error('MPMEC - Error marking messages as read:', error);
+    }
+  }
+
+  // Secretariat Chat functionality
+  async function selectSecretariatContact(contactId) {
+    // Mark messages from this contact as read
+    await markMessagesAsRead(contactId);
+    
+    selectedSecretariatContactId = contactId;
+    console.log('Selected Secretariat contact:', contactId);
+    
+    // Highlight selected contact
+    document.querySelectorAll('.secretariat-contact-item').forEach(item => {
+      item.classList.remove('bg-gray-100');
+    });
+    
+    const selectedItem = document.querySelector(`[data-contact-id="${contactId}"]`);
+    if (selectedItem) {
+      selectedItem.classList.add('bg-gray-100');
+    }
+    
+    // Load conversation with the selected Secretariat contact
+    loadSecretariatConversationWithContact(contactId);
+  }
+
+  async function loadSecretariatConversationWithContact(contactId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/communications/conversation/${contactId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('MPMEC - Conversation messages loaded:', data.messages.length);
+        console.log('MPMEC - Current user ID:', currentUser.id);
+        console.log('MPMEC - Selected Secretariat contact ID:', contactId);
+        
+        // Messages are already filtered and sorted by the backend
+        const conversationMessages = data.messages;
+        
+        console.log('MPMEC - Conversation messages:', conversationMessages.length);
+        
+        // Update Secretariat chat messages with the conversation
+        updateSecretariatChatMessages(conversationMessages);
+        
+        // Update chat header to show selected contact name
+        updateSecretariatChatHeader(contactId);
+      }
+    } catch (error) {
+      console.error('Error loading Secretariat conversation:', error);
+    }
+  }
+
+  function updateSecretariatChatMessages(messages) {
+    const secretariatChatMessages = document.getElementById('secretariatChatMessages');
+    if (!secretariatChatMessages) {
+      console.log('Secretariat chat messages container not found');
+      return;
+    }
+    
+    if (messages && messages.length > 0) {
+      secretariatChatMessages.innerHTML = messages.map(message => {
+        const isIncoming = message.recipientId === currentUser.id;
+        const senderName = message.sender?.name || 'Unknown';
+        const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+        const messageContent = message.message || '';
+        const messageTime = new Date(message.createdAt).toLocaleTimeString();
+        
+        return isIncoming ? (
+          `<div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-[#FE5353] rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">${senderInitials}</span>
+            </div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                <p class="text-sm text-gray-800">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+          </div>`
+        ) : (
+          `<div class="flex items-start gap-3 justify-end">
+            <div class="flex-1 text-right">
+              <div class="bg-[#FE5353] text-white rounded-lg p-3 max-w-xs ml-auto">
+                <p class="text-sm">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">MV</span>
+            </div>
+          </div>`
+        );
+      }).join('');
+    } else {
+      secretariatChatMessages.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+          </svg>
+          <p class="text-lg font-medium">No messages yet</p>
+          <p class="text-sm">Start a conversation with Secretariat members</p>
+        </div>
+      `;
+    }
+  }
+
+  function updateSecretariatChatHeader(contactId) {
+    // Find the contact name from the contacts list
+    const contactItem = document.querySelector(`[data-contact-id="${contactId}"]`);
+    if (contactItem) {
+      const contactName = contactItem.querySelector('p').textContent;
+      const chatHeader = document.querySelector('#secretariatChatMessages').previousElementSibling;
+      if (chatHeader && chatHeader.querySelector('h2')) {
+        chatHeader.querySelector('h2').textContent = `Secretariat Chat with ${contactName}`;
+      }
+    }
+  }
+
+  async function sendSecretariatChatMessage() {
+    const messageInput = document.getElementById('secretariatMessageInput');
+    const sendButton = document.getElementById('sendSecretariatMessageBtn');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    if (!selectedSecretariatContactId) {
+      console.error('No Secretariat contact selected');
+      return;
+    }
+    
+    // Disable input and show sending state
+    messageInput.disabled = true;
+    if (sendButton) {
+      sendButton.style.opacity = '0.5';
+      sendButton.style.pointerEvents = 'none';
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          subject: 'Secretariat Chat Message',
+          message: message,
+          category: 'general',
+          priority: 'medium',
+          recipientId: selectedSecretariatContactId,
+          isImportant: false,
+          requestAcknowledgment: false
+        })
+      });
+
+      if (response.ok) {
+        messageInput.value = '';
+        // Reload Secretariat conversation with the selected contact
+        loadSecretariatConversationWithContact(selectedSecretariatContactId);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to send Secretariat message:', errorData.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Error sending Secretariat message:', error);
+    } finally {
+      // Re-enable input and button
+      messageInput.disabled = false;
+      if (sendButton) {
+        sendButton.style.opacity = '1';
+        sendButton.style.pointerEvents = 'auto';
+      }
+    }
+  }
+
+  function updateSecretariatHistory(messages) {
+    const secretariatHistoryTable = document.getElementById('secretariatHistoryTable');
+    if (messages && messages.length > 0) {
+      secretariatHistoryTable.innerHTML = messages.map(message => {
+        const messageDate = new Date(message.createdAt).toLocaleDateString();
+        const messageType = message.category || 'general';
+        const messageSubject = message.subject || 'No subject';
+        const messageStatus = message.status || 'sent';
+        
+        return `
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${messageDate}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                ${messageType}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${messageSubject}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                messageStatus === 'sent' ? 'bg-green-100 text-green-800' :
+                messageStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-gray-100 text-gray-800'
+              }">
+                ${messageStatus}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button onclick="viewSecretariatMessage('${message.id}')" class="text-[#FE5353] hover:text-[#E54545]">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      secretariatHistoryTable.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-6 py-4 text-center text-gray-500">No Secretariat communications found</td>
+        </tr>
+      `;
+    }
+  }
+
+  function loadSecretariatCommunicationData() {
+    loadCommunicationData();
+  }
+
+  function viewSecretariatMessage(messageId) {
+    // Implementation for viewing Secretariat message details
+    console.log('View Secretariat message:', messageId);
+  }
+
+  function addSecretariatContact() {
+    console.log('Add Secretariat contact functionality - to be implemented');
+    // This could open a modal to add new Secretariat contacts
+  }
+
+  // Check for new notifications
+  async function checkForNewNotifications() {
+    try {
+      const response = await fetch('http://localhost:3000/api/notifications/count?isRead=false', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.count > 0) {
+          // Show notification badge or alert
+          showNotificationAlert(data.count);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  }
+
+  // Show notification alert
+  function showNotificationAlert(count) {
+    // Check if we already showed a notification for this session
+    if (sessionStorage.getItem('notificationShown')) return;
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-[#FE5353] text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3';
+    notification.innerHTML = `
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+      </svg>
+      <span>You have ${count} new notification${count > 1 ? 's' : ''}</span>
+      <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+    
+    // Mark as shown for this session
+    sessionStorage.setItem('notificationShown', 'true');
+    
+    // Clear the flag after 30 seconds to allow new notifications
+    setTimeout(() => {
+      sessionStorage.removeItem('notificationShown');
+    }, 30000);
+  }
+
+  function composeStructuredMessage(category) {
+    console.log('Compose structured message for category:', category);
+    
+    // Open the compose modal with pre-filled category
+    composeFeedback();
+    
+    // Set the category based on the button clicked
+    const categoryMap = {
+      'project': 'project',
+      'policy': 'policy',
+      'budget': 'budget',
+      'compliance': 'compliance',
+      'training': 'training',
+      'document': 'document',
+      'general': 'general'
+    };
+    
+    const categorySelect = document.getElementById('category');
+    if (categorySelect && categoryMap[category]) {
+      categorySelect.value = categoryMap[category];
+    }
+    
+    // Set appropriate subject based on category
+    const subjectInput = document.getElementById('subject');
+    if (subjectInput) {
+      const subjectMap = {
+        'project': 'Project Discussion - ',
+        'policy': 'Policy Feedback Request - ',
+        'budget': 'Budget Discussion - ',
+        'compliance': 'Compliance Update - ',
+        'training': 'Training Announcement - ',
+        'document': 'Document Review Request - ',
+        'general': 'General Communication - '
+      };
+      subjectInput.value = subjectMap[category] || 'General Communication - ';
+    }
+    
+    // Focus on the message field
+    const messageInput = document.getElementById('message');
+    if (messageInput) {
+      messageInput.focus();
+    }
   }
 
   function updateRecentMessages() {
     const container = document.getElementById('recentMessages');
+    if (!container) {
+      console.log('Recent messages container not found, skipping update');
+      return;
+    }
+    
     const recentMessages = communications.filter(msg => 
       msg.senderId === currentUser.id || msg.recipientId === currentUser.id
     ).slice(0, 3);
@@ -498,6 +1053,59 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
     }, 3000);
   }
 
+  // Secretariat Chat functionality
+  const sendSecretariatMessageBtn = document.getElementById('sendSecretariatMessageBtn');
+  const addSecretariatContactBtn = document.getElementById('addSecretariatContactBtn');
+  
+  if (sendSecretariatMessageBtn) {
+    sendSecretariatMessageBtn.addEventListener('click', sendSecretariatChatMessage);
+  }
+  
+  if (addSecretariatContactBtn) {
+    addSecretariatContactBtn.addEventListener('click', addSecretariatContact);
+  }
+  
+  // Enter key functionality for Secretariat message input
+  const secretariatMessageInput = document.getElementById('secretariatMessageInput');
+  if (secretariatMessageInput) {
+    secretariatMessageInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendSecretariatChatMessage();
+      }
+    });
+  }
+
+  // Structured communication buttons
+  const structuredButtons = [
+    { id: 'projectCommBtn', category: 'project' },
+    { id: 'policyFeedbackBtn', category: 'policy' },
+    { id: 'budgetDiscussionsBtn', category: 'budget' },
+    { id: 'complianceNotificationsBtn', category: 'compliance' },
+    { id: 'trainingAnnouncementsBtn', category: 'training' },
+    { id: 'documentReviewsBtn', category: 'document' },
+    { id: 'composeStructuredBtn', category: 'general' }
+  ];
+
+  structuredButtons.forEach(button => {
+    const element = document.getElementById(button.id);
+    if (element) {
+      element.addEventListener('click', () => composeStructuredMessage(button.category));
+    }
+  });
+
+  // Event delegation for Secretariat contacts
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('secretariat-contact-item') || e.target.closest('.secretariat-contact-item')) {
+      const contactItem = e.target.classList.contains('secretariat-contact-item') ? e.target : e.target.closest('.secretariat-contact-item');
+      const contactId = contactItem.getAttribute('data-contact-id');
+      selectSecretariatContact(contactId);
+    }
+  });
+
   // Form submission
-  document.getElementById('feedbackForm').addEventListener('submit', sendFeedback);
+  const feedbackForm = document.getElementById('feedbackForm');
+  if (feedbackForm) {
+    feedbackForm.addEventListener('submit', sendFeedback);
+  }
 </script> 

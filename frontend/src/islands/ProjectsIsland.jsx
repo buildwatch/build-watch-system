@@ -186,13 +186,21 @@ function ProjectCard({ proj }) {
     }
   };
 
+  // Handle project card click
+  const handleProjectClick = () => {
+    window.location.href = `/project/${proj.id}`;
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col w-full border border-[#EB3C3C]/10 hover:shadow-xl transition-shadow">
+    <div 
+      className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col w-full border border-[#EB3C3C]/10 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+      onClick={handleProjectClick}
+    >
       <div className="h-32 w-full bg-gray-200 flex items-center justify-center">
         <span className="text-3xl text-[#EB3C3C]">🏗️</span>
       </div>
       <div className="p-4 flex flex-col flex-1">
-        <h3 className="text-base font-bold text-[#EB3C3C] mb-2 line-clamp-2">{proj.name || 'Project Name'}</h3>
+        <h3 className="text-base font-bold text-[#EB3C3C] mb-2 line-clamp-2 hover:text-[#D63333] transition-colors">{proj.name || 'Project Name'}</h3>
         <div className="text-[#7A1F1F] text-xs mb-1"><b>Location:</b> {proj.location || 'N/A'}</div>
         <div className="text-[#7A1F1F] text-xs mb-1"><b>Office:</b> {proj.implementingUnitName || 'N/A'}</div>
         <div className="text-[#7A1F1F] text-xs mb-1"><b>Budget:</b> {formatBudget(proj.budget)}</div>
@@ -207,6 +215,16 @@ function ProjectCard({ proj }) {
         </div>
         <div className="text-[#7A1F1F] text-xs mb-1"><b>Progress:</b> {proj.progress || 0}%</div>
         <div className="text-[#7A1F1F] text-xs mt-2"><b>Start:</b> {formatDate(proj.startDate)}</div>
+        
+        {/* Click indicator */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>Click to view details</span>
+            <svg className="w-4 h-4 text-[#EB3C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -473,7 +491,7 @@ export default function ProjectsIsland() {
           implementingUnitName: project.implementingOfficeName,
           budget: project.totalBudget,
           status: project.status,
-          progress: project.progress?.overallProgress || project.overallProgress || 0,
+          progress: project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0,
           startDate: project.startDate,
           endDate: project.endDate,
           category: project.category,

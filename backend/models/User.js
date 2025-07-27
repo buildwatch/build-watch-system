@@ -240,6 +240,12 @@ module.exports = (sequelize) => {
       foreignKey: 'userId',
       as: 'notifications'
     });
+
+    // User has many Project Validations (as validator)
+    User.hasMany(models.ProjectValidation, {
+      foreignKey: 'validatedBy',
+      as: 'validatedReports'
+    });
   };
 
   return User;

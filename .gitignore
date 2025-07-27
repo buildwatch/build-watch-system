@@ -1,8 +1,6 @@
 # Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*/node_modules/
 
 # Environment variables
 .env
@@ -11,30 +9,21 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Build outputs
-frontend/dist/
-frontend/build/
-backend/build/
-*.tgz
-*.tar.gz
-
 # Logs
-logs/
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
 
 # Runtime data
-pids/
+pids
 *.pid
 *.seed
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -44,9 +33,6 @@ jspm_packages/
 
 # Optional npm cache directory
 .npm
-
-# Optional eslint cache
-.eslintcache
 
 # Optional REPL history
 .node_repl_history
@@ -58,7 +44,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env.test
+.env
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -74,7 +60,7 @@ jspm_packages/
 .vuepress/dist
 
 # Serverless directories
-.serverless/
+.serverless
 
 # FuseBox cache
 .fusebox/
@@ -89,12 +75,28 @@ jspm_packages/
 .vscode-test
 
 # Astro
+dist/
 .astro/
 
-# Database files
-*.db
+# Database
 *.sqlite
-*.sqlite3
+*.db
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Backups
+backend/backups/*
+!backend/backups/.gitkeep
+
+# Logs
+backend/logs/*
+!backend/logs/.gitkeep
+
+# Test exports
+backend/test-exports/*
+!backend/test-exports/.gitkeep
 
 # OS generated files
 .DS_Store
@@ -103,102 +105,4 @@ jspm_packages/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Backup files
-*.bak
-*.backup
-*.old
-
-# Test files
-test-results/
-coverage/
-
-# Documentation build
-docs/build/
-
-# Excel files (if they contain sensitive data)
-# Uncomment if you want to exclude Excel files
-# *.xlsx
-# *.xls
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Shell scripts (if they contain sensitive data)
-# Uncomment if you want to exclude shell scripts
-# *.sh
-
-# Cursor IDE
-.cursor/
-
-# Local development files
-local/
-dev/
-development/
-
-# Production files
-prod/
-production/
-
-# SSL certificates
-*.pem
-*.key
-*.crt
-*.csr
-
-# Backup directories
-backup/
-backups/
-
-# Archive files
-*.zip
-*.rar
-*.7z
-
-# Large media files
-*.mp4
-*.avi
-*.mov
-*.wmv
-*.flv
-*.webm
-
-# Audio files
-*.mp3
-*.wav
-*.flac
-*.aac
-*.ogg
-
-# Image files (if they contain sensitive data)
-# Uncomment if you want to exclude image files
-# *.jpg
-# *.jpeg
-# *.png
-# *.gif
-# *.bmp
-# *.tiff
-# *.svg 
+Thumbs.db 

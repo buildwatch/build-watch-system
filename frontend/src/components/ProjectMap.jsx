@@ -48,7 +48,8 @@ export default function ProjectMap() {
     // Fetch real project data from backend
     const fetchProjects = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/home/project-locations');
+        const timestamp = new Date().getTime();
+        const response = await fetch(`http://localhost:3000/api/home/project-locations?_t=${timestamp}`);
         if (response.ok) {
           const data = await response.json();
           setProjects(data.locations || []);
@@ -146,7 +147,7 @@ export default function ProjectMap() {
           <p><strong>Location:</strong> ${project.location || 'Santa Cruz, Laguna'}</p>
           <p><strong>Status:</strong> <span style="color: ${getStatusColor(project.status)}; font-weight: bold;">${project.status}</span></p>
           <p><strong>Budget:</strong> ${formatBudget(project.budget)}</p>
-          <p><strong>Progress:</strong> ${project.progress || 0}%</p>
+          <p><strong>Progress:</strong> ${(parseFloat(project.progress) || 0).toFixed(2)}%</p>
           <p><strong>Start Date:</strong> ${formatDate(project.startDate)}</p>
           <p><strong>End Date:</strong> ${formatDate(project.endDate)}</p>
           <p><strong>Category:</strong> ${project.category || 'Infrastructure'}</p>

@@ -2,6 +2,33 @@ export const prerender = false;
 ---
 import Layout from '../../../../layouts/Layout.astro';
 import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
+import { policyService } from '../../../../services/policy.js';
+
+// Fetch policy data
+let policyAnalytics = null;
+let policies = null;
+let error = null;
+
+try {
+  // Fetch policy analytics
+  const analyticsResponse = await policyService.getPolicyAnalytics();
+  policyAnalytics = analyticsResponse.analytics;
+
+  // Fetch policies for documents tab
+  const policiesResponse = await policyService.getPolicies({ limit: 10 });
+  policies = policiesResponse.policies;
+} catch (err) {
+  console.error('Error fetching policy data:', err);
+  error = err.message;
+  // Set default values to prevent undefined errors
+  policyAnalytics = {
+    totalPolicies: 0,
+    publishedPolicies: 0,
+    draftPolicies: 0,
+    archivedPolicies: 0
+  };
+  policies = [];
+}
 ---
 
 <Layout title="Policy Dashboard - MPMEC">
@@ -34,13 +61,13 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Total Projects</p>
-              <p class="text-2xl font-bold text-gray-800">1,247</p>
+              <p class="text-sm font-medium text-gray-600">Total Policies</p>
+              <p class="text-2xl font-bold text-gray-800">{policyAnalytics?.totalPolicies || 0}</p>
               <p class="text-sm text-green-600 flex items-center mt-1">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"></path>
                 </svg>
-                +12.5%
+                Active
               </p>
             </div>
             <div class="bg-blue-100 p-3 rounded-xl">
@@ -54,13 +81,13 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Budget Utilization</p>
-              <p class="text-2xl font-bold text-gray-800">₱2.8B</p>
+              <p class="text-sm font-medium text-gray-600">Published Policies</p>
+              <p class="text-2xl font-bold text-gray-800">{policyAnalytics?.publishedPolicies || 0}</p>
               <p class="text-sm text-green-600 flex items-center mt-1">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"></path>
                 </svg>
-                +8.3%
+                Active
               </p>
             </div>
             <div class="bg-green-100 p-3 rounded-xl">
@@ -74,17 +101,17 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Policy Impact Score</p>
-              <p class="text-2xl font-bold text-gray-800">87.2%</p>
-              <p class="text-sm text-green-600 flex items-center mt-1">
+              <p class="text-sm font-medium text-gray-600">Draft Policies</p>
+              <p class="text-2xl font-bold text-gray-800">{policyAnalytics?.draftPolicies || 0}</p>
+              <p class="text-sm text-yellow-600 flex items-center mt-1">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"></path>
                 </svg>
-                +5.2%
+                Pending
               </p>
             </div>
-            <div class="bg-purple-100 p-3 rounded-xl">
-              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-yellow-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
             </div>
@@ -94,17 +121,17 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Active Policies</p>
-              <p class="text-2xl font-bold text-gray-800">24</p>
-              <p class="text-sm text-blue-600 flex items-center mt-1">
+              <p class="text-sm font-medium text-gray-600">Archived Policies</p>
+              <p class="text-2xl font-bold text-gray-800">{policyAnalytics?.archivedPolicies || 0}</p>
+              <p class="text-sm text-gray-600 flex items-center mt-1">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                 </svg>
-                Updated
+                Inactive
               </p>
             </div>
-            <div class="bg-orange-100 p-3 rounded-xl">
-              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-gray-100 p-3 rounded-xl">
+              <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
             </div>
@@ -112,257 +139,312 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         </div>
       </div>
 
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Policy Impact Analysis -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-800">Policy Impact Analysis</h2>
-            <div class="flex space-x-2">
-              <select class="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-red-500">
-                <option>Last 12 Months</option>
-                <option>Last 6 Months</option>
-                <option>Last 3 Months</option>
-                <option>This Year</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="space-y-6">
-            <!-- Project Distribution Chart -->
-            <div class="bg-gray-50 rounded-xl p-4">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">Project Distribution by Sector</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span class="text-white font-bold text-lg">42%</span>
-                  </div>
-                  <p class="text-sm font-medium text-gray-700">Infrastructure</p>
-                  <p class="text-xs text-gray-500">523 projects</p>
-                </div>
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span class="text-white font-bold text-lg">28%</span>
-                  </div>
-                  <p class="text-sm font-medium text-gray-700">Education</p>
-                  <p class="text-xs text-gray-500">349 projects</p>
-                </div>
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span class="text-white font-bold text-lg">18%</span>
-                  </div>
-                  <p class="text-sm font-medium text-gray-700">Healthcare</p>
-                  <p class="text-xs text-gray-500">224 projects</p>
-                </div>
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span class="text-white font-bold text-lg">12%</span>
-                  </div>
-                  <p class="text-sm font-medium text-gray-700">Agriculture</p>
-                  <p class="text-xs text-gray-500">151 projects</p>
-                </div>
+      <!-- Tab Navigation -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
+        <div class="border-b border-gray-200">
+          <nav class="flex space-x-1 px-6" aria-label="Tabs">
+            <button class="tab-button active group relative py-5 px-6 text-sm font-semibold flex items-center transition-all duration-300 ease-in-out" data-tab="dashboard">
+              <div class="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 rounded-t-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="relative flex items-center">
+                <svg class="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="relative">Policy Dashboard</span>
+                <div class="absolute -bottom-5 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-red-600 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
               </div>
-            </div>
-
-            <!-- Budget Utilization Chart -->
-            <div class="bg-gray-50 rounded-xl p-4">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">Budget Utilization by Department</h3>
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">Department of Public Works</span>
-                  <div class="flex items-center space-x-2">
-                    <div class="w-32 bg-gray-200 rounded-full h-2">
-                      <div class="bg-blue-500 h-2 rounded-full" style="width: 85%"></div>
-                    </div>
-                    <span class="text-sm font-medium text-gray-600">85%</span>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">Department of Education</span>
-                  <div class="flex items-center space-x-2">
-                    <div class="w-32 bg-gray-200 rounded-full h-2">
-                      <div class="bg-green-500 h-2 rounded-full" style="width: 72%"></div>
-                    </div>
-                    <span class="text-sm font-medium text-gray-600">72%</span>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">Department of Health</span>
-                  <div class="flex items-center space-x-2">
-                    <div class="w-32 bg-gray-200 rounded-full h-2">
-                      <div class="bg-purple-500 h-2 rounded-full" style="width: 68%"></div>
-                    </div>
-                    <span class="text-sm font-medium text-gray-600">68%</span>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">Department of Agriculture</span>
-                  <div class="flex items-center space-x-2">
-                    <div class="w-32 bg-gray-200 rounded-full h-2">
-                      <div class="bg-orange-500 h-2 rounded-full" style="width: 91%"></div>
-                    </div>
-                    <span class="text-sm font-medium text-gray-600">91%</span>
-                  </div>
-                </div>
+            </button>
+            <button class="tab-button group relative py-5 px-6 text-sm font-semibold flex items-center transition-all duration-300 ease-in-out" data-tab="documents">
+              <div class="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 rounded-t-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="relative flex items-center">
+                <svg class="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="relative">Policy Documents</span>
+                <div class="absolute -bottom-5 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-red-600 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
               </div>
-            </div>
-          </div>
+            </button>
+          </nav>
         </div>
 
-        <!-- Policy Insights Sidebar -->
-        <div class="space-y-6">
-          <!-- Policy Performance -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Policy Performance</h3>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Infrastructure Development</span>
+        <!-- Tab Content -->
+        <div class="tab-container">
+          <!-- Policy Dashboard Tab -->
+          <div id="tab-dashboard" class="tab-content active p-6">
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <!-- Policy Impact Analysis -->
+              <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-xl font-semibold text-gray-800">Policy Impact Analysis</h2>
+                  <div class="flex space-x-2">
+                    <select class="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-red-500">
+                      <option>Last 12 Months</option>
+                      <option>Last 6 Months</option>
+                      <option>Last 3 Months</option>
+                      <option>This Year</option>
+                    </select>
+                  </div>
                 </div>
-                <span class="text-sm font-bold text-green-600">92%</span>
-              </div>
-              <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Education Enhancement</span>
+                
+                <div class="space-y-6">
+                  <!-- Project Distribution Chart -->
+                  <div class="bg-gray-50 rounded-xl p-4">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Project Distribution by Sector</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span class="text-white font-bold text-lg">42%</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">Infrastructure</p>
+                        <p class="text-xs text-gray-500">523 projects</p>
+                      </div>
+                      <div class="text-center">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span class="text-white font-bold text-lg">28%</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">Education</p>
+                        <p class="text-xs text-gray-500">349 projects</p>
+                      </div>
+                      <div class="text-center">
+                        <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span class="text-white font-bold text-lg">18%</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">Healthcare</p>
+                        <p class="text-xs text-gray-500">224 projects</p>
+                      </div>
+                      <div class="text-center">
+                        <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span class="text-white font-bold text-lg">12%</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">Agriculture</p>
+                        <p class="text-xs text-gray-500">151 projects</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Budget Utilization Chart -->
+                  <div class="bg-gray-50 rounded-xl p-4">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Budget Utilization by Department</h3>
+                    <div class="space-y-3">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Department of Public Works</span>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 85%"></div>
+                          </div>
+                          <span class="text-sm font-medium text-gray-600">85%</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Department of Education</span>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 72%"></div>
+                          </div>
+                          <span class="text-sm font-medium text-gray-600">72%</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Department of Health</span>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-500 h-2 rounded-full" style="width: 68%"></div>
+                          </div>
+                          <span class="text-sm font-medium text-gray-600">68%</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Department of Agriculture</span>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-orange-500 h-2 rounded-full" style="width: 91%"></div>
+                          </div>
+                          <span class="text-sm font-medium text-gray-600">91%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span class="text-sm font-bold text-blue-600">87%</span>
               </div>
-              <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Healthcare Access</span>
+
+              <!-- Policy Insights Sidebar -->
+              <div class="space-y-6">
+                <!-- Policy Performance -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4">Policy Performance</h3>
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-sm font-medium text-gray-700">Infrastructure Development</span>
+                      </div>
+                      <span class="text-sm font-bold text-green-600">92%</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span class="text-sm font-medium text-gray-700">Education Enhancement</span>
+                      </div>
+                      <span class="text-sm font-bold text-blue-600">87%</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span class="text-sm font-medium text-gray-700">Healthcare Access</span>
+                      </div>
+                      <span class="text-sm font-bold text-purple-600">78%</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <span class="text-sm font-medium text-gray-700">Agricultural Support</span>
+                      </div>
+                      <span class="text-sm font-bold text-orange-600">85%</span>
+                    </div>
+                  </div>
                 </div>
-                <span class="text-sm font-bold text-purple-600">78%</span>
-              </div>
-              <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                <div class="flex items-center space-x-3">
-                  <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
-                  <span class="text-sm font-medium text-gray-700">Agricultural Support</span>
+
+                <!-- Recent Policy Updates -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Policy Updates</h3>
+                  <div class="space-y-4">
+                    <div class="border-l-4 border-blue-500 pl-4">
+                      <p class="text-sm font-medium text-gray-800">Enhanced Infrastructure Guidelines</p>
+                      <p class="text-xs text-gray-500 mt-1">Updated 2 days ago</p>
+                      <p class="text-xs text-gray-600 mt-1">New standards for road construction and maintenance</p>
+                    </div>
+                    <div class="border-l-4 border-green-500 pl-4">
+                      <p class="text-sm font-medium text-gray-800">Education Facility Standards</p>
+                      <p class="text-xs text-gray-500 mt-1">Updated 1 week ago</p>
+                      <p class="text-xs text-gray-600 mt-1">Revised classroom and equipment requirements</p>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                      <p class="text-sm font-medium text-gray-800">Healthcare Service Protocols</p>
+                      <p class="text-xs text-gray-500 mt-1">Updated 2 weeks ago</p>
+                      <p class="text-xs text-gray-600 mt-1">Enhanced patient care and facility management</p>
+                    </div>
+                  </div>
                 </div>
-                <span class="text-sm font-bold text-orange-600">85%</span>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                  <div class="space-y-3">
+                    <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                      Generate Policy Report
+                    </button>
+                    <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                      View Impact Analysis
+                    </button>
+                    <button class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                      Export Data
+                    </button>
+                    <button class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                      Schedule Review
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Recent Policy Updates -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Policy Updates</h3>
-            <div class="space-y-4">
-              <div class="border-l-4 border-blue-500 pl-4">
-                <p class="text-sm font-medium text-gray-800">Enhanced Infrastructure Guidelines</p>
-                <p class="text-xs text-gray-500 mt-1">Updated 2 days ago</p>
-                <p class="text-xs text-gray-600 mt-1">New standards for road construction and maintenance</p>
-              </div>
-              <div class="border-l-4 border-green-500 pl-4">
-                <p class="text-sm font-medium text-gray-800">Education Facility Standards</p>
-                <p class="text-xs text-gray-500 mt-1">Updated 1 week ago</p>
-                <p class="text-xs text-gray-600 mt-1">Revised classroom and equipment requirements</p>
-              </div>
-              <div class="border-l-4 border-purple-500 pl-4">
-                <p class="text-sm font-medium text-gray-800">Healthcare Service Protocols</p>
-                <p class="text-xs text-gray-500 mt-1">Updated 2 weeks ago</p>
-                <p class="text-xs text-gray-600 mt-1">Enhanced patient care and facility management</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-            <div class="space-y-3">
-              <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
-                Generate Policy Report
-              </button>
-              <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
-                View Impact Analysis
-              </button>
-              <button class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
-                Export Data
-              </button>
-              <button class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
-                Schedule Review
+          <!-- Policy Documents Tab -->
+          <div id="tab-documents" class="tab-content hidden p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-800">Policy Documents Archive</h2>
+              <button class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Upload Document
               </button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Policy Trends Section -->
-      <div class="mt-8 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-gray-800">Policy Trends & Analytics</h2>
-          <div class="flex space-x-2">
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm transition-colors">Monthly</button>
-            <button class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm">Quarterly</button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm transition-colors">Yearly</button>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-            <h3 class="text-lg font-medium text-blue-800 mb-3">Approval Rate Trends</h3>
-            <div class="space-y-2">
-              <div class="flex justify-between text-sm">
-                <span class="text-blue-700">Q1 2024</span>
-                <span class="font-medium text-blue-800">89%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-blue-700">Q2 2024</span>
-                <span class="font-medium text-blue-800">92%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-blue-700">Q3 2024</span>
-                <span class="font-medium text-blue-800">87%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-blue-700">Q4 2024</span>
-                <span class="font-medium text-blue-800">94%</span>
+            <!-- Filters and Search -->
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Search Documents</label>
+                  <input type="text" placeholder="Search by title or type..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                  <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                    <option value="">All Types</option>
+                    <option value="policy">Policy</option>
+                    <option value="memo">Memo</option>
+                    <option value="order">Order</option>
+                    <option value="plan">Strategic Plan</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                  <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                    <option value="">All Years</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
+                    <option value="">All Status</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
-            <h3 class="text-lg font-medium text-green-800 mb-3">Budget Efficiency</h3>
-            <div class="space-y-2">
-              <div class="flex justify-between text-sm">
-                <span class="text-green-700">Infrastructure</span>
-                <span class="font-medium text-green-800">95%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-green-700">Education</span>
-                <span class="font-medium text-green-800">88%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-green-700">Healthcare</span>
-                <span class="font-medium text-green-800">82%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-green-700">Agriculture</span>
-                <span class="font-medium text-green-800">91%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-            <h3 class="text-lg font-medium text-purple-800 mb-3">Policy Impact Score</h3>
-            <div class="space-y-2">
-              <div class="flex justify-between text-sm">
-                <span class="text-purple-700">Community Satisfaction</span>
-                <span class="font-medium text-purple-800">4.2/5</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-purple-700">Project Completion</span>
-                <span class="font-medium text-purple-800">87%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-purple-700">Timeline Adherence</span>
-                <span class="font-medium text-purple-800">92%</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-purple-700">Quality Standards</span>
-                <span class="font-medium text-purple-800">89%</span>
+            <!-- Documents Table -->
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {policies && policies.length > 0 ? (
+                      policies.map(policy => (
+                        <tr>
+                          <td class="px-6 py-4 whitespace-nowrap">{policy.title}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">{policy.documentType?.replace('_', ' ').toUpperCase()}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">{new Date(policy.createdAt).getFullYear()}</td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              policy.status === 'published' ? 'bg-green-100 text-green-800' :
+                              policy.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                              policy.status === 'archived' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {policy.status?.toUpperCase()}
+                            </span>
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-[#FE5353] hover:text-[#E54545] mr-3" onclick="viewPolicy('{policy.id}')">View</button>
+                            {policy.filePath && (
+                              <button class="text-blue-600 hover:text-blue-800" onclick="downloadPolicy('{policy.id}')">Download</button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                          {error ? `Error loading policies: ${error}` : 'No policies found. Create your first policy to get started.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -420,5 +502,171 @@ import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
         bar.style.width = width;
       }, 500);
     });
+
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Policy functions
+    window.viewPolicy = function(policyId) {
+      console.log('Viewing policy:', policyId);
+      // TODO: Implement policy viewing modal
+      alert('Policy viewing feature coming soon!');
+    };
+
+    window.downloadPolicy = async function(policyId) {
+      try {
+        console.log('Downloading policy:', policyId);
+        const response = await fetch(`/api/policies/${policyId}/download`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `policy-${policyId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } else {
+          alert('Failed to download policy');
+        }
+      } catch (error) {
+        console.error('Error downloading policy:', error);
+        alert('Error downloading policy');
+      }
+    };
+
+    function switchTab(targetTab) {
+      tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+      });
+      tabContents.forEach(content => {
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+          content.classList.remove('active');
+          content.classList.add('hidden');
+        }, 200);
+      });
+      const activeButton = document.querySelector(`[data-tab="${targetTab}"]`);
+      if (activeButton) {
+        activeButton.classList.add('active');
+        activeButton.setAttribute('aria-selected', 'true');
+        activeButton.style.transform = 'scale(0.95)';
+        setTimeout(() => { activeButton.style.transform = 'scale(1)'; }, 150);
+      }
+      const targetContent = document.getElementById(`tab-${targetTab}`);
+      if (targetContent) {
+        setTimeout(() => {
+          targetContent.classList.remove('hidden');
+          targetContent.classList.add('active');
+          requestAnimationFrame(() => {
+            targetContent.style.opacity = '1';
+            targetContent.style.transform = 'translateY(0)';
+          });
+        }, 200);
+      }
+    }
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        ripple.style.cssText = `
+          position: absolute;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.6);
+          transform: scale(0);
+          animation: ripple 0.6s linear;
+          pointer-events: none;
+          width: 20px;
+          height: 20px;
+          left: ${e.offsetX - 10}px;
+          top: ${e.offsetY - 10}px;
+        `;
+        button.appendChild(ripple);
+        setTimeout(() => { ripple.remove(); }, 600);
+        switchTab(button.getAttribute('data-tab'));
+      });
+      button.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          switchTab(button.getAttribute('data-tab'));
+        }
+      });
+    });
   });
-</script> 
+</script>
+
+<style>
+  .tab-button {
+    transition: all 0.3s ease;
+    color: #6b7280;
+    position: relative;
+    overflow: hidden;
+  }
+  .tab-button:hover {
+    color: #374151;
+  }
+  .tab-button.active {
+    color: #EB3C3C;
+  }
+  .tab-button.active::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, #EB3C3C, #D63333);
+    border-radius: 3px 3px 0 0;
+    transform: scaleX(1);
+    transition: transform 0.3s ease;
+  }
+  .tab-button:not(.active)::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, #EB3C3C, #D63333);
+    border-radius: 3px 3px 0 0;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  .tab-button:hover::before {
+    transform: scaleX(1);
+  }
+  .tab-content {
+    transition: all 0.4s ease;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .tab-content.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .tab-content.hidden {
+    display: none;
+  }
+  .tab-container {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+</style> 

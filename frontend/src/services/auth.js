@@ -145,7 +145,7 @@ class AuthService {
 
   // Clear authentication data
   clearAuth() {
-    apiUtils.clearAuthData();
+          apiUtils.clearAuthData();
     this.isAuthenticated = false;
     this.currentUser = null;
   }

@@ -49,115 +49,183 @@ loading = false;
 ---
 
 <Layout title="Progress Timeline | Implementing Office Dashboard">
+  <style>
+    /* Enhanced Global Styles */
+    .project-card {
+      animation: cardSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .project-card:nth-child(1) { animation-delay: 0.1s; }
+    .project-card:nth-child(2) { animation-delay: 0.2s; }
+    .project-card:nth-child(3) { animation-delay: 0.3s; }
+    .project-card:nth-child(4) { animation-delay: 0.4s; }
+    .project-card:nth-child(5) { animation-delay: 0.5s; }
+    .project-card:nth-child(6) { animation-delay: 0.6s; }
+
+    @keyframes cardSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Enhanced global animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      opacity: 0;
+    }
+
+    /* Enhanced transitions for all elements */
+    * {
+      transition-property: transform, box-shadow, filter, backdrop-filter, color, background-color, border-color;
+    }
+    
+    /* Timeline Styles */
+    .timeline-milestone {
+      position: absolute;
+      height: 100%;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 2;
+    }
+    
+    .timeline-milestone.completed {
+      background: linear-gradient(45deg, #10b981, #059669);
+    }
+    
+    .timeline-milestone.in_progress {
+      background: linear-gradient(45deg, #3b82f6, #2563eb);
+    }
+    
+    .timeline-milestone.pending {
+      background: linear-gradient(45deg, #f59e0b, #d97706);
+    }
+    
+    .timeline-milestone.delayed {
+      background: linear-gradient(45deg, #ef4444, #dc2626);
+    }
+    
+    .timeline-milestone:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 20;
+    }
+    
+    .timeline-popup {
+      position: fixed;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 1000;
+      max-width: 250px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .timeline-popup.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    
+    .timeline-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+      border-radius: 4px;
+      transition: width 1s ease-in-out;
+      z-index: 1;
+    }
+    
+    .progress-indicator {
+      position: absolute;
+      top: 50%;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 3;
+      transition: left 1s ease-in-out, transform 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      transform: translateY(-50%) translateX(-50%); /* Center the indicator vertically and horizontally */
+    }
+    
+    .progress-indicator:hover {
+      transform: translateY(-50%) translateX(-50%) scale(1.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    
+    .timeline-popup::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: white;
+    }
+  </style>
   <IUImplementingOfficeLayout>
-    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
-      <!-- Header Section -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+    <section class="p-8 bg-gradient-to-br from-gray-50 via-amber-50 to-white min-h-screen">
+      <!-- Enhanced Header Section -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">Progress Timeline</h1>
-          <p class="text-gray-600">Update and monitor project progress across timeline, budget, and physical divisions</p>
+          <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-800 to-amber-600 bg-clip-text text-transparent mb-3">Progress Timeline</h1>
+          <p class="text-lg text-gray-600">Update and monitor project progress across timeline, budget, and physical divisions</p>
         </div>
-        <div class="flex items-center gap-3">
-          <!-- Compilation button moved to workflow section -->
+        <div class="flex items-center gap-4">
+          <button onclick="loadProgressTimeline()" class="group relative px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl hover:from-amber-700 hover:to-amber-800 transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center gap-3 overflow-hidden font-semibold">
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+            <svg class="w-5 h-5 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh Data
+          </button>
         </div>
       </div>
 
       <!-- Project Selection -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Project</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map(project => {
-            // Use calculated progress from ProgressCalculationService
-            const overallProgress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-            const timelineProgress = parseFloat(project.progress?.timelineProgress || project.timelineProgress || 0);
-            const budgetProgress = parseFloat(project.progress?.budgetProgress || project.budgetProgress || 0);
-            const physicalProgress = parseFloat(project.progress?.physicalProgress || project.physicalProgress || 0);
-            const workflowStatus = project.workflowStatus || 'draft';
-            
-            return (
-              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer project-card" data-project-id={project.id}>
-                <div class="flex items-start justify-between mb-3">
-                  <div class="flex-1">
-                    <h4 class="font-semibold text-gray-800 mb-1">{project.name}</h4>
-                    <p class="text-sm text-gray-600">{project.projectCode}</p>
-                  </div>
-                  <div class="flex flex-col items-end gap-1">
-                    <span class={`px-2 py-1 text-xs font-medium rounded-full ${
-                      workflowStatus === 'ongoing' ? 'bg-green-100 text-green-700' :
-                      workflowStatus === 'completed' ? 'bg-blue-100 text-blue-700' :
-                      workflowStatus === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
-                      workflowStatus === 'draft' ? 'bg-gray-100 text-gray-700' :
-                      workflowStatus === 'secretariat_approved' ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {workflowStatus.replace('_', ' ').toUpperCase()}
-                    </span>
-                    {project.submittedToSecretariat && (
-                      <span class="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
-                        PENDING SECRETARIAT
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div class="mb-3">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm text-gray-600">Overall Progress</span>
-                    <span class="text-sm font-medium text-gray-800">{overallProgress.toFixed(2)}%</span>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class={`h-2 rounded-full ${
-                      overallProgress >= 100 ? 'bg-green-500' : 'bg-[#92751F]'
-                    }`} style={`width: ${overallProgress}%`}></div>
-                  </div>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                  <div class="text-center">
-                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
-                      <div class="bg-blue-500 h-1 rounded-full" style={`width: ${timelineProgress}%`}></div>
-                    </div>
-                    <span class="text-gray-600">Timeline</span>
-                  </div>
-                  <div class="text-center">
-                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
-                      <div class="bg-green-500 h-1 rounded-full" style={`width: ${budgetProgress}%`}></div>
-                    </div>
-                    <span class="text-gray-600">Budget</span>
-                  </div>
-                  <div class="text-center">
-                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
-                      <div class="bg-purple-500 h-1 rounded-full" style={`width: ${physicalProgress}%`}></div>
-                    </div>
-                    <span class="text-gray-600">Physical</span>
-                  </div>
-                </div>
-                
-                {project.milestones && project.milestones.length > 0 && (
-                  <div class="mt-3 pt-3 border-t border-gray-100">
-                    <p class="text-xs text-gray-500 mb-2">Milestones: {project.milestones.length}</p>
-                    <div class="space-y-1">
-                      {project.milestones.slice(0, 2).map(milestone => (
-                        <div class="flex items-center justify-between text-xs">
-                          <span class="text-gray-600 truncate">{milestone.title}</span>
-                          <span class={`px-1 py-0.5 rounded text-xs ${
-                            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
-                            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {milestone.status}
-                          </span>
-                        </div>
-                      ))}
-                      {project.milestones.length > 2 && (
-                        <p class="text-xs text-gray-500">+{project.milestones.length - 2} more</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Select Project</h3>
+            <p class="text-gray-600">Choose a project to view detailed progress timeline</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span class="text-sm text-gray-600">Live Updates</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="projectsGrid">
+          <!-- Projects will be populated by JavaScript -->
         </div>
       </div>
 
@@ -230,23 +298,89 @@ loading = false;
           </div>
         </div>
 
-        <!-- Draft Message -->
-        <div id="draftMessage" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8" style="display: none;">
+        <!-- Horizontal Timeline Section -->
+        <div id="horizontalTimelineSection" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8" style="display: none;">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Project Timeline</h3>
+            <button onclick="refreshProjectTimeline()" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Refresh
+            </button>
+          </div>
+          
+          <!-- Timeline Container -->
+          <div id="projectTimelineContainer" class="relative">
+            <div class="timeline-container h-12 bg-gray-100 rounded-lg relative overflow-hidden mb-2">
+              <div class="timeline-track absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300"></div>
+              <div class="timeline-grid absolute inset-0 flex">
+                {Array.from({length: 12}, (_, i) => (
+                  <div class="timeline-grid-line flex-1 border-r border-dashed border-gray-400"></div>
+                ))}
+              </div>
+              <div class="timeline-milestones absolute inset-0"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mb-2">
+              <span id="timelineStartDate">Start Date</span>
+              <span id="timelineEndDate">End Date</span>
+            </div>
+            <div class="text-center text-sm text-gray-600">
+              <span id="horizontalTimelineProgressText">Overall Progress: 0%</span>
+            </div>
+          </div>
+          
+          <!-- Timeline Legend -->
+          <div class="mt-4 flex items-center gap-4 text-sm">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-green-500 rounded"></div>
+              <span>Completed</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-blue-500 rounded"></div>
+              <span>Ongoing</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+              <span>Pending</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-red-500 rounded"></div>
+              <span>Delayed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Approval Message -->
+        <div id="draftMessage" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8 hidden">
           <div class="flex items-center gap-3">
             <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div>
-              <h3 class="text-lg font-semibold text-yellow-800">Project in Draft Status</h3>
-              <p class="text-yellow-700">This project is currently in draft status. You need to submit it to the Secretariat for approval before you can start updating progress.</p>
+              <h3 class="text-lg font-semibold text-yellow-800">Project Pending Secretariat Approval</h3>
+              <p class="text-yellow-700">This project is currently pending Secretariat approval. Once approved, you will be able to review EIU Partner milestone updates and submit them to Secretariat for final approval.</p>
             </div>
           </div>
         </div>
 
         <!-- Milestones Section -->
         <div id="milestonesSection" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8" style="display: none;">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Milestones</h3>
-          <div id="milestonesContainer">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              Project Milestones
+            </h3>
+            <button onclick="toggleMilestonesSection()" class="px-3 py-1 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1">
+              <svg id="milestonesToggleIcon" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+              <span id="milestonesToggleText">Hide</span>
+            </button>
+          </div>
+          <div id="milestonesContainer" class="transition-all duration-300 ease-in-out">
             <!-- Milestones will be displayed here -->
           </div>
         </div>
@@ -391,42 +525,270 @@ loading = false;
 </Layout>
 
 <script>
+  // Make API_URL available to client-side JavaScript
+  const API_URL = 'http://localhost:3000/api';
   let selectedProject = null;
   let projectUpdates = [];
+  let projects = [];
+
+  // Function to render projects grid
+  function renderProjectsGrid(projectsData) {
+    const projectsGrid = document.getElementById('projectsGrid');
+    if (!projectsGrid) return;
+
+    projectsGrid.innerHTML = '';
+
+    projectsData.forEach(project => {
+      // Use new field names from backend
+      const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+      const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
+      const budgetProgress = parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
+      const physicalProgress = parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
+      
+      // Determine project status based on the three main statuses
+      const projectStatus = project.status || 'pending';
+      let statusText, statusClass;
+      
+      if (projectStatus.toLowerCase() === 'completed') {
+        statusText = 'COMPLETE';
+        statusClass = 'bg-green-100 text-green-700';
+      } else if (project.approvedBySecretariat === true) {
+        statusText = 'ONGOING';
+        statusClass = 'bg-blue-100 text-blue-700';
+      } else {
+        statusText = 'PENDING';
+        statusClass = 'bg-yellow-100 text-yellow-700';
+      }
+
+      const projectCard = document.createElement('div');
+      projectCard.className = 'group project-card bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-2 cursor-pointer';
+      projectCard.setAttribute('data-project-id', project.id);
+      
+      projectCard.innerHTML = `
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-800 mb-2 group-hover:text-amber-700 transition-colors">${project.name}</h4>
+            <p class="text-sm text-gray-600 mb-3 line-clamp-2 group-hover:text-gray-700 transition-colors">${project.description}</p>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300 transform group-hover:scale-105 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 group-hover:from-amber-200 group-hover:to-amber-300">${project.category}</span>
+              <span class="px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300 transform group-hover:scale-105 bg-gradient-to-r from-green-100 to-green-200 text-green-700 group-hover:from-green-200 group-hover:to-green-300">${statusText}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="viewProjectDetails('${project.id}')" class="group/btn p-2 text-gray-400 hover:text-amber-600 transition-all duration-300 transform hover:scale-110 hover:bg-amber-50 rounded-lg">
+              <svg class="w-4 h-4 transition-transform duration-300 group-hover/btn:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="space-y-4 mb-4">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 group-hover:text-amber-600 transition-colors">Overall Progress:</span>
+            <span class="font-medium text-gray-800 group-hover:text-amber-700 transition-colors">${overallProgress.toFixed(2)}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div class="h-3 rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-amber-500 to-amber-600" style="width: 0%"></div>
+          </div>
+        
+          <!-- Enhanced Three Divisions Progress -->
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="text-center p-2 bg-gray-50 rounded-lg group-hover:bg-amber-50 transition-colors">
+              <div class="w-full bg-gray-200 rounded-full h-2 mb-1 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+              </div>
+              <span class="text-gray-600 group-hover:text-blue-600 transition-colors">Timeline</span>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded-lg group-hover:bg-amber-50 transition-colors">
+              <div class="w-full bg-gray-200 rounded-full h-2 mb-1 overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+              </div>
+              <span class="text-gray-600 group-hover:text-green-600 transition-colors">Budget</span>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded-lg group-hover:bg-amber-50 transition-colors">
+              <div class="w-full bg-gray-200 rounded-full h-2 mb-1 overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+              </div>
+              <span class="text-gray-600 group-hover:text-purple-600 transition-colors">Physical</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add milestones section if available
+      if (project.milestones && project.milestones.length > 0) {
+        const milestonesSection = document.createElement('div');
+        milestonesSection.className = 'mt-4 pt-4 border-t border-gray-100';
+        milestonesSection.innerHTML = `
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-medium text-gray-700 group-hover:text-amber-600 transition-colors">Milestones (${project.milestones.length})</p>
+            <div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+          </div>
+          <div class="space-y-2">
+            ${project.milestones.slice(0, 2).map(milestone => `
+              <div class="flex items-center justify-between text-xs p-2 rounded-lg hover:bg-amber-50 transition-colors">
+                <span class="text-gray-700 truncate font-medium group-hover:text-amber-700 transition-colors">${milestone.title}</span>
+                <span class="px-2 py-1 rounded-full text-xs font-medium transition-all duration-300 transform group-hover:scale-105 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 group-hover:from-gray-200 group-hover:to-gray-300">
+                  ${milestone.status || 'pending'}
+                </span>
+              </div>
+            `).join('')}
+            ${project.milestones.length > 2 ? `
+              <div class="text-center pt-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border border-gray-200 group-hover:from-amber-100 group-hover:to-amber-200 group-hover:text-amber-700 transition-all duration-300">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                  +${project.milestones.length - 2} more milestones
+                </span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        projectCard.appendChild(milestonesSection);
+      }
+
+      // Add click event listener
+      projectCard.addEventListener('click', function() {
+        selectProject(project.id);
+      });
+
+      projectsGrid.appendChild(projectCard);
+    });
+
+    // Animate progress bars after rendering
+    setTimeout(() => {
+      projectsData.forEach(async project => {
+        try {
+          // Fetch latest progress data for this project
+          const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+          const timestamp = new Date().getTime();
+          const progressResponse = await fetch(`${API_URL}/projects/progress/${project.id}?_t=${timestamp}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          let progressData = null;
+          if (progressResponse.ok) {
+            const progressResult = await progressResponse.json();
+            if (progressResult.success) {
+              progressData = progressResult.data;
+            }
+          }
+          
+          // Use progress data from backend or fallback to project data
+          const overallProgress = progressData?.progress?.overall || parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+          const timelineProgress = progressData?.progress?.internalTimeline || parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
+          const budgetProgress = progressData?.progress?.internalBudget || parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
+          const physicalProgress = progressData?.progress?.internalPhysical || parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
+
+          const card = document.querySelector(`[data-project-id="${project.id}"]`);
+          if (card) {
+            const overallBar = card.querySelector('.bg-gradient-to-r.from-amber-500');
+            const timelineBar = card.querySelector('.bg-gradient-to-r.from-blue-500');
+            const budgetBar = card.querySelector('.bg-gradient-to-r.from-green-500');
+            const physicalBar = card.querySelector('.bg-gradient-to-r.from-purple-500');
+
+            if (overallBar) {
+              overallBar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+              overallBar.style.width = `${overallProgress}%`;
+            }
+            if (timelineBar) {
+              timelineBar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+              timelineBar.style.width = `${timelineProgress}%`;
+            }
+            if (budgetBar) {
+              budgetBar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+              budgetBar.style.width = `${budgetProgress}%`;
+            }
+            if (physicalBar) {
+              physicalBar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+              physicalBar.style.width = `${physicalProgress}%`;
+            }
+          }
+        } catch (error) {
+          console.error('Error animating progress for project:', project.id, error);
+        }
+      });
+    }, 100);
+  }
+
+  // Global functions
+  window.loadProgressTimeline = function() {
+    console.log('Refreshing progress timeline...');
+    loadProjects();
+  };
+
+  window.viewProjectDetails = function(projectId) {
+    console.log('Viewing project details:', projectId);
+    // Navigate to project details page
+    window.location.href = `/project/${projectId}`;
+  };
+
+  window.toggleSecretariatNote = function(updateId) {
+    console.log('toggleSecretariatNote called with updateId:', updateId);
+    const noteSection = document.getElementById(`secretariat-note-${updateId}`);
+    if (noteSection) {
+      noteSection.classList.toggle('hidden');
+      console.log('Note section toggled, hidden:', noteSection.classList.contains('hidden'));
+    } else {
+      console.log('Note section not found for updateId:', updateId);
+    }
+  }
+  
+  console.log('Global functions defined');
+
+  // Load projects data
+  async function loadProjects() {
+    try {
+      console.log('Loading projects data...');
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const timestamp = new Date().getTime();
+      
+      const response = await fetch(`${API_URL}/projects?_t=${timestamp}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          projects = data.projects;
+          console.log('Projects loaded:', projects.length);
+          renderProjectsGrid(projects);
+          
+          // Auto-select the first project if available
+          if (projects.length > 0) {
+            console.log('Auto-selecting first project');
+            selectProject(projects[0].id);
+          }
+        } else {
+          console.error('Failed to load projects:', data.message);
+        }
+      } else {
+        console.error('Failed to fetch projects:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  }
 
   // Project selection functionality
   document.addEventListener('DOMContentLoaded', function() {
     console.log('Progress Timeline page loaded');
     
-    const projectCards = document.querySelectorAll('.project-card');
-    console.log('Found project cards:', projectCards.length);
+    // Load projects first
+    loadProjects();
     
-    projectCards.forEach(card => {
-      const projectId = card.getAttribute('data-project-id');
-      console.log('Project card found with ID:', projectId);
-      
-      card.addEventListener('click', function() {
-        console.log('Project card clicked:', projectId);
-        selectProject(projectId);
-      });
-    });
-
     // Check for project parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
     const projectParam = urlParams.get('project');
     if (projectParam) {
       console.log('Project parameter found in URL:', projectParam);
-      selectProject(projectParam);
-    }
-    
-    // Auto-select the first project if available
-    if (projectCards.length > 0) {
-      console.log('Auto-selecting first project');
-      const firstProjectId = projectCards[0].getAttribute('data-project-id');
-      console.log('First project ID:', firstProjectId);
-      selectProject(firstProjectId);
-    } else {
-      console.log('No project cards found for auto-selection');
+      // Wait a bit for projects to load, then select
+      setTimeout(() => selectProject(projectParam), 500);
     }
   });
 
@@ -450,8 +812,25 @@ loading = false;
         
         if (data.success) {
           selectedProject = data.project;
-          console.log('Selected project:', data.project);
-          displayProjectUpdates(data.project);
+          
+          // Fetch progress data and merge it with the project
+          try {
+            const progressResponse = await fetch(`http://localhost:3000/api/projects/progress/${projectId}?_t=${timestamp}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (progressResponse.ok) {
+              const progressData = await progressResponse.json();
+              if (progressData.success) {
+                selectedProject.progress = progressData.data.progress;
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching progress data:', error);
+          }
+          
+          console.log('Selected project with progress:', selectedProject);
+          await displayProjectUpdates(data.project);
           loadProjectUpdates(projectId);
           
           // Update active state
@@ -474,36 +853,152 @@ loading = false;
     }
   }
 
-  // Load project updates
+  // Load project updates with enhanced EIU milestone data
   async function loadProjectUpdates(projectId) {
     try {
       console.log('Loading project updates for project:', projectId);
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
       const timestamp = new Date().getTime();
-      const response = await fetch(`http://localhost:3000/api/projects/${projectId}/updates?_t=${timestamp}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      
+      // Fetch project progress data using the new ProgressCalculationService
+      const progressResponse = await fetch(`http://localhost:3000/api/projects/progress/${projectId}?_t=${timestamp}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      let progressData = null;
+      if (progressResponse.ok) {
+        const progressResult = await progressResponse.json();
+        if (progressResult.success) {
+          progressData = progressResult.data;
+        }
+      }
+      
+      // Fetch project updates and milestones as fallback
+      const [updatesResponse, milestonesResponse] = await Promise.all([
+        fetch(`http://localhost:3000/api/projects/${projectId}/updates?_t=${timestamp}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`http://localhost:3000/api/projects/${projectId}/milestones?_t=${timestamp}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+      
+      let updates = [];
+      let milestones = [];
+      
+      if (updatesResponse.ok) {
+        const updatesData = await updatesResponse.json();
+        if (updatesData.success) {
+          updates = updatesData.updates || [];
+        }
+      }
+      
+      if (milestonesResponse.ok) {
+        const milestonesData = await milestonesResponse.json();
+        if (milestonesData.success) {
+          milestones = milestonesData.milestones || [];
+        }
+      }
+      
+      // Create a map of milestones for quick lookup
+      const milestonesMap = {};
+      milestones.forEach(milestone => {
+        milestonesMap[milestone.id] = milestone;
+      });
+      
+      // Extract milestone updates from project updates
+      const milestoneUpdates = [];
+      updates.forEach(update => {
+        if (update.milestoneUpdates && update.updateType === 'milestone') {
+          try {
+            const milestoneData = typeof update.milestoneUpdates === 'string' 
+              ? JSON.parse(update.milestoneUpdates) 
+              : update.milestoneUpdates;
+            
+            console.log('Parsed milestone data:', milestoneData);
+            
+            if (Array.isArray(milestoneData)) {
+              milestoneData.forEach(milestoneUpdate => {
+                console.log('Individual milestone update:', milestoneUpdate);
+                // Get the original milestone data for planned dates and budget
+                const originalMilestone = milestonesMap[milestoneUpdate.milestoneId];
+                
+                milestoneUpdates.push({
+                  ...milestoneUpdate,
+                  submittedBy: update.submittedBy,
+                  submittedByRole: update.submittedByRole,
+                  submittedAt: update.submittedAt,
+                  status: update.status,
+                  updateId: update.id,
+                  updateType: 'milestone',
+                  id: update.id, // Use the project update ID for the milestone update
+                  isExtractedMilestone: true, // Flag to identify extracted milestone updates
+                  milestoneId: milestoneUpdate.milestoneId, // Keep the original milestone ID
+                  // Add planned milestone data
+                  plannedStartDate: originalMilestone?.plannedStartDate || originalMilestone?.timelineStartDate,
+                  plannedEndDate: originalMilestone?.plannedEndDate || originalMilestone?.timelineEndDate,
+                  plannedBudget: originalMilestone?.plannedBudget || originalMilestone?.budgetPlanned,
+                  milestoneTitle: originalMilestone?.title,
+                  milestoneWeight: originalMilestone?.weight
+                });
+              });
+            } else if (milestoneData && typeof milestoneData === 'object') {
+              // Handle single milestone update object
+              console.log('Single milestone update object:', milestoneData);
+              // Get the original milestone data for planned dates and budget
+              const originalMilestone = milestonesMap[milestoneData.milestoneId];
+              
+              milestoneUpdates.push({
+                ...milestoneData,
+                submittedBy: update.submittedBy,
+                submittedByRole: update.submittedByRole,
+                submittedAt: update.submittedAt,
+                status: update.status,
+                updateId: update.id,
+                updateType: 'milestone',
+                id: update.id,
+                isExtractedMilestone: true, // Flag to identify extracted milestone updates
+                milestoneId: milestoneData.milestoneId, // Keep the original milestone ID
+                // Add planned milestone data
+                plannedStartDate: originalMilestone?.plannedStartDate || originalMilestone?.timelineStartDate,
+                plannedEndDate: originalMilestone?.plannedEndDate || originalMilestone?.timelineEndDate,
+                plannedBudget: originalMilestone?.plannedBudget || originalMilestone?.budgetPlanned,
+                milestoneTitle: originalMilestone?.title,
+                milestoneWeight: originalMilestone?.weight
+              });
+            }
+          } catch (error) {
+            console.error('Error parsing milestone updates:', error);
+          }
         }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Project updates API response:', data);
-        if (data.success) {
-          projectUpdates = data.updates;
-          console.log('Project updates loaded:', projectUpdates.length, 'updates');
-          displayUpdates(data.updates);
+      // Filter out duplicate milestone updates - only keep the extracted ones
+      const filteredUpdates = updates.filter(update => {
+        // If it's a milestone update without the extracted flag, filter it out
+        if (update.updateType === 'milestone' && !update.isExtractedMilestone) {
+          return false;
         }
-      } else {
-        console.error('Failed to fetch project updates:', response.status);
-      }
+        return true;
+      });
+      
+      // Add milestone updates to the filtered updates array
+      updates = [...filteredUpdates, ...milestoneUpdates];
+      
+      projectUpdates = updates;
+      console.log('Project updates loaded:', projectUpdates.length, 'total updates');
+      console.log('Updates with milestone data:', updates.filter(u => u.milestoneUpdates).length);
+      console.log('First update submitter data:', updates[0]?.submitter);
+      console.log('First update submittedBy:', updates[0]?.submittedBy);
+      
+      displayUpdates(projectUpdates);
     } catch (error) {
       console.error('Error fetching project updates:', error);
     }
   }
 
   // Display project updates
-  function displayProjectUpdates(project) {
+  async function displayProjectUpdates(project, progressData = null) {
     console.log('displayProjectUpdates called with project:', project);
     console.log('Project object keys:', Object.keys(project));
     
@@ -514,6 +1009,27 @@ loading = false;
     console.log('Project approvedBySecretariat:', actualProject.approvedBySecretariat);
     console.log('Project progress:', project.progress);
     console.log('Project progress keys:', project.progress ? Object.keys(project.progress) : 'No progress object');
+    
+    // Fetch progress data if not provided
+    let localProgressData = progressData;
+    if (!localProgressData && selectedProject && selectedProject.id) {
+      try {
+        const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        const timestamp = new Date().getTime();
+        const progressResponse = await fetch(`${API_URL}/projects/progress/${selectedProject.id}?_t=${timestamp}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (progressResponse.ok) {
+          const progressResult = await progressResponse.json();
+          if (progressResult.success) {
+            localProgressData = progressResult.data;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching progress data:', error);
+      }
+    }
     
     // Show selected project info
     const selectedProjectInfo = document.getElementById('selectedProjectInfo');
@@ -545,106 +1061,439 @@ loading = false;
     document.getElementById('selectedProjectName').textContent = actualProject.name || 'No project selected';
     document.getElementById('selectedProjectCode').textContent = actualProject.projectCode || '';
     
-    // Update workflow status based on Secretariat approval
-    const isApprovedBySecretariat = actualProject.approvedBySecretariat === true;
-    const statusText = isApprovedBySecretariat ? 'VALIDATED BY SECRETARIAT' : 'DRAFT';
+    // Update project status based on the three main statuses
+    const projectStatus = actualProject.status || 'pending';
+    let statusText, statusClass;
+    
+    console.log('Status determination:', {
+      projectStatus: projectStatus,
+      approvedBySecretariat: actualProject.approvedBySecretariat,
+      approvedBySecretariatType: typeof actualProject.approvedBySecretariat,
+      isApproved: actualProject.approvedBySecretariat === true,
+      isApprovedTruthy: !!actualProject.approvedBySecretariat
+    });
+    
+    // Determine status based on project state
+    if (projectStatus.toLowerCase() === 'completed') {
+      statusText = 'COMPLETE';
+      statusClass = 'bg-green-100 text-green-700';
+    } else if (actualProject.approvedBySecretariat === true || actualProject.approvedBySecretariat === 'true') {
+      statusText = 'ONGOING';
+      statusClass = 'bg-blue-100 text-blue-700';
+    } else {
+      statusText = 'PENDING';
+      statusClass = 'bg-yellow-100 text-yellow-700';
+    }
+    
     const statusElement = document.getElementById('projectWorkflowStatus');
     statusElement.textContent = statusText;
-    statusElement.className = `px-3 py-1 text-sm font-medium rounded-full ${
-      isApprovedBySecretariat ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-    }`;
+    statusElement.className = `px-3 py-1 text-sm font-medium rounded-full ${statusClass}`;
 
     // Update progress bars using calculated progress from ProgressCalculationService
-    const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
-    const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.timelineProgress || project.timelineProgress || 0);
-    const budgetProgress = parseFloat(project.progress?.budget || project.progress?.budgetProgress || project.budgetProgress || 0);
-    const physicalProgress = parseFloat(project.progress?.physical || project.progress?.physicalProgress || project.physicalProgress || 0);
+    const overallProgress = localProgressData?.progress?.overall || parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+    // Use internal division progress (percentage within each division) instead of contribution to overall
+    const timelineProgress = localProgressData?.progress?.internalTimeline || parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
+    const budgetProgress = localProgressData?.progress?.internalBudget || parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
+    const physicalProgress = localProgressData?.progress?.internalPhysical || parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
     
     document.getElementById('overallProgressBar').style.width = `${overallProgress}%`;
     document.getElementById('overallProgressText').textContent = `${overallProgress.toFixed(2)}%`;
     
     document.getElementById('timelineProgressBar').style.width = `${timelineProgress}%`;
-    document.getElementById('timelineProgressText').textContent = `${timelineProgress}%`;
+    document.getElementById('timelineProgressText').textContent = `${timelineProgress.toFixed(2)}%`;
     
     document.getElementById('budgetProgressBar').style.width = `${budgetProgress}%`;
-    document.getElementById('budgetProgressText').textContent = `${budgetProgress}%`;
+    document.getElementById('budgetProgressText').textContent = `${budgetProgress.toFixed(2)}%`;
     
     document.getElementById('physicalProgressBar').style.width = `${physicalProgress}%`;
-    document.getElementById('physicalProgressText').textContent = `${physicalProgress}%`;
+    document.getElementById('physicalProgressText').textContent = `${physicalProgress.toFixed(2)}%`;
 
-    // Show/hide review section based on Secretariat approval status
+    // Show/hide review section based on project status
     const reviewSection = document.getElementById('eiuUpdatesReview');
     const draftMessage = document.getElementById('draftMessage');
     
-    if (!isApprovedBySecretariat) {
+    console.log('Element check:', {
+      reviewSectionFound: !!reviewSection,
+      draftMessageFound: !!draftMessage,
+      draftMessageCurrentDisplay: draftMessage ? draftMessage.style.display : 'element not found'
+    });
+    
+    console.log('Project status check:', {
+      projectStatus: projectStatus,
+      approvedBySecretariat: actualProject.approvedBySecretariat,
+      isPending: projectStatus.toLowerCase() === 'pending',
+      isNotApproved: !actualProject.approvedBySecretariat
+    });
+    
+    const isApproved = actualProject.approvedBySecretariat === true || actualProject.approvedBySecretariat === 'true' || actualProject.approvedBySecretariat === 1;
+    // If project is approved by Secretariat, it's NOT pending regardless of status field
+    const isPending = isApproved ? false : (projectStatus.toLowerCase() === 'pending');
+    
+    console.log('Approval check:', {
+      isApproved: isApproved,
+      isPending: isPending,
+      shouldShowPendingMessage: isPending || !isApproved,
+      rawApprovedValue: actualProject.approvedBySecretariat,
+      rawApprovedType: typeof actualProject.approvedBySecretariat,
+      projectStatus: projectStatus,
+      logic: 'If approved by Secretariat, project is NOT pending regardless of status field'
+    });
+    
+    if (isPending || !isApproved) {
+      console.log('Showing pending approval message');
       if (reviewSection) reviewSection.style.display = 'none';
-      if (draftMessage) draftMessage.style.display = 'block';
+      if (draftMessage) {
+        draftMessage.style.display = 'block';
+        draftMessage.style.setProperty('display', 'block', 'important');
+        // Update draft message text to reflect pending status for IO role
+        const draftTitle = draftMessage.querySelector('h3');
+        const draftText = draftMessage.querySelector('p');
+        if (draftTitle) draftTitle.textContent = 'Project Pending Secretariat Approval';
+        if (draftText) draftText.textContent = 'This project is currently pending Secretariat approval. Once approved, you will be able to review EIU Partner milestone updates and submit them to Secretariat for final approval.';
+        console.log('Draft message shown with !important');
+      }
     } else {
-      if (reviewSection) reviewSection.style.display = 'block';
-      if (draftMessage) draftMessage.style.display = 'none';
+      console.log('Hiding pending approval message, showing review section');
+      if (reviewSection) {
+        reviewSection.style.display = 'block';
+        console.log('Review section shown');
+      } else {
+        console.log('Review section element not found');
+      }
+      if (draftMessage) {
+        draftMessage.style.display = 'none';
+        draftMessage.style.setProperty('display', 'none', 'important');
+        console.log('Draft message hidden with !important');
+      } else {
+        console.log('Draft message element not found');
+      }
     }
     
     // Update automatic progress summary
     updateAutomaticProgress(project);
 
     // Display milestones if available
-    if (project.milestones && project.milestones.length > 0) {
-      displayMilestones(project.milestones);
+    console.log('Checking for milestones in project:', project);
+    console.log('Project milestones:', project.milestones);
+    console.log('Milestones type:', typeof project.milestones);
+    
+    // Handle different milestone data structures
+    let milestonesArray = null;
+    if (project.milestones) {
+      if (Array.isArray(project.milestones)) {
+        // Direct array structure
+        milestonesArray = project.milestones;
+        console.log('Milestones is direct array, length:', milestonesArray.length);
+      } else if (project.milestones.milestones && Array.isArray(project.milestones.milestones)) {
+        // Object with milestones array inside
+        milestonesArray = project.milestones.milestones;
+        console.log('Milestones is object with array inside, length:', milestonesArray.length);
+      } else {
+        console.log('Milestones structure not recognized:', project.milestones);
+      }
+    }
+    
+    if (milestonesArray && milestonesArray.length > 0) {
+      console.log('Displaying milestones:', milestonesArray);
+      displayMilestones(milestonesArray, localProgressData);
+    } else {
+      console.log('No milestones found or milestones array is empty');
+      // Try to fetch milestones separately if not included
+      if (selectedProject && selectedProject.id) {
+        console.log('Attempting to fetch milestones separately...');
+        fetchMilestonesSeparately(selectedProject.id, localProgressData);
+      }
+    }
+    
+    // Load horizontal timeline for the selected project
+    if (selectedProject && selectedProject.id) {
+      console.log('Loading horizontal timeline for project:', selectedProject.id);
+      setTimeout(() => {
+        loadProjectTimeline();
+      }, 500); // Small delay to ensure DOM is ready
     }
   }
 
-  // Display milestones
-  function displayMilestones(milestones) {
+  // Fetch milestones separately if not included in project data
+  async function fetchMilestonesSeparately(projectId, progressData = null) {
+    try {
+      console.log('Fetching milestones separately for project:', projectId);
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const timestamp = new Date().getTime();
+      const response = await fetch(`http://localhost:3000/api/projects/${projectId}/milestones?_t=${timestamp}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Separate milestones API response:', data);
+        if (data.success && data.milestones && data.milestones.length > 0) {
+          console.log('Milestones fetched separately:', data.milestones);
+          displayMilestones(data.milestones, progressData);
+          
+          // Load horizontal timeline after milestones are fetched
+          setTimeout(() => {
+            loadProjectTimeline();
+          }, 500);
+        } else {
+          console.log('No milestones found in separate API call');
+          displayNoMilestonesMessage();
+          
+          // Still try to load timeline even if no milestones
+          setTimeout(() => {
+            loadProjectTimeline();
+          }, 500);
+        }
+      } else {
+        console.error('Failed to fetch milestones separately:', response.status);
+        displayNoMilestonesMessage();
+        
+        // Still try to load timeline even if API fails
+        setTimeout(() => {
+          loadProjectTimeline();
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error fetching milestones separately:', error);
+      displayNoMilestonesMessage();
+    }
+  }
+
+  // Display no milestones message
+  function displayNoMilestonesMessage() {
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    if (milestonesContainer) {
+      milestonesContainer.innerHTML = `
+        <div class="text-center py-8">
+          <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <p class="text-gray-500 text-lg font-medium">No milestones configured</p>
+          <p class="text-gray-400 text-sm mt-2">This project does not have any milestones configured yet.</p>
+        </div>
+      `;
+    }
+  }
+
+  // Helper function to calculate milestone progress
+  function calculateMilestoneProgress(milestone, progressData) {
+    if (!progressData || !progressData.milestones) {
+      return milestone.progress || 0;
+    }
+    
+    // Check if progressData.milestones is an array before using find
+    if (!Array.isArray(progressData.milestones)) {
+      console.log('progressData.milestones is not an array:', progressData.milestones);
+      return milestone.progress || 0;
+    }
+    
+    // Find the milestone in the progress data
+    const milestoneProgress = progressData.milestones.find(m => m.id === milestone.id);
+    if (milestoneProgress) {
+      return milestoneProgress.progress || 0;
+    }
+    
+    // Calculate based on division statuses
+    let approvedDivisions = 0;
+    let totalDivisions = 0;
+    
+    if (milestone.timelineStatus) {
+      totalDivisions++;
+      if (milestone.timelineStatus === 'approved') approvedDivisions++;
+    }
+    if (milestone.budgetStatus) {
+      totalDivisions++;
+      if (milestone.budgetStatus === 'approved') approvedDivisions++;
+    }
+    if (milestone.physicalStatus) {
+      totalDivisions++;
+      if (milestone.physicalStatus === 'approved') approvedDivisions++;
+    }
+    
+    if (totalDivisions === 0) return 0;
+    return Math.round((approvedDivisions / totalDivisions) * 100);
+  }
+
+  // Helper function to get status class
+  function getStatusClass(status) {
+    if (!status) return 'bg-gray-100 text-gray-700';
+    
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'bg-green-100 text-green-700';
+      case 'rejected':
+        return 'bg-red-100 text-red-700';
+      case 'revision_requested':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'pending':
+        return 'bg-gray-100 text-gray-700';
+      case 'submitted':
+        return 'bg-blue-100 text-blue-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  }
+
+  // Display milestones with progress data
+  function displayMilestones(milestones, progressData = null) {
     const milestonesContainer = document.getElementById('milestonesContainer');
     if (!milestonesContainer) return;
 
+    console.log('Displaying milestones with full details:', milestones);
+    console.log('Progress data:', progressData);
+    console.log('Progress data type:', typeof progressData);
+    console.log('Progress data keys:', progressData ? Object.keys(progressData) : 'null');
+    if (progressData && progressData.milestones) {
+      console.log('Progress data milestones type:', typeof progressData.milestones);
+      console.log('Progress data milestones is array:', Array.isArray(progressData.milestones));
+      console.log('Progress data milestones:', progressData.milestones);
+    }
+
     milestonesContainer.innerHTML = milestones.map(milestone => `
-      <div class="border border-gray-200 rounded-lg p-4 mb-3">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="font-semibold text-gray-800">${milestone.title}</h4>
-          <span class="px-2 py-1 text-xs font-medium rounded-full ${
-            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
-            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-            'bg-gray-100 text-gray-700'
-          }">${milestone.status || 'pending'}</span>
+      <div class="border border-gray-200 rounded-lg p-6 mb-4">
+        <!-- Milestone Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h4 class="text-lg font-semibold text-gray-800">${milestone.title}</h4>
+            <p class="text-sm text-gray-600">Milestone ID: ${milestone.id}</p>
+          </div>
+          <span class="px-3 py-1 text-sm font-medium rounded-full ${getStatusClass(milestone.status)}">${milestone.status || 'pending'}</span>
         </div>
-        <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-          <div>
-            <span class="text-gray-600">Weight:</span>
-            <span class="font-medium">${milestone.weight}%</span>
+
+        <!-- Basic Milestone Info -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600 block text-xs">Total Weight</span>
+            <span class="font-semibold text-lg">${milestone.weight}%</span>
           </div>
-          <div>
-            <span class="text-gray-600">Budget:</span>
-            <span class="font-medium">₱${(milestone.plannedBudget || 0).toLocaleString()}</span>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600 block text-xs">Planned Budget</span>
+            <span class="font-semibold text-lg">₱${(milestone.plannedBudget || 0).toLocaleString()}</span>
           </div>
-          <div>
-            <span class="text-gray-600">Start Date:</span>
-            <span class="font-medium">${milestone.plannedStartDate || '-'}</span>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600 block text-xs">Due Date</span>
+            <span class="font-semibold">${milestone.dueDate || '-'}</span>
           </div>
-          <div>
-            <span class="text-gray-600">End Date:</span>
-            <span class="font-medium">${milestone.plannedEndDate || '-'}</span>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600 block text-xs">Progress</span>
+            <span class="font-semibold text-lg">${calculateMilestoneProgress(milestone, progressData)}%</span>
           </div>
         </div>
+
+        <!-- Three Divisions Section -->
+        <div class="mb-4">
+          <h5 class="font-semibold text-gray-800 mb-3">Three-Division Configuration</h5>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Timeline Division -->
+            <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <div class="flex items-center mb-2">
+                <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <h6 class="font-semibold text-blue-800">Timeline Division</h6>
+              </div>
+              <div class="space-y-2 text-sm">
+                <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${milestone.timelineWeight || 33.33}%</span></div>
+                <div><span class="text-gray-600">Start:</span> <span class="font-medium">${milestone.timelineStartDate || '-'}</span></div>
+                <div><span class="text-gray-600">End:</span> <span class="font-medium">${milestone.timelineEndDate || '-'}</span></div>
+                <div><span class="text-gray-600">Status:</span> 
+                  <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(milestone.timelineStatus)}">${milestone.timelineStatus || 'pending'}</span>
+                </div>
+                ${milestone.timelineDescription ? `
+                  <div class="mt-2 p-2 bg-white rounded border">
+                    <span class="text-gray-600 text-xs">Description:</span>
+                    <p class="text-xs mt-1">${milestone.timelineDescription}</p>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Budget Division -->
+            <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+              <div class="flex items-center mb-2">
+                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                <h6 class="font-semibold text-green-800">Budget Division</h6>
+              </div>
+              <div class="space-y-2 text-sm">
+                <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${milestone.budgetWeight || 33.33}%</span></div>
+                <div><span class="text-gray-600">Planned:</span> <span class="font-medium">₱${(milestone.budgetPlanned || 0).toLocaleString()}</span></div>
+                <div><span class="text-gray-600">Status:</span> 
+                  <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(milestone.budgetStatus)}">${milestone.budgetStatus || 'pending'}</span>
+                </div>
+                ${milestone.budgetBreakdown ? `
+                  <div class="mt-2 p-2 bg-white rounded border">
+                    <span class="text-gray-600 text-xs">Breakdown:</span>
+                    <p class="text-xs mt-1">${milestone.budgetBreakdown}</p>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Physical Division -->
+            <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
+              <div class="flex items-center mb-2">
+                <svg class="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h6 class="font-semibold text-orange-800">Physical Division</h6>
+              </div>
+              <div class="space-y-2 text-sm">
+                <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${milestone.physicalWeight || 33.33}%</span></div>
+                <div><span class="text-gray-600">Proof Type:</span> <span class="font-medium">${milestone.physicalProofType || 'form'}</span></div>
+                <div><span class="text-gray-600">Status:</span> 
+                  <span class="px-2 py-1 text-xs rounded-full ${
+                    milestone.physicalStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                    milestone.physicalStatus === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                    milestone.physicalStatus === 'approved' ? 'bg-purple-100 text-purple-700' :
+                    'bg-gray-100 text-gray-700'
+                  }">${milestone.physicalStatus || 'pending'}</span>
+                </div>
+                ${milestone.physicalDescription ? `
+                  <div class="mt-2 p-2 bg-white rounded border">
+                    <span class="text-gray-600 text-xs">Description:</span>
+                    <p class="text-xs mt-1">${milestone.physicalDescription}</p>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description and Progress -->
         ${milestone.description ? `
-          <div class="mb-3">
-            <span class="text-gray-600">Description:</span>
+          <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+            <span class="text-gray-600 font-medium">Description:</span>
             <p class="text-sm mt-1">${milestone.description}</p>
           </div>
         ` : ''}
+        
+        <!-- Progress Bar -->
         <div class="flex items-center justify-between">
           <div class="flex-1 mr-4">
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-[#92751F] h-2 rounded-full" style="width: ${milestone.progress || 0}%"></div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div class="bg-[#92751F] h-3 rounded-full transition-all duration-300" style="width: ${calculateMilestoneProgress(milestone, progressData)}%"></div>
             </div>
           </div>
-          <span class="text-sm font-medium">${milestone.progress || 0}%</span>
+          <span class="text-sm font-semibold">${calculateMilestoneProgress(milestone, progressData)}% Complete</span>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600">
+          <div><span class="font-medium">Order:</span> ${milestone.order || 0}</div>
+          <div><span class="font-medium">Priority:</span> ${milestone.priority || 'medium'}</div>
+          <div><span class="font-medium">Completed:</span> ${milestone.completedDate || 'Not completed'}</div>
+          <div><span class="font-medium">Validated:</span> ${milestone.validationDate || 'Not validated'}</div>
         </div>
       </div>
     `).join('');
   }
 
-  // Display updates
+  // Display updates with enhanced EIU milestone structure
   function displayUpdates(updates) {
     console.log('Displaying updates:', updates);
     const updatesContainer = document.getElementById('updatesContainer');
@@ -667,132 +1516,318 @@ loading = false;
       return;
     }
 
-    updatesContainer.innerHTML = updates.map(update => `
-      <div class="border border-gray-200 rounded-lg p-4 mb-4">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="font-semibold text-gray-800">${update.title || 'Milestone Update'}</h4>
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-1 text-xs font-medium rounded-full ${
-              update.status === 'iu_approved' ? 'bg-green-100 text-green-700' :
-              update.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
-              update.status === 'iu_rejected' ? 'bg-red-100 text-red-700' :
-              'bg-gray-100 text-gray-700'
-            }">${update.status || 'submitted'}</span>
-            
-            ${update.status === 'submitted' ? `
-              <div class="flex gap-2">
-                <button onclick="approveUpdate('${update.id}')" class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                  Approve
-                </button>
-                <button onclick="rejectUpdate('${update.id}')" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-                  Reject
-                </button>
+    updatesContainer.innerHTML = updates.map(update => {
+      const isMilestoneUpdate = update.updateType === 'milestone' || update.milestoneId;
+      const updateDate = new Date(update.createdAt || update.submittedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      return `
+        <div class="border border-gray-200 rounded-lg p-6 mb-6 hover:shadow-md transition-shadow">
+          <!-- Update Header -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-full bg-blue-100">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
               </div>
-            ` : ''}
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-          <div>
-            <span class="text-gray-600">Submitted by:</span>
-            <span class="font-medium">${update.submitter?.name || update.submittedBy || 'EIU Personnel'}</span>
-          </div>
-          <div>
-            <span class="text-gray-600">Date:</span>
-            <span class="font-medium">${new Date(update.createdAt).toLocaleDateString()}</span>
-          </div>
-          <div>
-            <span class="text-gray-600">Progress:</span>
-            <span class="font-medium">${update.currentProgress || 0}%</span>
-          </div>
-          <div>
-            <span class="text-gray-600">Update Type:</span>
-            <span class="font-medium">${update.updateType || 'Milestone'}</span>
-          </div>
-        </div>
-        <div class="mb-3">
-          <span class="text-gray-600">Description:</span>
-          <p class="text-sm mt-1">${update.description || 'No description provided'}</p>
-        </div>
-        ${update.milestoneUpdates ? `
-          <div class="mb-3">
-            <span class="text-gray-600">Milestone Details:</span>
-            <div class="bg-gray-50 p-3 rounded-lg mt-1">
-              ${(() => {
-                try {
-                  const milestones = update.milestoneUpdates;
-                  
-                  if (Array.isArray(milestones)) {
-                    return milestones.map((milestone, index) => `
-                      <div class="border-l-4 border-blue-500 pl-3 mb-3">
-                        <div class="flex items-center justify-between mb-2">
-                          <h5 class="font-medium text-gray-800">Milestone ${index + 1}</h5>
-                          <span class="px-2 py-1 text-xs font-medium rounded-full ${
-                            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
-                            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                            milestone.status === 'delayed' ? 'bg-red-100 text-red-700' :
-                            'bg-gray-100 text-gray-700'
-                          }">${milestone.status || 'not_started'}</span>
-                        </div>
-                        ${milestone.physicalDescription ? `
-                          <div class="mb-2">
-                            <span class="text-sm text-gray-600">Physical Accomplishments:</span>
-                            <p class="text-sm mt-1">${milestone.physicalDescription}</p>
-                          </div>
-                        ` : ''}
-                        ${milestone.budgetAllocation > 0 ? `
-                          <div class="mb-2">
-                            <span class="text-sm text-gray-600">Budget Allocation:</span>
-                            <p class="text-sm mt-1">₱${milestone.budgetAllocation.toLocaleString()}</p>
-                          </div>
-                        ` : ''}
-                        ${milestone.budgetBreakdown ? `
-                          <div class="mb-2">
-                            <span class="text-sm text-gray-600">Budget Breakdown:</span>
-                            <p class="text-sm mt-1">${milestone.budgetBreakdown}</p>
-                          </div>
-                        ` : ''}
-                        ${milestone.notes ? `
-                          <div class="mb-2">
-                            <span class="text-sm text-gray-600">Notes:</span>
-                            <p class="text-sm mt-1">${milestone.notes}</p>
-                          </div>
-                        ` : ''}
-                        ${milestone.uploadedFiles && milestone.uploadedFiles.length > 0 ? `
-                          <div class="mb-2">
-                            <span class="text-sm text-gray-600">Attachments:</span>
-                            <div class="flex flex-wrap gap-2 mt-1">
-                              ${milestone.uploadedFiles.map(file => `
-                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                  ${file.originalName || 'File'}
-                                </span>
-                              `).join('')}
-                            </div>
-                          </div>
-                        ` : ''}
-                      </div>
-                    `).join('');
-                  } else {
-                    return `<pre class="text-sm whitespace-pre-wrap">${JSON.stringify(milestones, null, 2)}</pre>`;
-                  }
-                } catch (e) {
-                  return `<pre class="text-sm whitespace-pre-wrap">${update.milestoneUpdates}</pre>`;
-                }
-              })()}
+              <div>
+                <h4 class="font-semibold text-gray-800">${isMilestoneUpdate ? 'Milestone Update' : (update.title || 'Project Update')}</h4>
+                <p class="text-sm text-gray-600">Submitted by ${update.submitter?.name || update.submittedBy || 'EIU Personnel'}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700">${update.status || 'submitted'}</span>
+              
+
             </div>
           </div>
-        ` : ''}
-        ${update.remarks ? `
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <span class="text-gray-600">Additional Notes:</span>
-            <p class="text-sm mt-1">${update.remarks}</p>
+
+          <!-- Update Metadata -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <span class="text-gray-600 block text-xs">Submission Date</span>
+              <span class="font-medium">${updateDate}</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <span class="text-gray-600 block text-xs">Update Type</span>
+              <span class="font-medium">${isMilestoneUpdate ? 'Milestone' : (update.updateType || 'General')}</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <span class="text-gray-600 block text-xs">Progress</span>
+              <span class="font-medium">${update.currentProgress || update.progress || 0}%</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <span class="text-gray-600 block text-xs">Status</span>
+              <span class="font-medium">${update.status || 'submitted'}</span>
+            </div>
           </div>
-        ` : ''}
-      </div>
-    `).join('');
+
+          ${isMilestoneUpdate ? generateMilestoneUpdateContent(update) : generateGeneralUpdateContent(update)}
+        </div>
+      `;
+    }).join('');
     
     // Update compilation status after displaying updates
     updateCompilationStatus();
   }
+
+  // Generate milestone update content with three divisions
+  function generateMilestoneUpdateContent(update) {
+    console.log('generateMilestoneUpdateContent called with update:', update);
+    
+    // Extract the actual milestone data from the update
+    let milestoneData = null;
+    
+    if (update.milestoneUpdates) {
+      // If this is a project update with milestoneUpdates field
+      try {
+        const parsed = typeof update.milestoneUpdates === 'string' 
+          ? JSON.parse(update.milestoneUpdates) 
+          : update.milestoneUpdates;
+        
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          milestoneData = parsed[0]; // Get the first milestone update
+        } else if (typeof parsed === 'object') {
+          milestoneData = parsed;
+        }
+      } catch (error) {
+        console.error('Error parsing milestone updates:', error);
+      }
+    } else {
+      // If this is already a milestone update object
+      milestoneData = update;
+    }
+    
+    console.log('Milestone data for display:', milestoneData);
+    
+    // If no milestone data found, show empty state
+    if (!milestoneData) {
+      return `
+        <div class="mb-4">
+          <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            Three-Division Milestone Update
+          </h5>
+          <p class="text-gray-500 text-sm">No milestone data available</p>
+        </div>
+      `;
+    }
+    
+    return `
+      <!-- Three Divisions Review -->
+      <div class="mb-4">
+        <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          Three-Division Milestone Update
+          ${milestoneData.milestoneTitle ? `<span class="text-sm font-normal text-gray-600">- ${milestoneData.milestoneTitle}</span>` : ''}
+        </h5>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Timeline Division -->
+          <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+            <div class="flex items-center mb-3">
+              <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <h6 class="font-semibold text-blue-800">Timeline Division</h6>
+            </div>
+            <div class="space-y-2 text-sm">
+              ${milestoneData.plannedStartDate ? `
+                <div class="bg-white p-2 rounded border">
+                  <span class="text-gray-600 text-xs">Planned Start Date:</span>
+                  <p class="font-medium text-sm text-blue-700">${new Date(milestoneData.plannedStartDate).toLocaleDateString()}</p>
+                </div>
+              ` : ''}
+              ${milestoneData.plannedEndDate ? `
+                <div class="bg-white p-2 rounded border">
+                  <span class="text-gray-600 text-xs">Planned Due Date:</span>
+                  <p class="font-medium text-sm text-blue-700">${new Date(milestoneData.plannedEndDate).toLocaleDateString()}</p>
+                </div>
+              ` : ''}
+              ${milestoneData.timeline?.description ? `
+                <div class="bg-white p-3 rounded border">
+                  <span class="text-gray-600 text-xs">Activities & Deliverables:</span>
+                  <p class="text-sm mt-1">${milestoneData.timeline.description}</p>
+                </div>
+              ` : '<p class="text-gray-500 text-sm">No timeline updates provided</p>'}
+            </div>
+          </div>
+
+          <!-- Budget Division -->
+          <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+            <div class="flex items-center mb-3">
+              <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+              <h6 class="font-semibold text-green-800">Budget Division</h6>
+            </div>
+            <div class="space-y-2 text-sm">
+              ${milestoneData.plannedBudget ? `
+                <div class="bg-white p-2 rounded border">
+                  <span class="text-gray-600 text-xs">Planned Budget:</span>
+                  <p class="font-medium text-green-700">₱${parseFloat(milestoneData.plannedBudget).toLocaleString()}</p>
+                </div>
+              ` : ''}
+              <div class="bg-white p-2 rounded border">
+                <span class="text-gray-600 text-xs">Used Budget:</span>
+                            <p class="font-medium text-gray-500">
+              ₱${parseFloat(milestoneData.budget?.amount || 0).toLocaleString()}
+              (No budget used)
+            </p>
+              </div>
+              ${milestoneData.budget?.breakdown ? `
+                <div class="bg-white p-3 rounded border">
+                  <span class="text-gray-600 text-xs">Budget Breakdown:</span>
+                  <p class="text-sm mt-1">${milestoneData.budget.breakdown}</p>
+                </div>
+              ` : ''}
+              ${!milestoneData.budget?.breakdown && !milestoneData.plannedBudget ? 
+                '<p class="text-gray-500 text-sm">No budget breakdown provided</p>' : ''}
+            </div>
+          </div>
+
+          <!-- Physical Division -->
+          <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
+            <div class="flex items-center mb-3">
+              <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              <h6 class="font-semibold text-orange-800">Physical Division</h6>
+            </div>
+            <div class="space-y-2 text-sm">
+              ${milestoneData.physical?.description ? `
+                <div class="bg-white p-3 rounded border">
+                  <span class="text-gray-600 text-xs">Progress Requirements:</span>
+                  <p class="text-sm mt-1">${milestoneData.physical.description}</p>
+                </div>
+              ` : '<p class="text-gray-500 text-sm">No physical updates provided</p>'}
+              
+              ${milestoneData.uploadedFiles && milestoneData.uploadedFiles.length > 0 ? `
+                <div class="bg-white p-3 rounded border">
+                  <span class="text-gray-600 text-xs">Supporting Documents (${milestoneData.uploadedFiles.length} files):</span>
+                  <div class="mt-2 space-y-1">
+                    ${milestoneData.uploadedFiles.map((file, index) => `
+                      <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                        <div class="flex items-center gap-2">
+                          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                          <span class="text-sm text-gray-700 truncate max-w-xs">
+                            ${file.originalName || file.name || `Document ${index + 1}`}
+                          </span>
+                        </div>
+                        <button onclick="downloadFile('${file.filename || file.name}', '${file.originalName || file.name}')" 
+                                class="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors">
+                          Download
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Notes -->
+      ${milestoneData.notes ? `
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+          <span class="text-gray-600 font-medium">Additional Notes:</span>
+          <p class="text-sm mt-2">${milestoneData.notes}</p>
+        </div>
+      ` : ''}
+
+      <!-- Review Actions -->
+      ${update.status === 'submitted' ? `
+        <div class="border-t border-gray-200 pt-4">
+          <!-- Note to Secretariat Section -->
+          <div class="mb-4">
+            <button onclick="toggleSecretariatNote('${update.id}')" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Note to Secretariat
+            </button>
+            <div id="secretariat-note-${update.id}" class="hidden">
+              <textarea id="secretariat-note-text-${update.id}" rows="3" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" placeholder="Add a note for the Secretariat admin..."></textarea>
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-3">
+            <button onclick="approveUpdate('${update.id}')" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Approve Update
+            </button>
+            <button onclick="rejectUpdate('${update.id}')" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Reject Update
+            </button>
+          </div>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  // Generate general update content
+  function generateGeneralUpdateContent(update) {
+    return `
+      <div class="mb-4">
+        <span class="text-gray-600">Description:</span>
+        <p class="text-sm mt-1">${update.description || 'No description provided'}</p>
+      </div>
+      ${update.remarks ? `
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <span class="text-gray-600">Additional Notes:</span>
+          <p class="text-sm mt-1">${update.remarks}</p>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  // Download file function
+  function downloadFile(filename, originalName) {
+    try {
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const downloadUrl = `http://localhost:3000/api/uploads/download/${filename}`;
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = originalName || filename;
+      
+      // Add authorization header
+      if (token) {
+        link.setAttribute('data-token', token);
+      }
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('Download initiated for:', originalName || filename);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Error downloading file. Please try again.');
+    }
+  }
+
+
 
   // Update automatic progress summary
   function updateAutomaticProgress(project) {
@@ -811,10 +1846,10 @@ loading = false;
     const autoBudgetElement = document.getElementById('autoBudgetProgress');
     const autoPhysicalElement = document.getElementById('autoPhysicalProgress');
     
-    if (autoOverallElement) autoOverallElement.textContent = `${overallProgress.toFixed(1)}%`;
-    if (autoTimelineElement) autoTimelineElement.textContent = `${timelineProgress}%`;
-    if (autoBudgetElement) autoBudgetElement.textContent = `${budgetProgress}%`;
-    if (autoPhysicalElement) autoPhysicalElement.textContent = `${physicalProgress}%`;
+    if (autoOverallElement) autoOverallElement.textContent = `${overallProgress.toFixed(2)}%`;
+    if (autoTimelineElement) autoTimelineElement.textContent = `${timelineProgress.toFixed(2)}%`;
+    if (autoBudgetElement) autoBudgetElement.textContent = `${budgetProgress.toFixed(2)}%`;
+    if (autoPhysicalElement) autoPhysicalElement.textContent = `${physicalProgress.toFixed(2)}%`;
   }
 
   // Approve update
@@ -825,6 +1860,10 @@ loading = false;
 
     try {
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      
+      // Get Secretariat note if provided
+      const secretariatNote = document.getElementById(`secretariat-note-text-${updateId}`)?.value || '';
+      
       const response = await fetch(`http://localhost:3000/api/projects/project-updates/${updateId}/approve`, {
         method: 'POST',
         headers: {
@@ -833,7 +1872,8 @@ loading = false;
         },
         body: JSON.stringify({
           status: 'iu_approved',
-          iuReviewRemarks: 'Approved by Implementing Office'
+          iuReviewRemarks: 'Approved by Implementing Office',
+          secretariatNote: secretariatNote
         })
       });
       
@@ -901,45 +1941,33 @@ loading = false;
     }
   }
 
-  // Compile and submit to Secretariat
+  // Compile and submit to Secretariat with professional report generation
   async function compileAndSubmitToSecretariat() {
     if (!selectedProject) {
       alert('Please select a project first.');
       return;
     }
 
-    // Check if there's an approved milestone update that contains all required divisions
+    // Validate that all three divisions are complete
     const approvedUpdates = projectUpdates.filter(update => update.status === 'iu_approved');
-    const approvedMilestone = approvedUpdates.find(update => update.updateType === 'milestone');
-    
-    if (!approvedMilestone) {
-      alert('No approved milestone update found. Please approve a milestone update first.');
-      return;
-    }
-    
-    // If we have an approved milestone update, consider it complete
-    // since milestone updates inherently contain timeline, budget, and physical info
-    if (approvedMilestone.milestoneUpdates) {
-      try {
-        const milestones = approvedMilestone.milestoneUpdates;
-        if (milestones && milestones.length > 0) {
-          // Milestone updates inherently contain all required divisions
-          console.log('Approved milestone update contains milestone data, proceeding with compilation');
-        } else {
-          alert('The approved milestone update does not contain milestone data.');
-          return;
-        }
-      } catch (e) {
-        console.error('Error parsing milestone updates:', e);
-        alert('Error parsing milestone data. Please try again.');
-        return;
-      }
-    } else {
-      alert('The approved milestone update does not contain milestone data.');
+    const milestoneUpdates = approvedUpdates.filter(update => 
+      update.updateType === 'milestone' || update.milestoneId
+    );
+
+    if (milestoneUpdates.length === 0) {
+      alert('No approved milestone updates found. Please approve milestone updates first.');
       return;
     }
 
-    if (!confirm('Are you sure you want to compile and submit this progress report to the Secretariat?')) {
+    // Generate professional compilation report
+    const compilationReport = generateProfessionalReport(milestoneUpdates);
+    
+    if (!compilationReport.isValid) {
+      alert(compilationReport.errorMessage);
+      return;
+    }
+
+    if (!confirm('Are you sure you want to compile and submit this professional progress report to the Secretariat?')) {
       return;
     }
 
@@ -952,15 +1980,23 @@ loading = false;
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          compiledReport: `Compiled progress report for ${selectedProject.name} with approved EIU updates.`,
-          submittedAt: new Date().toISOString()
+          compiledReport: compilationReport.report,
+          reportSummary: compilationReport.summary,
+          submittedAt: new Date().toISOString(),
+          compilationDetails: {
+            totalUpdates: milestoneUpdates.length,
+            timelineComplete: compilationReport.timelineComplete,
+            budgetComplete: compilationReport.budgetComplete,
+            physicalComplete: compilationReport.physicalComplete,
+            overallProgress: compilationReport.overallProgress
+          }
         })
       });
       
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          alert('Progress report compiled and submitted to Secretariat successfully!');
+          alert('Professional progress report compiled and submitted to Secretariat successfully!');
           // Refresh project data
           selectProject(selectedProject.id);
         } else {
@@ -975,74 +2011,315 @@ loading = false;
     }
   }
 
-  // Update compilation status
+  // Generate professional compilation report
+  function generateProfessionalReport(milestoneUpdates) {
+    const report = {
+      isValid: false,
+      errorMessage: '',
+      report: '',
+      summary: {},
+      timelineComplete: false,
+      budgetComplete: false,
+      physicalComplete: false,
+      overallProgress: 0
+    };
+
+    try {
+      // Analyze milestone updates
+      let timelineData = [];
+      let budgetData = [];
+      let physicalData = [];
+      let totalProgress = 0;
+      let updateCount = 0;
+
+      milestoneUpdates.forEach(update => {
+        const milestoneData = update.milestoneUpdates || update;
+        
+        // Collect Timeline Division data
+        if (milestoneData.timeline?.description) {
+          timelineData.push({
+            description: milestoneData.timeline.description,
+            submittedBy: update.submitter?.name || update.submittedBy || 'EIU Personnel',
+            submittedAt: update.createdAt || update.submittedAt
+          });
+        }
+
+        // Collect Budget Division data
+        if (milestoneData.budget?.amount || milestoneData.budget?.breakdown) {
+          budgetData.push({
+            amount: milestoneData.budget.amount || 0,
+            breakdown: milestoneData.budget.breakdown || '',
+            submittedBy: update.submitter?.name || update.submittedBy || 'EIU Personnel',
+            submittedAt: update.createdAt || update.submittedAt
+          });
+        }
+
+        // Collect Physical Division data
+        if (milestoneData.physical?.description || milestoneData.uploadedFiles) {
+          physicalData.push({
+            description: milestoneData.physical?.description || '',
+            attachments: milestoneData.uploadedFiles || [],
+            submittedBy: update.submitter?.name || update.submittedBy || 'EIU Personnel',
+            submittedAt: update.createdAt || update.submittedAt
+          });
+        }
+
+        totalProgress += parseFloat(update.currentProgress || update.progress || 0);
+        updateCount++;
+      });
+
+      // Validate completeness
+      report.timelineComplete = timelineData.length > 0;
+      report.budgetComplete = budgetData.length > 0;
+      report.physicalComplete = physicalData.length > 0;
+      report.overallProgress = updateCount > 0 ? totalProgress / updateCount : 0;
+
+      if (!report.timelineComplete || !report.budgetComplete || !report.physicalComplete) {
+        report.errorMessage = 'All three divisions (Timeline, Budget, Physical) must be complete before compilation.';
+        return report;
+      }
+
+      // Generate professional report
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      report.report = `
+PROGRESS COMPILATION REPORT
+Project: ${selectedProject.name}
+Project Code: ${selectedProject.projectCode}
+Compilation Date: ${currentDate}
+Implementing Office: ${selectedProject.implementingOffice || 'Municipal Engineer Office'}
+
+EXECUTIVE SUMMARY
+Overall Progress: ${report.overallProgress.toFixed(2)}%
+Total Approved Updates: ${milestoneUpdates.length}
+Compilation Status: COMPLETE
+
+TIMELINE DIVISION COMPILATION
+Status: ✅ COMPLETE
+Updates Received: ${timelineData.length}
+${timelineData.map((item, index) => `
+Update ${index + 1}:
+- Activities & Deliverables: ${item.description}
+- Submitted by: ${item.submittedBy}
+- Date: ${new Date(item.submittedAt).toLocaleDateString()}
+`).join('')}
+
+BUDGET DIVISION COMPILATION
+Status: ✅ COMPLETE
+Updates Received: ${budgetData.length}
+Total Budget Utilized: ₱${budgetData.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toLocaleString()}
+${budgetData.map((item, index) => `
+Update ${index + 1}:
+- Used Budget: ₱${parseFloat(item.amount || 0).toLocaleString()}
+- Breakdown: ${item.breakdown || 'No breakdown provided'}
+- Submitted by: ${item.submittedBy}
+- Date: ${new Date(item.submittedAt).toLocaleDateString()}
+`).join('')}
+
+PHYSICAL DIVISION COMPILATION
+Status: ✅ COMPLETE
+Updates Received: ${physicalData.length}
+Total Attachments: ${physicalData.reduce((sum, item) => sum + (item.attachments?.length || 0), 0)}
+${physicalData.map((item, index) => `
+Update ${index + 1}:
+- Progress Requirements: ${item.description || 'No description provided'}
+- Supporting Documents: ${item.attachments?.length || 0} files
+- Submitted by: ${item.submittedBy}
+- Date: ${new Date(item.submittedAt).toLocaleDateString()}
+`).join('')}
+
+COMPILATION VERIFICATION
+✅ Timeline Division: Complete with ${timelineData.length} updates
+✅ Budget Division: Complete with ${budgetData.length} updates  
+✅ Physical Division: Complete with ${physicalData.length} updates
+✅ All divisions validated and approved by Implementing Office
+✅ Ready for Secretariat review and final approval
+
+This compilation report has been generated automatically based on approved EIU milestone updates and validated by the Implementing Office for submission to the Secretariat.
+      `.trim();
+
+      report.summary = {
+        projectName: selectedProject.name,
+        projectCode: selectedProject.projectCode,
+        compilationDate: currentDate,
+        overallProgress: report.overallProgress.toFixed(2) + '%',
+        totalUpdates: milestoneUpdates.length,
+        timelineUpdates: timelineData.length,
+        budgetUpdates: budgetData.length,
+        physicalUpdates: physicalData.length,
+        totalBudget: budgetData.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0),
+        totalAttachments: physicalData.reduce((sum, item) => sum + (item.attachments?.length || 0), 0)
+      };
+
+      report.isValid = true;
+      return report;
+
+    } catch (error) {
+      console.error('Error generating professional report:', error);
+      report.errorMessage = 'Error generating compilation report. Please try again.';
+      return report;
+    }
+  }
+
+  // Update compilation status with enhanced three-division validation and revision handling
   function updateCompilationStatus() {
-    if (!projectUpdates || projectUpdates.length === 0) {
-      document.getElementById('timelineStatus').textContent = 'Pending EIU Updates';
-      document.getElementById('budgetStatus').textContent = 'Pending EIU Updates';
-      document.getElementById('physicalStatus').textContent = 'Pending EIU Updates';
+    // First, check if project is under Secretariat review - if so, disable compilation
+    if (selectedProject && (selectedProject.workflowStatus === 'compiled_for_secretariat' || selectedProject.workflowStatus === 'iu_approved')) {
+      document.getElementById('timelineStatus').textContent = '⏳ Under Secretariat Review';
+      document.getElementById('budgetStatus').textContent = '⏳ Under Secretariat Review';
+      document.getElementById('physicalStatus').textContent = '⏳ Under Secretariat Review';
+      disableCompileButton();
       return;
     }
 
-    // For milestone updates, we need to check if there's at least one approved milestone update
-    // that contains all three divisions (timeline, budget, physical)
-    const approvedUpdates = projectUpdates.filter(update => update.status === 'iu_approved');
-    const hasApprovedMilestone = approvedUpdates.some(update => update.updateType === 'milestone');
-    
-    // Check if the approved milestone update contains all required divisions
-    let hasTimeline = false;
-    let hasBudget = false;
-    let hasPhysical = false;
-    
-    if (hasApprovedMilestone) {
-      const milestoneUpdate = approvedUpdates.find(update => update.updateType === 'milestone');
-      console.log('Found approved milestone update:', milestoneUpdate);
-      if (milestoneUpdate && milestoneUpdate.milestoneUpdates) {
-        try {
-          const milestones = milestoneUpdate.milestoneUpdates;
-          console.log('Milestone data:', milestones);
-          
-          // If we have milestone data, consider it as having all divisions
-          // since milestone updates typically contain timeline, budget, and physical info
-          if (milestones && milestones.length > 0) {
-            hasTimeline = true; // Milestone updates inherently contain timeline info
-            hasBudget = true;   // Milestone updates inherently contain budget info  
-            hasPhysical = true; // Milestone updates inherently contain physical info
-          } else {
-            // Fallback to specific field checking
-            hasTimeline = milestones.some(m => 
-              (m.plannedStartDate && m.plannedEndDate) || 
-              (m.startDate && m.endDate) ||
-              (m.dueDate) ||
-              (m.actualStartDate && m.actualEndDate)
-            );
-            hasBudget = milestones.some(m => m.budgetAllocation > 0);
-            hasPhysical = milestones.some(m => m.physicalDescription);
-          }
-          
-          console.log('Division checks:', { hasTimeline, hasBudget, hasPhysical });
-        } catch (e) {
-          console.error('Error parsing milestone updates:', e);
-        }
-      }
+    if (!projectUpdates || projectUpdates.length === 0) {
+      document.getElementById('timelineStatus').textContent = '⏳ Pending EIU Updates';
+      document.getElementById('budgetStatus').textContent = '⏳ Pending EIU Updates';
+      document.getElementById('physicalStatus').textContent = '⏳ Pending EIU Updates';
+      disableCompileButton();
+      return;
     }
 
-    document.getElementById('timelineStatus').textContent = hasTimeline ? '✅ Updated & Approved' : '⏳ Pending Approval';
-    document.getElementById('budgetStatus').textContent = hasBudget ? '✅ Updated & Approved' : '⏳ Pending Approval';
-    document.getElementById('physicalStatus').textContent = hasPhysical ? '✅ Updated & Approved' : '⏳ Pending Approval';
+    // Find approved milestone updates
+    const approvedUpdates = projectUpdates.filter(update => update.status === 'iu_approved');
+    const milestoneUpdates = approvedUpdates.filter(update => 
+      update.updateType === 'milestone' || update.milestoneId
+    );
 
-    // Enable/disable compile button
+    console.log('Compilation status check:', {
+      totalUpdates: projectUpdates.length,
+      approvedUpdates: approvedUpdates.length,
+      milestoneUpdates: milestoneUpdates.length,
+      projectWorkflowStatus: selectedProject?.workflowStatus
+    });
+
+    // Check each division separately with revision status handling
+    let timelineStatus = { hasData: false, status: '⏳ Pending EIU Updates', needsRevision: false };
+    let budgetStatus = { hasData: false, status: '⏳ Pending EIU Updates', needsRevision: false };
+    let physicalStatus = { hasData: false, status: '⏳ Pending EIU Updates', needsRevision: false };
+
+    milestoneUpdates.forEach(update => {
+      const milestoneData = update.milestoneUpdates || update;
+      
+      // Check Timeline Division
+      if (milestoneData.timeline?.description && milestoneData.timeline.description.trim() !== '') {
+        if (milestoneData.timelineStatus === 'revision_requested') {
+          timelineStatus = { hasData: true, status: '⚠️ Revision Requested by Secretariat', needsRevision: true };
+        } else if (milestoneData.timelineStatus === 'rejected') {
+          timelineStatus = { hasData: true, status: '❌ Rejected by Secretariat', needsRevision: false };
+        } else if (milestoneData.timelineStatus === 'approved') {
+          timelineStatus = { hasData: true, status: '✅ Updated & Approved', needsRevision: false };
+        } else {
+          timelineStatus = { hasData: true, status: '✅ Updated & Approved', needsRevision: false };
+        }
+      }
+      
+      // Check Budget Division
+      if ((milestoneData.budget?.amount && parseFloat(milestoneData.budget.amount) > 0) ||
+          (milestoneData.budget?.breakdown && milestoneData.budget.breakdown.trim() !== '')) {
+        if (milestoneData.budgetStatus === 'revision_requested') {
+          budgetStatus = { hasData: true, status: '⚠️ Revision Requested by Secretariat', needsRevision: true };
+        } else if (milestoneData.budgetStatus === 'rejected') {
+          budgetStatus = { hasData: true, status: '❌ Rejected by Secretariat', needsRevision: false };
+        } else if (milestoneData.budgetStatus === 'approved') {
+          budgetStatus = { hasData: true, status: '✅ Updated & Approved', needsRevision: false };
+        } else {
+          budgetStatus = { hasData: true, status: '✅ Updated & Approved', needsRevision: false };
+        }
+      }
+      
+      // Check Physical Division
+      if ((milestoneData.physical?.description && milestoneData.physical.description.trim() !== '') ||
+          (milestoneData.uploadedFiles && milestoneData.uploadedFiles.length > 0)) {
+        if (milestoneData.physicalStatus === 'revision_requested') {
+          physicalStatus = { hasData: true, status: '⚠️ Revision Requested by Secretariat', needsRevision: true };
+        } else if (milestoneData.physicalStatus === 'rejected') {
+          physicalStatus = { hasData: true, status: '❌ Rejected by Secretariat', needsRevision: false };
+        } else if (milestoneData.physicalStatus === 'approved') {
+          physicalStatus = { hasData: true, status: '✅ Updated & Approved', needsRevision: false };
+        } else {
+          physicalStatus = { hasData: true, status: '✅ Updated & Approved', needsRevision: false };
+        }
+      }
+    });
+
+    // Update status display
+    document.getElementById('timelineStatus').textContent = timelineStatus.status;
+    document.getElementById('budgetStatus').textContent = budgetStatus.status;
+    document.getElementById('physicalStatus').textContent = physicalStatus.status;
+
+    // Enable/disable compile button based on all three divisions being complete and no revisions needed
+    const allDivisionsComplete = timelineStatus.hasData && budgetStatus.hasData && physicalStatus.hasData;
+    const anyRevisionNeeded = timelineStatus.needsRevision || budgetStatus.needsRevision || physicalStatus.needsRevision;
+    
+    console.log('Division completion status:', {
+      timeline: timelineStatus.hasData,
+      budget: budgetStatus.hasData,
+      physical: physicalStatus.hasData,
+      allComplete: allDivisionsComplete,
+      anyRevisionNeeded: anyRevisionNeeded,
+      projectWorkflowStatus: selectedProject?.workflowStatus
+    });
+
+    if (allDivisionsComplete && !anyRevisionNeeded) {
+      enableCompileButton();
+    } else {
+      disableCompileButton();
+    }
+  }
+
+  // Enable compile button
+  function enableCompileButton() {
     const compileButton = document.querySelector('button[onclick="compileAndSubmitToSecretariat()"]');
     if (compileButton) {
-      if (hasTimeline && hasBudget && hasPhysical) {
-        compileButton.disabled = false;
-        compileButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        compileButton.classList.add('bg-green-600', 'hover:bg-green-700');
-      } else {
-        compileButton.disabled = true;
-        compileButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-        compileButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+      compileButton.disabled = false;
+      compileButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+      compileButton.classList.add('bg-green-600', 'hover:bg-green-700');
+      compileButton.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Compile & Submit to Secretariat
+      `;
+    }
+  }
+
+  // Disable compile button
+  function disableCompileButton() {
+    const compileButton = document.querySelector('button[onclick="compileAndSubmitToSecretariat()"]');
+    if (compileButton) {
+      compileButton.disabled = true;
+      compileButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+      compileButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+      
+      // Show appropriate message based on project status
+      let buttonText = 'Complete All Divisions First';
+      let icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>`;
+      
+      if (selectedProject) {
+        if (selectedProject.workflowStatus === 'compiled_for_secretariat' || selectedProject.workflowStatus === 'iu_approved') {
+          buttonText = 'Under Secretariat Review';
+          icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>`;
+        } else if (!projectUpdates || projectUpdates.length === 0) {
+          buttonText = 'Waiting for EIU Updates';
+          icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>`;
+        }
       }
+      
+      compileButton.innerHTML = `
+        ${icon}
+        ${buttonText}
+      `;
     }
   }
 
@@ -1061,6 +2338,293 @@ loading = false;
     window.location.reload();
   }
 
+  // ===== HORIZONTAL TIMELINE FUNCTIONS =====
+  
+  // Load timeline for the selected project
+  async function loadProjectTimeline() {
+    if (!selectedProject) return;
+    
+    try {
+      const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      if (!token) return;
+      
+      console.log('Loading timeline for project:', selectedProject.id);
+      
+      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/milestones`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.milestones) {
+          await renderProjectTimeline(selectedProject, data.milestones);
+        } else {
+          console.log('No milestones found for project');
+          hideTimelineSection();
+        }
+      } else {
+        console.error('Failed to load milestones:', response.status);
+        hideTimelineSection();
+      }
+    } catch (error) {
+      console.error('Error loading project timeline:', error);
+      hideTimelineSection();
+    }
+  }
+  
+  // Render timeline for a project
+  async function renderProjectTimeline(project, milestones) {
+    const timelineSection = document.getElementById('horizontalTimelineSection');
+    const timelineContainer = document.getElementById('projectTimelineContainer');
+    const startDateSpan = document.getElementById('timelineStartDate');
+    const endDateSpan = document.getElementById('timelineEndDate');
+    
+    if (!timelineSection || !timelineContainer || !startDateSpan || !endDateSpan) {
+      console.error('Timeline elements not found');
+      return;
+    }
+    
+    // Show timeline section
+    timelineSection.style.display = 'block';
+    
+    // Update date labels
+    if (project.startDate) {
+      startDateSpan.textContent = new Date(project.startDate).toLocaleDateString();
+    }
+    if (project.endDate) {
+      endDateSpan.textContent = new Date(project.endDate).toLocaleDateString();
+    }
+    
+    // Get timeline container
+    const milestonesContainer = timelineContainer.querySelector('.timeline-milestones');
+    if (!milestonesContainer) return;
+    
+    // Clear existing milestones
+    milestonesContainer.innerHTML = '';
+    
+    if (!project.startDate || !project.endDate) {
+      console.log('Project missing start or end date');
+      return;
+    }
+    
+    // Fetch progress data if not available
+    let progressData = project.progress;
+    if (!progressData) {
+      try {
+        const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        const timestamp = new Date().getTime();
+        const progressResponse = await fetch(`http://localhost:3000/api/projects/progress/${project.id}?_t=${timestamp}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (progressResponse.ok) {
+          const progressResult = await progressResponse.json();
+          if (progressResult.success) {
+            progressData = progressResult.data.progress;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching progress data in renderProjectTimeline:', error);
+      }
+    }
+    
+    // Use overall progress data from the project object (already available)
+    const timelineProgress = progressData?.overall || 0;
+    
+
+    
+    // Create progress bar element
+    const progressBar = document.createElement('div');
+    progressBar.className = 'timeline-progress-bar';
+    progressBar.style.width = '0%'; // Start at 0%
+    progressBar.style.zIndex = '1'; // Ensure it's above the track but below milestones
+    progressBar.style.position = 'absolute';
+    progressBar.style.top = '0';
+    progressBar.style.left = '0';
+    progressBar.style.height = '100%';
+    progressBar.style.backgroundColor = '#3b82f6';
+    progressBar.style.borderRadius = '4px';
+    progressBar.style.transition = 'width 1s ease-in-out';
+    
+              milestonesContainer.appendChild(progressBar);
+          
+          // Create progress indicator icon
+          const progressIndicator = document.createElement('div');
+          progressIndicator.className = 'progress-indicator';
+          progressIndicator.innerHTML = `
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+          `;
+          progressIndicator.style.position = 'absolute';
+          progressIndicator.style.top = '50%';
+          progressIndicator.style.left = '0%';
+          progressIndicator.style.width = '20px';
+          progressIndicator.style.height = '20px';
+          progressIndicator.style.backgroundColor = '#1d4ed8';
+          progressIndicator.style.borderRadius = '50%';
+          progressIndicator.style.border = '2px solid white';
+          progressIndicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+          progressIndicator.style.zIndex = '3';
+          progressIndicator.style.transition = 'left 1s ease-in-out, transform 0.2s ease';
+          progressIndicator.style.cursor = 'pointer';
+          progressIndicator.style.display = 'flex';
+          progressIndicator.style.alignItems = 'center';
+          progressIndicator.style.justifyContent = 'center';
+          progressIndicator.style.color = 'white';
+          progressIndicator.style.transform = 'translateY(-50%) translateX(-50%)';
+          
+          // Add hover tooltip with detailed information
+          const tooltipText = `
+            Project: ${project.name}
+            Overall Progress: ${timelineProgress.toFixed(2)}%
+            Timeline Progress: 50%
+            Budget Progress: ${progressData?.budget || 0}%
+            Physical Progress: ${progressData?.physical || 0}%
+            Status: ${project.status || 'ONGOING'}
+          `.trim();
+          
+
+          
+
+          
+          progressIndicator.setAttribute('title', tooltipText);
+          
+          milestonesContainer.appendChild(progressIndicator);
+          
+          // Animate the progress bar and indicator
+          setTimeout(() => {
+            progressBar.style.width = `${timelineProgress}%`;
+            // Position indicator at the end of the progress bar, centered
+            progressIndicator.style.left = `${timelineProgress}%`;
+          }, 100);
+    
+              // Update progress text
+          const progressText = document.getElementById('horizontalTimelineProgressText');
+          if (progressText) {
+            progressText.textContent = `Overall Progress: ${timelineProgress.toFixed(2)}%`;
+          }
+    
+
+    
+    const projectStart = new Date(project.startDate);
+    const projectEnd = new Date(project.endDate);
+    const totalDuration = projectEnd - projectStart;
+    
+    console.log('Rendering timeline with milestones:', milestones.length);
+    
+    milestones.forEach(milestone => {
+      // Use milestone due date as the timeline position
+      if (milestone.dueDate) {
+        const milestoneDate = new Date(milestone.dueDate);
+        const position = ((milestoneDate - projectStart) / totalDuration) * 100;
+        
+        // Ensure position is within bounds
+        const clampedPosition = Math.max(0, Math.min(100, position));
+        
+        const milestoneElement = document.createElement('div');
+        milestoneElement.className = `timeline-milestone ${milestone.status || 'pending'}`;
+        milestoneElement.style.left = `${clampedPosition}%`;
+        milestoneElement.style.width = '8px'; // Fixed width for milestone markers
+        milestoneElement.style.marginLeft = '-4px'; // Center the marker
+        milestoneElement.setAttribute('data-milestone', JSON.stringify(milestone));
+        
+        // Add hover popup
+        milestoneElement.addEventListener('mouseenter', (e) => showTimelinePopup(e, milestone));
+        milestoneElement.addEventListener('mouseleave', hideTimelinePopup);
+        
+        milestonesContainer.appendChild(milestoneElement);
+      }
+    });
+  }
+  
+  // Show timeline popup
+  function showTimelinePopup(event, milestone) {
+    const popup = document.createElement('div');
+    popup.className = 'timeline-popup';
+    popup.innerHTML = `
+      <div class="font-semibold text-gray-800 mb-2">${milestone.title}</div>
+      <div class="text-sm text-gray-600 mb-1">${milestone.description || 'No description'}</div>
+      <div class="text-xs text-gray-500">
+        <div>Due Date: ${milestone.dueDate ? new Date(milestone.dueDate).toLocaleDateString() : 'Not set'}</div>
+        <div>Status: ${milestone.status ? milestone.status.replace('_', ' ') : 'Pending'}</div>
+        <div>Weight: ${milestone.weight || 0}%</div>
+        <div>Budget: ₱${parseFloat(milestone.plannedBudget || 0).toLocaleString()}</div>
+      </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    const rect = event.target.getBoundingClientRect();
+    popup.style.left = `${rect.left + rect.width / 2 - popup.offsetWidth / 2}px`;
+    popup.style.top = `${rect.top - popup.offsetHeight - 10}px`;
+    
+    setTimeout(() => popup.classList.add('show'), 10);
+  }
+  
+  // Hide timeline popup
+  function hideTimelinePopup() {
+    const popup = document.querySelector('.timeline-popup');
+    if (popup) {
+      popup.classList.remove('show');
+      setTimeout(() => popup.remove(), 300);
+    }
+  }
+  
+  // Hide timeline section
+  function hideTimelineSection() {
+    const timelineSection = document.getElementById('horizontalTimelineSection');
+    if (timelineSection) {
+      timelineSection.style.display = 'none';
+    }
+  }
+  
+  // Refresh project timeline
+  function refreshProjectTimeline() {
+    if (selectedProject) {
+      loadProjectTimeline();
+    }
+  }
+
+  // Toggle milestones section visibility
+  function toggleMilestonesSection() {
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    const toggleIcon = document.getElementById('milestonesToggleIcon');
+    const toggleText = document.getElementById('milestonesToggleText');
+    
+    if (milestonesContainer && toggleIcon && toggleText) {
+      const isVisible = milestonesContainer.style.display !== 'none';
+      
+      if (isVisible) {
+        // Hide the section
+        milestonesContainer.style.display = 'none';
+        milestonesContainer.style.maxHeight = '0';
+        milestonesContainer.style.overflow = 'hidden';
+        toggleIcon.style.transform = 'rotate(-90deg)';
+        toggleText.textContent = 'Show';
+      } else {
+        // Show the section
+        milestonesContainer.style.display = 'block';
+        milestonesContainer.style.maxHeight = 'none';
+        milestonesContainer.style.overflow = 'visible';
+        toggleIcon.style.transform = 'rotate(0deg)';
+        toggleText.textContent = 'Hide';
+      }
+    }
+  }
+
+  // View project details function
+  async function viewProjectDetails(projectId) {
+    try {
+      console.log('Viewing project details for ID:', projectId);
+      // For now, just select the project to show its timeline
+      selectProject(projectId);
+    } catch (error) {
+      console.error('Error viewing project details:', error);
+      alert('Error viewing project details: ' + error.message);
+    }
+  }
+
   // Make functions globally available
   window.selectProject = selectProject;
   window.approveUpdate = approveUpdate;
@@ -1068,4 +2632,7 @@ loading = false;
   window.compileAndSubmitToSecretariat = compileAndSubmitToSecretariat;
   window.loadProgressTimeline = loadProgressTimeline;
   window.refreshUpdates = refreshUpdates;
+  window.refreshProjectTimeline = refreshProjectTimeline;
+  window.toggleMilestonesSection = toggleMilestonesSection;
+  window.viewProjectDetails = viewProjectDetails;
 </script> 

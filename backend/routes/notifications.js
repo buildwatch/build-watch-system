@@ -42,6 +42,12 @@ router.get('/', authenticateToken, async (req, res) => {
       offset: parseInt(offset)
     });
 
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     res.json({
       success: true,
       notifications,
@@ -75,6 +81,12 @@ router.get('/count', authenticateToken, async (req, res) => {
       }
     });
 
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     res.json({
       success: true,
       count
@@ -177,9 +189,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    await notification.update({
-      status: 'Deleted'
-    });
+    await notification.destroy();
 
     res.json({
       success: true,
@@ -248,9 +258,70 @@ router.get('/recent-activity', authenticateToken, async (req, res) => {
   }
 });
 
+// Create notification for user
+async function createNotification(userId, title, message, type = 'Info', category = 'System', entityType = null, entityId = null, priority = 'Medium') {
+  try {
+    const notification = await Notification.create({
+      userId,
+      title,
+      message,
+      type,
+      category,
+      entityType,
+      entityId,
+      priority,
+      isRead: false,
+      status: 'Active'
+    });
+    
+    console.log(`Notification created for user ${userId}: ${title}`);
+    return notification;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return null;
+  }
+}
+
+// Create notification for multiple users (for system-wide notifications)
+async function createNotificationForUsers(userIds, title, message, type = 'Info', category = 'System', entityType = null, entityId = null, priority = 'Medium') {
+  try {
+    const notifications = [];
+    for (const userId of userIds) {
+      const notification = await createNotification(userId, title, message, type, category, entityType, entityId, priority);
+      if (notification) {
+        notifications.push(notification);
+      }
+    }
+    return notifications;
+  } catch (error) {
+    console.error('Error creating notifications for users:', error);
+    return [];
+  }
+}
+
+// Create notification for users by role
+async function createNotificationForRole(role, title, message, type = 'Info', category = 'System', entityType = null, entityId = null, priority = 'Medium') {
+  try {
+    const users = await User.findAll({
+      where: { 
+        role: role,
+        status: 'active'
+      },
+      attributes: ['id']
+    });
+    
+    const userIds = users.map(user => user.id);
+    return await createNotificationForUsers(userIds, title, message, type, category, entityType, entityId, priority);
+  } catch (error) {
+    console.error('Error creating notifications for role:', error);
+    return [];
+  }
+}
+
 // Helper functions for activity conversion
 function getActivityTitle(action) {
   const titles = {
+    'CREATE_USER': 'New User Account Created',
     'PROJECT_CREATED': 'New Project Created',
     'PROJECT_UPDATED': 'Project Updated',
     'VALIDATION_REQUIRED': 'Validation Required',
@@ -265,6 +336,7 @@ function getActivityTitle(action) {
 
 function getActivityType(action) {
   const types = {
+    'CREATE_USER': 'Success',
     'PROJECT_CREATED': 'Success',
     'PROJECT_UPDATED': 'Info',
     'VALIDATION_REQUIRED': 'Warning',
@@ -279,6 +351,7 @@ function getActivityType(action) {
 
 function getActivityCategory(action) {
   const categories = {
+    'CREATE_USER': 'User Management',
     'PROJECT_CREATED': 'Project',
     'PROJECT_UPDATED': 'Project',
     'VALIDATION_REQUIRED': 'Validation',
@@ -291,4 +364,10 @@ function getActivityCategory(action) {
   return categories[action] || 'System';
 }
 
-module.exports = router; 
+// Export notification creation functions
+module.exports = {
+  router,
+  createNotification,
+  createNotificationForUsers,
+  createNotificationForRole
+}; 

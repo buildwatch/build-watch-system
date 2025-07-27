@@ -39,8 +39,9 @@ router.get('/stats', async (req, res) => {
     for (const project of allProjects) {
       try {
         const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'executive');
-        const projectProgress = progress?.overallProgress || project.overallProgress || 0;
-        utilizedBudget += (parseFloat(project.totalBudget) || 0) * (projectProgress / 100);
+        // Use budget division progress for utilized budget calculation
+        const budgetProgress = progress?.progress?.budget || 0;
+        utilizedBudget += (parseFloat(project.totalBudget) || 0) * (budgetProgress / 100);
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);
         // Fallback to database progress
@@ -129,27 +130,40 @@ router.get('/featured-projects', async (req, res) => {
     // Calculate progress for each project using ProgressCalculationService
     const ProgressCalculationService = require('../services/progressCalculationService');
     const projectsWithProgress = await Promise.all(featuredProjects.map(async (project) => {
-      const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'executive');
-      return {
-        ...project.toJSON(),
-        progress
-      };
+      try {
+        const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
+        return {
+          ...project.toJSON(),
+          progress
+        };
+      } catch (error) {
+        console.error(`Error calculating progress for project ${project.name}:`, error);
+        return {
+          ...project.toJSON(),
+          progress: { overall: 0 }
+        };
+      }
     }));
 
     // Format projects for frontend
-    const formattedProjects = projectsWithProgress.map(project => ({
-      id: project.id,
-      name: project.name,
-      location: project.location || 'Santa Cruz, Laguna',
-      status: project.status,
-      startDate: project.startDate,
-      endDate: project.endDate,
-      budget: project.totalBudget,
-      progress: project.progress?.overallProgress || project.overallProgress || 0,
-      implementingOffice: project.implementingOffice?.name || 'Municipal Government',
-      description: project.description,
-      category: project.category
-    }));
+    const formattedProjects = projectsWithProgress.map(project => {
+      // Use the progress data directly from the calculation service
+      const progressValue = project.progress?.progress?.overall || 0;
+      
+      return {
+        id: project.id,
+        name: project.name,
+        location: project.location || 'Santa Cruz, Laguna',
+        status: project.status,
+        startDate: project.startDate,
+        endDate: project.endDate,
+        budget: project.totalBudget,
+        progress: progressValue,
+        implementingOffice: project.implementingOffice?.name || 'Municipal Government',
+        description: project.description,
+        category: project.category
+      };
+    });
 
     res.json({
       success: true,
@@ -238,14 +252,24 @@ router.get('/project-locations', async (req, res) => {
       ]
     });
 
+    // Calculate progress for each project using ProgressCalculationService
+    const ProgressCalculationService = require('../services/progressCalculationService');
+    const projectsWithProgress = await Promise.all(projects.map(async (project) => {
+      const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
+      return {
+        ...project.toJSON(),
+        progress
+      };
+    }));
+
     // Format for map display
-    const locations = projects.map(project => ({
+    const locations = projectsWithProgress.map(project => ({
       id: project.id,
       name: project.name,
       location: project.location,
       status: project.status,
       budget: project.totalBudget,
-      progress: project.overallProgress || 0,
+      progress: project.progress?.progress?.overall || project.progress?.overall || project.overallProgress || 0,
       startDate: project.startDate,
       endDate: project.endDate,
       category: project.category

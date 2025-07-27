@@ -382,6 +382,12 @@ module.exports = (sequelize) => {
       foreignKey: 'projectId',
       as: 'uploads'
     });
+
+    // Project has many validations
+    Project.hasMany(models.ProjectValidation, {
+      foreignKey: 'projectId',
+      as: 'validations'
+    });
   };
 
   return Project;

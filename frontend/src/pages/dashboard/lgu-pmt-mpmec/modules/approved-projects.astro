@@ -63,6 +63,136 @@ loading = false;
 
 <Layout title="Approved Projects | MPMEC Dashboard">
   <LGUPMTLayout>
+    <style>
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* Modern Tab Button Design */
+      .tab-button {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 140px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        flex-grow: 0;
+        border: none;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .tab-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .tab-button:hover::before {
+        left: 100%;
+      }
+
+      .tab-button.active {
+        background: linear-gradient(135deg, #FE5353, #E54545);
+        color: white;
+        font-weight: 600;
+      }
+
+      .tab-button:not(.active):hover {
+        background: #f8f9fa;
+        transform: translateY(-1px);
+      }
+
+      /* Sink and pop animation for tab switching */
+      .tab-button.switching {
+        animation: sinkAndPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes sinkAndPop {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(2px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      /* Tab Content Animations */
+      .tab-content {
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      .tab-content.fade-in {
+        animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .tab-content.fade-out {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Card Grid Animation */
+      .card-grid {
+        animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Staggered Card Animation */
+      .project-card {
+        animation: cardSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      .project-card:nth-child(1) { animation-delay: 0.1s; }
+      .project-card:nth-child(2) { animation-delay: 0.2s; }
+      .project-card:nth-child(3) { animation-delay: 0.3s; }
+      .project-card:nth-child(4) { animation-delay: 0.4s; }
+      .project-card:nth-child(5) { animation-delay: 0.5s; }
+      .project-card:nth-child(6) { animation-delay: 0.6s; }
+
+      @keyframes cardSlideIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
     <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
       <!-- Header -->
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
@@ -217,49 +347,150 @@ loading = false;
           <p class="text-gray-600 mb-6">No projects have been submitted to the Secretariat yet. Projects will appear here once they are submitted.</p>
         </div>
       ) : (
-        <!-- Projects Table -->
+        <!-- Projects View Tabs -->
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <!-- Tab Navigation -->
           <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-800">Approved Project List</h2>
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-gray-800">Approved Project List</h2>
+              <div class="flex bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" style="width: 280px;">
+                <button id="tableTab" class="tab-button text-sm font-medium text-gray-900 bg-[#FE5353] text-white transition-all duration-300 flex items-center gap-2 active relative">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                  Table View
+                </button>
+                <button id="cardTab" class="tab-button text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-300 flex items-center gap-2 relative">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                  </svg>
+                  Card View
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Date</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="projectsTableBody" class="bg-white divide-y divide-gray-200">
-                {approvedProjects.map(project => {
-                  const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-                  const budget = parseFloat(project.totalBudget) || 0;
-                  const timelineProgress = parseFloat(project.timelineProgress) || 0;
-                  const startDate = project.startDate ? new Date(project.startDate) : null;
-                  const endDate = project.endDate ? new Date(project.endDate) : null;
-                  
-                  return (
-                    <tr class="hover:bg-gray-50">
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div class="text-sm font-medium text-gray-900">{project.name}</div>
-                          <div class="text-sm text-gray-500">{project.projectCode}</div>
+
+          <!-- Table View Content -->
+          <div id="tableView" class="tab-content block">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="projectsTableBody" class="bg-white divide-y divide-gray-200">
+                  {approvedProjects.map(project => {
+                    const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
+                    const budget = parseFloat(project.totalBudget) || 0;
+                    const timelineProgress = parseFloat(project.timelineProgress) || 0;
+                    const startDate = project.startDate ? new Date(project.startDate) : null;
+                    const endDate = project.endDate ? new Date(project.endDate) : null;
+                    
+                    return (
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div class="text-sm font-medium text-gray-900">{project.name}</div>
+                            <div class="text-sm text-gray-500">{project.projectCode}</div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-900">{project.implementingOfficeName}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-900">₱{budget.toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                            project.status === 'complete' ? 'bg-green-100 text-green-700' :
+                            project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
+                            project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {project.status}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                              <div class={`h-2 rounded-full ${
+                                project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
+                              }`} style={`width: ${progress}%`}></div>
+                            </div>
+                            <span class="text-sm text-gray-900">{progress.toFixed(1)}%</span>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                                                       <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                             <div class={`h-2 rounded-full ${
+                               timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                             }`} style={`width: ${Math.min(timelineProgress, 100)}%`}></div>
+                           </div>
+                            <span class="text-sm text-gray-900">{timelineProgress.toFixed(1)}%</span>
+                          </div>
+                          <div class="text-xs text-gray-500 mt-1">
+                            {startDate ? startDate.toLocaleDateString() : 'N/A'} - {endDate ? endDate.toLocaleDateString() : 'N/A'}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {(() => {
+                            // Try multiple fields for approval date
+                            const approvalDate = project.secretariatApprovalDate || project.approvalDate;
+                            if (approvalDate) {
+                              return new Date(approvalDate).toLocaleDateString();
+                            }
+                            // If project is approved but no specific approval date, use updatedAt
+                            if (project.approvedBySecretariat === true || project.workflowStatus === 'secretariat_approved') {
+                              return project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : 'N/A';
+                            }
+                            return 'N/A';
+                          })()}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button onclick={`viewProjectDetails('${project.id}')`} class="text-[#FE5353] hover:text-[#E54545] mr-3">
+                            View
+                          </button>
+                          <button onclick={`viewProgress('${project.id}')`} class="text-blue-600 hover:text-blue-800">
+                            Progress
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Card View Content -->
+          <div id="cardView" class="tab-content hidden p-6">
+            <div id="projectsCardBody" class="card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {approvedProjects.map(project => {
+                const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
+                const budget = parseFloat(project.totalBudget) || 0;
+                const timelineProgress = parseFloat(project.timelineProgress) || 0;
+                const startDate = project.startDate ? new Date(project.startDate) : null;
+                const endDate = project.endDate ? new Date(project.endDate) : null;
+                
+                return (
+                  <div class="project-card bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <div class="p-6">
+                      <!-- Project Header -->
+                      <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                          <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">{project.name}</h3>
+                          <p class="text-sm text-gray-500">{project.projectCode}</p>
                         </div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{project.implementingOfficeName}</div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">₱{budget.toLocaleString()}</div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                        <span class={`px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
                           project.status === 'complete' ? 'bg-green-100 text-green-700' :
                           project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
                           project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -267,47 +498,73 @@ loading = false;
                         }`}>
                           {project.status}
                         </span>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                          <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div class={`h-2 rounded-full ${
+                      </div>
+
+                      <!-- Project Info -->
+                      <div class="space-y-3 mb-4">
+                        <div class="flex items-center text-sm text-gray-600">
+                          <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                          </svg>
+                          <span class="truncate">{project.implementingOfficeName}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                          <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                          </svg>
+                          <span>₱{budget.toLocaleString()}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                          <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                          <span>{startDate ? startDate.toLocaleDateString() : 'N/A'} - {endDate ? endDate.toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                      </div>
+
+                      <!-- Progress Bars -->
+                      <div class="space-y-3 mb-4">
+                        <div>
+                          <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Overall Progress</span>
+                            <span class="font-medium text-gray-900">{progress.toFixed(1)}%</span>
+                          </div>
+                          <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class={`h-2 rounded-full transition-all duration-300 ${
                               project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
                             }`} style={`width: ${progress}%`}></div>
                           </div>
-                          <span class="text-sm text-gray-900">{progress.toFixed(1)}%</span>
                         </div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                                                   <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                           <div class={`h-2 rounded-full ${
-                             timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                           }`} style={`width: ${Math.min(timelineProgress, 100)}%`}></div>
-                         </div>
-                          <span class="text-sm text-gray-900">{timelineProgress.toFixed(1)}%</span>
+                        <div>
+                          <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Timeline</span>
+                            <span class="font-medium text-gray-900">{timelineProgress.toFixed(1)}%</span>
+                          </div>
+                          <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class={`h-2 rounded-full transition-all duration-300 ${
+                              timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                            }`} style={`width: ${Math.min(timelineProgress, 100)}%`}></div>
+                          </div>
                         </div>
-                        <div class="text-xs text-gray-500 mt-1">
-                          {startDate ? startDate.toLocaleDateString() : 'N/A'} - {endDate ? endDate.toLocaleDateString() : 'N/A'}
-                        </div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {project.secretariatApprovalDate ? new Date(project.secretariatApprovalDate).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick={`viewProjectDetails('${project.id}')`} class="text-[#FE5353] hover:text-[#E54545] mr-3">
-                          View
+                      </div>
+
+                      <!-- Action Buttons -->
+                      <div class="flex space-x-2">
+                        <button onclick={`viewProjectDetails('${project.id}')`} class="flex-1 px-3 py-2 bg-[#FE5353] text-white text-sm font-medium rounded-lg hover:bg-[#E54545] transition-colors duration-200">
+                          View Details
                         </button>
-                        <button onclick={`viewProgress('${project.id}')`} class="text-blue-600 hover:text-blue-800">
+                        <button onclick={`viewProgress('${project.id}')`} class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
                           Progress
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
+          <!-- Footer -->
           <div class="px-6 py-4 border-t border-gray-200">
             <div class="flex items-center justify-between">
               <p class="text-sm text-gray-700">Showing <span id="showingCount">{approvedProjects.length}</span> of <span id="totalCount">{approvedProjects.length}</span> projects</p>
@@ -386,6 +643,20 @@ loading = false;
   // Initialize the page when the script loads
   initializePage();
 
+  // Add event listeners for tab switching
+  document.addEventListener('DOMContentLoaded', function() {
+    const tableTab = document.getElementById('tableTab');
+    const cardTab = document.getElementById('cardTab');
+    
+    if (tableTab) {
+      tableTab.addEventListener('click', switchToTableView);
+    }
+    
+    if (cardTab) {
+      cardTab.addEventListener('click', switchToCardView);
+    }
+  });
+
   // Load projects function
   async function loadProjects() {
     try {
@@ -413,11 +684,7 @@ loading = false;
     }
   }
 
-  // Update projects UI
-  function updateProjectsUI() {
-    console.log('Projects updated:', projects);
-    updateProjectsTable(projects);
-  }
+
 
   // Refresh projects
   async function refreshProjects() {
@@ -446,6 +713,9 @@ loading = false;
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
+          console.log('=== PROJECT DETAILS FETCHED ===');
+          console.log('Project data from API:', data.project);
+          console.log('Project keys:', Object.keys(data.project));
           showProjectModal(data.project);
         }
       }
@@ -472,74 +742,317 @@ loading = false;
 
   // Show project modal
   function showProjectModal(project) {
+    console.log('=== RENDERING PROJECT MODAL ===');
+    console.log('Project data:', project);
+    
     const modal = document.getElementById('projectModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalContent = document.getElementById('modalContent');
     
-    modalTitle.textContent = project.name;
+    // Helper function to safely extract numeric progress values
+    function getProgressValue(project, field, fallback = 0) {
+      if (typeof project[field] === 'number') {
+        return project[field];
+      }
+      if (project.progress && typeof project.progress[field] === 'number') {
+        return project.progress[field];
+      }
+      const alternativeFields = {
+        'overall': ['overallProgress', 'progress', 'totalProgress'],
+        'timeline': ['timelineProgress', 'scheduleProgress'],
+        'budget': ['budgetProgress', 'financialProgress'],
+        'physical': ['physicalProgress', 'completionProgress']
+      };
+      for (const altField of alternativeFields[field] || []) {
+        if (typeof project[altField] === 'number') {
+          return project[altField];
+        }
+      }
+      return fallback;
+    }
+    
+    // Safely handle missing or undefined data
+    const safeData = {
+      projectCode: project.projectCode || project.code || project.id || 'N/A',
+      status: project.status || project.projectStatus || project.state || 'Unknown',
+      category: project.category || project.projectCategory || project.type || 'N/A',
+      implementingOfficeName: project.implementingOfficeName || project.implementingOffice || project.office || project.department || 'N/A',
+      totalBudget: parseFloat(project.totalBudget || project.budget || project.amount || project.cost || 0),
+      amountSpent: parseFloat(project.amountSpent || project.spentAmount || project.expendedAmount || 0),
+      fundingSource: project.fundingSource || project.funding || project.source || 'Not specified',
+      approvedBySecretariat: project.approvedBySecretariat || project.secretariatApproved || false,
+      secretariatApprovalDate: project.secretariatApprovalDate || project.approvalDate || null,
+      overallProgress: getProgressValue(project, 'overall', 0),
+      description: project.description || project.projectDescription || project.details || project.summary || 'No description available',
+      expectedOutputs: project.expectedOutputs || project.outputs || project.deliverables || 'No expected outputs specified',
+      targetBeneficiaries: project.targetBeneficiaries || project.beneficiaries || project.stakeholders || 'No target beneficiaries specified',
+      startDate: project.startDate || project.projectStartDate || project.beginDate || new Date(),
+      endDate: project.endDate || project.projectEndDate || project.finishDate || null,
+      createdAt: project.createdAt || project.created || project.dateCreated || new Date(),
+      updatedAt: project.updatedAt || project.updated || project.lastModified || new Date(),
+      timelineProgress: getProgressValue(project, 'timeline', 0),
+      budgetProgress: getProgressValue(project, 'budget', 0),
+      physicalProgress: getProgressValue(project, 'physical', 0)
+    };
+    
+    // Status logic (consistent with other modules)
+    let statusText, statusClass;
+    if (safeData.status && safeData.status.toLowerCase() === 'completed') {
+      statusText = 'COMPLETED';
+      statusClass = 'bg-green-100 text-green-800';
+    } else if (safeData.approvedBySecretariat === true || safeData.approvedBySecretariat === 'true' || safeData.approvedBySecretariat === 1) {
+      statusText = 'ONGOING';
+      statusClass = 'bg-blue-100 text-blue-800';
+    } else {
+      statusText = 'PENDING';
+      statusClass = 'bg-yellow-100 text-yellow-800';
+    }
+    
+    modalTitle.textContent = project.name || project.projectName || 'Project Details';
     modalContent.innerHTML = `
       <div class="space-y-6">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <h4 class="font-medium text-gray-900">Project Code</h4>
-            <p class="text-gray-600">${project.projectCode}</p>
+        <!-- Project Overview Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Basic Info Card -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            <h4 class="font-bold text-blue-900 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Project Overview
+            </h4>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Project Code</p>
+                <p class="text-lg font-bold text-blue-900">${safeData.projectCode}</p>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Status</p>
+                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">${statusText}</span>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Category</p>
+                <p class="text-lg font-bold text-blue-900 capitalize">${safeData.category}</p>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Implementing Office</p>
+                <p class="text-sm font-semibold text-blue-900">${safeData.implementingOfficeName}</p>
+              </div>
+              <div>
+                <p class="text-sm text-blue-700 font-medium">Approval Date</p>
+                <p class="text-sm font-semibold text-blue-900">${safeData.secretariatApprovalDate ? new Date(safeData.secretariatApprovalDate).toLocaleDateString() : 'Not approved yet'}</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Status</h4>
-            <p class="text-gray-600 capitalize">${project.status}</p>
+
+          <!-- Budget & Progress Card -->
+          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+            <h4 class="font-bold text-green-900 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+              Budget & Progress
+            </h4>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-green-700 font-medium">Total Budget</p>
+                <p class="text-xl font-bold text-green-900">₱${safeData.totalBudget.toLocaleString()}</p>
+              </div>
+              <div>
+                <p class="text-sm text-green-700 font-medium">Overall Progress</p>
+                <div class="w-full bg-green-200 rounded-full h-3 mt-2">
+                  <div class="bg-green-600 h-3 rounded-full transition-all duration-500" style="width: ${safeData.overallProgress}%"></div>
+                </div>
+                <p class="text-sm font-semibold text-green-900 mt-1">${safeData.overallProgress.toFixed(2)}%</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Implementing Office</h4>
-            <p class="text-gray-600">${project.implementingOfficeName}</p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Category</h4>
-            <p class="text-gray-600 capitalize">${project.category}</p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Total Budget</h4>
-            <p class="text-gray-600">₱${(parseFloat(project.totalBudget) || 0).toLocaleString()}</p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Overall Progress</h4>
-            <p class="text-gray-600">${parseFloat(project.progress?.overallProgress || project.overallProgress || 0)}%</p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Start Date</h4>
-            <p class="text-gray-600">${project.startDate}</p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900">End Date</h4>
-            <p class="text-gray-600">${project.endDate}</p>
+
+          <!-- Timeline Card -->
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+            <h4 class="font-bold text-purple-900 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              Timeline
+            </h4>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-purple-700 font-medium">Start Date</p>
+                <p class="text-sm font-semibold text-purple-900">${new Date(safeData.startDate).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p class="text-sm text-purple-700 font-medium">End Date</p>
+                <p class="text-sm font-semibold text-purple-900">${safeData.endDate ? new Date(safeData.endDate).toLocaleDateString() : 'Not set'}</p>
+              </div>
+              <div>
+                <p class="text-sm text-purple-700 font-medium">Created</p>
+                <p class="text-sm font-semibold text-purple-900">${new Date(safeData.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div>
-          <h4 class="font-medium text-gray-900">Description</h4>
-          <p class="text-gray-600">${project.description}</p>
+
+        <!-- Project Information Section -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Project Information
+          </h4>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-2">Description</label>
+              <p class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border">${safeData.description}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-2">Expected Outputs</label>
+              <p class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border">${safeData.expectedOutputs}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-2">Target Beneficiaries</label>
+              <p class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border">${safeData.targetBeneficiaries}</p>
+            </div>
+          </div>
         </div>
-        
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <h4 class="font-medium text-gray-900">Timeline Progress</h4>
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div class="bg-blue-500 h-2 rounded-full" style="width: ${parseFloat(project.timelineProgress) || 0}%"></div>
+
+        <!-- Budget Information Section -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+            Budget Information
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Total Budget</label>
+              <p class="text-lg font-bold text-gray-800">₱${safeData.totalBudget.toLocaleString()}</p>
             </div>
-            <p class="text-sm text-gray-600 mt-1">${parseFloat(project.timelineProgress) || 0}%</p>
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Amount Spent</label>
+              <p class="text-lg font-bold text-green-600">₱${safeData.amountSpent.toLocaleString()}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Remaining Budget</label>
+              <p class="text-lg font-bold text-blue-600">₱${(safeData.totalBudget - safeData.amountSpent).toLocaleString()}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Budget Utilization</label>
+              <p class="text-sm text-gray-600">${(safeData.amountSpent / safeData.totalBudget * 100).toFixed(2)}% utilized</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Funding Source</label>
+              <p class="text-sm font-semibold text-gray-800">${safeData.fundingSource}</p>
+            </div>
           </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Budget Progress</h4>
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div class="bg-green-500 h-2 rounded-full" style="width: ${parseFloat(project.budgetProgress) || 0}%"></div>
+        </div>
+
+        <!-- Progress Breakdown Section -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h4 class="font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            Progress Breakdown
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Timeline Progress -->
+            <div class="text-center">
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#e5e7eb"
+                    stroke-width="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#3b82f6"
+                    stroke-width="8"
+                    fill="transparent"
+                    stroke-dasharray="${2 * Math.PI * 40}"
+                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.timelineProgress / 100)}"
+                    class="transition-all duration-500"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg font-bold text-gray-800">${safeData.timelineProgress.toFixed(2)}%</span>
+                </div>
+              </div>
+              <h5 class="font-semibold text-gray-900 mb-2">Timeline Progress</h5>
+              <p class="text-sm text-gray-600">Project timeline completion</p>
             </div>
-            <p class="text-sm text-gray-600 mt-1">${parseFloat(project.budgetProgress) || 0}%</p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900">Physical Progress</h4>
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div class="bg-purple-500 h-2 rounded-full" style="width: ${parseFloat(project.physicalProgress) || 0}%"></div>
+
+            <!-- Budget Progress -->
+            <div class="text-center">
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#e5e7eb"
+                    stroke-width="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#10b981"
+                    stroke-width="8"
+                    fill="transparent"
+                    stroke-dasharray="${2 * Math.PI * 40}"
+                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.budgetProgress / 100)}"
+                    class="transition-all duration-500"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg font-bold text-gray-800">${safeData.budgetProgress.toFixed(2)}%</span>
+                </div>
+              </div>
+              <h5 class="font-semibold text-gray-900 mb-2">Budget Progress</h5>
+              <p class="text-sm text-gray-600">Budget utilization</p>
             </div>
-            <p class="text-sm text-gray-600 mt-1">${parseFloat(project.physicalProgress) || 0}%</p>
+
+            <!-- Physical Progress -->
+            <div class="text-center">
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#e5e7eb"
+                    stroke-width="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke="#8b5cf6"
+                    stroke-width="8"
+                    fill="transparent"
+                    stroke-dasharray="${2 * Math.PI * 40}"
+                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.physicalProgress / 100)}"
+                    class="transition-all duration-500"
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-lg font-bold text-gray-800">${safeData.physicalProgress.toFixed(2)}%</span>
+                </div>
+              </div>
+              <h5 class="font-semibold text-gray-900 mb-2">Physical Progress</h5>
+              <p class="text-sm text-gray-600">Physical completion</p>
+            </div>
           </div>
         </div>
       </div>
@@ -552,6 +1065,76 @@ loading = false;
   function closeProjectModal() {
     const modal = document.getElementById('projectModal');
     modal.classList.add('hidden');
+  }
+
+  // Enhanced Tab switching functions with animations
+  function switchToTableView() {
+    const tableTab = document.getElementById('tableTab');
+    const cardTab = document.getElementById('cardTab');
+    const tableView = document.getElementById('tableView');
+    const cardView = document.getElementById('cardView');
+
+    // Add sink and pop animation to the clicked tab
+    tableTab.classList.add('switching');
+    setTimeout(() => {
+      tableTab.classList.remove('switching');
+    }, 300);
+
+    // Update tab styles with active state - modern design
+    tableTab.className = 'tab-button text-sm font-medium transition-all duration-300 flex items-center gap-2 active';
+    cardTab.className = 'tab-button text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 flex items-center gap-2';
+
+    // Animate content switching
+    cardView.classList.add('fade-out');
+    
+    setTimeout(() => {
+      cardView.classList.add('hidden');
+      cardView.classList.remove('block', 'fade-out');
+      tableView.classList.remove('hidden');
+      tableView.classList.add('block', 'fade-in');
+      
+      setTimeout(() => {
+        tableView.classList.remove('fade-in');
+      }, 400);
+    }, 300);
+  }
+
+  function switchToCardView() {
+    const tableTab = document.getElementById('tableTab');
+    const cardTab = document.getElementById('cardTab');
+    const tableView = document.getElementById('tableView');
+    const cardView = document.getElementById('cardView');
+
+    // Add sink and pop animation to the clicked tab
+    cardTab.classList.add('switching');
+    setTimeout(() => {
+      cardTab.classList.remove('switching');
+    }, 300);
+
+    // Update tab styles with active state - modern design
+    tableTab.className = 'tab-button text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 flex items-center gap-2';
+    cardTab.className = 'tab-button text-sm font-medium transition-all duration-300 flex items-center gap-2 active';
+
+    // Animate content switching
+    tableView.classList.add('fade-out');
+    
+    setTimeout(() => {
+      tableView.classList.add('hidden');
+      tableView.classList.remove('block', 'fade-out');
+      cardView.classList.remove('hidden');
+      cardView.classList.add('block', 'fade-in');
+      
+      // Trigger staggered card animations
+      const cards = document.querySelectorAll('.project-card');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.style.animation = 'cardSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+      });
+      
+      setTimeout(() => {
+        cardView.classList.remove('fade-in');
+      }, 400);
+    }, 300);
   }
 
   // Filter projects
@@ -572,6 +1155,7 @@ loading = false;
     });
 
     updateProjectsTable(filteredProjects);
+    updateProjectsCards(filteredProjects);
   }
 
   // Clear filters
@@ -581,6 +1165,14 @@ loading = false;
     document.getElementById('departmentFilter').value = '';
     document.getElementById('categoryFilter').value = '';
     updateProjectsTable(projects);
+    updateProjectsCards(projects);
+  }
+
+  // Update projects UI (both table and card views)
+  function updateProjectsUI() {
+    console.log('Projects updated:', projects);
+    updateProjectsTable(projects);
+    updateProjectsCards(projects);
   }
 
   // Update projects table
@@ -591,12 +1183,12 @@ loading = false;
 
     if (!tbody) return;
 
-         tbody.innerHTML = projectsToShow.map(project => {
-       const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-       const budget = parseFloat(project.totalBudget) || 0;
-       const timelineProgress = parseFloat(project.timelineProgress) || 0;
-       const startDate = project.startDate ? new Date(project.startDate) : null;
-       const endDate = project.endDate ? new Date(project.endDate) : null;
+    tbody.innerHTML = projectsToShow.map(project => {
+      const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
+      const budget = parseFloat(project.totalBudget) || 0;
+      const timelineProgress = parseFloat(project.timelineProgress) || 0;
+      const startDate = project.startDate ? new Date(project.startDate) : null;
+      const endDate = project.endDate ? new Date(project.endDate) : null;
 
       return `
         <tr class="hover:bg-gray-50">
@@ -635,9 +1227,9 @@ loading = false;
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="flex items-center">
               <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                               <div class="h-2 rounded-full ${
-                 timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-               }" style="width: ${Math.min(timelineProgress, 100)}%"></div>
+                <div class="h-2 rounded-full ${
+                  timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                }" style="width: ${Math.min(timelineProgress, 100)}%"></div>
               </div>
               <span class="text-sm text-gray-900">${timelineProgress.toFixed(1)}%</span>
             </div>
@@ -664,6 +1256,100 @@ loading = false;
     totalCount.textContent = projects.length;
   }
 
+  // Update projects cards
+  function updateProjectsCards(projectsToShow) {
+    const cardBody = document.getElementById('projectsCardBody');
+    if (!cardBody) return;
+
+    cardBody.innerHTML = projectsToShow.map(project => {
+      const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
+      const budget = parseFloat(project.totalBudget) || 0;
+      const timelineProgress = parseFloat(project.timelineProgress) || 0;
+      const startDate = project.startDate ? new Date(project.startDate) : null;
+      const endDate = project.endDate ? new Date(project.endDate) : null;
+      
+      return `
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div class="p-6">
+            <!-- Project Header -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">${project.name}</h3>
+                <p class="text-sm text-gray-500">${project.projectCode}</p>
+              </div>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
+                project.status === 'complete' ? 'bg-green-100 text-green-700' :
+                project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
+                project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-gray-100 text-gray-700'
+              }">
+                ${project.status}
+              </span>
+            </div>
+
+            <!-- Project Info -->
+            <div class="space-y-3 mb-4">
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                <span class="truncate">${project.implementingOfficeName}</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                <span>₱${budget.toLocaleString()}</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span>${startDate ? startDate.toLocaleDateString() : 'N/A'} - ${endDate ? endDate.toLocaleDateString() : 'N/A'}</span>
+              </div>
+            </div>
+
+            <!-- Progress Bars -->
+            <div class="space-y-3 mb-4">
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-600">Overall Progress</span>
+                  <span class="font-medium text-gray-900">${progress.toFixed(1)}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="h-2 rounded-full transition-all duration-300 ${
+                    project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
+                  }" style="width: ${progress}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-600">Timeline</span>
+                  <span class="font-medium text-gray-900">${timelineProgress.toFixed(1)}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="h-2 rounded-full transition-all duration-300 ${
+                    timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                  }" style="width: ${Math.min(timelineProgress, 100)}%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-2">
+              <button onclick="viewProjectDetails('${project.id}')" class="flex-1 px-3 py-2 bg-[#FE5353] text-white text-sm font-medium rounded-lg hover:bg-[#E54545] transition-colors duration-200">
+                View Details
+              </button>
+              <button onclick="viewProgress('${project.id}')" class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                Progress
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   // Make functions globally available
   window.loadProjects = loadProjects;
   window.refreshProjects = refreshProjects;
@@ -673,4 +1359,6 @@ loading = false;
   window.closeProjectModal = closeProjectModal;
   window.filterProjects = filterProjects;
   window.clearFilters = clearFilters;
+  window.switchToTableView = switchToTableView;
+  window.switchToCardView = switchToCardView;
 </script> 

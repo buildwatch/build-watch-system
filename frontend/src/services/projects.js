@@ -207,12 +207,13 @@ const projectService = {
     }, 0);
   },
 
-  // Calculate utilized budget based on progress
+  // Calculate utilized budget based on approved budget divisions only
   calculateUtilizedBudget: (projects) => {
     return projects.reduce((sum, project) => {
       const budget = parseFloat(project.totalBudget) || 0;
-      const progress = parseFloat(project.overallProgress) || 0;
-      return sum + (budget * progress / 100);
+      // Use budget division progress for utilized budget calculation (only approved divisions)
+      const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
+      return sum + (budget * budgetProgress / 100);
     }, 0);
   },
 

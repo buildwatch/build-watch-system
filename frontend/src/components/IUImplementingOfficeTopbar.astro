@@ -31,7 +31,10 @@
           <div class="p-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-semibold text-gray-800">Notifications</h3>
+              <div class="flex items-center gap-2">
               <button class="text-sm text-[#92751F] hover:text-[#F8C734]" id="iu-mark-all-read">Mark all read</button>
+                <button class="text-sm text-red-600 hover:text-red-700" id="iu-delete-all">Delete all</button>
+              </div>
             </div>
           </div>
           <div class="max-h-96 overflow-y-auto" id="iu-notification-list">
@@ -211,6 +214,7 @@
     const notificationBadge = document.getElementById('iu-notification-badge');
     const notificationList = document.getElementById('iu-notification-list');
     const markAllReadBtn = document.getElementById('iu-mark-all-read');
+    const deleteAllBtn = document.getElementById('iu-delete-all');
 
     // Toggle dropdown
     notificationBtn.addEventListener('click', () => {
@@ -232,6 +236,27 @@
       await notificationService.markAllAsRead();
       updateNotificationBadge();
       loadNotifications();
+    });
+
+    // Delete all notifications
+    deleteAllBtn.addEventListener('click', async () => {
+      if (confirm('Are you sure you want to delete all notifications? This action cannot be undone.')) {
+        const data = await notificationService.getNotifications();
+        const notifications = data.notifications;
+        
+        let deletedCount = 0;
+        for (const notification of notifications) {
+          const success = await notificationService.deleteNotification(notification.id);
+          if (success) deletedCount++;
+        }
+        
+        if (deletedCount > 0) {
+          updateNotificationBadge();
+          loadNotifications();
+        } else {
+          alert('Failed to delete notifications. Please try again.');
+        }
+      }
     });
 
     // Load initial notification count
@@ -294,13 +319,20 @@
                 </a>
               ` : ''}
             </div>
+            <div class="flex items-center gap-1">
             ${!notification.isRead ? `
-              <button class="text-gray-400 hover:text-gray-600" onclick="markIUNotificationAsRead('${notification.id}')">
+                <button class="text-gray-400 hover:text-gray-600 p-1 rounded" onclick="markIUNotificationAsRead('${notification.id}')" title="Mark as read">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </button>
             ` : ''}
+              <button class="text-gray-400 hover:text-red-600 p-1 rounded transition-colors" onclick="deleteIUNotification('${notification.id}')" title="Delete notification">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       `).join('');
@@ -321,5 +353,18 @@
     await notificationService.markAsRead(notificationId);
     updateNotificationBadge();
     loadNotifications();
+  };
+
+  // Global function for deleting notification
+  window.deleteIUNotification = async function(notificationId) {
+    if (confirm('Are you sure you want to delete this notification?')) {
+      const success = await notificationService.deleteNotification(notificationId);
+      if (success) {
+        updateNotificationBadge();
+        loadNotifications();
+      } else {
+        alert('Failed to delete notification. Please try again.');
+      }
+    }
   };
 </script> 

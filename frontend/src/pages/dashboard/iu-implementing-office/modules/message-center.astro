@@ -10,78 +10,13 @@ let contacts = [];
 let error = '';
 let loading = true;
 
-// Default placeholder data - will be replaced with real data from API
+// Initialize with empty data - will be populated from API
 let messageStats = {
   totalMessages: 0,
   unreadMessages: 0,
   activeChats: 0,
   todayMessages: 0
 };
-
-// Sample contacts data
-let sampleContacts = [
-  {
-    id: 1,
-    name: 'Juan Dela Cruz',
-    position: 'Project Manager',
-    email: 'juan.delacruz@santacruz.gov.ph',
-    department: 'Engineering',
-    status: 'online',
-    avatar: 'JD'
-  },
-  {
-    id: 2,
-    name: 'Maria Santos',
-    position: 'Senior Engineer',
-    email: 'maria.santos@santacruz.gov.ph',
-    department: 'Engineering',
-    status: 'online',
-    avatar: 'MS'
-  },
-  {
-    id: 3,
-    name: 'Roberto Javier',
-    position: 'Site Engineer',
-    email: 'roberto.javier@santacruz.gov.ph',
-    department: 'Engineering',
-    status: 'offline',
-    avatar: 'RJ'
-  }
-];
-
-// Sample messages data
-let sampleMessages = [
-  {
-    id: 1,
-    senderId: 1,
-    senderName: 'Juan Dela Cruz',
-    senderAvatar: 'JD',
-    content: "How's the project progress going?",
-    timestamp: '2025-07-17T10:30:00Z',
-    type: 'incoming',
-    read: true
-  },
-  {
-    id: 2,
-    senderId: 'me',
-    senderName: 'Me',
-    senderAvatar: 'Me',
-    content: "Good morning! The project is progressing well. We're at 75% completion.",
-    timestamp: '2025-07-17T10:32:00Z',
-    type: 'outgoing',
-    read: true
-  },
-  {
-    id: 3,
-    senderId: 1,
-    senderName: 'Juan Dela Cruz',
-    senderAvatar: 'JD',
-    content: "That's great! Any issues we need to address?",
-    timestamp: '2025-07-17T10:33:00Z',
-    type: 'incoming',
-    read: false
-  }
-];
 
 // Try to fetch message data from API
 try {
@@ -98,43 +33,56 @@ try {
       }
     }
 
-    // TODO: Replace with actual messages API endpoints
-    // const messagesRes = await fetch(`${API_URL}/messages`, {
-    //   headers: { 'Authorization': `Bearer ${token}` }
-    // });
-    // if (messagesRes.ok) {
-    //   const data = await messagesRes.json();
-    //   if (data.success) {
-    //     messages = data.messages;
-    //     messageStats = data.stats;
-    //   }
-    // }
+    // Fetch communications from API
+    const messagesRes = await fetch(`${API_URL}/communications`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (messagesRes.ok) {
+      const data = await messagesRes.json();
+      if (data.success) {
+        messages = data.communications;
+        messageStats = {
+          totalMessages: data.total || 0,
+          unreadMessages: data.unreadMessages || 0,
+          activeChats: data.communications?.length || 0,
+          todayMessages: data.communications?.filter(m => 
+            new Date(m.createdAt).toDateString() === new Date().toDateString()
+          ).length || 0
+        };
+        console.log('Real message stats:', messageStats);
+      }
+    }
 
-    // const contactsRes = await fetch(`${API_URL}/contacts`, {
-    //   headers: { 'Authorization': `Bearer ${token}` }
-    // });
-    // if (contactsRes.ok) {
-    //   const data = await contactsRes.json();
-    //   if (data.success) {
-    //     contacts = data.contacts;
-    //   }
-    // }
+    // Fetch available users for contacts
+    const contactsRes = await fetch(`${API_URL}/communications/users/available`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (contactsRes.ok) {
+      const data = await contactsRes.json();
+      if (data.success) {
+        contacts = data.users.map(user => ({
+          id: user.id,
+          name: user.name,
+          position: user.subRole || user.role,
+          email: user.username,
+          department: user.department || 'N/A',
+          status: 'online',
+          avatar: user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+        }));
+      }
+    }
 
-    // For now, use sample data
-    messages = sampleMessages;
-    contacts = sampleContacts;
-    messageStats = {
-      totalMessages: 156,
-      unreadMessages: 12,
-      activeChats: 8,
-      todayMessages: 23
-    };
+    // Use real data from API only
+    if (messages && messages.length > 0) {
+      console.log('Using real API data:', messages.length, 'messages');
+    } else {
+      console.log('No messages found in API - this is expected for new users');
+    }
   }
 } catch (err) {
   console.error('Error fetching message data:', err);
   error = 'Failed to fetch message data.';
-  messages = sampleMessages;
-  contacts = sampleContacts;
+  // Don't fall back to mock data - let it show empty state
 }
 
 loading = false;
@@ -150,13 +98,13 @@ loading = false;
           <p class="text-gray-600">Communicate with team members and stakeholders</p>
         </div>
         <div class="flex gap-3">
-          <button onclick="composeMessage()" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2">
+          <button id="composeMessageBtn" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
             </svg>
             Compose Message
           </button>
-          <button onclick="startGroupChat()" class="px-6 py-3 bg-[#F8C734] text-white rounded-lg hover:bg-[#E6B82A] transition-colors flex items-center gap-2">
+          <button id="startGroupChatBtn" class="px-6 py-3 bg-[#F8C734] text-white rounded-lg hover:bg-[#E6B82A] transition-colors flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
@@ -230,7 +178,7 @@ loading = false;
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-gray-800">Contacts</h2>
-            <button onclick="addContact()" class="px-3 py-1 bg-[#F8C734] text-white rounded-lg hover:bg-[#E6B82A] transition-colors text-sm">
+            <button id="addContactBtn" class="px-3 py-1 bg-[#F8C734] text-white rounded-lg hover:bg-[#E6B82A] transition-colors text-sm">
               Add Contact
             </button>
           </div>
@@ -244,19 +192,8 @@ loading = false;
           </div>
           
           <!-- Contacts List -->
-          <div class="space-y-2 max-h-96 overflow-y-auto">
-            {contacts.map(contact => (
-              <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" onclick="selectContact('{contact.id}')">
-                <div class="w-10 h-10 bg-[#F8C734] rounded-full flex items-center justify-center">
-                  <span class="text-white font-medium">{contact.avatar}</span>
-                </div>
-                <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-800">{contact.name}</p>
-                  <p class="text-xs text-gray-600">{contact.position}</p>
-                </div>
-                <div class={`w-3 h-3 ${contact.status === 'online' ? 'bg-green-500' : 'bg-gray-400'} rounded-full`}></div>
-              </div>
-            ))}
+          <div class="space-y-2 max-h-96 overflow-y-auto" id="contactsList">
+            <div id="contactsContainer"></div>
           </div>
         </div>
 
@@ -264,107 +201,89 @@ loading = false;
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-gray-800">Chat</h2>
-            <div class="flex items-center gap-2">
-              <button onclick="voiceCall()" class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
-              </button>
-              <button onclick="videoCall()" class="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-              </button>
-            </div>
+            <button id="refreshChatBtn" class="px-3 py-1 bg-[#F8C734] text-white rounded-lg hover:bg-[#E6B82A] transition-colors text-sm flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Refresh
+            </button>
           </div>
           
           <!-- Chat Messages -->
           <div class="space-y-4 mb-4 max-h-96 overflow-y-auto" id="chatMessages">
-            {messages.map(message => (
-              message.type === 'incoming' ? (
-                <div class="flex items-start gap-3">
-                  <div class="w-8 h-8 bg-[#F8C734] rounded-full flex items-center justify-center flex-shrink-0">
-                    <span class="text-white text-xs font-medium">{message.senderAvatar}</span>
-                  </div>
-                  <div class="flex-1">
-                    <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
-                      <p class="text-sm text-gray-800">{message.content}</p>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">{new Date(message.timestamp).toLocaleTimeString()}</p>
-                  </div>
-                </div>
-              ) : (
-                <div class="flex items-start gap-3 justify-end">
-                  <div class="flex-1 text-right">
-                    <div class="bg-[#F8C734] text-white rounded-lg p-3 max-w-xs ml-auto">
-                      <p class="text-sm">{message.content}</p>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">{new Date(message.timestamp).toLocaleTimeString()}</p>
-                  </div>
-                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span class="text-white text-xs font-medium">{message.senderAvatar}</span>
-                  </div>
-                </div>
-              )
-            ))}
+            <div id="messagesContainer"></div>
           </div>
           
           <!-- Message Input -->
-          <div class="flex items-center gap-3">
-            <div class="flex-1 relative">
-              <input type="text" id="messageInput" placeholder="Type your message..." class="w-full pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
-              <button onclick="sendMessage()" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#92751F] hover:text-[#7A6219]">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                      <div class="flex items-center gap-3">
+              <div class="flex-1 relative">
+                <input type="text" id="messageInput" placeholder="Type your message..." class="w-full pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#92751F] focus:border-transparent">
+                <button id="sendMessageBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#92751F] hover:text-[#7A6219]">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                  </svg>
+                </button>
+              </div>
+              <button id="attachFileBtn" class="px-3 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                 </svg>
               </button>
             </div>
-            <button onclick="attachFile()" class="px-3 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
 
       <!-- Recent Messages -->
       <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mt-8 animate-fade-in-up" style="animation-delay: 0.7s;">
         <h2 class="text-xl font-semibold text-gray-800 mb-6">Recent Messages</h2>
-        <div class="space-y-4">
-          <div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="openMessage(1)">
-            <div class="w-12 h-12 bg-[#F8C734] rounded-full flex items-center justify-center">
-              <span class="text-white font-medium">JD</span>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1">
-                <h3 class="text-sm font-medium text-gray-800">Juan Dela Cruz</h3>
-                <span class="text-xs text-gray-500">2 hours ago</span>
-              </div>
-              <p class="text-sm text-gray-600">Project update meeting scheduled for tomorrow at 2 PM.</p>
-            </div>
-            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-          </div>
-          
-          <div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="openMessage(2)">
-            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-              <span class="text-white font-medium">MS</span>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1">
-                <h3 class="text-sm font-medium text-gray-800">Maria Santos</h3>
-                <span class="text-xs text-gray-500">1 day ago</span>
-              </div>
-              <p class="text-sm text-gray-600">Site review documents have been uploaded to the system.</p>
-            </div>
-          </div>
+        <div class="space-y-4" id="recentMessagesList">
+          <div id="recentMessagesContainer"></div>
         </div>
       </div>
     </section>
   </IUImplementingOfficeLayout>
 </Layout>
 
-<script>
+<script define:vars={{ messages, contacts, userData }}>
+  // Make data available to client-side JavaScript
+  window.messages = messages || [];
+  window.contacts = contacts || [];
+  window.userData = userData || {};
+  
+  // Debug: Log the data being passed
+  console.log('Data passed to client:', {
+    messagesCount: window.messages.length,
+    contactsCount: window.contacts.length,
+    userData: window.userData
+  });
+  
+  // Immediate test to see if containers exist
+  setTimeout(() => {
+    console.log('Container test:', {
+      messagesContainer: !!document.getElementById('messagesContainer'),
+      contactsContainer: !!document.getElementById('contactsContainer'),
+      recentMessagesContainer: !!document.getElementById('recentMessagesContainer')
+    });
+  }, 50);
+  
+  // Function to calculate unread message count for a specific contact
+  function getUnreadMessageCount(contactId, messages) {
+    const unreadMessages = messages.filter(msg => 
+      msg.recipientId === window.userData.id && 
+      msg.senderId === contactId && 
+      !msg.isRead
+    );
+    
+    console.log(`Implementing Office - getUnreadMessageCount for contact ${contactId}:`);
+    console.log(`Implementing Office - Total messages: ${messages.length}`);
+    console.log(`Implementing Office - Unread messages: ${unreadMessages.length}`);
+    console.log(`Implementing Office - Current user ID: ${window.userData.id}`);
+    console.log(`Implementing Office - Sample unread messages:`, unreadMessages.slice(0, 3));
+    
+    return unreadMessages.length;
+  }
+
+  // Authentication check for LGU-IU Implementing Office Officer
   // Authentication check for LGU-IU Implementing Office Officer
   document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('token');
@@ -378,19 +297,261 @@ loading = false;
     try {
       const user = JSON.parse(userData);
       
-      // Check if user is LGU-IU
-      if (user.role !== 'LGU-IU') {
+      // Check if user is Implementing Office (LGU-IU or IU)
+      if (user.role !== 'LGU-IU' && user.role !== 'IU') {
         window.location.href = '/login/lgu-pmt';
         return;
       }
       
       console.log('Message Center module loaded for user:', user.username);
       
+      // Verify user data with API to ensure it's current
+      verifyUserData();
+      
+      // Add event listeners for buttons
+      setupButtonEventListeners();
+      
+      // Set up periodic refresh and notification checking
+      setInterval(checkForNewNotifications, 10000); // Check notifications every 10 seconds
+      setInterval(refreshChatMessages, 15000); // Refresh chat messages every 15 seconds
+      
+      // Populate dynamic content after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        populateMessages();
+        populateContacts();
+        populateRecentMessages();
+        
+        // Add event listeners for contact selection after populating
+        setupContactEventListeners();
+        
+        // Force populate again after a longer delay to ensure everything is loaded
+        setTimeout(() => {
+          console.log('Force repopulating content...');
+          populateMessages();
+          populateContacts();
+          populateRecentMessages();
+        }, 500);
+      }, 100);
+      
     } catch (error) {
       console.error('Error parsing user data:', error);
       window.location.href = '/login/lgu-pmt';
     }
   });
+
+  // Setup contact event listeners
+  function setupContactEventListeners() {
+    const contactItems = document.querySelectorAll('.contact-item');
+    contactItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const contactId = this.getAttribute('data-contact-id');
+        selectContact(contactId);
+      });
+    });
+
+    // Setup message event listeners
+    const messageItems = document.querySelectorAll('.message-item');
+    messageItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const messageId = this.getAttribute('data-message-id');
+        openMessage(messageId);
+      });
+    });
+
+    // Auto-scroll to bottom of chat
+    scrollToBottom();
+  }
+
+  // Auto-scroll to bottom of chat
+  function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  }
+
+  // Function to refresh chat messages
+  async function refreshChatMessages() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications?limit=1000', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        window.messages = data.communications || [];
+        
+        // Re-populate messages and contacts with updated data
+        populateMessages();
+        populateContacts();
+        populateRecentMessages();
+        
+        console.log('Implementing Office - Chat messages refreshed');
+      }
+    } catch (error) {
+      console.error('Error refreshing chat messages:', error);
+    }
+  }
+
+  // Function to load conversation with a specific contact
+  async function loadConversationWithContact(contactId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/communications/conversation/${contactId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Implementing Office - Conversation loaded:', data.messages.length, 'messages');
+        
+        // Update the chat messages display
+        updateChatMessages(data.messages);
+        
+        // Mark messages as read after loading conversation
+        await markMessagesAsRead(contactId);
+        
+        // Refresh the overall message list to update unread counts
+        await refreshChatMessages();
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }
+
+  // Function to update chat messages display
+  function updateChatMessages(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    if (messages && messages.length > 0) {
+      chatMessages.innerHTML = messages.map(message => {
+        const isIncoming = message.recipientId === window.userData.id;
+        const senderName = message.sender?.name || 'Unknown';
+        const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+        const messageContent = message.message || '';
+        const messageTime = new Date(message.createdAt).toLocaleTimeString();
+        
+        return isIncoming ? (
+          `<div class="flex items-start gap-3 mb-4">
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">${senderInitials}</span>
+            </div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                <p class="text-sm text-gray-800">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+          </div>`
+        ) : (
+          `<div class="flex items-start gap-3 justify-end mb-4">
+            <div class="flex-1 text-right">
+              <div class="bg-blue-500 text-white rounded-lg p-3 max-w-xs ml-auto">
+                <p class="text-sm">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+            <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">ME</span>
+            </div>
+          </div>`
+        );
+      }).join('');
+    } else {
+      chatMessages.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+          </svg>
+          <p class="text-lg font-medium">No messages yet</p>
+          <p class="text-sm">Start a conversation with this contact</p>
+        </div>
+      `;
+    }
+    
+    // Scroll to bottom
+    scrollToBottom();
+  }
+
+  // Setup button event listeners
+  function setupButtonEventListeners() {
+    // Compose message button
+    document.getElementById('composeMessageBtn')?.addEventListener('click', composeMessage);
+    
+    // Start group chat button
+    document.getElementById('startGroupChatBtn')?.addEventListener('click', startGroupChat);
+    
+    // Add contact button
+    document.getElementById('addContactBtn')?.addEventListener('click', addContact);
+    
+    // Send message button
+    document.getElementById('sendMessageBtn')?.addEventListener('click', sendMessage);
+    
+    // Attach file button
+    document.getElementById('attachFileBtn')?.addEventListener('click', attachFile);
+    
+    // Refresh chat button
+    document.getElementById('refreshChatBtn')?.addEventListener('click', refreshChatMessages);
+    
+    // Enter key functionality for message input
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+      messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+  }
+
+  // Verify user data with API
+  async function verifyUserData() {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+      
+      const response = await fetch('http://localhost:3000/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.user) {
+          // Update localStorage with fresh data
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          // Check if the fresh data shows correct role
+          if (data.user.role !== 'LGU-IU' && data.user.role !== 'IU') {
+            window.location.href = '/login/lgu-pmt';
+            return;
+          }
+        } else {
+          window.location.href = '/login/lgu-pmt';
+        }
+      } else {
+        window.location.href = '/login/lgu-pmt';
+      }
+    } catch (error) {
+      console.error('Error verifying user data:', error);
+      window.location.href = '/login/lgu-pmt';
+    }
+  }
 
   // Message functions
   function composeMessage() {
@@ -411,21 +572,138 @@ loading = false;
     alert('Add contact functionality will be implemented soon.');
   }
 
-  function selectContact(contactId) {
-    console.log('Select contact clicked:', contactId);
-    // TODO: Load chat with selected contact
-    alert(`Loading chat with contact ID: ${contactId}`);
+  async function markMessagesAsRead(contactId) {
+    try {
+      console.log('Implementing Office - Attempting to mark messages as read for contact:', contactId);
+      console.log('Implementing Office - Current user ID:', window.userData.id);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          senderId: contactId,
+          recipientId: window.userData.id
+        })
+      });
+
+      console.log('Implementing Office - Mark as read response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Implementing Office - Messages marked as read result:', result);
+        // Note: refreshChatMessages is now called from loadConversationWithContact
+      } else {
+        const errorData = await response.json();
+        console.error('Implementing Office - Failed to mark messages as read:', errorData);
+      }
+    } catch (error) {
+      console.error('Implementing Office - Error marking messages as read:', error);
+    }
   }
 
-  function sendMessage() {
+  async function selectContact(contactId) {
+    console.log('Select contact clicked:', contactId);
+    // Store selected contact for sending messages
+    window.selectedContactId = contactId;
+    
+    // Load conversation with this contact (this will also mark messages as read)
+    await loadConversationWithContact(contactId);
+    
+    // Find the contact name for better user feedback
+    const contactElement = document.querySelector(`[data-contact-id="${contactId}"]`);
+    const contactName = contactElement ? contactElement.querySelector('p').textContent : 'Contact';
+    
+    // Remove the alert and just log the selection
+    console.log(`Selected contact: ${contactName}. Messages will be sent to this contact.`);
+  }
+
+  async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendMessageBtn');
     const message = messageInput.value.trim();
-    if (message) {
-      console.log('Send message:', message);
-      // TODO: Send message to backend
-      messageInput.value = '';
-      alert('Message sent! (Backend integration pending)');
+    
+    if (!message) return;
+    
+    // Disable input and show sending state
+    messageInput.disabled = true;
+    if (sendButton) {
+      sendButton.style.opacity = '0.5';
+      sendButton.style.pointerEvents = 'none';
     }
+    
+    try {
+      // Get the first Secretariat user as recipient
+      const token = localStorage.getItem('token');
+      const usersResponse = await fetch('/api/communications/users/available', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      let recipientId = window.selectedContactId;
+      if (!recipientId) {
+        // If no contact selected, use the first available Secretariat user
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          if (usersData.success && usersData.users.length > 0) {
+            // Find the first Secretariat user
+            const secretariatUser = usersData.users.find(user => 
+              user.role === 'LGU-PMT' && 
+              user.subRole && 
+              user.subRole.toLowerCase().includes('secretariat')
+            );
+            recipientId = secretariatUser ? secretariatUser.id : usersData.users[0].id;
+            console.log('Auto-selected recipient:', recipientId);
+          }
+        }
+      }
+      
+      if (!recipientId) {
+        console.error('No recipient selected or available');
+        alert('No recipient available. Please try again.');
+        return;
+      }
+
+        const response = await fetch('/api/communications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            subject: 'Project Update from Implementing Office',
+            message: message,
+            category: 'general',
+            priority: 'medium',
+            recipientId: recipientId,
+            isImportant: false,
+            requestAcknowledgment: false
+          })
+        });
+
+        if (response.ok) {
+          messageInput.value = '';
+          // Refresh chat messages to show the new message
+          await refreshChatMessages();
+          // Auto-scroll to bottom to show the new message
+          scrollToBottom();
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to send message:', errorData.error || 'Unknown error');
+          alert('Failed to send message: ' + (errorData.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+      } finally {
+        // Re-enable input and button
+        messageInput.disabled = false;
+        if (sendButton) {
+          sendButton.style.opacity = '1';
+          sendButton.style.pointerEvents = 'auto';
+        }
+      }
   }
 
   function attachFile() {
@@ -434,22 +712,69 @@ loading = false;
     alert('File attachment functionality will be implemented soon.');
   }
 
-  function voiceCall() {
-    console.log('Voice call clicked');
-    // TODO: Initiate voice call
-    alert('Voice call functionality will be implemented soon.');
-  }
-
-  function videoCall() {
-    console.log('Video call clicked');
-    // TODO: Initiate video call
-    alert('Video call functionality will be implemented soon.');
-  }
-
   function openMessage(messageId) {
     console.log('Open message clicked:', messageId);
     // TODO: Open specific message thread
     alert(`Opening message thread ID: ${messageId}`);
+  }
+
+  // Check for new notifications
+  async function checkForNewNotifications() {
+    try {
+      const response = await fetch('http://localhost:3000/api/notifications/count?isRead=false', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.count > 0) {
+          // Show notification badge or alert
+          showNotificationAlert(data.count);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  }
+
+  // Show notification alert
+  function showNotificationAlert(count) {
+    // Check if we already showed a notification for this session
+    if (sessionStorage.getItem('notificationShown')) return;
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-[#F8C734] text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3';
+    notification.innerHTML = `
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+      </svg>
+      <span>You have ${count} new notification${count > 1 ? 's' : ''}</span>
+      <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+    
+    // Mark as shown for this session
+    sessionStorage.setItem('notificationShown', 'true');
+    
+    // Clear the flag after 30 seconds to allow new notifications
+    setTimeout(() => {
+      sessionStorage.removeItem('notificationShown');
+    }, 30000);
   }
 
   // Search functionality
@@ -458,6 +783,156 @@ loading = false;
     console.log('Searching contacts:', searchTerm);
     // TODO: Implement contact search functionality
   });
+  
+  // Function to populate messages
+  function populateMessages() {
+    const messagesContainer = document.getElementById('messagesContainer');
+    if (!messagesContainer) {
+      console.log('Messages container not found');
+      return;
+    }
+    
+    // Use the data passed from frontmatter
+    const messages = window.messages || [];
+    const userData = window.userData || JSON.parse(localStorage.getItem('user') || '{}');
+    
+    console.log('Populating messages:', messages.length, 'messages');
+    console.log('Sample message:', messages[0]);
+    
+    if (messages.length > 0) {
+      const messagesHTML = messages.map(message => {
+        const isIncoming = message.type === 'incoming' || message.recipientId === userData.id;
+        const senderName = message.sender?.name || message.senderName || 'Unknown';
+        const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+        const messageContent = message.message || message.content || '';
+        const messageTime = new Date(message.createdAt || message.timestamp).toLocaleTimeString();
+        
+        if (isIncoming) {
+          return `<div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-[#F8C734] rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">${senderInitials}</span>
+            </div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                <p class="text-sm text-gray-800">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+          </div>`;
+        } else {
+          return `<div class="flex items-start gap-3 justify-end">
+            <div class="flex-1 text-right">
+              <div class="bg-[#F8C734] text-white rounded-lg p-3 max-w-xs ml-auto">
+                <p class="text-sm">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">ME</span>
+            </div>
+          </div>`;
+        }
+      }).join('');
+      
+      messagesContainer.innerHTML = messagesHTML;
+    } else {
+      messagesContainer.innerHTML = `<div class="text-center py-8 text-gray-500">
+        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        </svg>
+        <p class="text-lg font-medium">No messages yet</p>
+        <p class="text-sm">Start a conversation by sending a message to Secretariat</p>
+      </div>`;
+    }
+  }
+  
+  // Function to populate contacts
+  function populateContacts() {
+    const contactsContainer = document.getElementById('contactsContainer');
+    if (!contactsContainer) {
+      console.log('Contacts container not found');
+      return;
+    }
+    
+    // Use the data passed from frontmatter
+    const contacts = window.contacts || [];
+    
+    console.log('Populating contacts:', contacts.length, 'contacts');
+    console.log('Sample contact:', contacts[0]);
+    
+    if (contacts.length > 0) {
+      const contactsHTML = contacts.map(contact => {
+        const unreadCount = getUnreadMessageCount(contact.id, window.messages || []);
+        console.log(`Implementing Office - Contact ${contact.name} (${contact.id}) unread count:`, unreadCount);
+        return `<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors contact-item" data-contact-id="${contact.id}">
+          <div class="w-10 h-10 bg-[#F8C734] rounded-full flex items-center justify-center relative">
+            <span class="text-white font-medium">${contact.avatar || contact.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}</span>
+            ${unreadCount > 0 ? `<div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">${unreadCount}</div>` : ''}
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-800">${contact.name}</p>
+            <p class="text-xs text-gray-600">${contact.position || contact.subRole || contact.role}</p>
+          </div>
+          <div class="w-3 h-3 ${contact.status === 'online' ? 'bg-green-500' : 'bg-gray-400'} rounded-full"></div>
+        </div>`;
+      }).join('');
+      
+      contactsContainer.innerHTML = contactsHTML;
+    } else {
+      contactsContainer.innerHTML = `<div class="text-center py-8 text-gray-500">
+        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <p class="text-sm">No contacts available</p>
+        <p class="text-xs">Secretariat contacts will appear here</p>
+      </div>`;
+    }
+  }
+  
+  // Function to populate recent messages
+  function populateRecentMessages() {
+    const recentMessagesContainer = document.getElementById('recentMessagesContainer');
+    if (!recentMessagesContainer) {
+      console.log('Recent messages container not found');
+      return;
+    }
+    
+    // Use the data passed from frontmatter
+    const messages = window.messages || [];
+    
+    console.log('Populating recent messages:', messages.length, 'messages');
+    
+    if (messages.length > 0) {
+      const recentMessages = messages.slice(0, 3);
+      const recentMessagesHTML = recentMessages.map(message => {
+        const senderName = message.sender?.name || message.senderName || 'Unknown';
+        const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+        const messageContent = message.message || message.content || '';
+        const messageTime = new Date(message.createdAt || message.timestamp).toLocaleString();
+        
+        return `<div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer message-item" data-message-id="${message.id}">
+          <div class="w-12 h-12 bg-[#F8C734] rounded-full flex items-center justify-center">
+            <span class="text-white font-medium">${senderInitials}</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-1">
+              <h3 class="text-sm font-medium text-gray-800">${senderName}</h3>
+              <span class="text-xs text-gray-500">${messageTime}</span>
+            </div>
+            <p class="text-sm text-gray-600">${messageContent.substring(0, 50)}...</p>
+          </div>
+          ${!message.isRead ? '<div class="w-3 h-3 bg-red-500 rounded-full"></div>' : ''}
+        </div>`;
+      }).join('');
+      
+      recentMessagesContainer.innerHTML = recentMessagesHTML;
+    } else {
+      recentMessagesContainer.innerHTML = `<div class="text-center py-8 text-gray-500">
+        <p class="text-sm">No recent messages</p>
+        <p class="text-xs">Messages will appear here once you start communicating</p>
+      </div>`;
+    }
+  }
 </script>
 
 <style>

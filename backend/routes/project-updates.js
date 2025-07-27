@@ -55,7 +55,7 @@ router.get('/project/:projectId', authenticateToken, async (req, res) => {
         {
           model: ProjectMilestone,
           as: 'milestone',
-          attributes: ['id', 'name', 'weight']
+          attributes: ['id', 'title', 'weight']
         },
         {
           model: User,

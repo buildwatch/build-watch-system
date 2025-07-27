@@ -656,4 +656,146 @@ router.post('/submit-update', authenticateToken, requireEIU, async (req, res) =>
   }
 });
 
+// Submit individual milestone update with three divisions
+router.post('/submit-milestone-update', authenticateToken, requireEIU, async (req, res) => {
+  try {
+    const { projectId, milestoneUpdate } = req.body;
+    
+    console.log('Received milestone update request:', { projectId, milestoneUpdate });
+
+    if (!projectId || !milestoneUpdate) {
+      return res.status(400).json({
+        success: false,
+        error: 'Project ID and milestone update are required'
+      });
+    }
+
+    // Verify the project is assigned to this EIU personnel
+    const project = await Project.findOne({
+      where: {
+        id: projectId,
+        eiuPersonnelId: req.user.id
+      },
+      include: [{
+        model: User,
+        as: 'implementingOffice',
+        attributes: ['id', 'name', 'username', 'role']
+      }]
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found or not assigned to you'
+      });
+    }
+
+    // Check if project is approved (ongoing status)
+    if (!project.approvedBySecretariat) {
+      return res.status(403).json({
+        success: false,
+        error: 'Project is not yet approved by Secretariat. You cannot submit updates for pending projects.'
+      });
+    }
+
+    console.log('Project found:', project.name);
+    console.log('Implementing office:', project.implementingOffice.name);
+
+    // Validate milestone update structure
+    const { milestoneId, status, timeline, budget, physical, notes, uploadedFiles } = milestoneUpdate;
+    
+    if (!milestoneId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Milestone ID is required'
+      });
+    }
+
+    // Prepare milestone updates data with proper structure
+    const milestoneUpdatesData = [{
+      milestoneId: milestoneId,
+      status: status || 'submitted',
+      timeline: timeline || {},
+      budget: budget || {},
+      physical: physical || {},
+      notes: notes || '',
+      uploadedFiles: uploadedFiles || []
+    }];
+
+    console.log('Prepared milestone updates data:', milestoneUpdatesData);
+
+    // Create project update record with three divisions
+    const projectUpdateData = {
+      projectId: projectId,
+      updateType: 'milestone',
+      submittedBy: req.user.id,
+      submittedByRole: 'eiu',
+      submittedTo: project.implementingOffice.id,
+      status: 'submitted',
+      milestoneUpdates: milestoneUpdatesData,
+      claimedProgress: 0.00,
+      currentProgress: 0.00,
+      updateFrequency: 'monthly',
+      title: `Milestone Update: ${milestoneId}`,
+      description: `Milestone update submitted by EIU personnel: ${req.user.name}`,
+      remarks: `Milestone update with three divisions (Timeline, Budget, Physical) submitted by EIU personnel: ${req.user.name}`,
+      submittedAt: new Date()
+    };
+
+    console.log('Attempting to create project update with data:', projectUpdateData);
+
+    const projectUpdate = await ProjectUpdate.create(projectUpdateData);
+
+    console.log('Project update created successfully:', projectUpdate.id);
+
+    // Log activity
+    try {
+      await ActivityLog.create({
+        userId: req.user.id,
+        action: 'SUBMIT_MILESTONE_UPDATE',
+        entityType: 'ProjectUpdate',
+        entityId: projectUpdate.id,
+        details: `Submitted milestone update for project: ${project.name}, milestone: ${milestoneId}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      console.log('Activity logged successfully');
+    } catch (activityError) {
+      console.error('Failed to log activity:', activityError);
+      // Don't fail the entire request if activity logging fails
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Milestone update submitted successfully to implementing office for review',
+      updateId: projectUpdate.id,
+      submittedTo: project.implementingOffice.name,
+      milestoneId: milestoneId
+    });
+
+  } catch (error) {
+    console.error('Submit milestone update error:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Provide more specific error information
+    let errorMessage = 'Failed to submit milestone update';
+    if (error.name === 'SequelizeValidationError') {
+      errorMessage = 'Validation error: ' + error.errors.map(e => e.message).join(', ');
+    } else if (error.name === 'SequelizeDatabaseError') {
+      errorMessage = 'Database error: ' + error.message;
+    } else if (error.name === 'SequelizeForeignKeyConstraintError') {
+      errorMessage = 'Foreign key constraint error: ' + error.message;
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+      details: error.message,
+      errorType: error.name
+    });
+  }
+});
+
 module.exports = router; 

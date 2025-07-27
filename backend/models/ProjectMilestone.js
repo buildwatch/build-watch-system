@@ -136,6 +136,86 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0
+    },
+    
+    // 3-Division Configuration Fields
+    // Timeline Division
+    timelineWeight: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 33.33,
+      comment: 'Weight percentage for timeline division (fixed at 33.33%)'
+    },
+    timelineStartDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      comment: 'Timeline division start date'
+    },
+    timelineEndDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      comment: 'Timeline division end date'
+    },
+    timelineDescription: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Description of timeline activities and progress'
+    },
+    timelineStatus: {
+      type: DataTypes.ENUM('pending', 'in_progress', 'completed', 'approved'),
+      allowNull: true,
+      defaultValue: 'pending',
+      comment: 'Status of timeline division approval'
+    },
+    
+    // Budget Division
+    budgetWeight: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 33.33,
+      comment: 'Weight percentage for budget division (fixed at 33.33%)'
+    },
+    budgetPlanned: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: true,
+      defaultValue: 0,
+      comment: 'Planned budget for this division'
+    },
+    budgetBreakdown: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Budget breakdown description'
+    },
+    budgetStatus: {
+      type: DataTypes.ENUM('pending', 'in_progress', 'completed', 'approved'),
+      allowNull: true,
+      defaultValue: 'pending',
+      comment: 'Status of budget division approval'
+    },
+    
+    // Physical Accomplishment Division
+    physicalWeight: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 33.33,
+      comment: 'Weight percentage for physical division (fixed at 33.33%)'
+    },
+    physicalProofType: {
+      type: DataTypes.ENUM('form', 'video', 'image', 'document', 'report', 'other'),
+      allowNull: true,
+      defaultValue: 'form',
+      comment: 'Type of proof required for physical accomplishment'
+    },
+    physicalDescription: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Description of physical accomplishment'
+    },
+    physicalStatus: {
+      type: DataTypes.ENUM('pending', 'in_progress', 'completed', 'approved'),
+      allowNull: true,
+      defaultValue: 'pending',
+      comment: 'Status of physical division approval'
     }
   }, {
     sequelize,

@@ -12,33 +12,73 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
     <div class="w-full h-[520px] md:h-[600px] relative overflow-hidden mt-28">
       <img src="/projects-page-header-bg.png" alt="Santa Cruz Aerial" class="absolute inset-0 w-full h-full object-cover object-top select-none" draggable="false" />
     </div>
-    <!-- Overlapping Search/Filter Card (restored) -->
+    <!-- Search and Filter Bar -->
     <div class="w-full flex justify-center relative z-30 -mt-16">
-      <div class="w-full max-w-7xl bg-white rounded-2xl shadow-2xl px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 border border-[#EB3C3C]/10">
-        <!-- Left: Filter Icon -->
-        <button id="filterToggle" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-[#EB3C3C] text-[#EB3C3C] shadow hover:bg-[#EB3C3C]/10 transition mr-2">
-          <span class="sr-only">Filter</span>
-          <!-- Filter icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0013 13.414V19a1 1 0 01-1.447.894l-2-1A1 1 0 019 18v-4.586a1 1 0 00-.293-.707L2.293 6.707A1 1 0 012 6V4z" /></svg>
-        </button>
-        <!-- Center: Controls -->
-        <div class="flex-1 flex flex-row gap-2 items-center">
-          <select id="barangayFilter" class="px-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#EB3C3C] font-bold w-56">
-            <option value="">All Barangays</option>
-            <option value="Barangay 1">Barangay 1</option>
-            <option value="Barangay 2">Barangay 2</option>
-            <option value="Barangay 3">Barangay 3</option>
-            <option value="Barangay 4">Barangay 4</option>
-            <option value="Barangay 5">Barangay 5</option>
-            <option value="Barangay 6">Barangay 6</option>
-            <option value="Barangay 7">Barangay 7</option>
-            <option value="Barangay 8">Barangay 8</option>
-            <option value="Barangay 9">Barangay 9</option>
-            <option value="Barangay 10">Barangay 10</option>
-            <option value="Various">Various Barangays</option>
-          </select>
-          <input type="text" id="searchInput" placeholder="Search for Project Name or Code" class="flex-1 px-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#7A1F1F] font-medium" />
-          <button id="searchBtn" class="px-8 py-3 bg-[#FE5353] text-white font-bold rounded-lg shadow hover:bg-[#EB3C3C] transition">Search</button>
+      <div class="w-full max-w-5xl bg-white/95 backdrop-blur-sm rounded-xl shadow-lg px-8 py-6 border border-[#EB3C3C]/10">
+        <div class="flex flex-col md:flex-row gap-4 items-center">
+          <!-- Search Input -->
+          <div class="flex-1 w-full">
+            <div class="relative group">
+              <input 
+                type="text" 
+                id="project-search" 
+                placeholder="Search for project name or code" 
+                class="w-full px-5 py-4 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EB3C3C] focus:border-[#EB3C3C] transition-all duration-200 text-base"
+              />
+              <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Filter Dropdowns -->
+          <div class="flex gap-3">
+            <!-- Status Filter -->
+            <select id="status-filter" class="px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EB3C3C] focus:border-[#EB3C3C] transition-all duration-200 text-base bg-white">
+              <option value="">All Status</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="completed">Completed</option>
+              <option value="delayed">Delayed</option>
+              <option value="pending">Pending</option>
+            </select>
+            
+            <!-- Category Filter -->
+            <select id="category-filter" class="px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EB3C3C] focus:border-[#EB3C3C] transition-all duration-200 text-base bg-white">
+              <option value="">All Categories</option>
+              <option value="infrastructure">Infrastructure</option>
+              <option value="health">Health</option>
+              <option value="education">Education</option>
+              <option value="social">Social Services</option>
+              <option value="environment">Environment</option>
+            </select>
+            
+            <!-- Priority Filter -->
+            <select id="priority-filter" class="px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EB3C3C] focus:border-[#EB3C3C] transition-all duration-200 text-base bg-white">
+              <option value="">All Priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex gap-3">
+            <!-- Clear Filters Button -->
+            <button 
+              id="clear-filters" 
+              class="px-5 py-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium text-base"
+            >
+              Clear
+            </button>
+            
+            <!-- Search Button -->
+            <button 
+              id="advanced-search" 
+              class="px-7 py-4 bg-[#EB3C3C] text-white rounded-lg hover:bg-[#D63333] transition-all duration-200 font-medium text-base"
+            >
+              Search
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -59,46 +99,165 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
 <script>
   // Search and filter functionality
   document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const barangayFilter = document.getElementById('barangayFilter');
-    const filterToggle = document.getElementById('filterToggle');
+    initializeSearchAndFilters();
+    initializeKeyboardShortcuts();
+  });
 
-    // Search functionality
-    function performSearch() {
-      const searchTerm = searchInput.value.trim();
-      const barangay = barangayFilter.value;
-      
-      // Call the searchProjects function on the window object
-      if (window.searchProjects) {
-        window.searchProjects(searchTerm, barangay);
-      } else {
-        // Fallback: wait a bit for the React component to load
-        setTimeout(() => {
-          if (window.searchProjects) {
-            window.searchProjects(searchTerm, barangay);
-          }
-        }, 1000);
-      }
+  function initializeSearchAndFilters() {
+    const searchInput = document.getElementById('project-search');
+    const statusFilter = document.getElementById('status-filter');
+    const categoryFilter = document.getElementById('category-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    const clearFiltersBtn = document.getElementById('clear-filters');
+    const advancedSearchBtn = document.getElementById('advanced-search');
+
+    // Add event listeners
+    if (searchInput) {
+      searchInput.addEventListener('input', handleSearch);
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          handleAdvancedSearch();
+        }
+      });
+    }
+    if (statusFilter) {
+      statusFilter.addEventListener('change', handleFilter);
+    }
+    if (categoryFilter) {
+      categoryFilter.addEventListener('change', handleFilter);
+    }
+    if (priorityFilter) {
+      priorityFilter.addEventListener('change', handleFilter);
+    }
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', clearAllFilters);
+    }
+    if (advancedSearchBtn) {
+      advancedSearchBtn.addEventListener('click', handleAdvancedSearch);
     }
 
-    // Search button click
-    searchBtn.addEventListener('click', performSearch);
+    // Add focus effects
+    addFocusEffects();
+  }
 
-    // Enter key in search input
-    searchInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        performSearch();
+  function initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+      // Cmd/Ctrl + K to focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('project-search');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      
+      // Escape to clear filters
+      if (e.key === 'Escape') {
+        clearAllFilters();
       }
     });
+  }
 
-    // Barangay filter change
-    barangayFilter.addEventListener('change', performSearch);
-
-    // Filter toggle (for future advanced filters)
-    filterToggle.addEventListener('click', function() {
-      // TODO: Implement advanced filter panel
-      console.log('Advanced filters coming soon...');
+  function addFocusEffects() {
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.classList.add('ring-4', 'ring-[#EB3C3C]/20');
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.classList.remove('ring-4', 'ring-[#EB3C3C]/20');
+      });
     });
-  });
+  }
+
+  function handleSearch() {
+    const searchTerm = document.getElementById('project-search').value.toLowerCase();
+    // This will be handled by the ProjectsIsland component
+    window.dispatchEvent(new CustomEvent('projectSearch', { 
+      detail: { searchTerm } 
+    }));
+  }
+
+  function handleFilter() {
+    const status = document.getElementById('status-filter').value;
+    const category = document.getElementById('category-filter').value;
+    const priority = document.getElementById('priority-filter').value;
+    
+    // This will be handled by the ProjectsIsland component
+    window.dispatchEvent(new CustomEvent('projectFilter', { 
+      detail: { status, category, priority } 
+    }));
+  }
+
+  function handleAdvancedSearch() {
+    const searchTerm = document.getElementById('project-search').value;
+    const status = document.getElementById('status-filter').value;
+    const category = document.getElementById('category-filter').value;
+    const priority = document.getElementById('priority-filter').value;
+    
+    // Show loading state
+    const searchBtn = document.getElementById('advanced-search');
+    if (searchBtn) {
+      const originalText = searchBtn.innerHTML;
+      searchBtn.innerHTML = `
+        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Searching...
+      `;
+      
+      setTimeout(() => {
+        searchBtn.innerHTML = originalText;
+      }, 1000);
+    }
+    
+    // This will be handled by the ProjectsIsland component
+    window.dispatchEvent(new CustomEvent('projectAdvancedSearch', { 
+      detail: { searchTerm, status, category, priority } 
+    }));
+  }
+
+  function clearAllFilters() {
+    const searchInput = document.getElementById('project-search');
+    const statusFilter = document.getElementById('status-filter');
+    const categoryFilter = document.getElementById('category-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    
+    if (searchInput) searchInput.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (priorityFilter) priorityFilter.value = '';
+    
+    // Add visual feedback
+    const clearBtn = document.getElementById('clear-filters');
+    if (clearBtn) {
+      clearBtn.classList.add('bg-green-100', 'text-green-700');
+      setTimeout(() => {
+        clearBtn.classList.remove('bg-green-100', 'text-green-700');
+      }, 500);
+    }
+    
+    // Trigger filter reset
+    window.dispatchEvent(new CustomEvent('projectFilterReset'));
+  }
+
+  // Add smooth animations for better UX
+  function addSmoothAnimations() {
+    const searchBar = document.querySelector('.search-filter-bar');
+    if (searchBar) {
+      searchBar.style.opacity = '0';
+      searchBar.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        searchBar.style.transition = 'all 0.6s ease-out';
+        searchBar.style.opacity = '1';
+        searchBar.style.transform = 'translateY(0)';
+      }, 100);
+    }
+  }
+
+  // Initialize animations when page loads
+  window.addEventListener('load', addSmoothAnimations);
 </script> 

@@ -62,11 +62,12 @@ try {
         const totalBudget = projects.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
         stats.totalBudget = `₱${totalBudget.toLocaleString()}`;
         
-        // Calculate utilized budget based on progress
+        // Calculate utilized budget based on approved budget divisions only
         const utilizedBudget = projects.reduce((sum, p) => {
-          const progress = parseFloat(p.overallProgress || 0);
           const budget = parseFloat(p.totalBudget || 0);
-          return sum + (budget * progress / 100);
+          // Use budget division progress for utilized budget calculation (only approved divisions)
+          const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+          return sum + (budget * budgetProgress / 100);
         }, 0);
         stats.utilizedBudget = `₱${utilizedBudget.toLocaleString()}`;
         
@@ -75,6 +76,10 @@ try {
           ? projects.reduce((sum, p) => sum + parseFloat(p.overallProgress || 0), 0) / projects.length
           : 0;
         stats.averageProgress = Math.round(avgProgress);
+        
+        // Calculate budget utilization percentage for progress bar
+        const budgetUtilizationPercentage = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
+        stats.budgetUtilizationPercentage = Math.round(budgetUtilizationPercentage);
         
         console.log('Calculated stats:', stats);
       } else {
@@ -189,7 +194,7 @@ loading = false;
               <span class="font-semibold text-gray-800">{stats.utilizedBudget}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-[#EB3C3C] h-2 rounded-full" style={`width: ${stats.averageProgress}%`}></div>
+              <div class="bg-[#EB3C3C] h-2 rounded-full" style={`width: ${stats.budgetUtilizationPercentage}%`}></div>
             </div>
           </div>
         </div>
@@ -267,13 +272,25 @@ loading = false;
                       <p class="text-sm text-gray-600">{project.projectCode}</p>
                     </div>
                     <span class={`px-2 py-1 text-xs font-medium rounded-full ${
-                      project.workflowStatus === 'ongoing' ? 'bg-green-100 text-green-700' :
-                      project.workflowStatus === 'completed' ? 'bg-blue-100 text-blue-700' :
-                      project.workflowStatus === 'draft' ? 'bg-yellow-100 text-yellow-700' :
-                      project.workflowStatus === 'secretariat_approved' ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-700'
+                      (() => {
+                        if (project.status && project.status.toLowerCase() === 'completed') {
+                          return 'bg-green-100 text-green-700';
+                        } else if (project.approvedBySecretariat === true || project.approvedBySecretariat === 'true' || project.approvedBySecretariat === 1) {
+                          return 'bg-blue-100 text-blue-700';
+                        } else {
+                          return 'bg-yellow-100 text-yellow-700';
+                        }
+                      })()
                     }`}>
-                      {project.workflowStatus.replace('_', ' ').toUpperCase()}
+                      {(() => {
+                        if (project.status && project.status.toLowerCase() === 'completed') {
+                          return 'COMPLETE';
+                        } else if (project.approvedBySecretariat === true || project.approvedBySecretariat === 'true' || project.approvedBySecretariat === 1) {
+                          return 'ONGOING';
+                        } else {
+                          return 'PENDING';
+                        }
+                      })()}
                     </span>
                   </div>
                   
@@ -284,7 +301,7 @@ loading = false;
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
                       <div class={`h-2 rounded-full ${
-                        project.workflowStatus === 'completed' ? 'bg-green-500' : 'bg-[#EB3C3C]'
+                        (project.status && project.status.toLowerCase() === 'completed') ? 'bg-green-500' : 'bg-[#EB3C3C]'
                       }`} style={`width: ${progress}%`}></div>
                     </div>
                   </div>

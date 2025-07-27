@@ -34,8 +34,15 @@ fs.readdirSync(__dirname)
     const model = require(path.join(__dirname, file));
     // Check if model is a function (old format) or direct export (new format)
     if (typeof model === 'function') {
-      const modelInstance = model(sequelize, Sequelize.DataTypes);
-      db[modelInstance.name] = modelInstance;
+      // Try with both parameters first (for models that need DataTypes)
+      try {
+        const modelInstance = model(sequelize, Sequelize.DataTypes);
+        db[modelInstance.name] = modelInstance;
+      } catch (error) {
+        // If that fails, try with just sequelize
+        const modelInstance = model(sequelize);
+        db[modelInstance.name] = modelInstance;
+      }
     } else {
       // New format - model is already defined
       db[model.name] = model;

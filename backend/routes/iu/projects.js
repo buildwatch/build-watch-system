@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../../middleware/auth');
-const { Project, ProjectUpdate, ProjectMilestone } = require('../../models');
+const { Project, ProjectUpdate, ProjectMilestone, ProjectValidation, User } = require('../../models');
+const { createNotification, createNotificationForRole } = require('../notifications');
 const { Op } = require('sequelize');
+const ProgressCalculationService = require('../../services/progressCalculationService');
 
 // Get all projects for IU Implementing Office
 router.get('/', authenticateToken, async (req, res) => {
@@ -374,6 +376,98 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
+    // Store project details for notifications before deletion
+    const projectDetails = {
+      id: project.id,
+      name: project.name,
+      projectCode: project.projectCode,
+      implementingOfficeId: project.implementingOfficeId,
+      eiuPersonnelId: project.eiuPersonnelId
+    };
+
+    // Create notifications for project deletion
+    try {
+      console.log('Starting notification creation for project deletion (IU route):', project.name);
+      
+      // Notification for Implementing Office (project owner)
+      if (project.implementingOfficeId) {
+        await createNotification(
+          project.implementingOfficeId,
+          'Project Deleted',
+          `Your project "${project.name}" (${project.projectCode}) has been successfully deleted.`,
+          'Info',
+          'Project',
+          'Project',
+          project.id,
+          'Medium'
+        );
+        console.log(`✅ Notification created for Implementing Office: ${project.implementingOfficeId}`);
+      }
+
+      // Notification for EIU Partner (if assigned)
+      if (project.eiuPersonnelId) {
+        await createNotification(
+          project.eiuPersonnelId,
+          'Project Deleted',
+          `The project "${project.name}" (${project.projectCode}) that you were assigned to has been deleted by the Implementing Office.`,
+          'Warning',
+          'Project',
+          'Project',
+          project.id,
+          'Medium'
+        );
+        console.log(`✅ Notification created for EIU Partner: ${project.eiuPersonnelId}`);
+      }
+
+      // Notification for Secretariat (LGU-PMT role)
+      await createNotificationForRole(
+        'LGU-PMT',
+        'Project Deleted',
+        `A project has been deleted: ${project.name} (${project.projectCode}) by ${req.user.name}`,
+        'Info',
+        'Project',
+        'Project',
+        project.id,
+        'Medium'
+      );
+      console.log(`✅ Notification created for Secretariat (LGU-PMT)`);
+
+      // Notify Executive users
+      const executiveUsers = await User.findAll({
+        where: { subRole: 'EXECUTIVE' }
+      });
+
+      if (executiveUsers.length > 0) {
+        console.log(`👑 Creating deletion notifications for ${executiveUsers.length} Executive users...`);
+        for (const executive of executiveUsers) {
+          const executiveNotification = await createNotification(
+            executive.id,
+            'Project Deleted',
+            `A project has been deleted: ${project.name} (${project.projectCode}) by ${req.user.name}`,
+            'Info',
+            'Project',
+            'Project',
+            project.id,
+            'Medium'
+          );
+          console.log(`✅ Executive deletion notification created for ${executive.name}:`, executiveNotification ? 'Success' : 'Failed');
+        }
+      } else {
+        console.log('ℹ️ No Executive users found for deletion notification');
+      }
+
+      console.log(`✅ All notifications created successfully for project deletion (IU route): ${project.name}`);
+    } catch (notificationError) {
+      console.error('❌ Error creating notifications for project deletion (IU route):', notificationError);
+      console.error('Error details:', {
+        message: notificationError.message,
+        stack: notificationError.stack,
+        projectId: project.id,
+        projectName: project.name
+      });
+      // Don't fail the project deletion if notifications fail
+    }
+
     await project.destroy();
 
     res.json({
@@ -477,6 +571,171 @@ router.get('/:id/disbursements', authenticateToken, async (req, res) => {
   }
 });
 
+// Debug EIU personnel endpoint
+router.get('/debug-eiu/:id', authenticateToken, async (req, res) => {
+  try {
+    console.log('Debug EIU endpoint called with project ID:', req.params.id);
+    
+    const project = await Project.findOne({
+      where: {
+        id: req.params.id,
+        implementingOfficeId: req.user.id
+      },
+      include: [
+        {
+          model: User,
+          as: 'eiuPersonnel',
+          attributes: ['id', 'name', 'email', 'role', 'subRole']
+        }
+      ]
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Get all EIU users
+    const eiuUsers = await User.findAll({
+      where: {
+        role: 'EIU'
+      },
+      attributes: ['id', 'name', 'email', 'role', 'subRole']
+    });
+
+    res.json({
+      success: true,
+      debug: {
+        projectId: project.id,
+        projectName: project.name,
+        projectCode: project.projectCode,
+        eiuPersonnelId: project.eiuPersonnelId,
+        eiuPersonnelName: project.eiuPersonnelName,
+        eiuPersonnel: project.eiuPersonnel,
+        allEIUUsers: eiuUsers,
+        hasExternalPartner: project.hasExternalPartner
+      }
+    });
+  } catch (error) {
+    console.error('Debug EIU endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Debug EIU endpoint failed',
+      error: error.message
+    });
+  }
+});
+
+// Debug endpoint to check project data
+router.get('/debug/:id', authenticateToken, async (req, res) => {
+  try {
+    console.log('Debug endpoint called with project ID:', req.params.id);
+    console.log('User ID:', req.user.id);
+    
+    const project = await Project.findOne({
+      where: {
+        id: req.params.id,
+        implementingOfficeId: req.user.id
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Get all project fields
+    const projectData = project.toJSON();
+    
+    res.json({
+      success: true,
+      debug: {
+        projectId: project.id,
+        name: project.name,
+        projectCode: project.projectCode,
+        status: project.status,
+        workflowStatus: project.workflowStatus,
+        overallProgress: project.overallProgress,
+        timelineProgress: project.timelineProgress,
+        budgetProgress: project.budgetProgress,
+        physicalProgress: project.physicalProgress,
+        totalBudget: project.totalBudget,
+        amountSpent: project.amountSpent,
+        startDate: project.startDate,
+        endDate: project.endDate,
+        createdDate: project.createdDate,
+        implementingOfficeName: project.implementingOfficeName,
+        location: project.location,
+        description: project.description,
+        expectedOutputs: project.expectedOutputs,
+        targetBeneficiaries: project.targetBeneficiaries,
+        eiuPersonnelName: project.eiuPersonnelName,
+        fundingSource: project.fundingSource,
+        approvedBySecretariat: project.approvedBySecretariat,
+        submittedToSecretariat: project.submittedToSecretariat,
+        secretariatApprovalDate: project.secretariatApprovalDate,
+        allFields: Object.keys(projectData)
+      }
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Debug endpoint failed',
+      error: error.message
+    });
+  }
+});
+
+// Test endpoint to debug issues
+router.get('/test/:id', authenticateToken, async (req, res) => {
+  try {
+    console.log('Test endpoint called with project ID:', req.params.id);
+    console.log('User ID:', req.user.id);
+    
+    const project = await Project.findOne({
+      where: {
+        id: req.params.id,
+        implementingOfficeId: req.user.id
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      project: {
+        id: project.id,
+        name: project.name,
+        projectCode: project.projectCode,
+        status: project.status,
+        overallProgress: project.overallProgress,
+        timelineProgress: project.timelineProgress,
+        budgetProgress: project.budgetProgress,
+        physicalProgress: project.physicalProgress,
+        approvedBySecretariat: project.approvedBySecretariat,
+        submittedToSecretariat: project.submittedToSecretariat
+      }
+    });
+  } catch (error) {
+    console.error('Test endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Test endpoint failed',
+      error: error.message
+    });
+  }
+});
+
 // Get project summary
 router.get('/:id/summary', authenticateToken, async (req, res) => {
   try {
@@ -491,6 +750,11 @@ router.get('/:id/summary', authenticateToken, async (req, res) => {
           as: 'updates',
           order: [['createdAt', 'DESC']],
           limit: 10
+        },
+        {
+          model: User,
+          as: 'eiuPersonnel',
+          attributes: ['id', 'name', 'email']
         }
       ]
     });
@@ -502,23 +766,158 @@ router.get('/:id/summary', authenticateToken, async (req, res) => {
       });
     }
 
+    // Get compilation reports
+    const compilationReports = await ProjectUpdate.findAll({
+      where: {
+        projectId: project.id,
+        updateType: 'compilation_report'
+      },
+      order: [['createdAt', 'DESC']],
+      limit: 5
+    });
+    
+    console.log(`🔍 Found ${compilationReports.length} compilation reports for project ${project.id}`);
+    compilationReports.forEach((report, index) => {
+      console.log(`📋 Compilation Report ${index + 1}:`, {
+        id: report.id,
+        title: report.title,
+        status: report.status,
+        createdAt: report.createdAt,
+        updateType: report.updateType
+      });
+    });
+
+    // Get project milestones
+    const milestones = await ProjectMilestone.findAll({
+      where: { projectId: project.id },
+      order: [['order', 'ASC']]
+    });
+
+    // Calculate total amount spent from project updates
+    const allUpdates = await ProjectUpdate.findAll({
+      where: { projectId: project.id },
+      attributes: ['amountSpent']
+    });
+    
+    const totalAmountSpent = allUpdates.reduce((sum, update) => {
+      return sum + parseFloat(update.amountSpent || 0);
+    }, 0);
+
+    // Determine Secretariat approval status
+    let secretariatStatus = 'pending';
+    let secretariatStatusText = 'Pending Secretariat Approval';
+    
+    if (project.approvedBySecretariat === true) {
+      secretariatStatus = 'approved';
+      secretariatStatusText = 'Approved by Secretariat';
+    } else if (project.submittedToSecretariat === true) {
+      secretariatStatus = 'under_review';
+      secretariatStatusText = 'Under Secretariat Review';
+    }
+
+    // Get latest compilation report
+    const latestCompilation = compilationReports.length > 0 ? compilationReports[0] : null;
+
+    // Calculate progress using ProgressCalculationService
+    const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, 'iu');
+    const overallProgress = progressData.progress?.overall || 0;
+    const timelineProgress = progressData.progress?.internalTimeline || 0;
+    const budgetProgress = progressData.progress?.internalBudget || 0;
+    const physicalProgress = progressData.progress?.internalPhysical || 0;
+
+    // Calculate budget utilization
+    const totalBudget = parseFloat(project.totalBudget || 0);
+    const amountSpent = totalAmountSpent;
+    const budgetUtilization = totalBudget > 0 ? (amountSpent / totalBudget) * 100 : 0;
+    const remainingBudget = totalBudget - amountSpent;
+
+    // Get EIU partner name from association or fallback to direct field
+    let eiuPartnerName = 'Not assigned';
+    
+    if (project.hasExternalPartner === true) {
+      // Project should have an EIU partner
+      if (project.eiuPersonnel?.name) {
+        eiuPartnerName = project.eiuPersonnel.name;
+      } else if (project.eiuPersonnelName) {
+        eiuPartnerName = project.eiuPersonnelName;
+      } else {
+        eiuPartnerName = 'EIU Partner Pending Assignment';
+      }
+    } else {
+      // Project doesn't have external partner
+      eiuPartnerName = 'No External Partner Required';
+    }
+
     res.json({
       success: true,
       summary: {
         projectId: project.id,
         name: project.name,
+        projectCode: project.projectCode,
         status: project.status,
-        overallProgress: project.overallProgress,
-        timelineProgress: project.timelineProgress,
-        budgetProgress: project.budgetProgress,
-        physicalProgress: project.physicalProgress,
+        workflowStatus: project.workflowStatus,
+        
+        // Progress data
+        progress: {
+          overall: overallProgress,
+          timeline: timelineProgress,
+          budget: budgetProgress,
+          physical: physicalProgress,
+          internalTimeline: progressData.progress?.internalTimeline || 0,
+          internalBudget: progressData.progress?.internalBudget || 0,
+          internalPhysical: progressData.progress?.internalPhysical || 0
+        },
+        milestones: milestones,
+        
+        // Project details
         startDate: project.startDate,
         endDate: project.endDate,
-        totalBudget: project.totalBudget,
+        totalBudget: totalBudget,
+        amountSpent: amountSpent,
+        implementingOffice: project.implementingOfficeName,
+        location: project.location,
+        description: project.description,
+        expectedOutputs: project.expectedOutputs,
+        targetBeneficiaries: project.targetBeneficiaries,
+        eiuPartner: eiuPartnerName,
+        fundingSource: project.fundingSource,
+        createdDate: project.createdDate,
+        
+        // Secretariat approval data
+        secretariat: {
+          approvalStatus: secretariatStatus,
+          approvalStatusText: secretariatStatusText,
+          approvedBySecretariat: project.approvedBySecretariat,
+          submittedToSecretariat: project.submittedToSecretariat,
+          secretariatApprovalDate: project.secretariatApprovalDate,
+          compilationReports: compilationReports.length,
+          latestCompilation: latestCompilation ? {
+            id: latestCompilation.id,
+            submittedAt: latestCompilation.createdAt,
+            status: latestCompilation.status,
+            title: latestCompilation.title,
+            description: latestCompilation.description
+          } : null,
+          validations: []
+        },
+        
+        // Recent updates
         recentUpdates: project.updates,
-        efficiency: project.overallProgress > 0 ? (project.overallProgress / 100) : 0,
-        timelineAdherence: project.timelineProgress > 0 ? (project.timelineProgress / 100) : 0
+        
+        // Efficiency metrics
+        efficiency: overallProgress > 0 ? (overallProgress / 100) : 0,
+        timelineAdherence: timelineProgress > 0 ? (timelineProgress / 100) : 0,
+        
+        // Budget utilization
+        budgetUtilization: budgetUtilization,
+        remainingBudget: remainingBudget
       }
+    });
+    
+    console.log('📊 Secretariat data being sent to frontend:', {
+      approvalStatus: secretariatStatus,
+      compilationReports: compilationReports.length,
+      latestCompilation: latestCompilation ? latestCompilation.title : 'None'
     });
   } catch (error) {
     console.error('Error fetching project summary:', error);

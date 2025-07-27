@@ -21,7 +21,7 @@ const adminRoutes = require('./routes/admin');
 const eiuRoutes = require('./routes/eiu');
 const iuProjectRoutes = require('./routes/iu/projects');
 const { router: activityLogRoutes } = require('./routes/activity-logs');
-const notificationRoutes = require('./routes/notifications');
+const { router: notificationRoutes } = require('./routes/notifications');
 const homeRoutes = require('./routes/home');
 const articleRoutes = require('./routes/articles');
 const milestoneRoutes = require('./routes/milestones');
@@ -29,6 +29,8 @@ const projectUpdateRoutes = require('./routes/project-updates');
 const templateRoutes = require('./routes/templates');
 const communicationRoutes = require('./routes/communications');
 const coordinationRoutes = require('./routes/coordination');
+const eiuActivityRoutes = require('./routes/eiu-activities');
+const policyRoutes = require('./routes/policies');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -150,6 +152,8 @@ app.use('/api/project-updates', projectUpdateRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/communications', communicationRoutes);
 app.use('/api/coordination', coordinationRoutes);
+app.use('/api/eiu-activities', eiuActivityRoutes);
+app.use('/api/policies', policyRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {

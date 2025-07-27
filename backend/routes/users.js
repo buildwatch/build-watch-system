@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { User, ActivityLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
 const { sendUserIdEmail } = require('../services/emailService');
+const { createNotification, createNotificationForRole } = require('./notifications');
 
 // Middleware to check if user is System Admin
 const requireSystemAdmin = async (req, res, next) => {
@@ -284,6 +285,61 @@ router.post('/', authenticateToken, requireSystemAdmin, async (req, res) => {
       ipAddress: req.ip,
       userAgent: req.get('User-Agent')
     });
+
+    // Create notifications for relevant users based on the new user's role
+    try {
+      // Notify System Administrators about new user creation
+      await createNotificationForRole('SYS.AD', 
+        'New User Account Created', 
+        `A new ${user.role} account has been created: ${user.fullName} (${user.username})`, 
+        'Success', 
+        'User Management', 
+        'User', 
+        user.id, 
+        'Normal'
+      );
+
+      // Notify specific role users based on the new user's role
+      if (user.role === 'EIU') {
+        // Notify Secretariat about new EIU user
+        await createNotificationForRole('secretariat', 
+          'New EIU User Account Created', 
+          `A new EIU personnel account has been created: ${user.fullName} (${user.username})`, 
+          'Info', 
+          'User Management', 
+          'User', 
+          user.id, 
+          'Normal'
+        );
+      } else if (user.role === 'LGU-IU' || user.role === 'iu') {
+        // Notify Secretariat about new Implementing Office user
+        await createNotificationForRole('secretariat', 
+          'New Implementing Office User Created', 
+          `A new Implementing Office account has been created: ${user.fullName} (${user.username})`, 
+          'Info', 
+          'User Management', 
+          'User', 
+          user.id, 
+          'Normal'
+        );
+      } else if (user.role === 'LGU-PMT') {
+        // Notify System Admin about new MPMEC user
+        await createNotificationForRole('SYS.AD', 
+          'New MPMEC User Account Created', 
+          `A new MPMEC member account has been created: ${user.fullName} (${user.username})`, 
+          'Info', 
+          'User Management', 
+          'User', 
+          user.id, 
+          'Normal'
+        );
+      }
+
+      console.log(`Notifications created for new user: ${user.fullName}`);
+    } catch (notificationError) {
+      console.error('Error creating notifications for new user:', notificationError);
+      // Don't fail the user creation if notifications fail
+    }
 
     // Return user data without password
     const userData = user.toJSON();

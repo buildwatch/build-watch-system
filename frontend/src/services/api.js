@@ -3,6 +3,9 @@
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
+// Export API_BASE_URL for other services
+export { API_BASE_URL as apiBaseUrl };
+
 // Utility function for API calls
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -37,6 +40,29 @@ async function apiCall(endpoint, options = {}) {
     throw error;
   }
 }
+
+// Simple axios-like API object for policy service
+const api = {
+  get: async (endpoint, options = {}) => {
+    const data = await apiCall(endpoint, { ...options, method: 'GET' });
+    return { data };
+  },
+  post: async (endpoint, body, options = {}) => {
+    const data = await apiCall(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) });
+    return { data };
+  },
+  put: async (endpoint, body, options = {}) => {
+    const data = await apiCall(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) });
+    return { data };
+  },
+  delete: async (endpoint, options = {}) => {
+    const data = await apiCall(endpoint, { ...options, method: 'DELETE' });
+    return { data };
+  }
+};
+
+// Export the api object as default for policy service
+export default api;
 
 // Authentication API
 export const authAPI = {
@@ -113,6 +139,68 @@ export const projectsAPI = {
   // Get project statistics for dashboard
   async getProjectStats() {
     return apiCall('/projects/stats', {
+      method: 'GET'
+    });
+  },
+
+  // Approve/reject project (Secretariat only)
+  async approveProject(id, { approved, comments }) {
+    return apiCall(`/projects/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ approved, comments })
+    });
+  },
+
+  // Submit project update
+  async submitUpdate(projectId, updateData) {
+    return apiCall(`/projects/${projectId}/updates`, {
+      method: 'POST',
+      body: JSON.stringify(updateData)
+    });
+  },
+
+  // Get project updates
+  async getProjectUpdates(projectId, params = {}) {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiCall(`/projects/${projectId}/updates?${queryParams}`, {
+      method: 'GET'
+    });
+  },
+
+  // Approve/reject project update
+  async approveUpdate(projectId, updateId, { approved, comments }) {
+    return apiCall(`/projects/${projectId}/updates/${updateId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ approved, comments })
+    });
+  },
+
+  // Create milestone
+  async createMilestone(projectId, milestoneData) {
+    return apiCall(`/projects/${projectId}/milestones`, {
+      method: 'POST',
+      body: JSON.stringify(milestoneData)
+    });
+  },
+
+  // Get project milestones
+  async getProjectMilestones(projectId) {
+    return apiCall(`/projects/${projectId}/milestones`, {
+      method: 'GET'
+    });
+  },
+
+  // Update milestone
+  async updateMilestone(projectId, milestoneId, updateData) {
+    return apiCall(`/projects/${projectId}/milestones/${milestoneId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+  },
+
+  // Get dashboard stats
+  async getDashboardStats() {
+    return apiCall('/projects/dashboard/stats', {
       method: 'GET'
     });
   }
@@ -357,8 +445,8 @@ export const apiUtils = {
   }
 };
 
-// Export all APIs
-export default {
+// Export all APIs as named export
+export const apiClient = {
   auth: authAPI,
   projects: projectsAPI,
   users: usersAPI,

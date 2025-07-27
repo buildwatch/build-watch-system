@@ -1,8 +1,28 @@
 {
+  "name": "build-watch-system",
+  "version": "1.0.0",
+  "description": "Build Watch LGU Santa Cruz - Full Stack Application",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "build": "cd frontend && npm run build",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "lgu",
+    "project-monitoring",
+    "build-watch",
+    "santa-cruz",
+    "government"
+  ],
+  "author": "LGU Santa Cruz",
+  "license": "ISC",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "devDependencies": {
-    "@astrojs/tailwind": "^6.0.2",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.11"
+    "concurrently": "^8.2.2"
   }
 }

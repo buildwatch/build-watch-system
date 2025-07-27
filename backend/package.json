@@ -15,6 +15,18 @@
     "seed-lgu-users": "node scripts/seed-lgu-users.js",
     "seed-lgu-users:test": "node scripts/seed-lgu-users-safe.js test",
     "seed-lgu-users:simple": "node scripts/seed-lgu-users-simple.js",
+    "backup-db": "node scripts/backup-database.js",
+    "fix-workflow": "node scripts/fix-project-workflow.js",
+    "check-milestone-workflow": "node scripts/check-milestone-workflow.js",
+    "fix-milestone-workflow": "node scripts/fix-milestone-workflow.js",
+    "check-compilation-status": "node scripts/check-compilation-status.js",
+    "fix-project-progress": "node scripts/fix-project-progress.js",
+    "fix-milestone-data": "node scripts/fix-milestone-data.js",
+    "update-milestone-status": "node scripts/update-milestone-status.js",
+    "finalize-project-progress": "node scripts/finalize-project-progress.js",
+    "comprehensive-project-fix": "node scripts/comprehensive-project-fix.js",
+    "verify-system-consistency": "node scripts/verify-system-consistency.js",
+    "clean-slate-reset": "node scripts/clean-slate-reset.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -29,6 +41,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "docx": "^9.5.1",
     "dotenv": "^16.3.1",
     "exceljs": "^4.4.0",
     "express": "^4.18.2",

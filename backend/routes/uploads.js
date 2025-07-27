@@ -212,6 +212,37 @@ router.get('/:id', (req, res) => {
   });
 });
 
+// Download file by filename
+router.get('/:filename/download', (req, res) => {
+  const { filename } = req.params;
+  
+  // Find the upload by filename
+  const upload = mockUploads.find(u => u.fileName === filename);
+  if (!upload) {
+    return res.status(404).json({ error: 'File not found' });
+  }
+  
+  // Construct the file path
+  const filePath = `uploads/${upload.fileName}`;
+  
+  // Check if file exists
+  const fs = require('fs');
+  const path = require('path');
+  const fullPath = path.join(__dirname, '..', filePath);
+  
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).json({ error: 'File not found on server' });
+  }
+  
+  // Set appropriate headers for download
+  res.setHeader('Content-Disposition', `attachment; filename="${upload.originalName}"`);
+  res.setHeader('Content-Type', upload.fileType);
+  
+  // Stream the file
+  const fileStream = fs.createReadStream(fullPath);
+  fileStream.pipe(res);
+});
+
 // Delete upload
 router.delete('/:id', (req, res) => {
   const { id } = req.params;

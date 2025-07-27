@@ -20,10 +20,11 @@ class NotificationService {
       const token = this.getAuthToken();
       if (!token) return 0;
 
-      const response = await fetch(`${API_BASE_URL}/notifications/count?isRead=false`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/count?isRead=false&_t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         }
       });
 
@@ -45,10 +46,11 @@ class NotificationService {
       const token = this.getAuthToken();
       if (!token) return [];
 
-      const response = await fetch(`${API_BASE_URL}/notifications?page=${page}&limit=${limit}`, {
+      const response = await fetch(`${API_BASE_URL}/notifications?page=${page}&limit=${limit}&_t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         }
       });
 
@@ -213,6 +215,14 @@ class NotificationService {
   // Get current notifications
   getCurrentNotifications() {
     return this.notifications;
+  }
+
+  // Force refresh notifications (for immediate updates)
+  async forceRefresh() {
+    console.log('🔄 Force refreshing notifications...');
+    await this.getNotificationCount();
+    await this.getNotifications();
+    this.notifyUpdateCallbacks();
   }
 
   // Format notification time

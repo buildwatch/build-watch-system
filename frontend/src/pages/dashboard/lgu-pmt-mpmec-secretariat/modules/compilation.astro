@@ -24,27 +24,101 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       }
       
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        background: linear-gradient(135deg, #ef4444, #dc2626);
         border-radius: 10px;
       }
       
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
       }
       
-      /* Modern card hover effects */
+      /* Enhanced card hover effects */
       .milestone-card {
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
       }
       
       .milestone-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      
+      .milestone-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.1), transparent);
+        transition: left 0.5s;
+      }
+      
+      .milestone-card:hover::before {
+        left: 100%;
+      }
+      
+      /* Statistics card hover effects */
+      .stats-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .stats-card:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 20px 40px -12px rgba(239, 68, 68, 0.3);
+        border-color: #ef4444;
+      }
+      
+      .stats-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+        transition: width 0.4s ease;
+      }
+      
+      .stats-card:hover::after {
+        width: 100%;
+      }
+      
+      /* Project card hover effects */
+      .project-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .project-card:hover {
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3);
+        border-left: 4px solid #ef4444;
+      }
+      
+      .project-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+      }
+      
+      .project-card:hover::before {
+        transform: scaleX(1);
       }
       
       /* Gradient text effect */
       .gradient-text {
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        background: linear-gradient(135deg, #ef4444, #dc2626);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -52,48 +126,339 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       
       /* Modern button styles */
       .modern-btn {
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        background: linear-gradient(135deg, #ef4444, #dc2626);
         transition: all 0.3s ease;
       }
       
       .modern-btn:hover {
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
         transform: translateY(-1px);
-        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+      }
+      
+      /* Enhanced tab animations */
+      .tab-content {
+        transition: all 0.3s ease-in-out;
+      }
+      
+      /* Card hover effects for compiled reports */
+      .compiled-report-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+      }
+      
+      .compiled-report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-left-color: #ef4444;
+      }
+      
+      /* Loading animation */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      
+      /* Gradient text for headers */
+      .gradient-text-red {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      /* Enhanced button hover effects */
+      .enhanced-btn {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .enhanced-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      }
+      
+      .enhanced-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+      
+      .enhanced-btn:hover::before {
+        left: 100%;
+      }
+      
+      /* Tab hover enhancement */
+      .tab-btn {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .tab-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.1);
+      }
+      
+      /* Enhanced statistics cards with better animations */
+      .stats-card-enhanced {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .stats-card-enhanced:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      
+      .stats-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.1), transparent);
+        transition: left 0.6s;
+      }
+      
+      .stats-card-enhanced:hover::before {
+        left: 100%;
+      }
+      
+      /* Enhanced project cards with better hover effects */
+      .project-card-enhanced {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .project-card-enhanced:hover {
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 0 35px 70px -12px rgba(0, 0, 0, 0.3);
+        border-left: 4px solid #ef4444;
+      }
+      
+      .project-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
+        transform: scaleX(0);
+        transition: transform 0.5s ease;
+      }
+      
+      .project-card-enhanced:hover::before {
+        transform: scaleX(1);
+      }
+      
+      /* Enhanced button animations */
+      .btn-enhanced {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .btn-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2);
+      }
+      
+      .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s;
+      }
+      
+      .btn-enhanced:hover::before {
+        left: 100%;
+      }
+      
+      /* Enhanced progress bars */
+      .progress-enhanced {
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+      }
+      
+      .progress-enhanced:hover {
+        background: linear-gradient(90deg, #dc2626, #b91c1c);
+        transform: scaleY(1.1);
+      }
+      
+      /* Enhanced loading animations */
+      @keyframes shimmer {
+        0% {
+          background-position: -200px 0;
+        }
+        100% {
+          background-position: calc(200px + 100%) 0;
+        }
+      }
+      
+      .shimmer {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200px 100%;
+        animation: shimmer 1.5s infinite;
+      }
+      
+      /* Enhanced focus states */
+      .focus-enhanced:focus {
+        outline: 2px solid #ef4444;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
       }
     </style>
     
-    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
-      <!-- Header -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">Compilation Summary</h1>
-          <p class="text-gray-600">Comprehensive project compilation by department/office</p>
+    <section class="p-8 bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen">
+      <!-- Enhanced Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+        <div class="space-y-2">
+          <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent">
+            Compilation Summary
+          </h1>
+          <p class="text-gray-600 text-lg">Comprehensive project compilation by department/office</p>
         </div>
-        <div class="flex items-center gap-3">
-          <button onclick="refreshCompilation()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-4">
+          <button 
+            onclick="refreshCompilation()" 
+            class="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center gap-3 overflow-hidden font-semibold"
+          >
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+            <svg class="w-6 h-6 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            Refresh
-          </button>
-          <button onclick="exportCompilation()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Export
+            <span>Refresh Data</span>
           </button>
         </div>
       </div>
 
-      <!-- Overall Statistics -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="overallStats">
-        <!-- Overall stats will be loaded dynamically -->
+      <!-- Enhanced Tab Navigation -->
+      <div class="mb-8">
+        <div class="flex space-x-2 bg-gradient-to-r from-gray-100 to-gray-200 p-2 rounded-2xl shadow-lg">
+          <button 
+            id="tab-summary" 
+            class="group flex-1 py-4 px-8 text-sm font-semibold rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-white text-red-600 shadow-lg border-b-2 border-red-500 relative overflow-hidden" 
+            onclick="showTab('summary')"
+          >
+            <div class="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="flex items-center justify-center gap-3 relative z-10">
+              <svg class="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <span>Compilation Summary</span>
+            </div>
+          </button>
+          <button 
+            id="tab-compiled" 
+            class="group flex-1 py-4 px-8 text-sm font-semibold rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-transparent text-gray-600 hover:text-gray-800 hover:bg-white/80 relative overflow-hidden" 
+            onclick="showTab('compiled')"
+          >
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="flex items-center justify-center gap-3 relative z-10">
+              <svg class="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span>Compiled Reports</span>
+              <span id="compiled-count" class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full hidden group-hover:scale-110 transition-transform duration-300">0</span>
+            </div>
+          </button>
+        </div>
       </div>
 
-      <!-- Department/Office Cards -->
-      <div class="space-y-8" id="departmentCards">
-        <!-- Department cards will be loaded dynamically -->
+      <!-- Tab Content -->
+      <div id="tab-content-summary">
+        <!-- Overall Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="overallStats">
+          <!-- Overall stats will be loaded dynamically -->
+        </div>
+
+        <!-- Department/Office Cards -->
+        <div class="space-y-8" id="departmentCards">
+          <!-- Department cards will be loaded dynamically -->
+        </div>
+      </div>
+      
+      <div id="tab-content-compiled" class="hidden">
+        <!-- Enhanced Compiled Reports Archive -->
+        <div class="mb-8">
+          <div class="group bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 rounded-2xl p-8 mb-8 border border-red-200 hover:border-red-300 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div class="flex items-center justify-between">
+              <div class="space-y-3">
+                <h2 class="text-4xl font-bold bg-gradient-to-r from-red-600 via-pink-600 to-orange-600 bg-clip-text text-transparent group-hover:from-red-700 group-hover:via-pink-700 group-hover:to-orange-700 transition-all duration-300">
+                  📋 Compiled Reports Archive
+                </h2>
+                <p class="text-gray-600 text-lg group-hover:text-gray-700 transition-colors">Official records of milestone reports that have received Secretariat verdicts</p>
+                <div class="flex items-center gap-6 mt-4">
+                  <div class="flex items-center gap-2 text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
+                    <div class="w-3 h-3 bg-green-500 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300"></div>
+                    <span class="font-medium">Approved Reports</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
+                    <div class="w-3 h-3 bg-yellow-500 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300"></div>
+                    <span class="font-medium">Pending Review</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
+                    <div class="w-3 h-3 bg-red-500 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300"></div>
+                    <span class="font-medium">Rejected Reports</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <button 
+                  onclick="refreshCompiledReports()" 
+                  class="group/btn relative px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3 font-semibold overflow-hidden"
+                >
+                  <div class="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity duration-300"></div>
+                  <svg class="w-6 h-6 transition-transform duration-300 group-hover/btn:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                  <span>Refresh Archive</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Enhanced Timeline-based compiled reports -->
+          <div id="compiledReportsTimeline" class="space-y-8">
+            <!-- Enhanced Loading state -->
+            <div id="compiled-reports-loading" class="hidden">
+              <div class="flex flex-col items-center justify-center py-16 space-y-6">
+                <div class="relative">
+                  <div class="animate-spin rounded-full h-16 w-16 border-4 border-red-200 border-t-red-600"></div>
+                  <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-red-400 animate-ping"></div>
+                </div>
+                <div class="text-center space-y-2">
+                  <p class="text-lg font-semibold text-gray-700">Loading compiled reports...</p>
+                  <p class="text-sm text-gray-500">Please wait while we gather the latest data</p>
+                </div>
+                <div class="flex space-x-2">
+                  <div class="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+                  <div class="w-2 h-2 bg-red-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                  <div class="w-2 h-2 bg-red-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Reports will be populated here dynamically -->
+          </div>
+        </div>
       </div>
     </section>
 
@@ -103,27 +468,42 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div class="mt-3">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900" id="modalTitle">Project Report Details</h3>
-            <div class="flex items-center gap-2">
-              <button onclick="openTimelineModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-3">
+              <button 
+                onclick="openTimelineModal()" 
+                class="group/btn relative px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 text-sm font-semibold overflow-hidden btn-enhanced"
+              >
+                <div class="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity duration-300"></div>
+                <svg class="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
-                Timeline Graph
+                <span>Timeline Graph</span>
               </button>
-              <button onclick="openHistoryModal()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button 
+                onclick="openHistoryModal()" 
+                class="group/btn relative px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 text-sm font-semibold overflow-hidden btn-enhanced"
+              >
+                <div class="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity duration-300"></div>
+                <svg class="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                Update History
+                <span>Update History</span>
               </button>
-              <button onclick="exportProjectReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button 
+                onclick="exportProjectReport()" 
+                class="group/btn relative px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 text-sm font-semibold overflow-hidden btn-enhanced"
+              >
+                <div class="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity duration-300"></div>
+                <svg class="w-5 h-5 transition-transform duration-300 group-hover/btn:translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                Export Report
+                <span>Export Report</span>
               </button>
-              <button onclick="closeProjectModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button 
+                onclick="closeProjectModal()" 
+                class="group/btn p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-110"
+              >
+                <svg class="w-6 h-6 transition-transform duration-300 group-hover/btn:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
@@ -153,29 +533,9 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 
           <!-- Approval Actions -->
           <div class="mt-8 pt-6 border-t border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-800 mb-4">Secretariat Validation & Progress Update</h4>
-            <div class="flex items-center gap-4">
-              <button onclick="approveFullWeight()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                Approve (Full Weight)
-              </button>
-              <button onclick="showPartialProgressModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                </svg>
-                Approve (Partial Progress)
-              </button>
-              <button onclick="rejectReport()" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Reject
-              </button>
-              <button onclick="closeProjectModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                Cancel
-              </button>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">Secretariat Validation & Progress Update</h4>
+            <div id="approvalActions" class="flex items-center justify-center gap-4">
+              <!-- Action buttons will be dynamically populated based on project status -->
             </div>
           </div>
         </div>
@@ -280,6 +640,17 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                 Export History
               </button>
               <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600">
+
+    <!-- Compiled Report Modal -->
+    <div id="compiledReportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-[9999]" style="display: none;">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white rounded-lg shadow-xl w-11/12 max-w-7xl max-h-[90vh] overflow-y-auto">
+          <div id="compiledReportModalContent">
+            <!-- Modal content will be dynamically loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -361,6 +732,107 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         </div>
       </div>
     </div>
+
+    <!-- Division Rejection Modal -->
+    <div id="divisionRejectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Reject Division</h3>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-3" id="divisionRejectionTitle">Rejecting division for milestone</p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Rejection Comments</label>
+            <textarea id="divisionRejectionComments" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Please provide specific reasons for rejection..."></textarea>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button onclick="closeDivisionRejectionModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+              Cancel
+            </button>
+            <button onclick="confirmDivisionRejection()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+              Confirm Rejection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revision Request Modal -->
+    <div id="revisionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Request Revision</h3>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-3">Requesting revision for project report</p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Revision Requirements</label>
+            <textarea id="revisionRequirements" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Please specify what revisions are needed..."></textarea>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button onclick="closeRevisionModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+              Cancel
+            </button>
+            <button onclick="confirmRevisionRequest()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+              Request Revision
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Division Revision Request Modal -->
+    <div id="divisionRevisionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Request Division Revision</h3>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-3" id="divisionRevisionTitle">Requesting revision for division</p>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Revision Requirements</label>
+            <textarea id="divisionRevisionRequirements" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Please specify what revisions are needed for this division..."></textarea>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button onclick="closeDivisionRevisionModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+              Cancel
+            </button>
+            <button onclick="confirmDivisionRevisionRequest()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+              Request Revision
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Report Modal -->
+    <div id="detailedReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Modal Header -->
+          <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <div>
+              <h3 class="text-xl font-bold text-gray-800">Official Milestone Report</h3>
+              <p class="text-sm text-gray-600" id="modalProjectCode"></p>
+            </div>
+            <div class="flex space-x-2">
+              <button 
+                onclick="exportToWord()"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-download mr-2"></i>Export to Word
+              </button>
+              <button 
+                onclick="closeDetailedModal()"
+                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-times mr-2"></i>Close
+              </button>
+            </div>
+          </div>
+          
+          <!-- Modal Content -->
+          <div class="p-6" id="detailedReportContent">
+            <!-- Content will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
   </SecretariatLayout>
 </Layout>
 
@@ -425,7 +897,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     const container = document.getElementById('overallStats');
     
     container.innerHTML = `
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 stats-card transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Total Projects</h3>
           <div class="p-3 bg-blue-100 rounded-full">
@@ -450,7 +922,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 stats-card transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Timeline Status</h3>
           <div class="p-3 bg-green-100 rounded-full">
@@ -475,7 +947,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 stats-card transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Budget Status</h3>
           <div class="p-3 bg-purple-100 rounded-full">
@@ -500,7 +972,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 stats-card transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-800">Validation Status</h3>
           <div class="p-3 bg-orange-100 rounded-full">
@@ -574,15 +1046,19 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div class="p-6">
           <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             ${department.projects?.map(project => `
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow project-card transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
                 <div class="flex items-start justify-between mb-3">
                   <h4 class="font-semibold text-gray-800 text-sm line-clamp-2">${project.name}</h4>
                   <span class="px-2 py-1 text-xs font-medium rounded-full ${
-                    project.status === 'compiled_for_secretariat' ? 'bg-green-100 text-green-800' :
+                    project.secretariatApprovalDate ? 'bg-green-100 text-green-800' :
+                    project.status === 'compiled_for_secretariat' ? 'bg-blue-100 text-blue-800' :
                     project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }">
-                    ${project.status === 'compiled_for_secretariat' ? 'Compiled' : project.status}
+                    ${project.secretariatApprovalDate ? 
+                      `Done Approval (${new Date(project.secretariatApprovalDate).toLocaleDateString()})` : 
+                      project.status === 'compiled_for_secretariat' ? 'Compiled' : 
+                      project.status}
                   </span>
                 </div>
                 
@@ -599,15 +1075,15 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                   
                   <div class="grid grid-cols-3 gap-2 text-xs">
                     <div class="text-center">
-                      <div class="font-medium text-green-600">${(parseFloat(project.timelineProgress) || 0).toFixed(1)}%</div>
+                      <div class="font-medium text-green-600">${(parseFloat(project.timelineProgress) || 0).toFixed(2)}%</div>
                       <div class="text-gray-500">Timeline</div>
                     </div>
                     <div class="text-center">
-                      <div class="font-medium text-purple-600">${(parseFloat(project.budgetProgress) || 0).toFixed(1)}%</div>
+                      <div class="font-medium text-purple-600">${(parseFloat(project.budgetProgress) || 0).toFixed(2)}%</div>
                       <div class="text-gray-500">Budget</div>
                     </div>
                     <div class="text-center">
-                      <div class="font-medium text-orange-600">${(parseFloat(project.physicalProgress) || 0).toFixed(1)}%</div>
+                      <div class="font-medium text-orange-600">${(parseFloat(project.physicalProgress) || 0).toFixed(2)}%</div>
                       <div class="text-gray-500">Physical</div>
                     </div>
                   </div>
@@ -629,13 +1105,13 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                 </div>
                 
                 <div class="mt-4 flex gap-2">
-                  <button onclick="viewProjectReport('${project.id}')" class="flex-1 px-3 py-2 bg-[#FE5353] text-white text-sm rounded-lg hover:bg-[#E54545] transition-colors">
+                  <button onclick="viewProjectReport('${project.id}')" class="flex-1 px-3 py-2 bg-[#FE5353] text-white text-sm rounded-lg hover:bg-[#E54545] transition-colors enhanced-btn">
                     View Report
                   </button>
                   ${project.hasCompiledReport ? `
-                    <button onclick="generateProjectReport('${project.id}')" class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-                      Export
-                    </button>
+                            <button onclick="generateProjectReport('${project.id}')" class="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors enhanced-btn">
+          Export
+        </button>
                   ` : ''}
                 </div>
               </div>
@@ -648,30 +1124,14 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 
   async function viewProjectReport(projectId) {
     try {
-      const token = localStorage.getItem('token');
-      const timestamp = new Date().getTime(); // Cache busting
-      const response = await fetch(`http://localhost:3000/api/projects/progress/${projectId}?t=${timestamp}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        currentProjectId = projectId;
-        currentProjectData = data.data;
-        displayProjectReport(data.data);
-        document.getElementById('projectReportModal').classList.remove('hidden');
-      } else {
-        throw new Error(data.error || 'Failed to fetch project details');
-      }
+      currentProjectId = projectId;
+      await loadProjectDetails(projectId);
+      document.getElementById('projectReportModal').classList.remove('hidden');
+      // Update buttons and actions after loading project details
+      setTimeout(() => {
+        updateDivisionButtons();
+        updateOverallActions();
+      }, 100);
     } catch (error) {
       console.error('Error loading project report:', error);
       alert('Error loading project report. Please try again.');
@@ -683,6 +1143,9 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     const projectInfo = document.getElementById('projectInfo');
     const compiledReport = document.getElementById('compiledReport');
     const milestoneUpdates = document.getElementById('milestoneUpdates');
+    
+    // Update approval actions based on project status
+    updateApprovalActions(projectData.project.workflowStatus);
     
     // Update modal title
     modalTitle.textContent = `Compiled Report - ${projectData.project.name}`;
@@ -720,23 +1183,23 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           <div class="space-y-3">
             <div>
               <label class="text-sm font-medium text-gray-600">Overall Progress:</label>
-              <p class="text-sm text-gray-800">${projectData.progress.overall.toFixed(2)}%</p>
+              <p class="text-sm text-gray-800">${(parseFloat(projectData?.progress?.overall) || 0).toFixed(2)}%</p>
             </div>
             <div>
               <label class="text-sm font-medium text-gray-600">Timeline Progress:</label>
-              <p class="text-sm text-gray-800">${projectData.progress.timeline.toFixed(2)}%</p>
+              <p class="text-sm text-gray-800">${(parseFloat(projectData?.progress?.timeline) || 0).toFixed(2)}%</p>
             </div>
             <div>
               <label class="text-sm font-medium text-gray-600">Budget Progress:</label>
-              <p class="text-sm text-gray-800">${projectData.progress.budget.toFixed(2)}%</p>
+              <p class="text-sm text-gray-800">${(parseFloat(projectData?.progress?.budget) || 0).toFixed(2)}%</p>
             </div>
             <div>
               <label class="text-sm font-medium text-gray-600">Physical Progress:</label>
-              <p class="text-sm text-gray-800">${projectData.progress.physical.toFixed(2)}%</p>
+              <p class="text-sm text-gray-800">${(parseFloat(projectData?.progress?.physical) || 0).toFixed(2)}%</p>
             </div>
             <div>
               <label class="text-sm font-medium text-gray-600">Workflow Status:</label>
-              <p class="text-sm text-gray-800">${projectData.project.workflowStatus}</p>
+              <p class="text-sm text-gray-800">${projectData?.project?.workflowStatus || 'Unknown'}</p>
             </div>
           </div>
         </div>
@@ -744,7 +1207,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     `;
 
     // Update compiled report section
-    if (projectData.compiledReport.exists) {
+    if (projectData?.compiledReport?.exists) {
       const report = projectData.compiledReport;
       compiledReport.innerHTML = `
         <div class="space-y-4">
@@ -824,48 +1287,269 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       `;
     }
 
-    // Update milestone updates section
-    if (projectData.milestones && projectData.milestones.milestones && projectData.milestones.milestones.length > 0) {
-      const milestones = projectData.milestones.milestones;
-      const totalWeight = projectData.milestones.totalWeight;
-      const appliedWeight = projectData.milestones.appliedWeight;
+    // Update milestone updates section with 3-division approval structure
+    if (projectData.milestoneUpdates && projectData.milestoneUpdates.length > 0) {
+      const milestoneUpdates = projectData.milestoneUpdates;
+      const totalWeight = 100; // Total project weight
+      const appliedWeight = 0; // Will be calculated based on approved milestones
 
       milestoneUpdates.innerHTML = `
-        <div class="bg-white p-4 rounded border">
-          <div class="flex items-center justify-between mb-4">
-            <h5 class="font-medium text-gray-800">Milestone Updates & Weight Distribution</h5>
-            <div class="text-sm text-gray-600">
+        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h5 class="text-lg font-semibold text-gray-800">Milestone Updates & 3-Division Validation</h5>
+            <div class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
               Applied: ${appliedWeight.toFixed(1)}% / Total: ${totalWeight.toFixed(1)}%
             </div>
           </div>
-          <div class="space-y-3">
-            ${milestones.map((milestone, index) => {
-              const statusColor = milestone.status === 'completed' ? 'green' : 
-                                 milestone.status === 'in_progress' ? 'yellow' : 'gray';
-              const statusText = milestone.status === 'completed' ? 'Completed' :
-                                milestone.status === 'in_progress' ? 'In Progress' : 'Pending';
-              const appliedText = milestone.status === 'completed' ? 
-                `${milestone.weight}% applied` : 
-                milestone.status === 'in_progress' ? 
-                `${milestone.progress}% completed` : '0% applied';
+          <div class="space-y-6">
+            ${milestoneUpdates.map((milestoneUpdate, index) => {
+              const overallStatus = getMilestoneOverallStatus(milestoneUpdate);
+              
+              const timelineData = milestoneUpdate.timeline || {};
+              const budgetData = milestoneUpdate.budget || {};
+              const physicalData = milestoneUpdate.physical || {};
+              
+              const divisionWeight = (milestoneUpdate.milestoneWeight / 3).toFixed(1);
               
               return `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div class="flex-1">
-                    <h6 class="font-medium text-gray-800">${milestone.title || `Milestone ${index + 1}`}</h6>
-                    <p class="text-sm text-gray-600">Weight: ${milestone.weight}%</p>
-                    ${milestone.description ? `<p class="text-xs text-gray-500 mt-1">${milestone.description}</p>` : ''}
-                    ${milestone.dueDate ? `<p class="text-xs text-gray-500">Due: ${new Date(milestone.dueDate).toLocaleDateString()}</p>` : ''}
-                    ${milestone.completedDate ? `<p class="text-xs text-green-600">Completed: ${new Date(milestone.completedDate).toLocaleDateString()}</p>` : ''}
-                    ${milestone.remarks ? `<p class="text-xs text-blue-600 mt-1">Remarks: ${milestone.remarks}</p>` : ''}
-                    ${milestone.budgetBreakdown ? `<p class="text-xs text-purple-600 mt-1">Budget: ₱${(parseFloat(milestone.budgetAllocation) || 0).toLocaleString()} - ${milestone.budgetBreakdown}</p>` : ''}
-                    ${milestone.uploadedFiles && milestone.uploadedFiles.length > 0 ? `<p class="text-xs text-orange-600 mt-1">Files: ${milestone.uploadedFiles.length} uploaded</p>` : ''}
+                <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="flex-1">
+                      <h6 class="text-lg font-semibold text-gray-800 mb-1">${milestoneUpdate.milestoneTitle || `Milestone ${index + 1}`}</h6>
+                      <p class="text-sm text-gray-600">Total Weight: ${milestoneUpdate.milestoneWeight}% (${divisionWeight}% per division)</p>
+                      <p class="text-sm text-gray-500 mt-2">Submitted by ${milestoneUpdate.submittedBy} on ${new Date(milestoneUpdate.submittedAt).toLocaleDateString()}</p>
+                    </div>
+                    <div class="text-right ml-4">
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${overallStatus.class}">
+                        ${overallStatus.text}
+                      </span>
+                    </div>
                   </div>
-                  <div class="text-right ml-4">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800">
-                      ${statusText}
-                    </span>
-                    <p class="text-xs text-gray-500 mt-1">${appliedText}</p>
+
+                  <div class="space-y-6 mb-4">
+                    <div class="bg-white border border-blue-200 rounded-lg p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                          <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                          <h6 class="font-semibold text-blue-800">Timeline</h6>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${getDivisionStatusDisplay(milestoneUpdate.timelineStatus || 'pending').class}">${getDivisionStatusDisplay(milestoneUpdate.timelineStatus || 'pending').text}</span>
+                      </div>
+                      <div class="space-y-2 text-sm mb-3">
+                        <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${divisionWeight}%</span></div>
+                        <div><span class="text-gray-600">Planned Start:</span> <span class="font-medium">${milestoneUpdate.plannedStartDate || 'Not set'}</span></div>
+                        <div><span class="text-gray-600">Planned Due:</span> <span class="font-medium">${milestoneUpdate.plannedEndDate || 'Not set'}</span></div>
+                        ${timelineData.description ? `<div class="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded"><strong>Activities & Deliverables:</strong><br>${timelineData.description}</div>` : ''}
+                      </div>
+                      <div class="flex gap-2">
+                        <button onclick="approveDivision('${milestoneUpdate.updateId}', 'timeline', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                          Approve
+                        </button>
+                        <button onclick="showDivisionRevisionModal('${milestoneUpdate.updateId}', 'timeline', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors">
+                          Request Revision
+                        </button>
+                        <button onclick="rejectDivision('${milestoneUpdate.updateId}', 'timeline', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors">
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="bg-white border border-green-200 rounded-lg p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                          <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                          </svg>
+                          <h6 class="font-semibold text-green-800">Budget</h6>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${getDivisionStatusDisplay(milestoneUpdate.budgetStatus || 'pending').class}">${getDivisionStatusDisplay(milestoneUpdate.budgetStatus || 'pending').text}</span>
+                      </div>
+                      <div class="space-y-2 text-sm mb-3">
+                        <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${divisionWeight}%</span></div>
+                        <div><span class="text-gray-600">Planned Budget:</span> <span class="font-medium">₱${(milestoneUpdate.plannedBudget || 0).toLocaleString()}</span></div>
+                        <div><span class="text-gray-600">Used Budget:</span> <span class="font-medium">₱${(budgetData.amount || 0).toLocaleString()}</span></div>
+                        ${budgetData.breakdown ? `<div class="text-xs text-gray-500 mt-2 p-2 bg-green-50 rounded"><strong>Budget Breakdown:</strong><br>${budgetData.breakdown}</div>` : ''}
+                      </div>
+                      <div class="flex gap-2">
+                        <button onclick="approveDivision('${milestoneUpdate.updateId}', 'budget', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                          Approve
+                        </button>
+                        <button onclick="showDivisionRevisionModal('${milestoneUpdate.updateId}', 'budget', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors">
+                          Request Revision
+                        </button>
+                        <button onclick="rejectDivision('${milestoneUpdate.updateId}', 'budget', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors">
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="bg-white border border-orange-200 rounded-lg p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                          <svg class="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                          <h6 class="font-semibold text-orange-800">Physical</h6>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${getDivisionStatusDisplay(milestoneUpdate.physicalStatus || 'pending').class}">${getDivisionStatusDisplay(milestoneUpdate.physicalStatus || 'pending').text}</span>
+                      </div>
+                      <div class="space-y-2 text-sm mb-3">
+                        <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${divisionWeight}%</span></div>
+                        <div><span class="text-gray-600">Proof Type:</span> <span class="font-medium">${physicalData.proofType || 'form'}</span></div>
+                        ${physicalData.description ? `<div class="text-xs text-gray-500 mt-2 p-2 bg-orange-50 rounded"><strong>Progress Requirements:</strong><br>${physicalData.description}</div>` : ''}
+                        ${milestoneUpdate.uploadedFiles && milestoneUpdate.uploadedFiles.length > 0 ? `
+                          <div class="mt-4">
+                            <div class="text-base font-semibold text-orange-800 mb-3">📎 Supporting Documents (${milestoneUpdate.uploadedFiles.length} files):</div>
+                            <div class="space-y-3">
+                              ${milestoneUpdate.uploadedFiles.map((file, fileIndex) => `
+                                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                  <div class="flex items-center justify-between">
+                                    <div class="flex items-center flex-1 min-w-0">
+                                      <svg class="w-6 h-6 text-orange-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                      </svg>
+                                      <div class="min-w-0 flex-1">
+                                        <div class="font-semibold text-gray-900 truncate">${file.name || `Document ${fileIndex + 1}`}</div>
+                                        <div class="text-sm text-gray-600">${(file.size / 1024).toFixed(1)} KB • ${file.type}</div>
+                                      </div>
+                                    </div>
+                                    <button onclick="downloadFile('${file.name}', '${file.name}')" 
+                                            class="ml-4 px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors font-medium flex-shrink-0">
+                                      📥 Download
+                                    </button>
+                                  </div>
+                                </div>
+                              `).join('')}
+                            </div>
+                          </div>
+                        ` : ''}
+                      </div>
+                      <div class="flex gap-2">
+                        <button onclick="approveDivision('${milestoneUpdate.updateId}', 'physical', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                          Approve
+                        </button>
+                        <button onclick="showDivisionRevisionModal('${milestoneUpdate.updateId}', 'physical', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors">
+                          Request Revision
+                        </button>
+                        <button onclick="rejectDivision('${milestoneUpdate.updateId}', 'physical', '${milestoneUpdate.milestoneTitle}')" 
+                                class="flex-1 px-3 py-2 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors">
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Additional Notes Section -->
+                  ${milestoneUpdate.notes ? `
+                    <div class="mt-4 p-3 bg-gray-100 rounded-lg">
+                      <h6 class="text-sm font-semibold text-gray-800 mb-2">Additional Notes:</h6>
+                      <p class="text-sm text-gray-600">${milestoneUpdate.notes}</p>
+                    </div>
+                  ` : ''}
+
+                  <!-- Note to Secretariat Section -->
+                  ${milestoneUpdate.secretariatNote ? `
+                    <div class="mt-4 p-3 bg-blue-100 rounded-lg">
+                      <h6 class="text-sm font-semibold text-blue-800 mb-2">Note to Secretariat:</h6>
+                      <p class="text-sm text-blue-700">${milestoneUpdate.secretariatNote}</p>
+                    </div>
+                  ` : ''}
+
+                  <!-- Approve All Divisions Button -->
+                  <div class="mt-4 flex justify-center">
+                    <button onclick="approveAllDivisions('${milestoneUpdate.updateId}', '${milestoneUpdate.milestoneTitle}')" 
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      Approve All Divisions
+                    </button>
+                  </div>
+
+                  <!-- Division Approval Summary -->
+                  <div class="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                      <h6 class="font-semibold text-gray-800">Division Approval Summary</h6>
+                      ${timelineStatus !== 'approved' && budgetStatus !== 'approved' && physicalStatus !== 'approved' ? `
+                        <button onclick="approveAllDivisions('${milestone.id}', '${milestone.title}')" 
+                                class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                          Approve All Divisions
+                        </button>
+                      ` : ''}
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                      <div class="text-center">
+                        <div class="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                          timelineStatus === 'approved' ? 'bg-green-100 text-green-600' :
+                          timelineStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                          'bg-gray-100 text-gray-600'
+                        }">
+                          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                        <div class="font-medium text-gray-800">Timeline</div>
+                        <div class="text-xs text-gray-600">${timelineStatus}</div>
+                      </div>
+                      <div class="text-center">
+                        <div class="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                          budgetStatus === 'approved' ? 'bg-green-100 text-green-600' :
+                          budgetStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                          'bg-gray-100 text-gray-600'
+                        }">
+                          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                          </svg>
+                        </div>
+                        <div class="font-medium text-gray-800">Budget</div>
+                        <div class="text-xs text-gray-600">${budgetStatus}</div>
+                      </div>
+                      <div class="text-center">
+                        <div class="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                          physicalStatus === 'approved' ? 'bg-green-100 text-green-600' :
+                          physicalStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                          'bg-gray-100 text-gray-600'
+                        }">
+                          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                        </div>
+                        <div class="font-medium text-gray-800">Physical</div>
+                        <div class="text-xs text-gray-600">${physicalStatus}</div>
+                      </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                      <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">Overall Status:</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                          timelineStatus === 'approved' && budgetStatus === 'approved' && physicalStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                          timelineStatus === 'rejected' || budgetStatus === 'rejected' || physicalStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }">
+                          ${timelineStatus === 'approved' && budgetStatus === 'approved' && physicalStatus === 'approved' ? 'All Approved' :
+                            timelineStatus === 'rejected' || budgetStatus === 'rejected' || physicalStatus === 'rejected' ? 'Has Rejections' :
+                            'Pending Review'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Additional Milestone Info -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-600 bg-white p-3 rounded border mt-4">
+                    <div><span class="font-medium">Completed:</span> ${milestone.completedDate ? new Date(milestone.completedDate).toLocaleDateString() : 'Not completed'}</div>
+                    <div><span class="font-medium">Validated:</span> ${milestone.validationDate ? new Date(milestone.validationDate).toLocaleDateString() : 'Not validated'}</div>
+                    <div><span class="font-medium">Files:</span> ${milestone.uploadedFiles && milestone.uploadedFiles.length > 0 ? milestone.uploadedFiles.length : 0} uploaded</div>
+                    <div><span class="font-medium">Remarks:</span> ${milestone.remarks || 'None'}</div>
                   </div>
                 </div>
               `;
@@ -953,20 +1637,25 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         body: JSON.stringify(requestBody)
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
       
-      if (data.success) {
+      if (response.ok && data.success) {
         alert('Compiled report approved successfully!');
         // Refresh the compilation data
         await loadCompilationData();
         // Close the modal
         document.getElementById('projectReportModal').classList.add('hidden');
       } else {
-        throw new Error(data.error || 'Failed to approve compiled report');
+        // Handle specific error cases
+        if (data.error && data.error.includes('already validated')) {
+          alert('This project has already been validated by Secretariat. No further action needed.');
+          // Close the modal
+          document.getElementById('projectReportModal').classList.add('hidden');
+          // Refresh the compilation data
+          await loadCompilationData();
+        } else {
+          throw new Error(data.error || 'Failed to approve compiled report');
+        }
       }
     } catch (error) {
       console.error('Error approving compiled report:', error);
@@ -1026,6 +1715,634 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     }
   }
 
+  // 3-Division Approval Functions
+  async function approveDivision(milestoneId, divisionType, milestoneTitle) {
+    if (!currentProjectId) {
+      alert('No project selected for approval.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to approve the ${divisionType} division for milestone "${milestoneTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/${currentProjectId}/milestones/${milestoneId}/divisions/${divisionType}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          approved: true,
+          comments: `${divisionType} division approved by Secretariat`,
+          validatedBy: 'secretariat'
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        alert(`${divisionType} division approved successfully!`);
+        // Refresh the project data to show updated status
+        await loadProjectDetails(currentProjectId);
+        // Update buttons and actions immediately after approval
+        setTimeout(() => {
+          updateDivisionButtons();
+          updateOverallActions();
+          updateApprovalActions(currentProjectData?.status);
+        }, 100);
+
+      } else {
+        throw new Error(data.error || `Failed to approve ${divisionType} division`);
+      }
+    } catch (error) {
+      console.error(`Error approving ${divisionType} division:`, error);
+      alert(`Error approving ${divisionType} division. Please try again.`);
+    }
+  }
+
+  // Division rejection modal variables
+  let currentRejectionData = {
+    milestoneId: null,
+    divisionType: null,
+    milestoneTitle: null
+  };
+
+  function rejectDivision(milestoneId, divisionType, milestoneTitle) {
+    if (!currentProjectId) {
+      alert('No project selected for rejection.');
+      return;
+    }
+
+    // Store rejection data
+    currentRejectionData = {
+      milestoneId: milestoneId,
+      divisionType: divisionType,
+      milestoneTitle: milestoneTitle
+    };
+
+    // Update modal title
+    document.getElementById('divisionRejectionTitle').textContent = `Rejecting ${divisionType} division for milestone "${milestoneTitle}"`;
+    
+    // Clear previous comments
+    document.getElementById('divisionRejectionComments').value = '';
+    
+    // Show modal
+    document.getElementById('divisionRejectionModal').classList.remove('hidden');
+  }
+
+  function closeDivisionRejectionModal() {
+    document.getElementById('divisionRejectionModal').classList.add('hidden');
+    document.getElementById('divisionRejectionComments').value = '';
+    currentRejectionData = {
+      milestoneId: null,
+      divisionType: null,
+      milestoneTitle: null
+    };
+  }
+
+  async function confirmDivisionRejection() {
+    const comments = document.getElementById('divisionRejectionComments').value.trim();
+    
+    if (!comments) {
+      alert('Rejection comments are required.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/${currentProjectId}/milestones/${currentRejectionData.milestoneId}/divisions/${currentRejectionData.divisionType}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          approved: false,
+          comments: comments,
+          validatedBy: 'secretariat'
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        alert(`${currentRejectionData.divisionType} division rejected successfully!`);
+        closeDivisionRejectionModal();
+        // Refresh the project data to show updated status
+        await loadProjectDetails(currentProjectId);
+        // Update buttons and actions immediately after rejection
+        setTimeout(() => {
+          updateDivisionButtons();
+          updateOverallActions();
+          updateApprovalActions(currentProjectData?.status);
+        }, 100);
+
+      } else {
+        throw new Error(data.error || `Failed to reject ${currentRejectionData.divisionType} division`);
+      }
+    } catch (error) {
+      console.error(`Error rejecting ${currentRejectionData.divisionType} division:`, error);
+      alert(`Error rejecting ${currentRejectionData.divisionType} division. Please try again.`);
+    }
+  }
+
+  // Bulk approval for all divisions of a milestone
+  async function approveAllDivisions(milestoneId, milestoneTitle) {
+    if (!currentProjectId) {
+      alert('No project selected for approval.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to approve all divisions (Timeline, Budget, Physical) for milestone "${milestoneTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const divisions = ['timeline', 'budget', 'physical'];
+      
+      // Approve all divisions
+      for (const divisionType of divisions) {
+        const response = await fetch(`http://localhost:3000/api/projects/${currentProjectId}/milestones/${milestoneId}/divisions/${divisionType}/approve`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            approved: true,
+            comments: `${divisionType} division approved by Secretariat (bulk approval)`,
+            validatedBy: 'secretariat'
+          })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || `Failed to approve ${divisionType} division`);
+        }
+      }
+
+      alert(`All divisions for milestone "${milestoneTitle}" approved successfully!`);
+      // Refresh the project data to show updated status
+      await loadProjectDetails(currentProjectId);
+    } catch (error) {
+      console.error('Error approving all divisions:', error);
+      alert('Error approving all divisions. Please try again.');
+    }
+  }
+
+  // Enhanced project details loading function
+  async function loadProjectDetails(projectId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/${projectId}/compiled-report`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('Compiled report data:', data.report);
+        console.log('Milestone updates:', data.report?.milestoneUpdates);
+        currentProjectData = data.report;
+        displayProjectSummary(data.report);
+        
+        // Update all actions after project data is loaded
+        setTimeout(() => {
+          updateApprovalActions(data.report?.workflow?.status);
+          updateDivisionButtons();
+          updateOverallActions();
+        }, 100);
+        
+
+      } else {
+        throw new Error(data.error || 'Failed to load project details');
+      }
+    } catch (error) {
+      console.error('Error loading project details:', error);
+      alert('Error loading project details. Please try again.');
+    }
+  }
+
+
+
+  // Function to update division buttons based on status
+  function updateDivisionButtons() {
+    console.log('updateDivisionButtons called');
+    if (!currentProjectData || !currentProjectData?.milestoneUpdates) {
+      console.log('No currentProjectData or milestoneUpdates');
+      return;
+    }
+    
+    console.log('Current project data:', currentProjectData);
+    console.log('Milestone updates:', currentProjectData?.milestoneUpdates);
+    
+    currentProjectData.milestoneUpdates?.forEach(milestoneUpdate => {
+      console.log('Processing milestone update:', milestoneUpdate);
+      
+      // Find all button containers for this update
+      const buttonContainers = document.querySelectorAll('.flex.gap-2');
+      console.log('Found button containers:', buttonContainers.length);
+      
+      buttonContainers.forEach((container, index) => {
+        console.log(`Checking container ${index}:`, container);
+        
+        // Check if this container has buttons for the current milestone update
+        const approveButton = container.querySelector('button[onclick*="approveDivision"]');
+        if (approveButton) {
+          const onclick = approveButton.getAttribute('onclick');
+          console.log('Found approve button with onclick:', onclick);
+          
+          if (onclick.includes(milestoneUpdate.updateId)) {
+            console.log('This container matches our milestone update');
+            
+            // Determine which division this is by checking the onclick
+            let divisionType = '';
+            if (onclick.includes("'timeline'")) {
+              divisionType = 'timeline';
+            } else if (onclick.includes("'budget'")) {
+              divisionType = 'budget';
+            } else if (onclick.includes("'physical'")) {
+              divisionType = 'physical';
+            }
+            
+            console.log('Determined division type:', divisionType);
+            
+            if (divisionType) {
+              const status = milestoneUpdate[`${divisionType}Status`] || 'pending';
+              console.log(`Division ${divisionType} status:`, status);
+              
+              if (status !== 'pending') {
+                console.log(`Updating ${divisionType} division buttons for status:`, status);
+                
+                // Replace buttons with status display
+                let statusText = '';
+                let statusClass = '';
+                
+                if (status === 'approved') {
+                  statusText = '✓ Approved';
+                  statusClass = 'bg-green-100 text-green-700';
+                } else if (status === 'rejected') {
+                  statusText = '✗ Rejected';
+                  statusClass = 'bg-red-100 text-red-700';
+                } else if (status === 'revision_requested') {
+                  statusText = '⚠ Revision Requested';
+                  statusClass = 'bg-orange-100 text-orange-700';
+                } else {
+                  statusText = 'Action Taken';
+                  statusClass = 'bg-gray-100 text-gray-700';
+                }
+                
+                container.innerHTML = `
+                  <div class="flex-1 px-3 py-2 ${statusClass} text-xs rounded cursor-not-allowed">
+                    ${statusText}
+                  </div>
+                `;
+                console.log(`Updated ${divisionType} division buttons`);
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+
+  // Function to update "Approve All Divisions" button and Secretariat Validation section
+  function updateOverallActions() {
+    console.log('updateOverallActions called');
+    if (!currentProjectData || !currentProjectData?.milestoneUpdates) {
+      console.log('No currentProjectData or milestoneUpdates for overall actions');
+      return;
+    }
+    
+    const milestoneUpdate = currentProjectData.milestoneUpdates?.[0]; // Assuming single milestone update
+    if (!milestoneUpdate) {
+      console.log('No milestone update found');
+      return;
+    }
+    
+    console.log('Milestone update for overall actions:', milestoneUpdate);
+    
+    const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
+    const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
+    const physicalStatus = milestoneUpdate.physicalStatus || 'pending';
+    
+    console.log('Division statuses:', {
+      timeline: timelineStatus,
+      budget: budgetStatus,
+      physical: physicalStatus
+    });
+    
+    // Check if all divisions have verdicts
+    const allDivisionsHaveVerdicts = timelineStatus !== 'pending' && budgetStatus !== 'pending' && physicalStatus !== 'pending';
+    console.log('All divisions have verdicts:', allDivisionsHaveVerdicts);
+    
+    // Update "Approve All Divisions" button
+    const approveAllButton = document.querySelector('button[onclick*="approveAllDivisions"]');
+    console.log('Found Approve All Divisions button:', approveAllButton);
+    if (approveAllButton) {
+      if (allDivisionsHaveVerdicts) {
+        approveAllButton.style.display = 'none'; // Hide the button
+        console.log('Hiding Approve All Divisions button');
+      } else {
+        approveAllButton.style.display = 'block'; // Show the button
+        console.log('Showing Approve All Divisions button');
+      }
+    }
+    
+    // Also update the approval actions section
+    if (currentProjectData.status) {
+      console.log('Calling updateApprovalActions from updateOverallActions with status:', currentProjectData.status);
+      updateApprovalActions(currentProjectData.status);
+    } else if (currentProjectData.workflowStatus) {
+      console.log('No currentProjectData.status found, using workflowStatus:', currentProjectData.workflowStatus);
+      updateApprovalActions(currentProjectData.workflowStatus);
+    } else {
+      // If both are undefined, check if all divisions have verdicts and use 'iu_approved'
+      console.log('Both status and workflowStatus are undefined, checking division verdicts...');
+      if (currentProjectData?.milestoneUpdates && currentProjectData.milestoneUpdates.length > 0) {
+        const milestoneUpdate = currentProjectData.milestoneUpdates[0];
+        const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
+        const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
+        const physicalStatus = milestoneUpdate.physicalStatus || 'pending';
+        
+        const allDivisionsHaveVerdicts = timelineStatus !== 'pending' && budgetStatus !== 'pending' && physicalStatus !== 'pending';
+        
+        if (allDivisionsHaveVerdicts) {
+          console.log('All divisions have verdicts, using iu_approved status');
+          updateApprovalActions('iu_approved');
+        } else {
+          console.log('Not all divisions have verdicts, using pending_compilation status');
+          updateApprovalActions('pending_compilation');
+        }
+      } else {
+        console.log('No milestone updates found, using pending_compilation status');
+        updateApprovalActions('pending_compilation');
+      }
+    }
+  }
+
+  function displayProjectSummary(projectData) {
+    try {
+      console.log('Displaying project summary with data:', projectData);
+      
+      const modalTitle = document.getElementById('modalTitle');
+      const projectInfo = document.getElementById('projectInfo');
+      const compiledReport = document.getElementById('compiledReport');
+      const milestoneUpdates = document.getElementById('milestoneUpdates');
+    
+    // Update modal title
+    modalTitle.textContent = `Compiled Report - ${projectData?.projectInfo?.name || 'Project Details'}`;
+    
+    // Update project information with enhanced layout
+    projectInfo.innerHTML = `
+      <div class="space-y-6">
+        <!-- Project Information Section -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-lg font-semibold text-gray-800 mb-4">Project Information</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Project Code:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.projectCode || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Project Name:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.name || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Location:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.location || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Status:</label>
+                <p class="text-sm text-gray-800">${projectData?.workflow?.status || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Project Created:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.startDate ? new Date(projectData.projectInfo.startDate).toLocaleDateString() : 'N/A'}</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Implementing Office:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.implementingOffice || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Implementing Partner:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.eiuPartner || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Category:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.category || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Project Period:</label>
+                <p class="text-sm text-gray-800">${projectData?.projectInfo?.startDate ? new Date(projectData.projectInfo.startDate).toLocaleDateString() : 'N/A'} to ${projectData?.projectInfo?.endDate ? new Date(projectData.projectInfo.endDate).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Total Budget:</label>
+                <p class="text-sm text-gray-800">₱${(parseFloat(projectData?.projectInfo?.totalBudget) || 0).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Description Section -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-lg font-semibold text-gray-800 mb-4">Project Description</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="text-sm font-medium text-gray-600">Description:</label>
+              <p class="text-sm text-gray-800">${projectData?.projectInfo?.description || 'No description available'}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Target Beneficiaries:</label>
+              <p class="text-sm text-gray-800">${projectData?.projectInfo?.targetBeneficiaries || 'Not specified'}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Progress Section -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-lg font-semibold text-gray-800 mb-4">Current Progress</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center">
+              <label class="text-sm font-medium text-gray-600">Overall Progress:</label>
+              <p class="text-lg font-bold text-blue-600">${(parseFloat(projectData?.progress?.overallProgress) || 0).toFixed(2)}%</p>
+            </div>
+            <div class="text-center">
+              <label class="text-sm font-medium text-gray-600">Timeline Progress:</label>
+              <p class="text-lg font-bold text-green-600">${(parseFloat(projectData?.progress?.timelineProgress) || 0).toFixed(2)}%</p>
+            </div>
+            <div class="text-center">
+              <label class="text-sm font-medium text-gray-600">Budget Progress:</label>
+              <p class="text-lg font-bold text-orange-600">${(parseFloat(projectData?.progress?.budgetProgress) || 0).toFixed(2)}%</p>
+            </div>
+            <div class="text-center">
+              <label class="text-sm font-medium text-gray-600">Physical Progress:</label>
+              <p class="text-lg font-bold text-purple-600">${(parseFloat(projectData?.progress?.physicalProgress) || 0).toFixed(2)}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Update compiled report section with enhanced information
+    compiledReport.innerHTML = `
+      <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Compiled Report from Implementing Office</h4>
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-600">Report Title:</label>
+              <p class="text-sm text-gray-800">${projectData?.approvedUpdates?.[0]?.title || 'Milestone Update Report'}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Submitted By:</label>
+              <p class="text-sm text-gray-800">${projectData?.approvedUpdates?.[0]?.submittedBy || 'EIU Personnel'}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Submitted At:</label>
+              <p class="text-sm text-gray-800">${projectData?.approvedUpdates?.[0]?.submittedAt ? new Date(projectData.approvedUpdates[0].submittedAt).toLocaleString() : 'N/A'}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Status:</label>
+              <p class="text-sm text-gray-800">${projectData?.approvedUpdates?.[0]?.status || 'Submitted'}</p>
+            </div>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600">Report Summary:</label>
+            <p class="text-sm text-gray-800 mt-2">${projectData?.milestoneUpdates?.[0]?.description || 'No detailed report summary available'}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Update milestone updates section with 3-division information
+    if (projectData?.milestoneUpdates && projectData.milestoneUpdates.length > 0) {
+      const milestoneUpdate = projectData.milestoneUpdates[0]; // Get the first milestone
+      
+      milestoneUpdates.innerHTML = `
+        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-lg font-semibold text-gray-800 mb-4">Milestone 1: ${milestoneUpdate.milestoneTitle || 'Project Milestone'}</h4>
+          
+          <!-- Timeline Division -->
+          <div class="mb-6">
+            <h5 class="text-md font-semibold text-blue-600 mb-3">Timeline Division</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Weight:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.timelineWeight || 'N/A'}%</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Due Date:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.timelineDueDate ? new Date(milestoneUpdate.timelineDueDate).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Status:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.timelineStatus || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Secretariat Verdict:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.timelineVerdict || 'Pending'}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget Division -->
+          <div class="mb-6">
+            <h5 class="text-md font-semibold text-green-600 mb-3">Budget Division</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-green-50 p-4 rounded">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Weight:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.budgetWeight || 'N/A'}%</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Planned Budget:</label>
+                <p class="text-sm text-gray-800">₱${(parseFloat(milestoneUpdate.plannedBudget) || 0).toLocaleString()}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Budget Used:</label>
+                <p class="text-sm text-gray-800">₱${(parseFloat(milestoneUpdate.budgetUsed) || 0).toLocaleString()}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Secretariat Verdict:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.budgetVerdict || 'Pending'}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Physical Division -->
+          <div class="mb-6">
+            <h5 class="text-md font-semibold text-purple-600 mb-3">Physical Division</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50 p-4 rounded">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Weight:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.physicalWeight || 'N/A'}%</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Proof Type:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.physicalProofType || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Status:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.physicalStatus || 'N/A'}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Secretariat Verdict:</label>
+                <p class="text-sm text-gray-800">${milestoneUpdate.physicalVerdict || 'Pending'}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Requirements -->
+          <div class="mb-6">
+            <h5 class="text-md font-semibold text-gray-800 mb-3">Progress Requirements</h5>
+            <div class="bg-gray-50 p-4 rounded">
+              <p class="text-sm text-gray-800">${milestoneUpdate.progressRequirements || milestoneUpdate.description || 'No progress requirements specified'}</p>
+            </div>
+          </div>
+
+          <!-- Supporting Documents -->
+          ${milestoneUpdate.supportingDocuments && milestoneUpdate.supportingDocuments.length > 0 ? `
+            <div class="mb-6">
+              <h5 class="text-md font-semibold text-gray-800 mb-3">Supporting Documents</h5>
+              <div class="space-y-2">
+                ${milestoneUpdate.supportingDocuments.map(doc => `
+                  <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
+                    <span class="text-sm text-gray-800">${doc.filename || 'Document'}</span>
+                    <span class="text-xs text-gray-500">${doc.filesize ? (doc.filesize / 1024).toFixed(1) + ' KB' : 'N/A'}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    } else {
+      milestoneUpdates.innerHTML = `
+        <div class="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+          <h4 class="text-lg font-semibold text-yellow-800 mb-2">No Milestone Updates Available</h4>
+          <p class="text-sm text-yellow-700">No milestone updates have been submitted for this project yet.</p>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Error in displayProjectSummary:', error);
+    alert('Error displaying project summary. Please try again.');
+  }
+  }
+
   function closeProjectModal() {
     document.getElementById('projectReportModal').classList.add('hidden');
     currentProjectId = null;
@@ -1033,13 +2350,199 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     currentMilestoneData = null;
   }
 
-  function generateProjectReport(projectId) {
+  function updateApprovalActions(projectStatus) {
+    console.log('=== updateApprovalActions called with status:', projectStatus, '===');
+    const approvalActions = document.getElementById('approvalActions');
+    
+    if (!approvalActions) {
+      console.log('ERROR: approvalActions element not found');
+      return;
+    }
+    
+    console.log('Found approvalActions element:', approvalActions);
+    
+    // Check if all divisions have verdicts using the same logic as updateOverallActions
+    let allDivisionsHaveVerdicts = false;
+    if (currentProjectData && currentProjectData.milestoneUpdates && currentProjectData.milestoneUpdates.length > 0) {
+      const milestoneUpdate = currentProjectData.milestoneUpdates[0];
+      const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
+      const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
+      const physicalStatus = milestoneUpdate.physicalStatus || 'pending';
+      
+      allDivisionsHaveVerdicts = timelineStatus !== 'pending' && budgetStatus !== 'pending' && physicalStatus !== 'pending';
+      
+      console.log('Division statuses in updateApprovalActions:', {
+        timeline: timelineStatus,
+        budget: budgetStatus,
+        physical: physicalStatus,
+        allDivisionsHaveVerdicts: allDivisionsHaveVerdicts
+      });
+    }
+    
+    // Provide a fallback for undefined status
+    const status = projectStatus || 'pending_compilation';
+    const statusText = getStatusText(status);
+    
+    console.log('Project status:', status, 'All divisions have verdicts:', allDivisionsHaveVerdicts);
+    
+    if (status === 'validated_by_secretariat') {
+      approvalActions.innerHTML = `
+        <div class="px-6 py-3 bg-green-100 text-green-800 rounded-lg border border-green-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          ✓ Already Validated by Secretariat
+        </div>
+        <button onclick="closeProjectModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+          Close
+        </button>
+      `;
+    } else if ((status === 'compiled_for_secretariat' || status === 'iu_approved') && allDivisionsHaveVerdicts) {
+      console.log('All divisions have verdicts - showing completion status');
+      // Show completion status when all divisions have verdicts
+      approvalActions.innerHTML = `
+        <div class="px-6 py-3 bg-green-100 text-green-800 rounded-lg border border-green-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Secretariat Review Complete
+        </div>
+        <button onclick="closeProjectModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+          Close
+        </button>
+      `;
+    } else if (status === 'compiled_for_secretariat' || status === 'iu_approved') {
+      console.log('Showing awaiting message - not all divisions have verdicts');
+      // Show awaiting compilation message if not all divisions have verdicts
+      approvalActions.innerHTML = `
+        <div class="px-6 py-3 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          ⏳ Awaiting Division Verdicts
+        </div>
+        <button onclick="closeProjectModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+          Close
+        </button>
+      `;
+    } else if (status === 'pending_compilation' && allDivisionsHaveVerdicts) {
+      console.log('Status is pending_compilation but all divisions have verdicts - showing completion status');
+      // Special case: status is pending_compilation but all divisions have verdicts
+      approvalActions.innerHTML = `
+        <div class="px-6 py-3 bg-green-100 text-green-800 rounded-lg border border-green-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Secretariat Review Complete
+        </div>
+        <button onclick="closeProjectModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+          Close
+        </button>
+      `;
+    } else {
+      approvalActions.innerHTML = `
+        <div class="px-6 py-3 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          ⏳ ${statusText}
+        </div>
+        <button onclick="closeProjectModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+          Close
+        </button>
+      `;
+    }
+  }
+
+  function getStatusText(status) {
+    const statusMap = {
+      'pending_compilation': 'Awaiting Compilation',
+      'pending_review': 'Pending Review',
+      'in_progress': 'In Progress',
+      'submitted': 'Submitted for Review',
+      'iu_approved': 'Ready for Secretariat Validation',
+      'compiled_for_secretariat': 'Ready for Secretariat Validation',
+      'validated_by_secretariat': 'Validated by Secretariat',
+      'rejected': 'Rejected',
+      'completed': 'Completed'
+    };
+    return statusMap[status] || 'Awaiting Compilation';
+  }
+
+  async function generateProjectReport(projectId) {
     if (!projectId) {
       alert('No project ID available for report generation.');
       return;
     }
     
-    window.open(`http://localhost:3000/api/projects/${projectId}/generate-report`, '_blank');
+    // Get button and original text BEFORE try block
+    const button = event?.target || document.querySelector(`button[onclick*="generateProjectReport('${projectId}')"]`);
+    const originalText = button?.textContent || 'Export';
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Authentication required. Please log in again.');
+        return;
+      }
+      
+      // Show loading state
+      if (button) {
+        button.textContent = 'Generating...';
+        button.disabled = true;
+      }
+      
+      const response = await fetch(`http://localhost:3000/api/projects/${projectId}/generate-report`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `project-report-${projectId}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      // Show success message
+      alert('Report generated and downloaded successfully!');
+      
+      // Refresh compiled reports to show the new report in the archive
+      if (typeof loadCompiledReports === 'function') {
+        loadCompiledReports();
+      }
+      
+      // Also refresh the main compilation data to update the UI
+      if (typeof loadCompilationData === 'function') {
+        loadCompilationData();
+      }
+      
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert(`Failed to generate report: ${error.message}`);
+    } finally {
+      // Restore button state
+      const button = event?.target || document.querySelector(`button[onclick*="generateProjectReport('${projectId}')"]`);
+      if (button) {
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
   }
 
   function refreshCompilation() {
@@ -1098,6 +2601,10 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     const canvas = document.getElementById('timelineChart');
     const ctx = canvas.getContext('2d');
     
+    // Enable high-quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
     // Polyfill for roundRect if not supported
     if (!ctx.roundRect) {
       ctx.roundRect = function(x, y, width, height, radius) {
@@ -1118,8 +2625,14 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     // Clear previous chart
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Get milestones data
-    const milestones = timelineData.milestones || [];
+    // Get milestones data and sort by due date (earliest first)
+    let milestones = timelineData.milestones || [];
+    milestones = milestones.sort((a, b) => {
+      const dateA = new Date(a.dueDate || a.plannedEndDate || '9999-12-31');
+      const dateB = new Date(b.dueDate || b.plannedEndDate || '9999-12-31');
+      return dateA - dateB;
+    });
+    
     if (milestones.length === 0) {
       // Draw no data message with modern styling
       ctx.fillStyle = '#6B7280';
@@ -1188,35 +2701,43 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       const x = padding + (index / (milestones.length - 1)) * chartWidth;
       const y = height / 2;
       
-      // Determine colors based on status
-      const statusColors = {
-        'completed': {
-          fill: '#10B981',
-          stroke: '#059669',
-          glow: '#10B981',
-          shadow: '#047857'
-        },
-        'in_progress': {
-          fill: '#F59E0B',
-          stroke: '#D97706',
-          glow: '#F59E0B',
-          shadow: '#B45309'
-        },
-        'pending': {
-          fill: '#6B7280',
-          stroke: '#4B5563',
-          glow: '#6B7280',
-          shadow: '#374151'
-        },
-        'not_started': {
-          fill: '#9CA3AF',
-          stroke: '#6B7280',
-          glow: '#9CA3AF',
-          shadow: '#4B5563'
+      // Determine colors based on status and progress
+      const getStatusColors = (milestone) => {
+        const progress = milestone.progress || 0;
+        const status = milestone.status || 'pending';
+        
+        if (progress >= 100) {
+          return {
+            fill: '#10B981',
+            stroke: '#059669',
+            glow: '#10B981',
+            shadow: '#047857'
+          };
+        } else if (progress > 0 || status === 'submitted' || status === 'iu_approved') {
+          return {
+            fill: '#F59E0B',
+            stroke: '#D97706',
+            glow: '#F59E0B',
+            shadow: '#B45309'
+          };
+        } else if (status === 'pending' || status === 'not_started') {
+          return {
+            fill: '#6B7280',
+            stroke: '#4B5563',
+            glow: '#6B7280',
+            shadow: '#374151'
+          };
+        } else {
+          return {
+            fill: '#9CA3AF',
+            stroke: '#6B7280',
+            glow: '#9CA3AF',
+            shadow: '#4B5563'
+          };
         }
       };
       
-      const colors = statusColors[milestone.status] || statusColors.pending;
+      const colors = getStatusColors(milestone);
       
       // Draw outer glow
       ctx.shadowColor = colors.glow;
@@ -1257,9 +2778,10 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       
       // Draw progress percentage with modern badge style
       const progressPercent = milestone.progress || 0;
-      ctx.fillStyle = progressPercent > 0 ? colors.fill : '#9CA3AF';
+      const actualProgress = milestone.status === 'submitted' || milestone.status === 'iu_approved' ? 100 : progressPercent;
+      ctx.fillStyle = actualProgress > 0 ? colors.fill : '#9CA3AF';
       ctx.font = 'bold 12px Inter, Arial, sans-serif';
-      const progressText = `${progressPercent}%`;
+      const progressText = `${actualProgress}%`;
       ctx.fillText(progressText, x, y - 35);
       
       // Draw weight percentage with subtle styling
@@ -1349,7 +2871,14 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     const container = document.getElementById('timelineMilestones');
     
     if (milestones && milestones.length > 0) {
-      container.innerHTML = milestones.map((milestone, index) => {
+      // Sort milestones by due date (earliest first) to match timeline chart
+      const sortedMilestones = [...milestones].sort((a, b) => {
+        const dateA = new Date(a.dueDate || a.plannedEndDate || '9999-12-31');
+        const dateB = new Date(b.dueDate || b.plannedEndDate || '9999-12-31');
+        return dateA - dateB;
+      });
+      
+      container.innerHTML = sortedMilestones.map((milestone, index) => {
         const statusColors = {
           'completed': 'bg-green-100 text-green-800 border-green-200',
           'in_progress': 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -1443,7 +2972,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-blue-800">Overall Progress</span>
-            <span class="text-lg font-bold text-blue-900">${progress.overall.toFixed(1)}%</span>
+            <span class="text-lg font-bold text-blue-900">${progress.overall.toFixed(2)}%</span>
           </div>
           <div class="w-full bg-blue-200 rounded-full h-3">
             <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: ${progress.overall}%"></div>
@@ -1454,7 +2983,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-green-800">Timeline Progress</span>
-            <span class="text-lg font-bold text-green-900">${progress.timeline.toFixed(1)}%</span>
+            <span class="text-lg font-bold text-green-900">${progress.timeline.toFixed(2)}%</span>
           </div>
           <div class="w-full bg-green-200 rounded-full h-3">
             <div class="bg-green-600 h-3 rounded-full transition-all duration-300" style="width: ${progress.timeline}%"></div>
@@ -1465,7 +2994,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-purple-800">Budget Progress</span>
-            <span class="text-lg font-bold text-purple-900">${progress.budget.toFixed(1)}%</span>
+            <span class="text-lg font-bold text-purple-900">${progress.budget.toFixed(2)}%</span>
           </div>
           <div class="w-full bg-purple-200 rounded-full h-3">
             <div class="bg-purple-600 h-3 rounded-full transition-all duration-300" style="width: ${progress.budget}%"></div>
@@ -1476,7 +3005,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-orange-800">Physical Progress</span>
-            <span class="text-lg font-bold text-orange-900">${progress.physical.toFixed(1)}%</span>
+            <span class="text-lg font-bold text-orange-900">${progress.physical.toFixed(2)}%</span>
           </div>
           <div class="w-full bg-orange-200 rounded-full h-3">
             <div class="bg-orange-600 h-3 rounded-full transition-all duration-300" style="width: ${progress.physical}%"></div>
@@ -1662,6 +3191,388 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     }
   }
 
+  // Download file function
+  async function downloadFile(fileId, fileName) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/uploads/${fileId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // File not found - show specific message
+          alert(`File "${fileName}" is not available for download. This file was referenced in the milestone update but may not have been properly uploaded to the server.`);
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert(`Error downloading file "${fileName}". Please try again or contact the EIU personnel to re-upload the file.`);
+    }
+  }
+
+  // Revision Modal Functions
+  function showRevisionModal() {
+    document.getElementById('revisionModal').classList.remove('hidden');
+  }
+
+  function closeRevisionModal() {
+    document.getElementById('revisionModal').classList.add('hidden');
+    document.getElementById('revisionRequirements').value = '';
+  }
+
+  async function confirmRevisionRequest() {
+    const requirements = document.getElementById('revisionRequirements').value.trim();
+    
+    if (!requirements) {
+      alert('Please specify revision requirements.');
+      return;
+    }
+
+    if (!currentProjectId) {
+      alert('No project selected for revision request.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/${currentProjectId}/request-revision`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requirements: requirements,
+          requestedBy: 'secretariat'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('Revision request submitted successfully.');
+        closeRevisionModal();
+        closeProjectModal();
+        loadCompilationData(); // Refresh the data
+      } else {
+        throw new Error(data.error || 'Failed to submit revision request');
+      }
+    } catch (error) {
+      console.error('Error submitting revision request:', error);
+      alert('Error submitting revision request. Please try again.');
+    }
+  }
+
+  // Helper function to get division status display
+  function getDivisionStatusDisplay(divisionStatus) {
+    const statusMap = {
+      'approved': { class: 'bg-green-100 text-green-700', text: 'approved' },
+      'revision_requested': { class: 'bg-orange-100 text-orange-700', text: 'revision requested' },
+      'rejected': { class: 'bg-red-100 text-red-700', text: 'rejected' },
+      'pending': { class: 'bg-yellow-100 text-yellow-700', text: 'pending' }
+    };
+    
+    return statusMap[divisionStatus] || statusMap.pending;
+  }
+
+  // Helper function to generate division action buttons
+  function getDivisionActionButtons(updateId, divisionType, milestoneTitle, divisionStatus) {
+    if (divisionStatus === 'pending') {
+      return `
+        <button onclick="approveDivision('${updateId}', '${divisionType}', '${milestoneTitle}')" 
+                class="flex-1 px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+          Approve
+        </button>
+        <button onclick="showDivisionRevisionModal('${updateId}', '${divisionType}', '${milestoneTitle}')" 
+                class="flex-1 px-3 py-2 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors">
+          Request Revision
+        </button>
+        <button onclick="rejectDivision('${updateId}', '${divisionType}', '${milestoneTitle}')" 
+                class="flex-1 px-3 py-2 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors">
+          Reject
+        </button>
+      `;
+    } else {
+      let statusText = '';
+      let statusClass = '';
+      
+      if (divisionStatus === 'approved') {
+        statusText = '✓ Approved';
+        statusClass = 'bg-green-100 text-green-700';
+      } else if (divisionStatus === 'rejected') {
+        statusText = '✗ Rejected';
+        statusClass = 'bg-red-100 text-red-700';
+      } else if (divisionStatus === 'revision_requested') {
+        statusText = '⚠ Revision Requested';
+        statusClass = 'bg-orange-100 text-orange-700';
+      } else {
+        statusText = 'Action Taken';
+        statusClass = 'bg-gray-100 text-gray-700';
+      }
+      
+      return `
+        <div class="flex-1 px-3 py-2 ${statusClass} text-xs rounded cursor-not-allowed">
+          ${statusText}
+        </div>
+      `;
+    }
+  }
+
+  // Helper function to generate division action buttons for template literals
+  function getDivisionButtonsHTML(updateId, divisionType, milestoneTitle, divisionStatus) {
+    if (divisionStatus === 'pending') {
+      return `
+        <button onclick="approveDivision('${updateId}', '${divisionType}', '${milestoneTitle}')" 
+                class="flex-1 px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+          Approve
+        </button>
+        <button onclick="showDivisionRevisionModal('${updateId}', '${divisionType}', '${milestoneTitle}')" 
+                class="flex-1 px-3 py-2 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors">
+          Request Revision
+        </button>
+        <button onclick="rejectDivision('${updateId}', '${divisionType}', '${milestoneTitle}')" 
+                class="flex-1 px-3 py-2 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors">
+          Reject
+        </button>
+      `;
+    } else {
+      let statusText = '';
+      let statusClass = '';
+      
+      if (divisionStatus === 'approved') {
+        statusText = '✓ Approved';
+        statusClass = 'bg-green-100 text-green-700';
+      } else if (divisionStatus === 'rejected') {
+        statusText = '✗ Rejected';
+        statusClass = 'bg-red-100 text-red-700';
+      } else if (divisionStatus === 'revision_requested') {
+        statusText = '⚠ Revision Requested';
+        statusClass = 'bg-orange-100 text-orange-700';
+      } else {
+        statusText = 'Action Taken';
+        statusClass = 'bg-gray-100 text-gray-700';
+      }
+      
+      return `
+        <div class="flex-1 px-3 py-2 ${statusClass} text-xs rounded cursor-not-allowed">
+          ${statusText}
+        </div>
+      `;
+    }
+  }
+
+  // Helper function to check if all divisions have verdicts
+  function checkAllDivisionsHaveVerdicts(milestoneUpdate) {
+    const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
+    const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
+    const physicalStatus = milestoneUpdate.physicalStatus || 'pending';
+    
+    return timelineStatus !== 'pending' && budgetStatus !== 'pending' && physicalStatus !== 'pending';
+  }
+
+  // Helper function to get overall milestone status
+  function getMilestoneOverallStatus(milestoneUpdate) {
+    if (checkAllDivisionsHaveVerdicts(milestoneUpdate)) {
+      const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
+      const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
+      const physicalStatus = milestoneUpdate.physicalStatus || 'pending';
+      
+      // If any division is rejected, overall status is rejected
+      if (timelineStatus === 'rejected' || budgetStatus === 'rejected' || physicalStatus === 'rejected') {
+        return { class: 'bg-red-100 text-red-700', text: 'Rejected' };
+      }
+      
+      // If any division needs revision, overall status is revision requested
+      if (timelineStatus === 'revision_requested' || budgetStatus === 'revision_requested' || physicalStatus === 'revision_requested') {
+        return { class: 'bg-orange-100 text-orange-700', text: 'Revision Requested' };
+      }
+      
+      // If all divisions are approved, overall status is approved
+      if (timelineStatus === 'approved' && budgetStatus === 'approved' && physicalStatus === 'approved') {
+        return { class: 'bg-green-100 text-green-700', text: 'Approved' };
+      }
+    }
+    
+    return { class: 'bg-yellow-100 text-yellow-700', text: 'Pending Review' };
+  }
+
+  // Division Revision Modal Functions
+  let currentDivisionRevisionData = null;
+
+  function showDivisionRevisionModal(updateId, division, milestoneTitle) {
+    currentDivisionRevisionData = { updateId, division, milestoneTitle };
+    document.getElementById('divisionRevisionTitle').textContent = `Requesting revision for ${division} division of "${milestoneTitle}"`;
+    document.getElementById('divisionRevisionModal').classList.remove('hidden');
+  }
+
+  function closeDivisionRevisionModal() {
+    document.getElementById('divisionRevisionModal').classList.add('hidden');
+    document.getElementById('divisionRevisionRequirements').value = '';
+    currentDivisionRevisionData = null;
+  }
+
+  async function confirmDivisionRevisionRequest() {
+    const requirements = document.getElementById('divisionRevisionRequirements').value.trim();
+    
+    if (!requirements) {
+      alert('Please specify revision requirements.');
+      return;
+    }
+
+    if (!currentDivisionRevisionData) {
+      alert('No division selected for revision request.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/division-revision`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          updateId: currentDivisionRevisionData.updateId,
+          division: currentDivisionRevisionData.division,
+          requirements: requirements,
+          requestedBy: 'secretariat'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('Division revision request submitted successfully.');
+        closeDivisionRevisionModal();
+        // Refresh the project modal to show updated status
+        if (currentProjectId) {
+          viewProjectReport(currentProjectId);
+          // Update buttons and actions immediately after revision request
+          setTimeout(() => {
+            updateDivisionButtons();
+            updateOverallActions();
+            updateApprovalActions(currentProjectData?.status);
+          }, 100);
+        }
+      } else {
+        throw new Error(data.error || 'Failed to submit division revision request');
+      }
+    } catch (error) {
+      console.error('Error submitting division revision request:', error);
+      alert('Error submitting division revision request. Please try again.');
+    }
+  }
+
+  // Debug function to manually trigger button updates
+  async function debugUpdateButtons() {
+    console.log('=== DEBUG UPDATE BUTTONS ===');
+    
+    // If no current project data, try to load it from the first available project
+    if (!currentProjectData || !currentProjectId) {
+      console.log('No current project data, attempting to load from compilation summary...');
+      
+      try {
+        // Get the compilation summary to find available projects
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/api/projects/compilation/summary', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const summaryData = await response.json();
+          console.log('Compilation summary data:', summaryData);
+          
+          if (summaryData.success && summaryData.departments && summaryData.departments.length > 0) {
+            const firstDepartment = summaryData.departments[0];
+            if (firstDepartment.projects && firstDepartment.projects.length > 0) {
+              const firstProject = firstDepartment.projects[0];
+              console.log('Loading first project:', firstProject.id);
+              
+              // Load the project details
+              await loadProjectDetails(firstProject.id);
+              
+              console.log('Project data loaded successfully');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading project data for debug:', error);
+      }
+    }
+    
+    console.log('Current project ID:', currentProjectId);
+    console.log('Current project data:', currentProjectData);
+    
+    if (currentProjectData && currentProjectData.milestoneUpdates) {
+      console.log('Milestone updates found:', currentProjectData.milestoneUpdates.length);
+      currentProjectData.milestoneUpdates.forEach((update, index) => {
+        console.log(`Update ${index}:`, update);
+        console.log('Timeline status:', update.timelineStatus);
+        console.log('Budget status:', update.budgetStatus);
+        console.log('Physical status:', update.physicalStatus);
+      });
+    }
+    
+    // Manually call the update functions
+    updateDivisionButtons();
+    updateOverallActions();
+    
+    // Force call updateApprovalActions with the correct status
+    if (currentProjectData) {
+      let status = currentProjectData.status || currentProjectData.workflowStatus;
+      
+      // If both are undefined, check division verdicts
+      if (!status && currentProjectData.milestoneUpdates && currentProjectData.milestoneUpdates.length > 0) {
+        const milestoneUpdate = currentProjectData.milestoneUpdates[0];
+        const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
+        const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
+        const physicalStatus = milestoneUpdate.physicalStatus || 'pending';
+        
+        const allDivisionsHaveVerdicts = timelineStatus !== 'pending' && budgetStatus !== 'pending' && physicalStatus !== 'pending';
+        
+        if (allDivisionsHaveVerdicts) {
+          status = 'iu_approved';
+        } else {
+          status = 'pending_compilation';
+        }
+      }
+      
+      console.log('Debug: Forcing updateApprovalActions with status:', status);
+      updateApprovalActions(status);
+    }
+    
+    console.log('=== END DEBUG ===');
+  }
+
+
+
   // Make functions globally available
   window.viewProjectReport = viewProjectReport;
   window.generateProjectReport = generateProjectReport;
@@ -1675,10 +3586,1273 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   window.rejectReport = rejectReport;
   window.closeRejectionModal = closeRejectionModal;
   window.confirmRejection = confirmRejection;
+  window.showRevisionModal = showRevisionModal;
+  window.closeRevisionModal = closeRevisionModal;
+  window.confirmRevisionRequest = confirmRevisionRequest;
+  window.showDivisionRevisionModal = showDivisionRevisionModal;
+  window.closeDivisionRevisionModal = closeDivisionRevisionModal;
+  window.confirmDivisionRevisionRequest = confirmDivisionRevisionRequest;
+  window.approveDivision = approveDivision;
+  window.rejectDivision = rejectDivision;
+  window.approveAllDivisions = approveAllDivisions;
+  window.getDivisionActionButtons = getDivisionActionButtons;
+  window.getDivisionButtonsHTML = getDivisionButtonsHTML;
+  window.updateDivisionButtons = updateDivisionButtons;
+  window.updateOverallActions = updateOverallActions;
+  window.debugUpdateButtons = debugUpdateButtons;
+  window.closeDivisionRejectionModal = closeDivisionRejectionModal;
+  window.confirmDivisionRejection = confirmDivisionRejection;
   window.openTimelineModal = openTimelineModal;
   window.closeTimelineModal = closeTimelineModal;
   window.openHistoryModal = openHistoryModal;
   window.closeHistoryModal = closeHistoryModal;
   window.exportProjectReport = exportProjectReport;
   window.exportHistory = exportHistory;
+  window.downloadFile = downloadFile;
+
+  // Global variables for compiled reports
+  let compiledReports = [];
+  let currentDetailedReport = null;
+
+  // Function to view detailed report
+  async function viewDetailedReport(reportId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/compiled-reports/${reportId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch detailed report');
+      
+      const data = await response.json();
+      currentDetailedReport = data.report;
+      
+      renderDetailedModal(currentDetailedReport);
+      document.getElementById('detailedReportModal').classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading detailed report:', error);
+      alert('Failed to load detailed report');
+    }
+  }
+
+  // Function to render detailed modal
+  function renderDetailedModal(report) {
+    const modal = document.getElementById('detailedReportModal');
+    const content = document.getElementById('detailedReportContent');
+    const projectCode = document.getElementById('modalProjectCode');
+    
+    projectCode.textContent = report.projectCode;
+    
+    content.innerHTML = `
+      <div class="space-y-6">
+        <!-- Project Information -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Project Information</h4>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="font-medium text-gray-600">Project Name:</span>
+              <p class="text-gray-800">${report.projectName}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Project Code:</span>
+              <p class="text-gray-800">${report.projectCode}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Implementing Office:</span>
+              <p class="text-gray-800">${report.implementingOffice}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">EIU Partner:</span>
+              <p class="text-gray-800">${report.eiuPartner}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Category:</span>
+              <p class="text-gray-800">${report.category}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Total Budget:</span>
+              <p class="text-gray-800">₱${parseFloat(report.totalBudget).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        <!-- Project Description -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Project Description</h4>
+          <p class="text-gray-800">${report.description || 'No description available'}</p>
+        </div>
+        <!-- Current Progress -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Current Progress</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="font-medium text-gray-600">Overall Progress:</span>
+              <div class="flex items-center mt-1">
+                <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-blue-500 h-2 rounded-full" style="width: ${report.overallProgress}%"></div>
+                </div>
+                <span class="text-sm font-medium">${report.overallProgress}%</span>
+              </div>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Timeline Progress:</span>
+              <div class="flex items-center mt-1">
+                <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-green-500 h-2 rounded-full" style="width: ${report.timelineProgress}%"></div>
+                </div>
+                <span class="text-sm font-medium">${report.timelineProgress}%</span>
+              </div>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Budget Progress:</span>
+              <div class="flex items-center mt-1">
+                <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-yellow-500 h-2 rounded-full" style="width: ${report.budgetProgress}%"></div>
+                </div>
+                <span class="text-sm font-medium">${report.budgetProgress}%</span>
+              </div>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Physical Progress:</span>
+              <div class="flex items-center mt-1">
+                <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-purple-500 h-2 rounded-full" style="width: ${report.physicalProgress}%"></div>
+                </div>
+                <span class="text-sm font-medium">${report.physicalProgress}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Current Project Timeline -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Current Project Timeline</h4>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="font-medium text-gray-600">Start Date:</span>
+              <p class="text-gray-800">${new Date(report.projectStartDate).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">End Date:</span>
+              <p class="text-gray-800">${new Date(report.projectEndDate).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Workflow Status:</span>
+              <p class="text-gray-800">${report.workflowStatus}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Last Updated:</span>
+              <p class="text-gray-800">${new Date(report.updatedAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+        </div>
+        <!-- Compiled Report Summary -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Compiled Report Summary</h4>
+          <div class="space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-600">Report Title:</span>
+              <p class="text-gray-800">${report.milestoneTitle}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Submitted By:</span>
+              <p class="text-gray-800">${report.eiuPartner}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Submitted At:</span>
+              <p class="text-gray-800">${new Date(report.submittedAt).toLocaleString()}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Status:</span>
+              <p class="text-gray-800">${report.status}</p>
+            </div>
+          </div>
+        </div>
+        <!-- Milestone Update Details -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Milestone Update Details</h4>
+          <div class="space-y-4">
+            <div>
+              <span class="font-medium text-gray-600">Milestone Weight:</span>
+              <p class="text-gray-800">${report.milestoneWeight}%</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Description:</span>
+              <p class="text-gray-800">${report.milestoneDescription || 'No description available'}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Additional Notes:</span>
+              <p class="text-gray-800">${report.additionalNotes || 'No additional notes'}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Note to Secretariat:</span>
+              <p class="text-gray-800">${report.noteToSecretariat || 'No notes to secretariat'}</p>
+            </div>
+          </div>
+        </div>
+        <!-- Secretariat Verdict -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold text-lg text-gray-800 mb-3 border-b border-gray-300 pb-2">Secretariat Verdict</h4>
+          <div class="space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-600">Verdict Date:</span>
+              <p class="text-gray-800">${new Date(report.secretariatApprovalDate).toLocaleString()}</p>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Timeline Division:</span>
+              <span class="inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                report.timelineStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                report.timelineStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
+                'bg-yellow-100 text-yellow-800'
+              }">${report.timelineStatus}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Budget Division:</span>
+              <span class="inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                report.budgetStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                report.budgetStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
+                'bg-yellow-100 text-yellow-800'
+              }">${report.budgetStatus}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Physical Division:</span>
+              <span class="inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                report.physicalStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                report.physicalStatus === 'rejected' ? 'bg-red-100 text-red-800' : 
+                'bg-yellow-100 text-yellow-800'
+              }">${report.physicalStatus}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Function to close detailed modal
+  function closeDetailedModal() {
+    document.getElementById('detailedReportModal').classList.add('hidden');
+    currentDetailedReport = null;
+  }
+
+  // Function to export to Word
+  async function exportToWord() {
+    if (!currentDetailedReport) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/compiled-reports/${currentDetailedReport.id}/export-word`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to export Word document');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Milestone_Report_${currentDetailedReport.projectCode}_${new Date().toISOString().split('T')[0]}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error exporting Word document:', error);
+      alert('Failed to export Word document');
+    }
+  }
+
+  // Enhanced export function to also save to compiled reports
+  async function exportReport(project) {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // First, export the Word document
+      const wordResponse = await fetch(`http://localhost:3000/api/projects/${project.id}/export-word`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!wordResponse.ok) throw new Error('Failed to export Word document');
+      
+      const blob = await wordResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Milestone_Report_${project.projectCode}_${new Date().toISOString().split('T')[0]}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      // Then, save to compiled reports
+      const saveResponse = await fetch(`http://localhost:3000/api/projects/${project.id}/save-compiled-report`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!saveResponse.ok) throw new Error('Failed to save compiled report');
+      
+      // Reload compiled reports
+      await loadCompiledReports();
+      
+      alert('Report exported and saved successfully!');
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Failed to export report');
+    }
+  }
+
+  // Load compiled reports only when tab is switched to compiled reports
+  // Removed automatic loading on DOMContentLoaded to prevent errors
+
+  // Enhanced tab switching logic with smooth animations
+  function showTab(tab) {
+    const summaryTab = document.getElementById('tab-summary');
+    const compiledTab = document.getElementById('tab-compiled');
+    const summaryContent = document.getElementById('tab-content-summary');
+    const compiledContent = document.getElementById('tab-content-compiled');
+    
+    // Smooth transition for tab content
+    if (tab === 'summary') {
+      // Show summary tab
+      summaryContent.classList.remove('hidden');
+      summaryContent.style.opacity = '0';
+      summaryContent.style.transform = 'translateY(10px)';
+      
+      setTimeout(() => {
+        summaryContent.style.transition = 'all 0.3s ease-in-out';
+        summaryContent.style.opacity = '1';
+        summaryContent.style.transform = 'translateY(0)';
+      }, 50);
+      
+      // Hide compiled tab
+      compiledContent.classList.add('hidden');
+      
+      // Update tab button styles with enhanced animations
+      summaryTab.className = 'flex-1 py-3 px-6 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-white text-red-600 shadow-md border-b-2 border-red-500';
+      compiledTab.className = 'flex-1 py-3 px-6 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-transparent text-gray-600 hover:text-gray-800 hover:bg-white/50';
+      
+      // Load summary data
+      loadCompilationData();
+      
+    } else if (tab === 'compiled') {
+      // Show compiled tab
+      compiledContent.classList.remove('hidden');
+      compiledContent.style.opacity = '0';
+      compiledContent.style.transform = 'translateY(10px)';
+      
+      setTimeout(() => {
+        compiledContent.style.transition = 'all 0.3s ease-in-out';
+        compiledContent.style.opacity = '1';
+        compiledContent.style.transform = 'translateY(0)';
+      }, 50);
+      
+      // Hide summary tab
+      summaryContent.classList.add('hidden');
+      
+      // Update tab button styles with enhanced animations
+      compiledTab.className = 'flex-1 py-3 px-6 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-white text-red-600 shadow-md border-b-2 border-red-500';
+      summaryTab.className = 'flex-1 py-3 px-6 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-transparent text-gray-600 hover:text-gray-800 hover:bg-white/50';
+      
+      // Load compiled reports data
+      loadCompiledReports();
+    }
+  }
+
+  // Expose functions to global scope
+  window.showTab = showTab;
+  window.loadCompiledReports = loadCompiledReports;
+  window.displayCompiledReports = displayCompiledReports;
+  window.viewCompiledReportDetails = viewCompiledReportDetails;
+  window.showCompiledReportModal = showCompiledReportModal;
+  window.closeCompiledReportModal = closeCompiledReportModal;
+  window.downloadCompiledReport = downloadCompiledReport;
+  window.downloadCompiledReportExcel = downloadCompiledReportExcel;
+  window.refreshCompiledReports = refreshCompiledReports;
+  window.testModal = testModal;
+  window.closeTestModal = closeTestModal;
+  window.closeCompiledReportModalNew = closeCompiledReportModalNew;
+
+  // Enhanced load compiled reports with loading states
+  async function loadCompiledReports() {
+    // Small delay to ensure DOM elements are accessible after tab switch
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const timeline = document.getElementById('compiledReportsTimeline');
+    const loading = document.getElementById('compiled-reports-loading');
+    
+    // Check if elements exist before proceeding
+    if (!timeline || !loading) {
+      console.log('Compiled reports tab not active, skipping load');
+      return;
+    }
+    
+    try {
+      // Show loading state
+      loading.classList.remove('hidden');
+      timeline.innerHTML = '';
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/projects/compiled-reports', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Hide loading state
+      loading.classList.add('hidden');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        displayCompiledReports(data.compiledReports || []);
+        
+        // Update compiled count badge
+        const countBadge = document.getElementById('compiled-count');
+        if (data.compiledReports && data.compiledReports.length > 0) {
+          countBadge.textContent = data.compiledReports.length;
+          countBadge.classList.remove('hidden');
+        } else {
+          countBadge.classList.add('hidden');
+        }
+      } else {
+        throw new Error(data.error || 'Failed to load compiled reports');
+      }
+      
+    } catch (error) {
+      console.error('Error loading compiled reports:', error);
+      if (loading) loading.classList.add('hidden');
+      
+      if (timeline) {
+        timeline.innerHTML = `
+        <div class="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-12 text-center border-2 border-dashed border-red-200">
+          <div class="flex items-center justify-center mb-6">
+            <div class="bg-red-100 rounded-full p-4">
+              <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800 mb-3">No Compiled Reports Yet</h3>
+          <p class="text-gray-600 text-lg mb-4">The compiled reports archive is currently empty.</p>
+          <p class="text-gray-500 mb-6">Reports will appear here after the Secretariat exports milestone reports using the Export button.</p>
+          <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Navigate to the Compilation Summary tab to export reports</span>
+          </div>
+        </div>
+      `;
+      }
+    }
+  }
+
+  // Enhanced display compiled reports with better empty states
+  function displayCompiledReports(reports) {
+    const container = document.getElementById('compiledReportsTimeline');
+    
+    if (!container) {
+      console.error('Compiled reports container not found');
+      return;
+    }
+    
+    if (!reports || reports.length === 0) {
+      container.innerHTML = `
+        <div class="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-12 text-center border-2 border-dashed border-red-200">
+          <div class="flex items-center justify-center mb-6">
+            <div class="bg-red-100 rounded-full p-4">
+              <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800 mb-3">No Compiled Reports Yet</h3>
+          <p class="text-gray-600 text-lg mb-4">The compiled reports archive is currently empty.</p>
+          <p class="text-gray-500 mb-6">Reports will appear here after the Secretariat exports milestone reports using the Export button.</p>
+          <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Navigate to the Compilation Summary tab to export reports</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Group reports by department/office
+    const groupedReports = reports.reduce((acc, report) => {
+      const dept = report.implementingOfficeName || 'Unknown Department';
+      if (!acc[dept]) acc[dept] = [];
+      acc[dept].push(report);
+      return acc;
+    }, {});
+
+    let html = '';
+    
+    Object.entries(groupedReports).forEach(([department, deptReports]) => {
+      html += `
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-800">${department}</h3>
+            <span class="text-sm text-gray-500">${deptReports.length} compiled report(s)</span>
+          </div>
+          <div class="space-y-4">
+      `;
+      
+      deptReports.forEach(report => {
+        console.log('📊 Report progress debug:', {
+          reportId: report.id,
+          overallProgress: report.overallProgress,
+          reportContentProgress: report.reportContent?.progress?.overallProgress,
+          projectProgress: report.project?.overallProgress,
+          timelineProgress: report.project?.timelineProgress,
+          milestones: report.reportContent?.milestones,
+          latestUpdate: report.reportContent?.latestUpdate,
+          reportContent: report.reportContent
+        });
+        
+        // Debug milestone name specifically
+        console.log('🔍 Milestone name debug:', {
+          latestUpdateTitle: report.reportContent?.latestUpdate?.title,
+          firstMilestoneTitle: report.reportContent?.milestones?.[0]?.title,
+          milestoneUpdatesTitle: report.reportContent?.latestUpdate?.milestoneUpdates?.[0]?.title,
+          milestoneId: report.reportContent?.latestUpdate?.milestoneId,
+          allMilestones: report.reportContent?.milestones,
+          milestoneUpdates: report.reportContent?.latestUpdate?.milestoneUpdates,
+          fullLatestUpdate: report.reportContent?.latestUpdate
+        });
+        
+        // Debug all milestones with their IDs
+        console.log('📋 All milestones with IDs:', report.reportContent?.milestones?.map(m => ({
+          id: m.id,
+          title: m.title,
+          isTarget: m.id === report.reportContent?.latestUpdate?.milestoneId
+        })));
+        
+        // Find the correct milestone based on milestoneId
+        const milestoneId = report.reportContent?.latestUpdate?.milestoneId;
+        let correctMilestone = null;
+        
+        if (milestoneId) {
+          // Try to find milestone by ID
+          correctMilestone = report.reportContent?.milestones?.find(m => m.id === milestoneId);
+        }
+        
+        // If not found by ID, try to find from milestoneUpdates
+        if (!correctMilestone && report.reportContent?.latestUpdate?.milestoneUpdates) {
+          const milestoneUpdates = report.reportContent.latestUpdate.milestoneUpdates;
+          if (Array.isArray(milestoneUpdates) && milestoneUpdates.length > 0) {
+            // Get the first milestone update (most recent)
+            const firstUpdate = milestoneUpdates[0];
+            if (firstUpdate && firstUpdate.milestoneId) {
+              correctMilestone = report.reportContent?.milestones?.find(m => m.id === firstUpdate.milestoneId);
+            }
+          }
+        }
+        
+        // Fallback to first milestone if still not found
+        if (!correctMilestone) {
+          correctMilestone = report.reportContent?.milestones?.[0];
+        }
+        
+        console.log('🎯 Correct milestone found:', correctMilestone);
+        
+        const verdictDate = new Date(report.secretariatApprovalDate).toLocaleDateString();
+        const projectStartDate = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        const projectEndDate = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        
+        html += `
+          <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-500 project-card transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-3">
+                <!-- Professional Hover Icon with Milestone Information -->
+                <div class="relative group">
+                  <div class="bg-red-500 rounded-full p-2 cursor-help hover:bg-red-600 transition-colors shadow-md">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                           <!-- Hover Tooltip -->
+         <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 shadow-lg max-w-xs">
+                    <div class="text-center">
+                      <div class="font-semibold mb-1">Milestone Information</div>
+                                   <div class="text-xs">
+               <div>Milestone: ${correctMilestone?.title || report.reportContent?.latestUpdate?.milestoneUpdates?.[0]?.title || report.reportContent?.milestones?.[0]?.title || report.reportContent?.latestUpdate?.title || 'Project Milestone'}</div>
+               <div>Start: ${correctMilestone?.timelineStartDate ? new Date(correctMilestone.timelineStartDate).toLocaleDateString() : 'N/A'}</div>
+               <div>Due: ${correctMilestone?.timelineEndDate ? new Date(correctMilestone.timelineEndDate).toLocaleDateString() : 'N/A'}</div>
+               <div>Status: Approved by Secretariat</div>
+             </div>
+                    </div>
+                    <!-- Arrow -->
+                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+                <div class="bg-red-100 rounded-full p-2">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-800">${report.name}</h4>
+                  <p class="text-sm text-gray-600">${report.projectCode}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-medium text-gray-800">Verdict Date</div>
+                <div class="text-sm text-gray-600">${verdictDate}</div>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div class="text-center">
+                <div class="text-sm text-gray-600">Project Period</div>
+                <div class="font-medium text-gray-800">${projectStartDate} - ${projectEndDate}</div>
+              </div>
+              <div class="text-center">
+                <div class="text-sm text-gray-600">Overall Progress</div>
+                <div class="font-medium text-gray-800">${report.reportContent?.progress?.overallProgress || report.overallProgress || 0}%</div>
+              </div>
+              <div class="text-center">
+                <div class="text-sm text-gray-600">Budget</div>
+                <div class="font-medium text-gray-800">₱${parseFloat(report.totalBudget).toLocaleString()}</div>
+              </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2">
+              <button onclick="viewCompiledReportDetails('${report.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                View Details
+              </button>
+              <button onclick="alert('Test button works!')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Test Alert
+              </button>
+              <button onclick="downloadCompiledReport('${report.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm enhanced-btn">
+                Download Word
+              </button>
+              <button onclick="downloadCompiledReportExcel('${report.id}')" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm enhanced-btn">
+                Download Excel
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      });
+      
+      html += `
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // View compiled report details
+  async function viewCompiledReportDetails(reportId) {
+    try {
+      console.log('🔍 Fetching report details for:', reportId);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/compiled-reports/${reportId}?_t=${Date.now()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch report details');
+      
+      const data = await response.json();
+      console.log('📄 Received report data:', data);
+      console.log('🔍 Report object:', data.report);
+      console.log('🔍 Report content:', data.report?.reportContent);
+      
+      if (data.success && data.report) {
+        showCompiledReportModal(data.report);
+      } else {
+        throw new Error('Invalid report data received');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching report details:', error);
+      alert('Failed to load report details: ' + error.message);
+    }
+  }
+
+  // Show compiled report modal with formal layout
+  function showCompiledReportModal(report) {
+    console.log('🎯 Showing modal for report:', report);
+    
+    // Create a completely new modal element (like the test modal)
+    const newModal = document.createElement('div');
+    newModal.id = 'compiledReportModalNew';
+    
+    // Extract data from report content or fallback to report data
+    const reportContent = report.reportContent || {};
+    const projectInfo = reportContent.projectInfo || {};
+    const progress = reportContent.progress || {};
+    const workflow = reportContent.workflow || {};
+    const latestUpdate = reportContent.latestUpdate || {};
+    const milestones = reportContent.milestones || [];
+    
+    const verdictDate = new Date(report.validatedAt || report.secretariatApprovalDate).toLocaleDateString();
+    const projectStartDate = new Date(projectInfo.startDate || report.startDate).toLocaleDateString();
+    const projectEndDate = new Date(projectInfo.endDate || report.endDate).toLocaleDateString();
+    
+    // Create the modal content with inline styles
+    newModal.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow-y: auto;
+      ">
+        <div style="
+          background-color: white;
+          border-radius: 8px;
+          max-width: 90%;
+          width: 1200px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        ">
+          <div style="
+            background: linear-gradient(to right, #dc2626, #ec4899);
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          ">
+            <div>
+              <h2 style="font-size: 24px; font-weight: bold; margin: 0;">OFFICIAL MILESTONE REPORT</h2>
+              <p style="margin: 5px 0 0 0; opacity: 0.9;">MPMEC Secretariat - Compiled Report</p>
+            </div>
+            <button onclick="closeCompiledReportModalNew()" style="
+              background: none;
+              border: none;
+              color: white;
+              cursor: pointer;
+              font-size: 20px;
+            ">×</button>
+          </div>
+          
+          <div style="padding: 20px;">
+            <!-- Project Information Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Project Information</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; width: 25%;">Project Code</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.projectCode || report.projectCode || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Project Name</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.name || report.name || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Location</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.location || report.location || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Status</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${workflow.status || report.status || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Project Created</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectStartDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Implementing Office</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.implementingOffice || report.implementingOfficeName || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Implementing Partner</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.implementingPartner || report.implementingPartner || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Category</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.category || report.category || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Project Period</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectStartDate} to ${projectEndDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Total Budget</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">₱${parseFloat(projectInfo.totalBudget || report.totalBudget || 0).toLocaleString()}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Project Description Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Project Description</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; width: 25%;">Description</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.description || report.description || 'No description available'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Target Beneficiaries</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.targetBeneficiaries || report.targetBeneficiaries || 'Not specified'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Expected Output</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${projectInfo.expectedOutputs || report.expectedOutputs || 'Not specified'}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Current Progress Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Current Progress</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; width: 25%;">Overall Progress</td>
+                  <td style="padding: 8px; border: 1px solid #ddd; color: #2563eb; font-weight: bold;">${(parseFloat(progress.overallProgress) || 0).toFixed(2)}%</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Timeline Progress</td>
+                  <td style="padding: 8px; border: 1px solid #ddd; color: #059669; font-weight: bold;">${(parseFloat(progress.timelineProgress) || 0).toFixed(2)}%</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Budget Progress</td>
+                  <td style="padding: 8px; border: 1px solid #ddd; color: #ea580c; font-weight: bold;">${(parseFloat(progress.budgetProgress) || 0).toFixed(2)}%</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Physical Progress</td>
+                  <td style="padding: 8px; border: 1px solid #ddd; color: #7c3aed; font-weight: bold;">${(parseFloat(progress.physicalProgress) || 0).toFixed(2)}%</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Compiled Report from Implementing Office Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Compiled Report from Implementing Office</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; width: 25%;">Report Title</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${latestUpdate.title || 'Milestone Update Report'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Submitted By</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${latestUpdate.submittedBy || 'EIU Personnel'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Submitted At</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${latestUpdate.submittedAt ? new Date(latestUpdate.submittedAt).toLocaleString() : 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Status</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${latestUpdate.status || 'Submitted'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Report Summary</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${latestUpdate.description || 'No detailed report summary available'}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Milestone Information Section -->
+            ${milestones && milestones.length > 0 ? `
+              <div style="margin-bottom: 30px;">
+                <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Milestone 1: ${milestones[0].title || 'Project Milestone'}</h3>
+                
+                <!-- Timeline Division -->
+                <div style="margin-bottom: 20px;">
+                  <h4 style="color: #2563eb; margin-bottom: 10px; font-size: 16px;">Timeline Division</h4>
+                  <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #eff6ff;">
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #dbeafe; font-weight: bold; width: 25%;">Weight</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].timelineWeight || 'N/A'}%</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #dbeafe; font-weight: bold;">Planned Start</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].timelinePlannedStart ? new Date(milestones[0].timelinePlannedStart).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #dbeafe; font-weight: bold;">Planned Due</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].timelinePlannedDue ? new Date(milestones[0].timelinePlannedDue).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #dbeafe; font-weight: bold;">Status</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].timelineStatus || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #dbeafe; font-weight: bold;">Secretariat Verdict</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].timelineVerdict || 'Approved'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #dbeafe; font-weight: bold;">Description</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].timelineActivities || 'Site preparation and excavation activities including clearing, leveling, and foundation work'}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <!-- Budget Division -->
+                <div style="margin-bottom: 20px;">
+                  <h4 style="color: #059669; margin-bottom: 10px; font-size: 16px;">Budget Division</h4>
+                  <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #f0fdf4;">
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #bbf7d0; font-weight: bold; width: 25%;">Weight</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].budgetWeight || 'N/A'}%</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #bbf7d0; font-weight: bold;">Planned Budget</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">₱${(parseFloat(milestones[0].budgetPlanned) || 0).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #bbf7d0; font-weight: bold;">Budget Used</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">₱${(parseFloat(milestones[0].budgetUsed) || 0).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #bbf7d0; font-weight: bold;">Budget Breakdown</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].budgetBreakdown || 'Budget allocation for site preparation and excavation materials'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #bbf7d0; font-weight: bold;">Status</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].budgetStatus || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #bbf7d0; font-weight: bold;">Secretariat Verdict</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].budgetVerdict || 'Approved'}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <!-- Physical Division -->
+                <div style="margin-bottom: 20px;">
+                  <h4 style="color: #7c3aed; margin-bottom: 10px; font-size: 16px;">Physical Division</h4>
+                  <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #faf5ff;">
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #ddd6fe; font-weight: bold; width: 25%;">Weight</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].physicalWeight || 'N/A'}%</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #ddd6fe; font-weight: bold;">Proof Type</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].physicalProofType || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #ddd6fe; font-weight: bold;">Status</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].physicalStatus || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #ddd6fe; font-weight: bold;">Secretariat Verdict</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].physicalVerdict || 'Approved'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd; background-color: #ddd6fe; font-weight: bold;">Description</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${milestones[0].physicalRequirements || 'Physical completion of site preparation and excavation work'}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <!-- Progress Requirements -->
+                <div style="margin-bottom: 20px;">
+                  <h4 style="color: #374151; margin-bottom: 10px; font-size: 16px;">Progress Requirements</h4>
+                  <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; border: 1px solid #d1d5db;">
+                    <p style="margin: 0; color: #374151;">${milestones[0].progressRequirements || milestones[0].description || 'No progress requirements specified'}</p>
+                  </div>
+                </div>
+
+                <!-- Supporting Documents -->
+                <div style="margin-bottom: 20px;">
+                  <h4 style="color: #374151; margin-bottom: 10px; font-size: 16px;">Supporting Documents</h4>
+                  <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; border: 1px solid #d1d5db;">
+                    <p style="margin: 0; color: #374151;">
+                      ${milestones[0].supportingFiles && milestones[0].supportingFiles.length > 0 
+                        ? milestones[0].supportingFiles.map(file => file.name || file).join(', ') 
+                        : 'No supporting documents uploaded'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ` : `
+              <div style="margin-bottom: 30px;">
+                <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Milestone Information</h3>
+                <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; border: 1px solid #f59e0b;">
+                  <p style="margin: 0; color: #92400e;">No milestone information available</p>
+                </div>
+              </div>
+            `}
+
+            <!-- Secretariat Verdict Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #dc2626; margin-bottom: 15px; font-size: 18px;">Secretariat Verdict</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; width: 25%;">Verdict Date</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${verdictDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Overall Status</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${workflow.status || 'Pending'}</td>
+                </tr>
+              </table>
+            </div>
+            <p style="margin-bottom: 20px;"><strong>Verdict Date:</strong> ${verdictDate}</p>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+              <button onclick="downloadCompiledReportExcel('${report.id}')" style="
+                background-color: #ea580c;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+              ">Download Excel</button>
+              <button onclick="closeCompiledReportModalNew()" style="
+                background-color: #dc2626;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+              ">Close Modal</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(newModal);
+    console.log('✅ New compiled report modal created and displayed');
+  }
+  
+  // Close the new compiled report modal
+  function closeCompiledReportModalNew() {
+    const modal = document.getElementById('compiledReportModalNew');
+    if (modal) {
+      modal.remove();
+      console.log('🔒 New compiled report modal closed');
+    }
+  }
+
+  // Close compiled report modal
+  function closeCompiledReportModal() {
+    const modal = document.getElementById('compiledReportModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      console.log('🔒 Modal closed');
+    }
+  }
+
+  // Test modal function (for debugging)
+  function testModal() {
+    console.log('🧪 Test modal function called!');
+    
+    // Create a completely new modal element
+    const newModal = document.createElement('div');
+    newModal.id = 'testModal';
+    newModal.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          background-color: white;
+          padding: 20px;
+          border-radius: 8px;
+          max-width: 500px;
+          width: 90%;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        ">
+          <h2 style="color: red; margin-bottom: 10px;">TEST MODAL - WORKING!</h2>
+          <p style="margin-bottom: 20px;">If you can see this, the modal system is working!</p>
+          <button onclick="closeTestModal()" style="
+            background-color: red;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          ">Close Modal</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(newModal);
+    console.log('🧪 New test modal created and added to body');
+  }
+  
+  // Close test modal function
+  function closeTestModal() {
+    const testModal = document.getElementById('testModal');
+    if (testModal) {
+      testModal.remove();
+      console.log('🧪 Test modal removed');
+    }
+  }
+
+  // Add click outside to close functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('compiledReportModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeCompiledReportModal();
+        }
+      });
+      console.log('✅ Modal event listeners initialized');
+    } else {
+      console.error('❌ Modal not found during initialization');
+    }
+  });
+
+  // Download compiled report as Word
+  async function downloadCompiledReport(reportId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/compiled-reports/${reportId}/download-word`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to download report');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Compiled_Report_${reportId}_${new Date().toISOString().split('T')[0]}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      alert('Failed to download report');
+    }
+  }
+
+  // Download compiled report as Excel
+  async function downloadCompiledReportExcel(reportId) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/projects/compiled-reports/${reportId}/download-excel`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to download Excel report');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Milestone_Report_${reportId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading Excel report:', error);
+      alert('Failed to download Excel report');
+    }
+  }
+
+  // Enhanced refresh compiled reports with visual feedback
+  function refreshCompiledReports() {
+    const refreshBtn = event.target.closest('button');
+    const originalText = refreshBtn.innerHTML;
+    
+    // Show loading state on button
+    refreshBtn.innerHTML = `
+      <svg class="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Refreshing...
+    `;
+    refreshBtn.disabled = true;
+    
+    // Load reports
+    loadCompiledReports().finally(() => {
+      // Restore button state
+      refreshBtn.innerHTML = originalText;
+      refreshBtn.disabled = false;
+    });
+  }
+
+  // Set default tab with enhanced styling
+  document.addEventListener('DOMContentLoaded', function() {
+    showTab('summary');
+    
+    // Add subtle animation to the page load
+    const mainContent = document.querySelector('section');
+    mainContent.style.opacity = '0';
+    mainContent.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+      mainContent.style.transition = 'all 0.5s ease-in-out';
+      mainContent.style.opacity = '1';
+      mainContent.style.transform = 'translateY(0)';
+    }, 100);
+  });
+
+  (function() {
+    const tabButtons = [
+      document.getElementById('tab-summary'),
+      document.getElementById('tab-compiled')
+    ];
+    tabButtons.forEach(button => {
+      if (!button) return;
+      button.addEventListener('click', function(e) {
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        ripple.style.cssText = `
+          position: absolute;
+          border-radius: 50%;
+          background: rgba(235, 60, 60, 0.3);
+          transform: scale(0);
+          animation: ripple 0.6s linear;
+          pointer-events: none;
+          z-index: 10;
+        `;
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        button.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+    // Add ripple keyframes if not present
+    if (!document.getElementById('ripple-keyframes')) {
+      const style = document.createElement('style');
+      style.id = 'ripple-keyframes';
+      style.textContent = `@keyframes ripple { to { transform: scale(4); opacity: 0; } }`;
+      document.head.appendChild(style);
+    }
+  })();
 </script> 

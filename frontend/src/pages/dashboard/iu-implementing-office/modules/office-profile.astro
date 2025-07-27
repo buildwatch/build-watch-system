@@ -2,7 +2,6 @@
 export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
 import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
-import projectService from '../../../../services/projects.js';
 ---
 
 <Layout title="My Profile - Implementing Office Officer">
@@ -121,10 +120,7 @@ import projectService from '../../../../services/projects.js';
               <p class="text-gray-800 font-medium" id="profileSubRole">Implementing Office-Officer</p>
             </div>
             
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
-              <p class="text-gray-800 font-medium" id="profileProjectCode">-</p>
-            </div>
+            <!-- Project Code removed - only for EIU -->
             
             <div class="grid grid-cols-2 gap-4">
               <div>
@@ -254,24 +250,51 @@ import projectService from '../../../../services/projects.js';
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
+    console.log('Profile page loading...');
+    console.log('Token present:', !!token);
+    console.log('User data present:', !!userData);
+    
     if (!token || !userData) {
+      console.error('Missing token or user data, redirecting to login');
       window.location.href = '/login/lgu-pmt';
       return;
     }
     
     try {
       const user = JSON.parse(userData);
+      console.log('Parsed user data:', user);
       
-      // Check if user is LGU-IU
-      if (user.role !== 'LGU-IU') {
+      // More flexible role checking - check multiple possible role fields
+      const userRole = user.role || user.subRole || user.group || '';
+      console.log('User role detected:', userRole);
+      
+      // Check if user is Implementing Office (LGU-IU, IU, or has Implementing Office in name/role)
+      const isImplementingOffice = userRole === 'LGU-IU' || 
+                                  userRole === 'IU' || 
+                                  userRole.includes('Implementing') ||
+                                  user.name?.includes('Municipal') ||
+                                  user.fullName?.includes('Municipal');
+      
+      console.log('Is implementing office:', isImplementingOffice);
+      
+      if (!isImplementingOffice) {
+        console.error('User is not an implementing office user, redirecting to login');
         window.location.href = '/login/lgu-pmt';
         return;
       }
       
-      console.log('LGU-IU Profile module loaded for user:', user.username);
+      console.log('LGU-IU Profile module loaded for user:', user.username || user.name);
       
       // Load user profile data
       loadUserProfile();
+      
+      // Also try to load from localStorage immediately as fallback
+      console.log('Loading profile from localStorage immediately:', user);
+      updateProfileDisplay(user);
+      
+      // Debug: Check what's in localStorage
+      console.log('localStorage token:', localStorage.getItem('token') ? 'Present' : 'Missing');
+      console.log('localStorage user:', localStorage.getItem('user'));
       
     } catch (error) {
       console.error('Error parsing user data:', error);
@@ -281,19 +304,40 @@ import projectService from '../../../../services/projects.js';
 
   async function loadUserProfile() {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      console.log('Fetching profile from API with token:', token.substring(0, 20) + '...');
+      
       const response = await fetch('http://localhost:3000/api/auth/profile', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
       
+      console.log('API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Profile data received:', data);
         if (data.success && data.user) {
+          console.log('Updating profile display with user data:', data.user);
           updateProfileDisplay(data.user);
+        } else {
+          console.error('Failed to fetch user profile:', data.error);
         }
       } else {
-        console.error('Failed to fetch user profile');
+        console.error('Failed to fetch user profile:', response.status);
+        try {
+          const errorData = await response.json();
+          console.error('Error details:', errorData);
+        } catch (e) {
+          console.error('Could not parse error response');
+        }
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -301,15 +345,21 @@ import projectService from '../../../../services/projects.js';
   }
 
   function updateProfileDisplay(user) {
+    console.log('Updating profile display with user data:', user);
+    
     // Update personal information
-    document.getElementById('profileFirstName').textContent = user.firstName || user.name?.split(' ')[0] || 'Loading...';
+    const firstName = user.firstName || user.name?.split(' ')[0] || 'N/A';
+    const lastName = user.lastName || user.name?.split(' ').slice(-1)[0] || 'N/A';
+    const fullName = user.fullName || user.name || `${firstName} ${lastName}`.trim() || 'N/A';
+    
+    document.getElementById('profileFirstName').textContent = firstName;
     document.getElementById('profileMiddleName').textContent = user.middleName || '-';
-    document.getElementById('profileLastName').textContent = user.lastName || user.name?.split(' ').slice(-1)[0] || 'Loading...';
-    document.getElementById('profileFullName').textContent = user.fullName || user.name || 'Loading...';
-    document.getElementById('profileUsername').textContent = user.username || 'Loading...';
-    document.getElementById('profileEmail').textContent = user.email || 'Loading...';
+    document.getElementById('profileLastName').textContent = lastName;
+    document.getElementById('profileFullName').textContent = fullName;
+    document.getElementById('profileUsername').textContent = user.username || user.email || 'N/A';
+    document.getElementById('profileEmail').textContent = user.email || user.username || 'N/A';
     document.getElementById('profileBirthday').textContent = user.birthdate ? new Date(user.birthdate).toLocaleDateString() : '-';
-    document.getElementById('profileUserId').textContent = user.userId || 'Loading...';
+    document.getElementById('profileUserId').textContent = user.userId || user.id || 'N/A';
     document.getElementById('profileAddress').textContent = user.address || '-';
     document.getElementById('profileContact').textContent = user.contactNumber || '-';
 
@@ -325,12 +375,11 @@ import projectService from '../../../../services/projects.js';
     document.getElementById('profileGroup').textContent = user.group || 'LGU-IU';
     document.getElementById('profileRole').textContent = user.role || 'LGU-IU';
     document.getElementById('profileSubRole').textContent = user.subRole || 'Implementing Office-Officer';
-    document.getElementById('profileProjectCode').textContent = user.projectCode || '-';
     document.getElementById('profileDepartment').textContent = user.department || '-';
     document.getElementById('profilePosition').textContent = user.position || '-';
 
     // Update account information
-    document.getElementById('accountUsername').textContent = user.username || 'Loading...';
+    document.getElementById('accountUsername').textContent = user.username || user.email || 'N/A';
     document.getElementById('accountLastLogin').textContent = user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never';
 
     // Load project history (mock data for now)
@@ -342,19 +391,28 @@ import projectService from '../../../../services/projects.js';
       const token = localStorage.getItem('token');
       if (!token) {
         console.error('No authentication token found');
+        showProjectHistoryError('Authentication required');
         return;
       }
+
+      console.log('Fetching project history...');
 
       // Fetch projects for this implementing office
       const response = await fetch('http://localhost:3000/api/projects', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log('Project history API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Project history data received:', data);
+        
         if (data.success && data.projects) {
+          console.log('Updating project history table with', data.projects.length, 'projects');
           updateProjectHistoryTable(data.projects);
         } else {
           console.error('Failed to fetch projects:', data.message);
@@ -368,6 +426,15 @@ import projectService from '../../../../services/projects.js';
       console.error('Error fetching project history:', error);
       showProjectHistoryError('Error loading project history');
     }
+  }
+
+  // Simple budget formatting function
+  function formatBudget(amount) {
+    const numericAmount = parseFloat(amount) || 0;
+    return `₱${numericAmount.toLocaleString('en-PH', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })}`;
   }
 
   function updateProjectHistoryTable(projects) {
@@ -385,13 +452,13 @@ import projectService from '../../../../services/projects.js';
       return;
     }
 
-    tableBody.innerHTML = projects.map(project => {
+    tableBody.innerHTML = projects.map((project, index) => {
       const year = project.startDate ? new Date(project.startDate).getFullYear() : 'N/A';
       const progress = parseFloat(project.overallProgress) || 0;
-      const budget = projectService.formatBudget(project.totalBudget);
+      const budget = formatBudget(project.totalBudget);
       
       return `
-        <tr class="border-b hover:bg-gray-50 transition-all">
+        <tr class="border-b hover:bg-gray-50 transition-all" data-project-id="${project.id}">
           <td class="px-6 py-4 font-medium text-gray-800">${project.name}</td>
           <td class="px-6 py-4">${year}</td>
           <td class="px-6 py-4">
@@ -402,7 +469,7 @@ import projectService from '../../../../services/projects.js';
           <td class="px-6 py-4">
             <div class="flex items-center gap-2">
               <div class="w-16 bg-gray-200 rounded-full h-2">
-                <div class="h-2 rounded-full ${getProgressColor(progress)}" style="width: ${progress}%"></div>
+                <div class="h-2 rounded-full ${getProgressColor(progress)} transition-all duration-1000 ease-out" style="width: 0%"></div>
               </div>
               <span class="text-sm text-gray-600">${progress}%</span>
             </div>
@@ -416,6 +483,22 @@ import projectService from '../../../../services/projects.js';
         </tr>
       `;
     }).join('');
+
+    // Animate progress bars with staggered timing
+    setTimeout(() => {
+      projects.forEach((project, index) => {
+        const progress = parseFloat(project.overallProgress) || 0;
+        const row = document.querySelector(`[data-project-id="${project.id}"]`);
+        if (row) {
+          const progressBar = row.querySelector('.h-2.rounded-full');
+          if (progressBar) {
+            setTimeout(() => {
+              progressBar.style.width = `${progress}%`;
+            }, index * 100); // Stagger animation based on row index
+          }
+        }
+      });
+    }, 200);
   }
 
   function getStatusColor(status) {
@@ -533,11 +616,7 @@ import projectService from '../../../../services/projects.js';
     alert('Contact support functionality will be implemented soon.');
   }
 
-  function viewProjectDetails(projectId) {
-    console.log('View project details clicked:', projectId);
-    // TODO: Navigate to project details page
-    alert(`Viewing project details for project ID: ${projectId}`);
-  }
+  // viewProjectDetails function already defined above
 </script>
 
 <style>

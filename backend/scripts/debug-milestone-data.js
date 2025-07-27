@@ -1,66 +1,93 @@
-const { ProjectUpdate } = require('../models');
-const { sequelize } = require('../config/database');
+const { ProjectUpdate, Project, User } = require('../models');
+const { Op } = require('sequelize');
 
 async function debugMilestoneData() {
   try {
-    console.log('🔍 Debugging milestone data structure...\n');
+    console.log('🔍 Debugging Milestone Updates Data Structure...\n');
 
-    // Find the specific IU approved update
-    const update = await ProjectUpdate.findOne({
+    // Find all milestone updates
+    const milestoneUpdates = await ProjectUpdate.findAll({
       where: {
-        id: 'd3997780-264e-4c28-9bc2-8193a951a30f'
-      }
+        updateType: 'milestone'
+      },
+      include: [
+        {
+          model: User,
+          as: 'submitter',
+          attributes: ['id', 'name', 'username', 'role']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
     });
 
-    if (!update) {
-      console.log('❌ Update not found');
-      return;
-    }
+    console.log(`📊 Found ${milestoneUpdates.length} milestone updates:\n`);
 
-    console.log('📊 Update Details:');
-    console.log('  ID:', update.id);
-    console.log('  Title:', update.title);
-    console.log('  Status:', update.status);
-    console.log('  Update Type:', update.updateType);
-    console.log('  Submitted At:', update.submittedAt);
-    console.log('  Claimed Progress:', update.claimedProgress);
-    console.log('  Final Progress:', update.finalProgress);
-    console.log('  Remarks:', update.remarks);
-    
-    console.log('\n🔍 Milestone Updates Data:');
-    console.log('  Type:', typeof update.milestoneUpdates);
-    console.log('  Raw value:', update.milestoneUpdates);
-    
-    if (update.milestoneUpdates) {
-      if (Array.isArray(update.milestoneUpdates)) {
-        console.log('  ✅ It\'s an array with', update.milestoneUpdates.length, 'items');
-        update.milestoneUpdates.forEach((item, index) => {
-          console.log(`    Item ${index + 1}:`, JSON.stringify(item, null, 2));
-        });
-      } else if (typeof update.milestoneUpdates === 'object') {
-        console.log('  ✅ It\'s an object');
-        console.log('  Object:', JSON.stringify(update.milestoneUpdates, null, 2));
-      } else if (typeof update.milestoneUpdates === 'string') {
-        console.log('  ⚠️  It\'s a string');
-        console.log('  String value:', update.milestoneUpdates);
+    milestoneUpdates.forEach((update, index) => {
+      console.log(`\n--- Milestone Update ${index + 1} ---`);
+      console.log(`ID: ${update.id}`);
+      console.log(`Project ID: ${update.projectId}`);
+      console.log(`Submitted By: ${update.submittedBy}`);
+      console.log(`Submitted By Role: ${update.submittedByRole}`);
+      console.log(`Status: ${update.status}`);
+      console.log(`Created At: ${update.createdAt}`);
+      console.log(`Submitted At: ${update.submittedAt}`);
+      
+      // Check milestoneUpdates field
+      if (update.milestoneUpdates) {
+        console.log(`   Milestone Updates Field Type: ${typeof update.milestoneUpdates}`);
+        console.log(`   Milestone Updates Length: ${update.milestoneUpdates.length || 'N/A'}`);
+        
         try {
-          const parsed = JSON.parse(update.milestoneUpdates);
-          console.log('  ✅ Parsed successfully:', JSON.stringify(parsed, null, 2));
-        } catch (e) {
-          console.log('  ❌ Failed to parse as JSON:', e.message);
+          const parsed = typeof update.milestoneUpdates === 'string'
+            ? JSON.parse(update.milestoneUpdates)
+            : update.milestoneUpdates;
+          
+          console.log(`   Parsed Type: ${typeof parsed}`);
+          console.log(`   Is Array: ${Array.isArray(parsed)}`);
+          
+          if (Array.isArray(parsed)) {
+            console.log(`   Array Length: ${parsed.length}`);
+            parsed.forEach((item, i) => {
+              console.log(`   Item ${i + 1}:`, {
+                milestoneId: item.milestoneId,
+                timeline: item.timeline ? {
+                  hasData: true,
+                  description: item.timeline.description ? 'Has description' : 'No description',
+                  startDate: item.timeline.startDate || 'No start date',
+                  endDate: item.timeline.endDate || 'No end date'
+                } : 'No timeline data',
+                budget: item.budget ? {
+                  hasData: true,
+                  amount: item.budget.amount || 'No amount',
+                  plannedBudget: item.budget.plannedBudget || 'No planned budget',
+                  breakdown: item.budget.breakdown ? 'Has breakdown' : 'No breakdown'
+                } : 'No budget data',
+                physical: item.physical ? {
+                  hasData: true,
+                  description: item.physical.description ? 'Has description' : 'No description',
+                  files: item.uploadedFiles ? `${item.uploadedFiles.length} files` : 'No files'
+                } : 'No physical data',
+                notes: item.notes ? 'Has notes' : 'No notes'
+              });
+            });
+          } else if (typeof parsed === 'object') {
+            console.log(`   Object Keys: ${Object.keys(parsed).join(', ')}`);
+            console.log(`   Timeline: ${parsed.timeline ? 'Has data' : 'No data'}`);
+            console.log(`   Budget: ${parsed.budget ? 'Has data' : 'No data'}`);
+            console.log(`   Physical: ${parsed.physical ? 'Has data' : 'No data'}`);
+          }
+        } catch (error) {
+          console.log(`   ❌ Error parsing: ${error.message}`);
         }
+      } else {
+        console.log(`   ❌ No milestoneUpdates field`);
       }
-    } else {
-      console.log('  ❌ No milestone updates data');
-    }
-
-    // Test the JSON.stringify behavior
-    console.log('\n🧪 Testing JSON.stringify:');
-    console.log('  Stringified:', JSON.stringify(update.milestoneUpdates));
-    console.log('  toString():', update.milestoneUpdates?.toString());
+      
+      console.log(`   Raw data:`, update.milestoneUpdates);
+    });
 
   } catch (error) {
-    console.error('❌ Error debugging milestone data:', error);
+    console.error('Error debugging milestone data:', error);
   } finally {
     process.exit(0);
   }

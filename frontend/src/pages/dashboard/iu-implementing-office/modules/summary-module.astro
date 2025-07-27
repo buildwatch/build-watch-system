@@ -48,447 +48,548 @@ loading = false;
 
 <Layout title="Project Summary | Implementing Office Dashboard">
   <IUImplementingOfficeLayout>
-    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
-      <!-- Header Section -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">Project Summary</h1>
-          <p class="text-gray-600">Comprehensive overview of project progress and completion rates</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="exportSummary()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Export Summary
-          </button>
-        </div>
-      </div>
+    <section class="min-h-screen bg-gradient-to-br from-gray-50 to-white">
 
-      <!-- Project Selection -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Project for Summary</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map(project => {
-            // Use calculated progress from ProgressCalculationService
-            const overallProgress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-            const timelineProgress = parseFloat(project.progress?.timelineProgress || project.timelineProgress || 0);
-            const budgetProgress = parseFloat(project.progress?.budgetProgress || project.budgetProgress || 0);
-            const physicalProgress = parseFloat(project.progress?.physicalProgress || project.physicalProgress || 0);
-            const workflowStatus = project.workflowStatus || 'draft';
+
+      <!-- Main Content - Maximized width like progress-timeline -->
+      <div class="w-full px-6 py-8">
+        <!-- Enhanced Header Section -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+          <div>
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-800 to-amber-600 bg-clip-text text-transparent mb-3">Project Summary</h1>
+            <p class="text-lg text-gray-600">Comprehensive overview of project progress and completion rates</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="loadSummaryModule()" class="group relative px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl hover:from-amber-700 hover:to-amber-800 transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center gap-3 overflow-hidden font-semibold">
+              <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+              <svg class="w-5 h-5 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Refresh Data
+            </button>
+            <button onclick="exportSummary()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export Summary
+            </button>
+          </div>
+        </div>
+        <!-- Project Selection - Clean like progress-timeline -->
+        <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Select Project for Summary</h3>
+              <p class="text-gray-600">Choose a project to view detailed summary and progress overview</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="text-sm text-gray-600">Live Updates</span>
+            </div>
+          </div>
+          
+          <div id="projectSelection" class="space-y-4">
+            <!-- Projects will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Overall Progress Summary - Using distinct colors like progress-timeline -->
+        <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Overall Progress Summary</h3>
+              <p class="text-gray-600">Comprehensive progress tracking across all project divisions</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <span class="text-sm text-gray-600">Real-time Data</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-2 progress-card">
+              <div class="text-3xl font-bold text-blue-600 mb-2" id="overallProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0.00%</div>
+              <p class="text-sm text-gray-600 mb-3">Overall Progress</p>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out" id="overallProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
             
-            return (
-              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer project-card" data-project-id={project.id}>
-                <div class="flex items-start justify-between mb-3">
-                  <div class="flex-1">
-                    <h4 class="font-semibold text-gray-800 mb-1">{project.name}</h4>
-                    <p class="text-sm text-gray-600">{project.projectCode}</p>
-                  </div>
-                  <div class="flex flex-col items-end gap-1">
-                    <span class={`px-2 py-1 text-xs font-medium rounded-full ${
-                      workflowStatus === 'ongoing' ? 'bg-green-100 text-green-700' :
-                      workflowStatus === 'completed' ? 'bg-blue-100 text-blue-700' :
-                      workflowStatus === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
-                      workflowStatus === 'draft' ? 'bg-gray-100 text-gray-700' :
-                      workflowStatus === 'secretariat_approved' ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {workflowStatus.replace('_', ' ').toUpperCase()}
-                    </span>
-                    {project.submittedToSecretariat && (
-                      <span class="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
-                        PENDING SECRETARIAT
-                      </span>
-                    )}
+            <div class="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-2 progress-card">
+              <div class="text-3xl font-bold text-green-600 mb-2" id="timelineProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0.00%</div>
+              <p class="text-sm text-gray-600 mb-3">Timeline Progress</p>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-1000 ease-out" id="timelineProgressBarSummary" style="width: 0%"></div>
+              </div>
+            </div>
+            
+            <div class="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-2 progress-card">
+              <div class="text-3xl font-bold text-purple-600 mb-2" id="budgetProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0.00%</div>
+              <p class="text-sm text-gray-600 mb-3">Budget Progress</p>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out" id="budgetProgressBarSummary" style="width: 0%"></div>
+              </div>
+            </div>
+            
+            <div class="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-2 progress-card">
+              <div class="text-3xl font-bold text-orange-600 mb-2" id="physicalProgress" style="min-height: 2rem; display: flex; align-items: center; justify-content: center;">0.00%</div>
+              <p class="text-sm text-gray-600 mb-3">Physical Progress</p>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-1000 ease-out" id="physicalProgressBarSummary" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Information and Budget Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Project Information -->
+          <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Project Information</h3>
+                <p class="text-gray-600">Detailed project specifications and metadata</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                <span class="text-sm text-gray-600">Active</span>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Project Name</label>
+                <p class="text-sm text-gray-800" id="projectName">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Project Code</label>
+                <p class="text-sm text-gray-800" id="projectCode">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Implementing Office</label>
+                <p class="text-sm text-gray-800" id="implementingOffice">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Location</label>
+                <p class="text-sm text-gray-800" id="projectLocation">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Status</label>
+                <p class="text-sm text-gray-800" id="projectStatus">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Created Date</label>
+                <p class="text-sm text-gray-800" id="projectCreatedDate">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Category</label>
+                <p class="text-sm text-gray-800" id="projectCategory">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Priority</label>
+                <p class="text-sm text-gray-800" id="projectPriority">-</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget Information -->
+          <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Budget Information</h3>
+                <p class="text-gray-600">Financial tracking and budget utilization</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm text-gray-600">Live</span>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Total Budget</label>
+                <p class="text-lg font-semibold text-gray-800" id="totalBudget">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Amount Spent</label>
+                <p class="text-lg font-semibold text-green-600" id="amountSpent">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Remaining Budget</label>
+                <p class="text-lg font-semibold text-gray-800" id="remainingBudget">-</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Budget Utilization</label>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-800" id="budgetUtilization">-</p>
+                  <div class="flex-1 bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-2 rounded-full transition-all duration-1000 ease-out" id="budgetUtilizationBar" style="width: 0%"></div>
                   </div>
                 </div>
-                
-                <div class="mb-3">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Funding Source</label>
+                <p class="text-sm text-gray-800" id="fundingSource">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Description Card -->
+        <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Project Description</h3>
+              <p class="text-gray-600">Comprehensive project details and specifications</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+              <span class="text-sm text-gray-600">Complete</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-medium text-gray-600 mb-2">Description</label>
+              <div class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg min-h-[100px] max-h-[200px] overflow-y-auto" id="projectDescription">-</div>
+            </div>
+            
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-medium text-gray-600 mb-2">Target Beneficiaries</label>
+              <div class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg min-h-[100px] max-h-[200px] overflow-y-auto" id="targetBeneficiaries">-</div>
+            </div>
+            
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-medium text-gray-600 mb-2">Expected Outputs</label>
+              <div class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg min-h-[100px] max-h-[200px] overflow-y-auto" id="expectedOutputs">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Division Progress Details -->
+        <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors">Division Progress Details</h3>
+              <p class="text-gray-600">Detailed progress tracking for each project division</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+              <span class="text-sm text-gray-600">Updated</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Timeline Division -->
+            <div class="group bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-2xl hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-2 division-card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <h4 class="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">Timeline Division</h4>
+              </div>
+              
+              <div class="space-y-3">
+                <div>
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm text-gray-600">Overall Progress</span>
-                    <span class="text-sm font-medium text-gray-800">{overallProgress.toFixed(2)}%</span>
+                    <span class="text-sm text-gray-600">Progress</span>
+                    <span class="text-sm font-medium text-gray-800" id="timelineProgressDetail">0%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class={`h-2 rounded-full ${
-                      overallProgress >= 100 ? 'bg-green-500' : 'bg-[#92751F]'
-                    }`} style={`width: ${overallProgress}%`}></div>
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out progress-bar" id="timelineProgressBar" style="width: 0%"></div>
                   </div>
                 </div>
                 
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                  <div class="text-center">
-                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
-                      <div class="bg-blue-500 h-1 rounded-full" style={`width: ${timelineProgress}%`}></div>
-                    </div>
-                    <span class="text-gray-600">Timeline</span>
-                  </div>
-                  <div class="text-center">
-                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
-                      <div class="bg-green-500 h-1 rounded-full" style={`width: ${budgetProgress}%`}></div>
-                    </div>
-                    <span class="text-gray-600">Budget</span>
-                  </div>
-                  <div class="text-center">
-                    <div class="w-full bg-gray-200 rounded-full h-1 mb-1">
-                      <div class="bg-purple-500 h-1 rounded-full" style={`width: ${physicalProgress}%`}></div>
-                    </div>
-                    <span class="text-gray-600">Physical</span>
-                  </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Update Frequency</label>
+                  <p class="text-sm text-gray-800" id="timelineFrequency">-</p>
                 </div>
                 
-                {project.milestones && project.milestones.length > 0 && (
-                  <div class="mt-3 pt-3 border-t border-gray-100">
-                    <p class="text-xs text-gray-500 mb-2">Milestones: {project.milestones.length}</p>
-                    <div class="space-y-1">
-                      {project.milestones.slice(0, 2).map(milestone => (
-                        <div class="flex items-center justify-between text-xs">
-                          <span class="text-gray-600 truncate">{milestone.title}</span>
-                          <span class={`px-1 py-0.5 rounded text-xs ${
-                            milestone.status === 'completed' ? 'bg-green-100 text-green-700' :
-                            milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {milestone.status}
-                          </span>
-                        </div>
-                      ))}
-                      {project.milestones.length > 2 && (
-                        <p class="text-xs text-gray-500">+{project.milestones.length - 2} more</p>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Last Update</label>
+                  <p class="text-sm text-gray-800" id="timelineLastUpdate">-</p>
+                </div>
               </div>
-            );
-          })}
+            </div>
+
+            <!-- Budget Division -->
+            <div class="group bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-2xl hover:border-green-300 transition-all duration-300 transform hover:-translate-y-2 division-card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-green-100 rounded-full group-hover:bg-green-200 transition-colors">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                  </svg>
+                </div>
+                <h4 class="font-semibold text-gray-800 group-hover:text-green-700 transition-colors">Budget Division</h4>
+              </div>
+              
+              <div class="space-y-3">
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm text-gray-600">Progress</span>
+                    <span class="text-sm font-medium text-gray-800" id="budgetProgressDetail">0%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-1000 ease-out progress-bar" id="budgetProgressBar" style="width: 0%"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Update Frequency</label>
+                  <p class="text-sm text-gray-800" id="budgetFrequency">-</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Last Update</label>
+                  <p class="text-sm text-gray-800" id="budgetLastUpdate">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Physical Division -->
+            <div class="group bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-2xl hover:border-orange-300 transition-all duration-300 transform hover:-translate-y-2 division-card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-orange-100 rounded-full group-hover:bg-orange-200 transition-colors">
+                  <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+                <h4 class="font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Physical Division</h4>
+              </div>
+              
+              <div class="space-y-3">
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm text-gray-600">Progress</span>
+                    <span class="text-sm font-medium text-gray-800" id="physicalProgressDetail">0%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-1000 ease-out progress-bar" id="physicalProgressBar" style="width: 0%"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Update Frequency</label>
+                  <p class="text-sm text-gray-800" id="physicalFrequency">-</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-600">Last Update</label>
+                  <p class="text-sm text-gray-800" id="physicalLastUpdate">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secretariat Approval Status -->
+        <div class="group bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl border border-yellow-200 p-6 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="p-3 bg-yellow-100 rounded-full group-hover:bg-yellow-200 transition-colors">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 group-hover:text-amber-700 transition-colors">Project Approval Status</h3>
+              <p class="text-sm text-gray-600">Overall completion rate and approval tracking</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-yellow-600" id="secretariatProgress">0%</div>
+              <p class="text-sm text-gray-600">Approved Progress</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="text-2xl font-bold text-green-600" id="submittedReports">0</div>
+              <p class="text-sm text-gray-600">Reports Submitted</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="text-2xl font-bold text-blue-600" id="pendingApproval">0</div>
+              <p class="text-sm text-gray-600">Pending Approval</p>
+            </div>
+          </div>
+          
+          <div class="mt-6 p-4 bg-white rounded-lg">
+            <h4 class="font-semibold text-gray-800 mb-2">Latest Approval Update</h4>
+            <p class="text-sm text-gray-600" id="latestSecretariatUpdate">No approval updates yet.</p>
+          </div>
         </div>
       </div>
-
-      {loading ? (
-        <div class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#92751F]"></div>
-          <span class="ml-3 text-gray-600">Loading project summary...</span>
-        </div>
-      ) : error ? (
-        <div class="text-center py-12">
-          <p class="text-red-600 mb-4">{error}</p>
-          <button onclick="loadSummaryModule()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-all">
-            Try Again
-          </button>
-        </div>
-      ) : projects.length === 0 ? (
-        <div class="text-center py-12">
-          <svg class="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">No Projects Available</h3>
-          <p class="text-gray-600 mb-6">You don't have any projects to summarize. Create a project first to view its summary.</p>
-          <button onclick="window.location.href='/dashboard/iu-implementing-office/modules/project-management'" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2 mx-auto">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            Create New Project
-          </button>
-        </div>
-      ) : (
-        <!-- Project Summary Display -->
-        <div id="projectSummaryDisplay" class="space-y-8">
-          <!-- Overall Progress Summary -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="p-3 bg-[#92751F]/20 rounded-full">
-                <svg class="w-6 h-6 text-[#92751F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-800">Overall Progress Summary</h3>
-                <p class="text-sm text-gray-600">Comprehensive overview of project completion rates</p>
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="text-center p-4 bg-blue-50 rounded-lg">
-                <div class="text-3xl font-bold text-blue-600" id="overallProgress">0%</div>
-                <p class="text-sm text-gray-600 mt-1">Overall Progress</p>
-              </div>
-              
-              <div class="text-center p-4 bg-green-50 rounded-lg">
-                <div class="text-3xl font-bold text-green-600" id="timelineProgress">0%</div>
-                <p class="text-sm text-gray-600 mt-1">Timeline Progress</p>
-              </div>
-              
-              <div class="text-center p-4 bg-purple-50 rounded-lg">
-                <div class="text-3xl font-bold text-purple-600" id="budgetProgress">0%</div>
-                <p class="text-sm text-gray-600 mt-1">Budget Progress</p>
-              </div>
-              
-              <div class="text-center p-4 bg-orange-50 rounded-lg">
-                <div class="text-3xl font-bold text-orange-600" id="physicalProgress">0%</div>
-                <p class="text-sm text-gray-600 mt-1">Physical Progress</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Project Details -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Project Information -->
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Information</h3>
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Project Name</label>
-                  <p class="text-sm font-semibold text-gray-800" id="projectName">-</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Project Code</label>
-                  <p class="text-sm font-semibold text-gray-800" id="projectCode">-</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Implementing Office</label>
-                  <p class="text-sm font-semibold text-gray-800" id="implementingOffice">-</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Location</label>
-                  <p class="text-sm font-semibold text-gray-800" id="projectLocation">-</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Status</label>
-                  <span class="inline-block px-2 py-1 text-xs font-medium rounded-full" id="projectStatus">-</span>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Created Date</label>
-                  <p class="text-sm font-semibold text-gray-800" id="createdDate">-</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Budget Information -->
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget Information</h3>
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Total Budget</label>
-                  <p class="text-lg font-bold text-gray-800" id="totalBudget">₱0</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Amount Spent</label>
-                  <p class="text-lg font-bold text-green-600" id="amountSpent">₱0</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Remaining Budget</label>
-                  <p class="text-lg font-bold text-blue-600" id="remainingBudget">₱0</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Budget Utilization</label>
-                  <div class="w-full bg-gray-200 rounded-full h-3 mt-2">
-                    <div class="bg-green-500 h-3 rounded-full" id="budgetUtilizationBar" style="width: 0%"></div>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1" id="budgetUtilizationText">0% utilized</p>
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-600">Funding Source</label>
-                  <p class="text-sm font-semibold text-gray-800" id="fundingSource">-</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Division Progress Details -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-6">Division Progress Details</h3>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <!-- Timeline Division -->
-              <div class="border border-gray-200 rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="p-2 bg-blue-100 rounded-full">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
-                  <h4 class="font-semibold text-gray-800">Timeline Division</h4>
-                </div>
-                
-                <div class="space-y-3">
-                  <div>
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-sm text-gray-600">Progress</span>
-                      <span class="text-sm font-medium text-gray-800" id="timelineProgressDetail">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                      <div class="bg-blue-500 h-2 rounded-full" id="timelineProgressBar" style="width: 0%"></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-600">Update Frequency</label>
-                    <p class="text-sm text-gray-800" id="timelineFrequency">-</p>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-600">Last Update</label>
-                    <p class="text-sm text-gray-800" id="timelineLastUpdate">-</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Budget Division -->
-              <div class="border border-gray-200 rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="p-2 bg-green-100 rounded-full">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
-                  </div>
-                  <h4 class="font-semibold text-gray-800">Budget Division</h4>
-                </div>
-                
-                <div class="space-y-3">
-                  <div>
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-sm text-gray-600">Progress</span>
-                      <span class="text-sm font-medium text-gray-800" id="budgetProgressDetail">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                      <div class="bg-green-500 h-2 rounded-full" id="budgetProgressBar" style="width: 0%"></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-600">Update Frequency</label>
-                    <p class="text-sm text-gray-800" id="budgetFrequency">-</p>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-600">Last Update</label>
-                    <p class="text-sm text-gray-800" id="budgetLastUpdate">-</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Physical Division -->
-              <div class="border border-gray-200 rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="p-2 bg-purple-100 rounded-full">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
-                  <h4 class="font-semibold text-gray-800">Physical Division</h4>
-                </div>
-                
-                <div class="space-y-3">
-                  <div>
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-sm text-gray-600">Progress</span>
-                      <span class="text-sm font-medium text-gray-800" id="physicalProgressDetail">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                      <div class="bg-purple-500 h-2 rounded-full" id="physicalProgressBar" style="width: 0%"></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-600">Update Frequency</label>
-                    <p class="text-sm text-gray-800" id="physicalFrequency">-</p>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-600">Last Update</label>
-                    <p class="text-sm text-gray-800" id="physicalLastUpdate">-</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Secretariat Approval Status -->
-          <div class="bg-yellow-50 rounded-2xl border border-yellow-200 p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="p-3 bg-yellow-100 rounded-full">
-                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-800">Secretariat Approval Status</h3>
-                <p class="text-sm text-gray-600">Overall completion rate is updated by Secretariat based on consolidated reports</p>
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-yellow-600" id="secretariatProgress">0%</div>
-                <p class="text-sm text-gray-600">Secretariat Approved Progress</p>
-              </div>
-              
-              <div class="text-center">
-                <div class="text-2xl font-bold text-green-600" id="submittedReports">0</div>
-                <p class="text-sm text-gray-600">Reports Submitted</p>
-              </div>
-              
-              <div class="text-center">
-                <div class="text-2xl font-bold text-blue-600" id="pendingApproval">0</div>
-                <p class="text-sm text-gray-600">Pending Approval</p>
-              </div>
-            </div>
-            
-            <div class="mt-6 p-4 bg-white rounded-lg">
-              <h4 class="font-semibold text-gray-800 mb-2">Latest Secretariat Update</h4>
-              <p class="text-sm text-gray-600" id="latestSecretariatUpdate">No updates from Secretariat yet.</p>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   </IUImplementingOfficeLayout>
 </Layout>
 
 <script>
+  // Make API_URL available to client-side JavaScript
+  const API_URL = 'http://localhost:3000/api';
   let selectedProject = null;
   let projectSummary = null;
+  let projects = [];
+
+  // Function to render projects selection
+  function renderProjectsSelection(projectsData) {
+    const projectSelection = document.getElementById('projectSelection');
+    if (!projectSelection) return;
+
+    projectSelection.innerHTML = '';
+
+    projectsData.forEach(project => {
+      // Use new field names from backend
+      const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+      const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
+      const budgetProgress = parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
+      const physicalProgress = parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
+      
+      // Determine project status based on the three main statuses
+      const projectStatus = project.status || 'pending';
+      let statusText, statusClass;
+      
+      if (projectStatus.toLowerCase() === 'completed') {
+        statusText = 'COMPLETED';
+        statusClass = 'bg-green-100 text-green-700';
+      } else if (project.approvedBySecretariat === true) {
+        statusText = 'ONGOING';
+        statusClass = 'bg-blue-100 text-blue-700';
+      } else {
+        statusText = 'PENDING';
+        statusClass = 'bg-gray-100 text-gray-700';
+      }
+
+      const projectCard = document.createElement('div');
+      projectCard.className = 'project-card border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-[#F8C734] transition-all duration-300';
+      projectCard.setAttribute('data-project-id', project.id);
+      
+      projectCard.innerHTML = `
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <h4 class="font-semibold text-gray-800 mb-1">${project.name}</h4>
+            <p class="text-sm text-gray-600">Project Code: ${project.projectCode}</p>
+          </div>
+          <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${statusText}</span>
+        </div>
+        
+        <div class="space-y-2">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm text-gray-600">Overall Progress</span>
+              <span class="text-sm font-medium text-gray-800">${overallProgress.toFixed(2)}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-[#F8C734] h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <span class="text-gray-600">Timeline</span>
+              <div class="text-gray-800 font-medium">${timelineProgress.toFixed(2)}%</div>
+            </div>
+            <div>
+              <span class="text-gray-600">Budget</span>
+              <div class="text-gray-800 font-medium">${budgetProgress.toFixed(2)}%</div>
+            </div>
+            <div>
+              <span class="text-gray-600">Physical</span>
+              <div class="text-gray-800 font-medium">${physicalProgress.toFixed(2)}%</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add click event listener
+      projectCard.addEventListener('click', function() {
+        selectProject(project.id);
+      });
+
+      projectSelection.appendChild(projectCard);
+    });
+
+    // Animate progress bars in project selection cards
+    setTimeout(() => {
+      projectsData.forEach((project, index) => {
+        const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+        const card = document.querySelector(`[data-project-id="${project.id}"]`);
+        if (card) {
+          const progressBar = card.querySelector('.bg-\\[\\#F8C734\\]');
+          if (progressBar) {
+            setTimeout(() => {
+              progressBar.style.width = `${overallProgress > 0 ? overallProgress : 0}%`;
+            }, index * 100); // Stagger animation based on card index
+          }
+        }
+      });
+    }, 200);
+  }
+
+  // Load projects data
+  async function loadProjects() {
+    try {
+      console.log('Loading projects data for summary module...');
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const timestamp = new Date().getTime();
+      
+      const response = await fetch(`${API_URL}/projects?_t=${timestamp}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          projects = data.projects;
+          console.log('Projects loaded for summary:', projects.length);
+          renderProjectsSelection(projects);
+          
+          // Auto-select the first project if available
+          if (projects.length > 0) {
+            console.log('Auto-selecting first project for summary');
+            setTimeout(() => selectProject(projects[0].id), 100);
+          }
+        } else {
+          console.error('Failed to load projects:', data.message);
+        }
+      } else {
+        console.error('Failed to fetch projects:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  }
 
   // Project selection functionality
   document.addEventListener('DOMContentLoaded', function() {
     console.log('Summary Module page loaded');
     
-    const projectCards = document.querySelectorAll('.project-card');
-    console.log('Found project cards:', projectCards.length);
-    
-    projectCards.forEach(card => {
-      const projectId = card.getAttribute('data-project-id');
-      console.log('Project card found with ID:', projectId);
-      
-      card.addEventListener('click', function() {
-        console.log('Project card clicked:', projectId);
-        selectProject(projectId);
-      });
-    });
-
-    // Auto-select the first project if available
-    if (projectCards.length > 0) {
-      console.log('Auto-selecting first project');
-      const firstProjectId = projectCards[0].getAttribute('data-project-id');
-      console.log('First project ID:', firstProjectId);
-      
-      // Add a small delay to ensure DOM is fully ready
-      setTimeout(() => {
-        selectProject(firstProjectId);
-      }, 100);
-    } else {
-      console.log('No project cards found for auto-selection');
-    }
+    // Load projects first
+    loadProjects();
   });
+
+  // Global functions
+  window.exportSummary = function() {
+    if (!selectedProject) {
+      alert('Please select a project first to export its summary.');
+      return;
+    }
+    exportSummaryData();
+  };
 
   // Select project and load details
   async function selectProject(projectId) {
@@ -496,152 +597,242 @@ loading = false;
       console.log('selectProject called with ID:', projectId);
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
       const timestamp = new Date().getTime();
-      const response = await fetch(`http://localhost:3000/api/projects/${projectId}?_t=${timestamp}`, {
+      
+      // Use the updated summary endpoint
+      const response = await fetch(`${API_URL}/iu/projects/${projectId}/summary?_t=${timestamp}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      console.log('Project API response status:', response.status);
+      console.log('Project Summary API response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Project API response data:', data);
+        console.log('Project Summary API response data:', data);
         
         if (data.success) {
-          selectedProject = data.project;
-          console.log('Selected project:', data.project);
-          displayProjectSummary(data.project);
+          selectedProject = data.summary;
+          console.log('Selected project summary:', data.summary);
+          displayProjectSummary(data.summary);
           
-          // Update active state
+          // Enhanced UX: Update active state with better visual feedback
           document.querySelectorAll('.project-card').forEach(card => {
-            card.classList.remove('ring-2', 'ring-[#92751F]');
+            card.classList.remove('ring-2', 'ring-[#F8C734]', 'bg-yellow-50', 'border-[#F8C734]', 'shadow-lg');
           });
           const activeCard = document.querySelector(`[data-project-id="${projectId}"]`);
           if (activeCard) {
-            activeCard.classList.add('ring-2', 'ring-[#92751F]');
+            activeCard.classList.add('ring-2', 'ring-[#F8C734]', 'bg-yellow-50', 'border-[#F8C734]', 'shadow-lg');
             console.log('Updated active card styling');
           }
         } else {
-          console.error('Project API returned success: false');
+          console.error('Project Summary API returned success: false');
         }
       } else {
-        console.error('Project API request failed with status:', response.status);
+        console.error('Project Summary API request failed with status:', response.status);
       }
     } catch (error) {
-      console.error('Error fetching project details:', error);
+      console.error('Error fetching project summary:', error);
     }
   }
 
   // Display project summary
-  function displayProjectSummary(project) {
-    console.log('displayProjectSummary called with project:', project);
-    console.log('Project object keys:', Object.keys(project));
-    
-    // Handle nested project structure from API response
-    const actualProject = project.project || project;
-    console.log('Actual project data:', actualProject);
-    console.log('Project name:', actualProject.name);
-    console.log('Project approvedBySecretariat:', actualProject.approvedBySecretariat);
-    console.log('Project implementingOfficeName:', actualProject.implementingOfficeName);
-    console.log('Project createdDate:', actualProject.createdDate);
-    console.log('Project totalBudget:', actualProject.totalBudget);
-    console.log('Project amountSpent:', actualProject.amountSpent);
-    console.log('Project progress:', project.progress);
-    console.log('Project progress keys:', project.progress ? Object.keys(project.progress) : 'No progress object');
+  function displayProjectSummary(summary) {
+    console.log('displayProjectSummary called with summary:', summary);
+    console.log('Summary object keys:', Object.keys(summary));
+    console.log('Category value:', summary.category);
+    console.log('Priority value:', summary.priority);
     
     // Update overall progress summary - use calculated progress from ProgressCalculationService
-    const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.automatedProgress || 0);
-    const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.timelineProgress || project.timelineProgress || 0);
-    const budgetProgress = parseFloat(project.progress?.budget || project.progress?.budgetProgress || project.budgetProgress || 0);
-    const physicalProgress = parseFloat(project.progress?.physical || project.progress?.physicalProgress || project.physicalProgress || 0);
+    const overallProgress = parseFloat(summary.progress?.overall || summary.progress?.overallProgress || 0);
+    // Use internal division progress (percentage within each division) instead of contribution to overall
+    const timelineProgress = parseFloat(summary.progress?.internalTimeline || summary.progress?.timeline || summary.progress?.timelineProgress || 0);
+    const budgetProgress = parseFloat(summary.progress?.internalBudget || summary.progress?.budget || summary.progress?.budgetProgress || 0);
+    const physicalProgress = parseFloat(summary.progress?.internalPhysical || summary.progress?.physical || summary.progress?.physicalProgress || 0);
     
     document.getElementById('overallProgress').textContent = `${overallProgress.toFixed(2)}%`;
-    document.getElementById('timelineProgress').textContent = `${timelineProgress}%`;
-    document.getElementById('budgetProgress').textContent = `${budgetProgress}%`;
-    document.getElementById('physicalProgress').textContent = `${physicalProgress}%`;
+    document.getElementById('timelineProgress').textContent = `${timelineProgress.toFixed(2)}%`;
+    document.getElementById('budgetProgress').textContent = `${budgetProgress.toFixed(2)}%`;
+    document.getElementById('physicalProgress').textContent = `${physicalProgress.toFixed(2)}%`;
 
     // Update project information
-    document.getElementById('projectName').textContent = actualProject.name || '-';
-    document.getElementById('projectCode').textContent = actualProject.projectCode || '-';
-    document.getElementById('implementingOffice').textContent = actualProject.implementingOfficeName || '-';
-    document.getElementById('projectLocation').textContent = Array.isArray(actualProject.location) ? actualProject.location.join(', ') : actualProject.location || '-';
+    document.getElementById('projectName').textContent = summary.name || '-';
+    document.getElementById('projectCode').textContent = summary.projectCode || '-';
+    document.getElementById('implementingOffice').textContent = summary.implementingOffice || '-';
+    document.getElementById('projectLocation').textContent = Array.isArray(summary.location) ? summary.location.join(', ') : summary.location || '-';
     
-    // Update status with proper styling based on Secretariat approval
+    // Update status with proper styling based on Secretariat approval logic
     const statusElement = document.getElementById('projectStatus');
-    const isApprovedBySecretariat = actualProject.approvedBySecretariat === true;
-    const statusText = isApprovedBySecretariat ? 'SECRETARIAT APPROVED' : 'DRAFT';
-    statusElement.textContent = statusText;
-    statusElement.className = `inline-block px-2 py-1 text-xs font-medium rounded-full ${
-      isApprovedBySecretariat ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-    }`;
+    let statusText, statusClass;
     
-    document.getElementById('createdDate').textContent = actualProject.createdDate || '-';
+    if (summary.status && summary.status.toLowerCase() === 'completed') {
+      statusText = 'COMPLETE';
+      statusClass = 'bg-green-100 text-green-700';
+    } else if (summary.secretariat?.approvalStatus === 'approved') {
+      statusText = 'ONGOING';
+      statusClass = 'bg-blue-100 text-blue-700';
+    } else if (summary.secretariat?.approvalStatus === 'under_review') {
+      statusText = 'UNDER REVIEW';
+      statusClass = 'bg-orange-100 text-orange-700';
+    } else {
+      statusText = 'PENDING';
+      statusClass = 'bg-yellow-100 text-yellow-700';
+    }
+    
+    statusElement.textContent = statusText;
+    statusElement.className = `inline-block px-2 py-1 text-xs font-medium rounded-full ${statusClass}`;
+    
+    document.getElementById('projectCreatedDate').textContent = summary.createdDate || '-';
+    document.getElementById('projectDescription').textContent = summary.description || '-';
+
+    // Update project details
+    document.getElementById('targetBeneficiaries').textContent = summary.targetBeneficiaries || '-';
+    document.getElementById('expectedOutputs').textContent = summary.expectedOutputs || '-';
+    document.getElementById('projectCategory').textContent = summary.category && summary.category.trim() !== '' ? summary.category : 'Not specified';
+    document.getElementById('projectPriority').textContent = summary.priority && summary.priority.trim() !== '' ? summary.priority : 'Not specified';
 
     // Update budget information
-    const totalBudget = actualProject.totalBudget || 0;
-    const amountSpent = actualProject.amountSpent || 0;
+    const totalBudget = parseFloat(summary.totalBudget || 0);
+    const amountSpent = parseFloat(summary.amountSpent || 0);
     const remainingBudget = totalBudget - amountSpent;
     const budgetUtilization = totalBudget > 0 ? (amountSpent / totalBudget) * 100 : 0;
-    
+
     document.getElementById('totalBudget').textContent = `₱${totalBudget.toLocaleString()}`;
     document.getElementById('amountSpent').textContent = `₱${amountSpent.toLocaleString()}`;
     document.getElementById('remainingBudget').textContent = `₱${remainingBudget.toLocaleString()}`;
-    document.getElementById('budgetUtilizationText').textContent = `${parseFloat(budgetUtilization).toFixed(2)}% utilized`;
-    document.getElementById('budgetUtilizationBar').style.width = `${budgetUtilization}%`;
-    document.getElementById('fundingSource').textContent = actualProject.fundingSource || '-';
+    document.getElementById('budgetUtilization').textContent = `${budgetUtilization.toFixed(2)}% utilized`;
+    document.getElementById('fundingSource').textContent = summary.fundingSource || '-';
 
-    // Update division progress details - use calculated progress from ProgressCalculationService
-    document.getElementById('timelineProgressDetail').textContent = `${timelineProgress}%`;
-    document.getElementById('timelineProgressBar').style.width = `${timelineProgress}%`;
-    document.getElementById('timelineFrequency').textContent = actualProject.timelineUpdateFrequency || '-';
-    document.getElementById('timelineLastUpdate').textContent = actualProject.lastProgressUpdate || 'No updates';
+    // Animate budget utilization bar
+    setTimeout(() => {
+      document.getElementById('budgetUtilizationBar').style.width = '0%';
+      setTimeout(() => {
+        document.getElementById('budgetUtilizationBar').style.width = `${budgetUtilization}%`;
+      }, 150);
+    }, 50);
 
-    document.getElementById('budgetProgressDetail').textContent = `${budgetProgress}%`;
-    document.getElementById('budgetProgressBar').style.width = `${budgetProgress}%`;
-    document.getElementById('budgetFrequency').textContent = actualProject.budgetUpdateFrequency || '-';
-    document.getElementById('budgetLastUpdate').textContent = actualProject.lastProgressUpdate || 'No updates';
+    // Update division progress details with animated progress bars
+    document.getElementById('timelineProgressDetail').textContent = `${timelineProgress.toFixed(2)}%`;
+    document.getElementById('budgetProgressDetail').textContent = `${budgetProgress.toFixed(2)}%`;
+    document.getElementById('physicalProgressDetail').textContent = `${physicalProgress.toFixed(2)}%`;
+    
+    document.getElementById('timelineFrequency').textContent = summary.timelineUpdateFrequency || '-';
+    document.getElementById('timelineLastUpdate').textContent = summary.timelineLastUpdate || 'No updates';
+    document.getElementById('budgetFrequency').textContent = summary.budgetUpdateFrequency || '-';
+    document.getElementById('budgetLastUpdate').textContent = summary.budgetLastUpdate || 'No updates';
+    document.getElementById('physicalFrequency').textContent = summary.physicalUpdateFrequency || '-';
+    document.getElementById('physicalLastUpdate').textContent = summary.physicalLastUpdate || 'No updates';
 
-    document.getElementById('physicalProgressDetail').textContent = `${physicalProgress}%`;
-    document.getElementById('physicalProgressBar').style.width = `${physicalProgress}%`;
-    document.getElementById('physicalFrequency').textContent = actualProject.physicalUpdateFrequency || '-';
-    document.getElementById('physicalLastUpdate').textContent = actualProject.lastProgressUpdate || 'No updates';
+    // Animate division progress bars with staggered timing
+    setTimeout(() => {
+      // Reset division progress bars to 0% first
+      document.getElementById('timelineProgressBar').style.width = '0%';
+      document.getElementById('budgetProgressBar').style.width = '0%';
+      document.getElementById('physicalProgressBar').style.width = '0%';
+      
+      // Animate to actual values with staggered timing
+      setTimeout(() => {
+        document.getElementById('timelineProgressBar').style.width = `${timelineProgress > 0 ? timelineProgress : 0}%`;
+      }, 200);
+      
+      setTimeout(() => {
+        document.getElementById('budgetProgressBar').style.width = `${budgetProgress > 0 ? budgetProgress : 0}%`;
+      }, 400);
+      
+      setTimeout(() => {
+        document.getElementById('physicalProgressBar').style.width = `${physicalProgress > 0 ? physicalProgress : 0}%`;
+      }, 600);
+    }, 100);
 
-    // Show the summary display
-    const summaryDisplay = document.getElementById('projectSummaryDisplay');
-    if (summaryDisplay) {
-      summaryDisplay.style.display = 'block';
-      console.log('Summary display shown');
-    } else {
-      console.error('projectSummaryDisplay element not found');
+    // Animate progress bars with staggered timing for dynamic effect
+    setTimeout(() => {
+      // Reset all progress bars to 0% first
+      document.getElementById('overallProgressBar').style.width = '0%';
+      document.getElementById('timelineProgressBarSummary').style.width = '0%';
+      document.getElementById('budgetProgressBarSummary').style.width = '0%';
+      document.getElementById('physicalProgressBarSummary').style.width = '0%';
+      
+      // Animate to actual values with staggered timing
+      setTimeout(() => {
+        document.getElementById('overallProgressBar').style.width = `${overallProgress > 0 ? overallProgress : 0}%`;
+      }, 100);
+      
+      setTimeout(() => {
+        document.getElementById('timelineProgressBarSummary').style.width = `${timelineProgress > 0 ? timelineProgress : 0}%`;
+      }, 300);
+      
+      setTimeout(() => {
+        document.getElementById('budgetProgressBarSummary').style.width = `${budgetProgress > 0 ? budgetProgress : 0}%`;
+      }, 500);
+      
+      setTimeout(() => {
+        document.getElementById('physicalProgressBarSummary').style.width = `${physicalProgress > 0 ? physicalProgress : 0}%`;
+      }, 700);
+    }, 50);
+
+    // Update Secretariat approval status
+    updateSecretariatApprovalStatus(summary.secretariat);
+  }
+
+  // Update Secretariat approval status
+  function updateSecretariatApprovalStatus(secretariat) {
+    if (!secretariat) return;
+    
+    console.log('🔍 Frontend received secretariat data:', secretariat);
+    
+    const secretariatProgress = secretariat.approvalStatus === 'approved' ? 100 : 
+                               secretariat.approvalStatus === 'under_review' ? 50 : 0;
+    
+    document.getElementById('secretariatProgress').textContent = `${secretariatProgress}%`;
+    document.getElementById('submittedReports').textContent = secretariat.compilationReports || 0;
+    
+    console.log('📊 Setting submittedReports to:', secretariat.compilationReports || 0);
+    
+    const pendingCount = secretariat.approvalStatus === 'pending' ? 1 : 0;
+    document.getElementById('pendingApproval').textContent = pendingCount;
+    
+    let latestUpdateText = 'No approval updates yet.';
+    if (secretariat.approvalStatus === 'approved' && secretariat.secretariatApprovalDate) {
+      const approvalDate = new Date(secretariat.secretariatApprovalDate).toLocaleDateString();
+      latestUpdateText = `Project approved by Secretariat on ${approvalDate}`;
+    } else if (secretariat.approvalStatus === 'under_review') {
+      latestUpdateText = 'Project is currently under Secretariat review';
+    } else if (secretariat.latestCompilation) {
+      const submissionDate = new Date(secretariat.latestCompilation.submittedAt).toLocaleDateString();
+      latestUpdateText = `Latest compilation report submitted on ${submissionDate}`;
     }
+    
+    document.getElementById('latestSecretariatUpdate').textContent = latestUpdateText;
   }
 
   // Export summary function
-  function exportSummary() {
+  function exportSummaryData() {
     if (!selectedProject) {
       alert('Please select a project first to export its summary.');
       return;
     }
     
-    // Create export data - use calculated progress from ProgressCalculationService
+    // Create export data using updated field names
     const exportData = {
       projectName: selectedProject.name,
       projectCode: selectedProject.projectCode,
-      implementingOffice: selectedProject.implementingOfficeName,
+      implementingOffice: selectedProject.implementingOffice,
       location: selectedProject.location,
-      status: selectedProject.workflowStatus,
+      status: selectedProject.status,
       createdDate: selectedProject.createdDate,
       totalBudget: selectedProject.totalBudget,
       amountSpent: selectedProject.amountSpent,
-      remainingBudget: (selectedProject.totalBudget || 0) - (selectedProject.amountSpent || 0),
-      budgetUtilization: selectedProject.totalBudget > 0 ? ((selectedProject.amountSpent || 0) / selectedProject.totalBudget) * 100 : 0,
+      remainingBudget: selectedProject.remainingBudget,
+      budgetUtilization: selectedProject.budgetUtilization,
       fundingSource: selectedProject.fundingSource,
-      overallProgress: selectedProject.progress?.overallProgress || selectedProject.automatedProgress || 0,
-      timelineProgress: selectedProject.progress?.timelineProgress || selectedProject.timelineProgress || 0,
-      budgetProgress: selectedProject.progress?.budgetProgress || selectedProject.budgetProgress || 0,
-      physicalProgress: selectedProject.progress?.physicalProgress || selectedProject.physicalProgress || 0,
+      overallProgress: selectedProject.progress?.overall || 0,
+      timelineProgress: selectedProject.progress?.internalTimeline || selectedProject.progress?.timeline || 0,
+      budgetProgress: selectedProject.progress?.internalBudget || selectedProject.progress?.budget || 0,
+      physicalProgress: selectedProject.progress?.internalPhysical || selectedProject.progress?.physical || 0,
       milestones: selectedProject.milestones || [],
+      secretariatApproval: selectedProject.secretariat?.approvalStatus || 'pending',
+      secretariatApprovalDate: selectedProject.secretariat?.secretariatApprovalDate || null,
+      compilationReports: selectedProject.secretariat?.compilationReports || 0,
       exportDate: new Date().toISOString()
     };
     
@@ -668,6 +859,11 @@ loading = false;
     csvContent += `Budget Progress,${exportData.budgetProgress}%\n`;
     csvContent += `Physical Progress,${exportData.physicalProgress}%\n\n`;
     
+    csvContent += 'Secretariat Approval Information\n';
+    csvContent += `Approval Status,${exportData.secretariatApproval}\n`;
+    csvContent += `Approval Date,${exportData.secretariatApprovalDate || 'Not approved'}\n`;
+    csvContent += `Compilation Reports Submitted,${exportData.compilationReports}\n\n`;
+    
     if (exportData.milestones.length > 0) {
       csvContent += 'Milestones\n';
       csvContent += 'Name,Weight,Planned Budget,Planned Start Date,Planned End Date,Status,Description\n';
@@ -690,11 +886,132 @@ loading = false;
 
   // Load summary module function
   function loadSummaryModule() {
-    window.location.reload();
+    console.log('Refreshing summary module data...');
+    loadProjects();
   }
 
   // Make functions globally available
   window.selectProject = selectProject;
   window.exportSummary = exportSummary;
   window.loadSummaryModule = loadSummaryModule;
-</script> 
+  window.loadProjects = loadProjects;
+</script>
+
+<style>
+  /* Enhanced hover animations for project cards */
+  .project-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(248, 199, 52, 0.1), transparent);
+    transition: left 0.6s ease;
+  }
+  
+  .project-card:hover::before {
+    left: 100%;
+  }
+  
+  .project-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    border-color: #F8C734;
+  }
+  
+  .project-card.selected {
+    border-color: #F8C734;
+    box-shadow: 0 0 0 3px rgba(248, 199, 52, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  /* Enhanced hover animations for progress cards */
+  .progress-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .progress-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(248, 199, 52, 0.05) 0%, transparent 50%, rgba(248, 199, 52, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .progress-card:hover::after {
+    opacity: 1;
+  }
+  
+  .progress-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  }
+  
+  /* Enhanced hover animations for division cards */
+  .division-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .division-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #F8C734, #E6B800);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  
+  .division-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .division-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.1);
+    border-color: #F8C734;
+  }
+  
+  /* Enhanced progress bar animations */
+  .progress-bar {
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+  
+
+</style>

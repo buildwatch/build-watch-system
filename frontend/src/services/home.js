@@ -44,15 +44,17 @@ class HomeService {
   }
 
   // Get featured projects for carousel
-  async getFeaturedProjects(limit = 5) {
+  async getFeaturedProjects(limit = 5, forceRefresh = false) {
     try {
-      // Check cache first
-      if (this.cache.projects && this.cache.lastFetch && 
+      // Check cache first (unless force refresh is requested)
+      if (!forceRefresh && this.cache.projects && this.cache.lastFetch && 
           (Date.now() - this.cache.lastFetch) < this.cacheTimeout) {
         return this.cache.projects.slice(0, limit);
       }
 
-      const response = await fetch(`${API_BASE_URL}/home/featured-projects?limit=${limit}`);
+      // Add timestamp to force fresh data
+      const timestamp = new Date().getTime();
+      const response = await fetch(`${API_BASE_URL}/home/featured-projects?limit=${limit}&_t=${timestamp}`);
       
       if (response.ok) {
         const data = await response.json();

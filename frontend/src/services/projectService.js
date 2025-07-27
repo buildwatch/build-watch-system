@@ -17,8 +17,8 @@ class ProjectService {
   // Get projects based on user role
   async getProjects(params = {}) {
     try {
-      const response = await apiClient.get('/api/projects', { params });
-      return response.data;
+      const response = await apiClient.projects.getProjects(params);
+      return response;
     } catch (error) {
       console.error('Get projects error:', error);
       throw error;
@@ -28,8 +28,8 @@ class ProjectService {
   // Get project by ID with detailed information
   async getProject(id) {
     try {
-      const response = await apiClient.get(`/api/projects/${id}`);
-      return response.data;
+      const response = await apiClient.projects.getProject(id);
+      return response;
     } catch (error) {
       console.error('Get project error:', error);
       throw error;
@@ -39,8 +39,8 @@ class ProjectService {
   // Update project
   async updateProject(id, updateData) {
     try {
-      const response = await apiClient.put(`/api/projects/${id}`, updateData);
-      return response.data;
+      const response = await apiClient.projects.updateProject(id, updateData);
+      return response;
     } catch (error) {
       console.error('Update project error:', error);
       throw error;
@@ -50,8 +50,8 @@ class ProjectService {
   // Delete project
   async deleteProject(id) {
     try {
-      const response = await apiClient.delete(`/api/projects/${id}`);
-      return response.data;
+      const response = await apiClient.projects.deleteProject(id);
+      return response;
     } catch (error) {
       console.error('Delete project error:', error);
       throw error;
@@ -63,11 +63,8 @@ class ProjectService {
   // Approve/reject project (Secretariat only)
   async approveProject(id, { approved, comments }) {
     try {
-      const response = await apiClient.post(`/api/projects/${id}/approve`, {
-        approved,
-        comments
-      });
-      return response.data;
+      const response = await apiClient.projects.approveProject(id, { approved, comments });
+      return response;
     } catch (error) {
       console.error('Approve project error:', error);
       throw error;
@@ -79,8 +76,8 @@ class ProjectService {
   // Submit project update
   async submitUpdate(projectId, updateData) {
     try {
-      const response = await apiClient.post(`/api/projects/${projectId}/updates`, updateData);
-      return response.data;
+      const response = await apiClient.projects.submitUpdate(projectId, updateData);
+      return response;
     } catch (error) {
       console.error('Submit update error:', error);
       throw error;
@@ -90,8 +87,8 @@ class ProjectService {
   // Get project updates
   async getProjectUpdates(projectId, params = {}) {
     try {
-      const response = await apiClient.get(`/api/projects/${projectId}/updates`, { params });
-      return response.data;
+      const response = await apiClient.projects.getProjectUpdates(projectId, params);
+      return response;
     } catch (error) {
       console.error('Get updates error:', error);
       throw error;
@@ -101,11 +98,8 @@ class ProjectService {
   // Approve/reject project update
   async approveUpdate(projectId, updateId, { approved, comments }) {
     try {
-      const response = await apiClient.post(`/api/projects/${projectId}/updates/${updateId}/approve`, {
-        approved,
-        comments
-      });
-      return response.data;
+      const response = await apiClient.projects.approveUpdate(projectId, updateId, { approved, comments });
+      return response;
     } catch (error) {
       console.error('Approve update error:', error);
       throw error;
@@ -117,8 +111,8 @@ class ProjectService {
   // Create milestone
   async createMilestone(projectId, milestoneData) {
     try {
-      const response = await apiClient.post(`/api/projects/${projectId}/milestones`, milestoneData);
-      return response.data;
+      const response = await apiClient.projects.createMilestone(projectId, milestoneData);
+      return response;
     } catch (error) {
       console.error('Create milestone error:', error);
       throw error;
@@ -128,8 +122,8 @@ class ProjectService {
   // Get project milestones
   async getProjectMilestones(projectId) {
     try {
-      const response = await apiClient.get(`/api/projects/${projectId}/milestones`);
-      return response.data;
+      const response = await apiClient.projects.getProjectMilestones(projectId);
+      return response;
     } catch (error) {
       console.error('Get milestones error:', error);
       throw error;
@@ -139,8 +133,8 @@ class ProjectService {
   // Update milestone
   async updateMilestone(projectId, milestoneId, updateData) {
     try {
-      const response = await apiClient.put(`/api/projects/${projectId}/milestones/${milestoneId}`, updateData);
-      return response.data;
+      const response = await apiClient.projects.updateMilestone(projectId, milestoneId, updateData);
+      return response;
     } catch (error) {
       console.error('Update milestone error:', error);
       throw error;
@@ -152,8 +146,8 @@ class ProjectService {
   // Get dashboard statistics
   async getDashboardStats() {
     try {
-      const response = await apiClient.get('/api/projects/dashboard/stats');
-      return response.data;
+      const response = await apiClient.projects.getDashboardStats();
+      return response;
     } catch (error) {
       console.error('Get dashboard stats error:', error);
       throw error;
@@ -172,9 +166,9 @@ class ProjectService {
     const overallProgress = (timelineProgress + budgetProgress + physicalProgress) / 3;
     
     return {
-      timelineProgress,
-      budgetProgress,
-      physicalProgress,
+      timelineProgress: Math.round(timelineProgress * 100) / 100,
+      budgetProgress: Math.round(budgetProgress * 100) / 100,
+      physicalProgress: Math.round(physicalProgress * 100) / 100,
       overallProgress: Math.round(overallProgress * 100) / 100
     };
   }
