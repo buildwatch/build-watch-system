@@ -5,9 +5,9 @@ import "leaflet/dist/leaflet.css";
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
 // Barangay coordinates for Santa Cruz, Laguna
@@ -95,9 +95,10 @@ export default function ProjectMap() {
       // Create custom icon based on project status
       const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
-          case 'ongoing': return '#fbbf24'; // yellow
+          case 'ongoing': return '#3b82f6'; // blue
+          case 'delayed': return '#ef4444'; // red
           case 'completed': return '#10b981'; // green
-          case 'planning': return '#3b82f6'; // blue
+          case 'planning': return '#6b7280'; // gray
           default: return '#6b7280'; // gray
         }
       };
@@ -168,16 +169,16 @@ export default function ProjectMap() {
       div.innerHTML = `
         <h4 style="margin: 0 0 8px 0; color: #333;">Project Status</h4>
         <div style="display: flex; align-items: center; margin-bottom: 4px;">
-          <div style="width: 12px; height: 12px; background-color: #fbbf24; border-radius: 50%; margin-right: 8px;"></div>
+          <div style="width: 12px; height: 12px; background-color: #3b82f6; border-radius: 50%; margin-right: 8px;"></div>
           <span>Ongoing</span>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 4px;">
+          <div style="width: 12px; height: 12px; background-color: #ef4444; border-radius: 50%; margin-right: 8px;"></div>
+          <span>Delayed</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 4px;">
           <div style="width: 12px; height: 12px; background-color: #10b981; border-radius: 50%; margin-right: 8px;"></div>
           <span>Completed</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-bottom: 4px;">
-          <div style="width: 12px; height: 12px; background-color: #3b82f6; border-radius: 50%; margin-right: 8px;"></div>
-          <span>Planning</span>
         </div>
         <div style="display: flex; align-items: center;">
           <div style="width: 12px; height: 12px; background-color: #6b7280; border-radius: 50%; margin-right: 8px;"></div>
@@ -196,27 +197,30 @@ export default function ProjectMap() {
       {loading && (
         <div className="text-white text-center mb-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-          Loading project locations...
+          <p className="text-white/90">Loading project locations...</p>
         </div>
       )}
       <div 
         id="project-map-leaflet" 
         className="w-full rounded-2xl shadow-lg z-10" 
         style={{ 
-          height: '960px', // 3x bigger (was 320px, now 960px)
-          minHeight: '960px',
-          width: '100%',
-          maxWidth: '100vw'
+          height: '700px', // Reduced from 960px for better proportion
+          minHeight: '700px',
+          width: '95%', // Almost maximize the page with 5% margin
+          maxWidth: '95vw', // Use viewport width with margin
+          position: 'relative',
+          margin: '0 auto' // Center the map with auto margins
         }}
       ></div>
       {projects.length === 0 && !loading && (
-        <div className="text-white text-center mt-4">
-          <p>No project locations available at the moment.</p>
+        <div className="text-white/80 text-center mt-4">
+          <div className="text-4xl mb-2">🗺️</div>
+          <p className="text-sm">No project locations available at the moment.</p>
         </div>
       )}
       {projects.length > 0 && !loading && (
-        <div className="text-white text-center mt-4">
-          <p className="text-sm opacity-80">Showing {projects.length} project{projects.length !== 1 ? 's' : ''} on the map</p>
+        <div className="text-white/80 text-center mt-4">
+          <p className="text-sm font-medium">Showing {projects.length} project{projects.length !== 1 ? 's' : ''} on the map</p>
         </div>
       )}
     </div>

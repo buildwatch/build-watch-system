@@ -87,6 +87,21 @@ module.exports = (sequelize) => {
       allowNull: false,
       comment: 'Project end date'
     },
+    targetCompletionDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      comment: 'Target completion date (new field name)'
+    },
+    targetDateOfCompletion: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      comment: 'Target date of completion (backward compatibility)'
+    },
+    expectedDaysOfCompletion: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Expected days of completion (auto-calculated)'
+    },
     completionDate: {
       type: DataTypes.DATEONLY,
       allowNull: true,
@@ -252,6 +267,23 @@ module.exports = (sequelize) => {
       comment: 'Date of last progress update'
     },
     
+    // Project media and location
+    initialPhoto: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      comment: 'URL or path to the initial project photo'
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+      comment: 'Project location latitude coordinate'
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+      comment: 'Project location longitude coordinate'
+    },
+    
     // Timestamps
     createdAt: {
       type: DataTypes.DATE,
@@ -387,6 +419,12 @@ module.exports = (sequelize) => {
     Project.hasMany(models.ProjectValidation, {
       foreignKey: 'projectId',
       as: 'validations'
+    });
+
+    // Project has many milestone submissions
+    Project.hasMany(models.MilestoneSubmission, {
+      foreignKey: 'projectId',
+      as: 'milestoneSubmissions'
     });
   };
 

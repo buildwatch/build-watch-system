@@ -1,0 +1,2893 @@
+---
+interface Props {
+  userTheme?: 'eiu' | 'iu-implementing-office' | 'secretariat' | 'mpmec' | 'executive';
+}
+
+const { userTheme = 'public' } = Astro.props;
+
+// Theme-based colors
+const themeColors = {
+  'eiu': {
+    primary: 'emerald',
+    accent: 'text-emerald-600',
+    button: 'bg-emerald-600 hover:bg-emerald-700',
+    border: 'border-emerald-200',
+    ring: 'ring-emerald-500'
+  },
+  'iu-implementing-office': {
+    primary: 'amber',
+    accent: 'text-amber-600',
+    button: 'bg-amber-600 hover:bg-amber-700',
+    border: 'border-amber-200',
+    ring: 'ring-amber-500'
+  },
+  'secretariat': {
+    primary: 'red',
+    accent: 'text-red-600',
+    button: 'bg-red-600 hover:bg-red-700',
+    border: 'border-red-200',
+    ring: 'ring-red-500'
+  },
+  'mpmec': {
+    primary: 'blue',
+    accent: 'text-blue-600',
+    button: 'bg-blue-600 hover:bg-blue-700',
+    border: 'border-blue-200',
+    ring: 'ring-blue-500'
+  },
+  'executive': {
+    primary: 'indigo',
+    accent: 'text-indigo-600',
+    button: 'bg-indigo-600 hover:bg-indigo-700',
+    border: 'border-indigo-200',
+    ring: 'ring-indigo-500'
+  }
+};
+
+const theme = themeColors[userTheme] || themeColors.mpmec;
+---
+
+<style>
+  /* Progress Circle Animations */
+  .progress-circle-fill {
+    transition: stroke-dasharray 2s ease-out, stroke 2s ease-out;
+  }
+
+  @keyframes fillProgressCircle {
+    from {
+      stroke-dasharray: 0, 100;
+    }
+    to {
+      stroke-dasharray: var(--progress-value), 100;
+    }
+  }
+</style>
+
+<!-- Project Details Modal -->
+<div id="projectDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div class={`sticky top-0 bg-white border-b ${theme.border} p-6 z-10 rounded-t-2xl`}>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class={`p-3 rounded-full bg-${theme.primary}-100`}>
+              <svg class={`w-6 h-6 text-${theme.primary}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 id="modalProjectTitle" class="text-2xl font-bold text-gray-800">Project Complete Information</h2>
+              <p id="modalProjectSubtitle" class="text-gray-600 mt-1">Comprehensive project details and progress tracking</p>
+            </div>
+          </div>
+          <button 
+            onclick="closeProjectDetailsModal()" 
+            class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Content -->
+      <div id="modalProjectContent" class="p-6 space-y-6">
+        
+        <!-- Loading State -->
+        <div id="modalLoading" class="flex justify-center items-center py-12">
+          <div class="flex items-center space-x-3">
+            <div class={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.primary}-600`}></div>
+            <span class="text-gray-600 font-medium">Loading project details...</span>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="modalError" class="text-center py-12 hidden">
+          <div class="text-red-600 mb-4">
+            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">Failed to Load Project Details</h3>
+          <p id="modalErrorMessage" class="text-gray-600 mb-4">An error occurred while loading the project information.</p>
+          <button 
+            onclick="retryLoadProject()" 
+            class={`px-6 py-2 ${theme.button} text-white rounded-lg font-semibold transition-colors`}
+          >
+            Try Again
+          </button>
+        </div>
+
+        <!-- Project Content -->
+        <div id="modalProjectData" class="space-y-6 hidden">
+          
+          <!-- Section 1: Basic Project Information -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('basicInfo')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Basic Project Information
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="basicInfo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="basicInfoContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Project Code</label>
+                    <p id="projectCode" class="text-gray-800 font-medium bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Project/Program Title</label>
+                    <p id="projectTitle" class="text-gray-800 font-medium bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Implementing Office</label>
+                    <p id="implementingOffice" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Category</label>
+                    <p id="projectCategory" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Location/Barangay</label>
+                    <p id="projectLocation" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                </div>
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Priority</label>
+                    <p id="projectPriority" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Funding Source</label>
+                    <p id="fundingSource" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Created Date</label>
+                    <p id="createdDate" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <!-- Status field removed as per specifications -->
+                </div>
+              </div>
+              <div class="mt-6 space-y-4">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-2 block">Project Description</label>
+                  <div id="projectDescription" class="text-gray-800 text-sm leading-relaxed bg-white p-4 rounded-lg border min-h-[100px]">-</div>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-2 block">Expected Outputs</label>
+                  <div id="expectedOutputs" class="text-gray-800 text-sm leading-relaxed bg-white p-4 rounded-lg border min-h-[80px]">-</div>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-2 block">Target Beneficiaries</label>
+                  <div id="targetBeneficiaries" class="text-gray-800 text-sm leading-relaxed bg-white p-4 rounded-lg border min-h-[80px]">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: EIU Contractor Profile (only for authenticated users) -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200 eiu-contractor-section">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('eiuProfile')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                EIU Contractor Profile Information
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="eiuProfile" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="eiuProfileContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              <!-- EIU Profile Picture -->
+              <div class="flex justify-center mb-6">
+                <div class="relative">
+                  <img 
+                    id="eiuProfilePicture" 
+                    src="" 
+                    alt="EIU Profile Picture" 
+                    class="w-20 h-20 rounded-full border-4 border-blue-200 object-cover hidden"
+                  />
+                  <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center border-4 border-blue-200" id="eiuProfilePlaceholder">
+                    <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Full Name</label>
+                    <p id="eiuFullName" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Email/Username</label>
+                    <p id="eiuEmail" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Contact Number</label>
+                    <p id="eiuContact" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Birthdate</label>
+                    <p id="eiuBirthdate" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                </div>
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Group</label>
+                    <p id="eiuGroup" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Department</label>
+                    <p id="eiuDepartment" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Subrole</label>
+                    <p id="eiuSubrole" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Company</label>
+                    <p id="eiuCompany" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Timeline Info -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('timelineInfo')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Timeline Information
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="timelineInfo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="timelineInfoContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Start Date</label>
+                  <p id="startDate" class="text-gray-800 font-medium bg-white p-3 rounded-lg border">-</p>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Target Completion Date</label>
+                  <p id="targetCompletionDate" class="text-gray-800 font-medium bg-white p-3 rounded-lg border">-</p>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Expected Days of Completion</label>
+                  <p id="expectedDaysOfCompletion" class="text-gray-800 font-medium bg-white p-3 rounded-lg border">-</p>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Actual Completion Date</label>
+                  <p id="actualCompletionDate" class="text-gray-800 font-medium bg-white p-3 rounded-lg border">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Budget Info -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('budgetInfo')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                Budget Information
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="budgetInfo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="budgetInfoContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Total Budget Allocation (₱)</label>
+                  <p id="totalBudget" class="text-gray-800 font-bold text-xl bg-white p-3 rounded-lg border" style="position: relative;">₱0</p>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Budget Description</label>
+                  <div id="budgetDescription" class="text-gray-800 text-sm bg-white p-3 rounded-lg border min-h-[60px]">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: Physical Accomplishment Info -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('physicalInfo')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Physical Accomplishment Information
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="physicalInfo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="physicalInfoContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              <div class="space-y-4">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-2 block">General Description</label>
+                  <div id="physicalDescription" class="text-gray-800 text-sm bg-white p-4 rounded-lg border min-h-[80px]">-</div>
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-2 block">Initial Photo Uploading</label>
+                  <div id="initialPhotoContainer" class="bg-white p-4 rounded-lg border">
+                    <img id="initialPhoto" src="" alt="Project Photo" class="max-w-full h-64 object-cover rounded-lg border border-gray-200 hidden">
+                    <div id="noPhotoContainer" class="flex flex-col items-center justify-center h-32 text-gray-500">
+                      <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                      <p class="text-sm">No photo available</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 6: Milestones Set -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('milestones')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Milestones Set (from Create Project Modal)
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="milestones" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="milestonesContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              <div id="milestonesData" class="space-y-4">
+                <!-- Milestones will be populated here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 7: Status (Project Updates) -->
+          <div class="bg-gray-50 rounded-2xl border border-gray-200">
+            <button 
+              class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
+              onclick="toggleSection('statusUpdates')"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Status (Project Updates)
+              </h3>
+              <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="statusUpdates" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="statusUpdatesContent" class="px-6 pb-6 border-t border-gray-200 hidden">
+              
+              <!-- Project Metrics Status -->
+              <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                  Project Metrics Status
+                </h4>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div class="text-center bg-white p-4 rounded-lg border">
+                    <div class="relative w-20 h-20 mx-auto mb-3">
+                      <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                        <path id="overallProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
+                      </svg>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="overallProgressText" class="text-sm font-bold text-gray-700">0%</span>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 font-semibold">Overall Progress</p>
+                  </div>
+                  <div class="text-center bg-white p-4 rounded-lg border">
+                    <div class="relative w-20 h-20 mx-auto mb-3">
+                      <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                        <path id="timelineProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
+                      </svg>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="timelineProgressText" class="text-sm font-bold text-gray-700">0%</span>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 font-semibold">Timeline Progress</p>
+                  </div>
+                  <div class="text-center bg-white p-4 rounded-lg border">
+                    <div class="relative w-20 h-20 mx-auto mb-3">
+                      <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                        <path id="budgetProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
+                      </svg>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="budgetProgressText" class="text-sm font-bold text-gray-700">0%</span>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 font-semibold">Budget Progress</p>
+                  </div>
+                  <div class="text-center bg-white p-4 rounded-lg border">
+                    <div class="relative w-20 h-20 mx-auto mb-3">
+                      <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                        <path id="physicalProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
+                      </svg>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="physicalProgressText" class="text-sm font-bold text-gray-700">0%</span>
+                      </div>
+                    </div>
+                    <p class="text-sm text-gray-600 font-semibold">Physical Progress</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Milestone Progress -->
+              <div class="mb-8">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  Milestone Progress
+                </h4>
+                <div id="milestoneProgress" class="space-y-4">
+                  <!-- Milestone progress will be populated here -->
+                </div>
+              </div>
+
+              <!-- Recent Updates -->
+              <div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Recent Updates
+                </h4>
+                <div id="recentUpdates" class="space-y-4">
+                  <!-- Recent updates will be populated here -->
+                  <div class="bg-white p-4 rounded-lg border text-center text-gray-500">
+                    <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p class="text-sm">No recent updates available</p>
+                    <p class="text-xs text-gray-400 mt-1">Updates will appear when EIU submits progress reports</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class={`sticky bottom-0 bg-white border-t ${theme.border} p-6 flex justify-between items-center rounded-b-2xl`}>
+        <div class="text-sm text-gray-500 flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Last updated: <span id="lastUpdated" class="font-medium ml-1">-</span>
+        </div>
+        <div class="flex gap-3">
+          <button 
+            onclick="closeProjectDetailsModal()" 
+            class="px-6 py-2 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+          >
+            Close
+          </button>
+          <button 
+            id="actionButton"
+            class={`px-6 py-2 ${theme.button} text-white rounded-xl font-semibold transition-colors hidden`}
+          >
+            Take Action
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Global functions for modal control
+  window.showProjectDetailsModal = function(projectId) {
+    console.log('🚀 Opening project details modal for project:', projectId);
+    console.log('🔍 Project ID type:', typeof projectId);
+    console.log('🔍 Project ID value:', projectId);
+    
+    const modal = document.getElementById('projectDetailsModal');
+    const loading = document.getElementById('modalLoading');
+    const error = document.getElementById('modalError');
+    const content = document.getElementById('modalProjectData');
+    
+    // Show modal and loading state
+    modal.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    error.classList.add('hidden');
+    content.classList.add('hidden');
+    
+    // Debug initial modal state after opening
+    console.log('🔍 Modal opened - initial loading state:');
+    console.log('  - loading element found:', !!loading);
+    console.log('  - loading classes after opening:', loading?.className);
+    console.log('  - loading style.display after opening:', loading?.style.display);
+    console.log('  - loading offsetHeight:', loading?.offsetHeight);
+    console.log('  - loading offsetWidth:', loading?.offsetWidth);
+    
+    // Store project ID for retry functionality
+    modal.dataset.projectId = projectId;
+    
+    // Load project data
+    loadProjectData(projectId);
+  };
+
+  window.closeProjectDetailsModal = function() {
+    const modal = document.getElementById('projectDetailsModal');
+    modal.classList.add('hidden');
+    
+    // Reset all sections to collapsed state
+    const allSections = ['basicInfo', 'eiuProfile', 'timelineInfo', 'budgetInfo', 'physicalInfo', 'milestones', 'statusUpdates'];
+    allSections.forEach(sectionId => {
+      const content = document.getElementById(sectionId + 'Content');
+      const icon = document.querySelector(`[data-section="${sectionId}"]`);
+      if (content && icon) {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    });
+  };
+
+  window.toggleSection = function(sectionId) {
+    const content = document.getElementById(sectionId + 'Content');
+    const icon = document.querySelector(`[data-section="${sectionId}"]`);
+    
+    if (!content || !icon) {
+      console.error(`Section ${sectionId} not found`);
+      return;
+    }
+    
+    console.log(`🔧 toggleSection(${sectionId}): currently hidden = ${content.classList.contains('hidden')}`);
+    
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+      icon.style.transform = 'rotate(180deg)';
+      console.log(`✅ ${sectionId} section expanded`);
+    } else {
+      content.classList.add('hidden');
+      icon.style.transform = 'rotate(0deg)';
+      console.log(`➖ ${sectionId} section collapsed`);
+    }
+  };
+
+  window.retryLoadProject = function() {
+    const modal = document.getElementById('projectDetailsModal');
+    const projectId = modal.dataset.projectId;
+    if (projectId) {
+      const loading = document.getElementById('modalLoading');
+      const error = document.getElementById('modalError');
+      const content = document.getElementById('modalProjectData');
+      
+      loading.classList.remove('hidden');
+      error.classList.add('hidden');
+      content.classList.add('hidden');
+      
+      loadProjectData(projectId);
+    }
+  };
+
+  // Check and update delayed status for project and milestones
+  async function checkAndUpdateDelayedStatus(project) {
+    try {
+      console.log('🔍 Checking delayed status for project:', project.id);
+      
+      const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+      if (!token) return;
+      
+      // Use dynamic API URL
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:3000/api' 
+        : 'http://148.230.96.155:3000/api';
+      
+      // Check delayed status via API
+      const delayedStatusResponse = await fetch(`${apiUrl}/projects/${project.id}/delayed-status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (delayedStatusResponse.ok) {
+        const delayData = await delayedStatusResponse.json();
+        if (delayData.success) {
+          console.log('✅ Delayed status check result:', delayData);
+          
+          // Update project with delay info
+          project.delayInfo = {
+            isDelayed: delayData.isDelayed,
+            overdueMilestoneCount: delayData.delayInfo.overdueMilestoneCount,
+            maxDaysOverdue: delayData.delayInfo.maxDaysOverdue,
+            severity: delayData.delayInfo.severity,
+            overdueMilestones: delayData.overdueMilestones
+          };
+          
+          // Update project status if delayed
+          if (delayData.isDelayed && project.status !== 'delayed') {
+            project.status = 'delayed';
+          }
+          
+          // Update milestone statuses to delayed if they're overdue
+          if (delayData.overdueMilestones && delayData.overdueMilestones.length > 0) {
+            console.log('🔄 Updating milestone statuses to delayed for overdue milestones:', delayData.overdueMilestones.map(m => m.title));
+            
+            // Update milestone status in database for each overdue milestone
+            for (const overdueMilestone of delayData.overdueMilestones) {
+              try {
+                console.log(`💾 Updating milestone "${overdueMilestone.title}" status in database...`);
+                const updateResponse = await fetch(`${apiUrl}/projects/${project.id}/milestones/${overdueMilestone.id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ status: 'delayed' })
+                });
+                
+                if (updateResponse.ok) {
+                  console.log(`✅ Successfully updated milestone "${overdueMilestone.title}" status to delayed in database`);
+                } else {
+                  console.error(`❌ Failed to update milestone "${overdueMilestone.title}" status:`, updateResponse.status);
+                }
+              } catch (updateError) {
+                console.error(`❌ Error updating milestone "${overdueMilestone.title}" status:`, updateError);
+              }
+            }
+            
+            // Update milestones array if it exists (in memory)
+            if (Array.isArray(project.milestones)) {
+              console.log('📝 Updating project.milestones array...');
+              project.milestones.forEach(milestone => {
+                const overdueMilestone = delayData.overdueMilestones.find(om => om.id === milestone.id || om.title === milestone.title);
+                if (overdueMilestone) {
+                  console.log(`🔴 Updating milestone "${milestone.title}" from "${milestone.status}" to "delayed"`);
+                  milestone.status = 'delayed';
+                }
+              });
+            }
+            
+            // Also update other possible milestone arrays (in memory)
+            if (Array.isArray(project.projectMilestones)) {
+              console.log('📝 Updating project.projectMilestones array...');
+              project.projectMilestones.forEach(milestone => {
+                const overdueMilestone = delayData.overdueMilestones.find(om => om.id === milestone.id || om.title === milestone.title);
+                if (overdueMilestone) {
+                  console.log(`🔴 Updating projectMilestone "${milestone.title}" from "${milestone.status}" to "delayed"`);
+                  milestone.status = 'delayed';
+                }
+              });
+            }
+            
+            if (Array.isArray(project.ProjectMilestones)) {
+              console.log('📝 Updating project.ProjectMilestones array...');
+              project.ProjectMilestones.forEach(milestone => {
+                const overdueMilestone = delayData.overdueMilestones.find(om => om.id === milestone.id || om.title === milestone.title);
+                if (overdueMilestone) {
+                  console.log(`🔴 Updating ProjectMilestone "${milestone.title}" from "${milestone.status}" to "delayed"`);
+                  milestone.status = 'delayed';
+                }
+              });
+            }
+            
+            console.log('✅ Milestone status updates complete (both database and memory)');
+          }
+          
+          // Fetch recent updates including delay notifications
+          try {
+            console.log('🔄 Fetching recent updates for project:', project.id);
+            const updatesResponse = await fetch(`${apiUrl}/projects/${project.id}/updates`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            console.log('📡 Updates API response status:', updatesResponse.status);
+            
+            if (updatesResponse.ok) {
+              const updatesData = await updatesResponse.json();
+              console.log('📦 Updates API response:', updatesData);
+              
+              if (updatesData.success && updatesData.updates) {
+                project.updates = updatesData.updates;
+                console.log('✅ Updated project updates:', updatesData.updates.length, 'updates found');
+                console.log('📋 Updates details:', updatesData.updates.map(u => ({ type: u.updateType, description: u.description, date: u.createdAt })));
+              } else {
+                console.log('⚠️ No updates found or API response unsuccessful');
+                project.updates = [];
+              }
+            } else {
+              console.error('❌ Updates API request failed with status:', updatesResponse.status);
+              project.updates = [];
+            }
+          } catch (updateError) {
+            console.error('❌ Error fetching updates:', updateError);
+            project.updates = [];
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error checking delayed status:', error);
+    }
+  }
+
+  // Load project data function with comprehensive error handling
+  async function loadProjectData(projectId) {
+    try {
+      console.log('🔍 Loading project data for ID:', projectId);
+      
+      const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+      
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
+      // Use dynamic API URL based on environment
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:3000/api' 
+        : 'http://148.230.96.155:3000/api';
+      const requestUrl = `${apiUrl}/projects/${projectId}`;
+      
+      console.log('🌐 Making API request to:', requestUrl);
+      console.log('🔑 Using token:', token ? 'Token found' : 'No token');
+      
+      const response = await fetch(requestUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).catch(fetchError => {
+        console.error('🚨 Fetch error:', fetchError);
+        throw new Error(`Network error: ${fetchError.message}`);
+        console.error('🚫 Network fetch error:', fetchError);
+        throw new Error(`Network error: ${fetchError.message}. Please check if the backend server is running on port 3000.`);
+      });
+
+      console.log('📡 API Response status:', response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        } else if (response.status === 404) {
+          throw new Error('Project not found or you do not have permission to view it.');
+        } else {
+          const errorText = await response.text();
+          console.error('❌ Server error response:', errorText);
+          throw new Error(`Server error (${response.status}): ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('📦 API Response data structure:', {
+        success: data.success,
+        hasProject: !!data.project,
+        projectKeys: data.project ? Object.keys(data.project) : [],
+        projectData: data.project
+      });
+      
+      
+      if (data.success && data.project) {
+        console.log('✅ Project data received, populating modal...');
+        console.log('🔍 Project includes delayed status info:', !!data.project.delayInfo);
+        
+        populateModalData(data.project);
+        
+        // Check loading state before trying to hide it
+        const preHideLoading = document.getElementById('modalLoading');
+        console.log('🔍 Before hiding - loading state:');
+        console.log('  - loading element found:', !!preHideLoading);
+        console.log('  - loading classes before hiding:', preHideLoading?.className);
+        console.log('  - loading computed display:', window.getComputedStyle(preHideLoading)?.display);
+        console.log('  - loading is visible (offsetHeight > 0):', preHideLoading?.offsetHeight > 0);
+        
+        // Show content, hide loading - with aggressive error handling
+        try {
+          const modalLoading = document.getElementById('modalLoading');
+          const modalError = document.getElementById('modalError');
+          const modalProjectData = document.getElementById('modalProjectData');
+          
+          console.log('🔧 About to hide loading state...');
+          console.log('  - modalLoading element found:', !!modalLoading);
+          console.log('  - modalLoading current classes:', modalLoading?.className);
+          console.log('  - modalLoading current style.display:', modalLoading?.style.display);
+          
+          if (modalLoading) {
+            // Remove conflicting flex classes that override hidden
+            modalLoading.classList.remove('flex', 'items-center', 'justify-center');
+            modalLoading.classList.add('hidden');
+            modalLoading.style.display = 'none';
+            modalLoading.hidden = true;
+            modalLoading.style.visibility = 'hidden';
+            console.log('  - modalLoading after hiding classes:', modalLoading.className);
+            console.log('  - modalLoading after hiding style.display:', modalLoading.style.display);
+          }
+          
+          if (modalError) {
+            modalError.classList.add('hidden');
+          }
+          
+          if (modalProjectData) {
+            modalProjectData.classList.remove('hidden');
+            modalProjectData.style.display = 'block';
+            modalProjectData.style.visibility = 'visible';
+          }
+          
+          console.log('✅ Successfully hidden loading state and shown content');
+        } catch (error) {
+          console.error('❌ Error hiding loading state:', error);
+          // Force hide loading with multiple methods
+          const loading = document.getElementById('modalLoading');
+          if (loading) {
+            // Remove conflicting flex classes that override hidden
+            loading.classList.remove('flex', 'items-center', 'justify-center');
+            loading.style.display = 'none';
+            loading.classList.add('hidden');
+            loading.hidden = true;
+            loading.style.visibility = 'hidden';
+          }
+        }
+        
+        // Auto-expand basic info section
+        setTimeout(() => {
+          toggleSection('basicInfo');
+        }, 100);
+        
+        // Fallback: Force hide loading state after a delay (in case of any issues)
+        setTimeout(() => {
+          const loading = document.getElementById('modalLoading');
+          if (loading) {
+            const isVisible = loading.offsetHeight > 0 || loading.offsetWidth > 0;
+            console.log('🔧 Fallback check - loading element visible:', isVisible);
+            console.log('  - loading classes:', loading.className);
+            console.log('  - loading style.display:', loading.style.display);
+            
+            if (isVisible || !loading.classList.contains('hidden')) {
+              console.log('🔧 Fallback: Force hiding loading state with all methods');
+              // Remove conflicting flex classes that override hidden
+              loading.classList.remove('flex', 'items-center', 'justify-center');
+              loading.style.display = 'none !important';
+              loading.classList.add('hidden');
+              loading.hidden = true;
+              loading.style.visibility = 'hidden';
+              loading.style.opacity = '0';
+              
+              // Also try removing the element content as last resort
+              if (loading.offsetHeight > 0) {
+                console.log('🔧 Last resort: Clearing loading element content');
+                loading.innerHTML = '';
+                loading.style.height = '0px';
+                loading.style.overflow = 'hidden';
+              }
+            }
+          }
+        }, 200);
+      } else {
+        throw new Error(data.error || data.message || 'Failed to load project data');
+      }
+    } catch (error) {
+      console.error('💥 Error loading project:', error);
+      
+      // Show error, hide loading
+      document.getElementById('modalLoading').classList.add('hidden');
+      document.getElementById('modalProjectData').classList.add('hidden');
+      document.getElementById('modalError').classList.remove('hidden');
+      document.getElementById('modalErrorMessage').textContent = error.message;
+    }
+  }
+
+  // Helper function to format text with proper capitalization
+  function formatText(text) {
+    if (!text) return 'N/A';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  }
+
+  // Helper function to format funding source
+  function formatFundingSource(source) {
+    if (!source) return 'N/A';
+    
+    // Handle special case for Municipal Development Fund
+    if (source === 'donor_fund') {
+      return 'Municipal Development Fund';
+    }
+    
+    // Convert underscore to space and capitalize each word
+    const formatted = source.replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    
+    return formatted;
+  }
+
+  // Populate modal with comprehensive project data
+  function populateModalData(project) {
+    console.log('🏗️ Populating modal with project data:', project);
+    console.log('📊 COMPLETE Project Data Structure:', JSON.stringify(project, null, 2));
+    console.log('📊 Project structure analysis:', {
+      id: project.id,
+      name: project.name,
+      // ALL PROJECT FIELDS
+      allProjectFields: Object.keys(project),
+      // Basic Info
+      projectCode: project.projectCode,
+      description: project.description,
+      expectedOutputs: project.expectedOutputs,
+      targetBeneficiaries: project.targetBeneficiaries,
+      // EIU Data - DETAILED ANALYSIS
+      hasEiuPersonnel: !!project.eiuPersonnel,
+      eiuPersonnelData: project.eiuPersonnel,
+      eiuPersonnelFields: project.eiuPersonnel ? Object.keys(project.eiuPersonnel) : 'none',
+      // Check other possible EIU field names
+      hasEiuPartner: !!project.eiuPartner,
+      hasAssignedEIU: !!project.assignedEIU,
+      hasEiu: !!project.eiu,
+      hasUser: !!project.User,
+      // Budget & Physical Data - DETAILED ANALYSIS
+      budgetBreakdown: project.budgetBreakdown,
+      budgetDescription: project.budgetDescription,
+      budgetDetails: project.budgetDetails,
+      specialRequirements: project.specialRequirements,
+      physicalProgressRequirements: project.physicalProgressRequirements,
+      generalDescription: project.generalDescription,
+      physicalDescription: project.physicalDescription,
+      requiredDocumentation: project.requiredDocumentation,
+      // Milestones - DETAILED ANALYSIS
+      hasMilestones: !!project.milestones,
+      milestonesType: typeof project.milestones,
+      milestonesLength: Array.isArray(project.milestones) ? project.milestones.length : 'not array',
+      milestonesData: project.milestones,
+      // Check other possible milestone field names
+      hasProjectMilestones: !!project.ProjectMilestones,
+      hasMilestoneData: !!project.Milestones,
+      hasTimelineMilestones: !!project.timelineMilestones,
+      // Progress
+      progressData: project.progress,
+      automatedProgress: project.automatedProgress
+    });
+
+    // Set modal title
+    document.getElementById('modalProjectTitle').textContent = project.name || 'Project Complete Information';
+    document.getElementById('modalProjectSubtitle').textContent = `Comprehensive information for ${project.name || 'this project'}`;
+
+    // Basic Project Information - Enhanced data extraction
+    safeSetTextContent('projectCode', project.projectCode);
+    safeSetTextContent('projectTitle', project.name || project.title || project.projectName);
+    safeSetTextContent('implementingOffice', project.implementingOfficeName || project.implementingOffice?.name || project.implementingOffice);
+    safeSetTextContent('projectCategory', formatText(project.category)); 
+    safeSetTextContent('projectLocation', Array.isArray(project.location) ? project.location.join(', ') : project.location);
+    safeSetTextContent('projectPriority', formatText(project.priority)); 
+    safeSetTextContent('fundingSource', formatFundingSource(project.fundingSource)); 
+    safeSetTextContent('createdDate', formatDate(project.createdDate || project.createdAt));
+    // Status field removed as per specifications
+    safeSetTextContent('projectDescription', project.description);
+    safeSetTextContent('expectedOutputs', project.expectedOutputs);
+    safeSetTextContent('targetBeneficiaries', project.targetBeneficiaries);
+
+    // EIU Contractor Profile - Enhanced with expanded ProgressCalculationService data
+    console.log('👤 DETAILED EIU Data Analysis:');
+    console.log('  - project.eiuPersonnel:', project.eiuPersonnel);
+    console.log('  - project.assignedEIU:', project.assignedEIU);
+    console.log('  - project.User:', project.User);
+    console.log('  - project.eiu:', project.eiu);
+    console.log('  - project.eiuPartner:', project.eiuPartner);
+    console.log('  - project._debug?.eiuPersonnel:', project._debug?.eiuPersonnel);
+    
+    // Try multiple sources for EIU data - including _debug object from ProgressCalculationService
+          console.log('🔍 CRITICAL: EIU data extraction debugging:');
+      console.log('  - project.eiuPersonnel:', project.eiuPersonnel);
+      console.log('  - project.assignedEIU:', project.assignedEIU);
+      console.log('  - project.User:', project.User);
+      console.log('  - project.eiu:', project.eiu);
+      console.log('  - project.eiuPartner:', project.eiuPartner);
+      console.log('  - All project keys:', Object.keys(project));
+      
+      let eiuData = project.eiuPersonnel || project.assignedEIU || project.User || project.eiu || project.eiuPartner;
+      console.log('🎯 FINAL eiuData result:', eiuData);
+      console.log('🎯 eiuData type:', typeof eiuData);
+      console.log('🎯 eiuData keys:', eiuData ? Object.keys(eiuData) : 'undefined');
+    
+    // If no direct EIU data, check if it's in the _debug object
+    if (!eiuData && project._debug && project._debug.eiuPersonnel) {
+      eiuData = project._debug.eiuPersonnel;
+      console.log('👤 Using EIU data from _debug object:', eiuData);
+    }
+    
+    // Special handling for submissions module - ensure we have complete data
+    if (eiuData && (!eiuData.contactNumber || !eiuData.birthdate || !eiuData.department)) {
+      console.log('👤 EIU data appears incomplete, checking for additional fields...');
+      console.log('👤 Current EIU data:', eiuData);
+      
+      // Try to get more complete data from the enriched object
+      if (project.eiuPersonnel) {
+        eiuData = {
+          ...eiuData,
+          ...project.eiuPersonnel,
+          // Ensure all fields are properly mapped
+          contactNumber: project.eiuPersonnel.contactNumber || project.eiuPersonnel.phoneNumber || eiuData.contactNumber,
+          birthdate: project.eiuPersonnel.birthdate || eiuData.birthdate,
+          department: project.eiuPersonnel.department || project.eiuPersonnel.externalCompanyName || eiuData.department || 'External Partner Company',
+          externalCompanyName: project.eiuPersonnel.externalCompanyName || project.eiuPersonnel.department || eiuData.externalCompanyName || 'Sample Company',
+          profilePicture: project.eiuPersonnel.profilePicture || eiuData.profilePicture
+        };
+        console.log('👤 Enhanced EIU data:', eiuData);
+      }
+    }
+    console.log('👤 Selected EIU Data:', eiuData);
+    console.log('👤 EIU Data type:', typeof eiuData);
+    console.log('👤 EIU Data keys:', eiuData ? Object.keys(eiuData) : 'none');
+    console.log('👤 EIU Data values:', eiuData ? Object.values(eiuData) : 'none');
+    
+    if (eiuData) {
+      // Use expanded data from ProgressCalculationService (now includes all needed fields)
+      console.log('👤 DETAILED Field Extraction:');
+      console.log('  - Name options:', {
+        name: eiuData.name,
+        fullName: eiuData.fullName,
+        firstName: eiuData.firstName,
+        lastName: eiuData.lastName
+      });
+      console.log('  - Email options:', {
+        email: eiuData.email,
+        username: eiuData.username
+      });
+      console.log('  - Contact options:', {
+        contactNumber: eiuData.contactNumber,
+        contact: eiuData.contact,
+        phoneNumber: eiuData.phoneNumber
+      });
+      console.log('  - Group options:', {
+        group: eiuData.group,
+        groupName: eiuData.groupName
+      });
+      console.log('  - Department options:', {
+        department: eiuData.department,
+        departmentName: eiuData.departmentName
+      });
+      console.log('  - Subrole options:', {
+        subRole: eiuData.subRole,
+        subrole: eiuData.subrole,
+        role: eiuData.role
+      });
+      console.log('  - Company options:', {
+        externalCompanyName: eiuData.externalCompanyName,
+        company: eiuData.company
+      });
+      console.log('  - Profile Picture options:', {
+        profilePictureUrl: eiuData.profilePictureUrl,
+        profilePicture: eiuData.profilePicture,
+        avatar: eiuData.avatar
+      });
+      console.log('  - Birthdate options:', {
+        birthdate: eiuData.birthdate,
+        birthDate: eiuData.birthDate,
+        dateOfBirth: eiuData.dateOfBirth
+      });
+      
+      const fullName = eiuData.name || eiuData.fullName || `${eiuData.firstName || ''} ${eiuData.lastName || ''}`.trim();
+      const email = eiuData.email || eiuData.username;
+      const contact = eiuData.contactNumber || eiuData.phoneNumber || eiuData.contact || eiuData.contact_number || eiuData.phone_number;
+      const group = eiuData.group || eiuData.groupName || 'EIU';
+      const department = eiuData.department || eiuData.departmentName;
+      const subrole = eiuData.subRole || eiuData.subrole || eiuData.role;
+      const company = eiuData.externalCompanyName || eiuData.company;
+      
+      // Handle cases where fields might be empty strings or null
+      const displayFullName = fullName && fullName !== '' && fullName !== 'null' ? fullName : 'N/A';
+      const displayEmail = email && email !== '' && email !== 'null' ? email : 'N/A';
+      const displayContact = contact && contact !== '' && contact !== 'null' ? contact : 'N/A';
+      const displayGroup = group && group !== '' && group !== 'null' ? group : 'EIU';
+      const displayDepartment = department && department !== '' && department !== 'null' ? department : 'N/A';
+      const displaySubrole = subrole && subrole !== '' && subrole !== 'null' ? subrole : 'N/A';
+      const displayCompany = company && company !== '' && company !== 'null' ? company : 'N/A';
+      
+      // Process birthdate - try multiple field names
+      const birthdate = eiuData.birthdate || eiuData.birthDate || eiuData.dateOfBirth;
+      console.log('👤 Birthdate processing:', { 
+        birthdate, 
+        type: typeof birthdate,
+        eiuData_birthdate: eiuData.birthdate,
+        eiuData_birthDate: eiuData.birthDate,
+        eiuData_dateOfBirth: eiuData.dateOfBirth
+      });
+      const displayBirthdate = birthdate && birthdate !== '' && birthdate !== 'null' ? formatDate(birthdate) : 'Not provided';
+      
+      console.log('👤 Final extracted values:', {
+        fullName, email, contact, group, department, subrole, company
+      });
+      console.log('👤 Display values:', {
+        displayFullName, displayEmail, displayContact, displayGroup, displayDepartment, displaySubrole, displayCompany, displayBirthdate
+      });
+      
+      safeSetTextContent('eiuFullName', displayFullName);
+      safeSetTextContent('eiuEmail', displayEmail);
+      safeSetTextContent('eiuContact', displayContact);
+      safeSetTextContent('eiuBirthdate', displayBirthdate);
+      safeSetTextContent('eiuGroup', displayGroup);
+      safeSetTextContent('eiuDepartment', displayDepartment);
+      safeSetTextContent('eiuSubrole', displaySubrole);
+      safeSetTextContent('eiuCompany', displayCompany);
+      
+      // Handle EIU Profile Picture with robust fallback and loading delay fix
+      const eiuProfileImg = document.getElementById('eiuProfilePicture');
+      const eiuProfilePlaceholder = document.getElementById('eiuProfilePlaceholder');
+      
+      // Get current user info for debugging
+      const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+      const currentUserRole = currentUser?.role || window.currentUserRole || 'unknown';
+      
+      console.log('👤 ENHANCED Profile picture debugging:', {
+        profilePictureUrl: eiuData.profilePictureUrl,
+        profilePicture: eiuData.profilePicture,
+        profile_picture: eiuData.profile_picture,
+        avatar: eiuData.avatar,
+        profileUrlType: typeof eiuData.profilePictureUrl,
+        profileUrlLength: eiuData.profilePictureUrl?.length,
+        profileUrlStartsWith: eiuData.profilePictureUrl?.substring(0, 50),
+        isRelativeUrl: eiuData.profilePictureUrl?.startsWith('/'),
+        isAbsoluteUrl: eiuData.profilePictureUrl?.startsWith('http'),
+        isDataUrl: eiuData.profilePictureUrl?.startsWith('data:'),
+        hasProfileImg: !!eiuProfileImg,
+        hasPlaceholder: !!eiuProfilePlaceholder,
+        currentUserRole: currentUserRole,
+        currentUserId: currentUser?.id,
+        eiuPersonnelId: project.eiuPersonnelId,
+        isCurrentUserEIU: currentUserRole === 'EIU' || currentUserRole === 'eiu',
+        isViewingSameUser: currentUser?.id === project.eiuPersonnelId,
+        windowLocation: window.location.origin,
+        contactNumber: eiuData.contactNumber,
+        phoneNumber: eiuData.phoneNumber,
+        birthdate: eiuData.birthdate,
+        allEIUDataKeys: Object.keys(eiuData),
+        fullEIUData: eiuData
+      });
+      
+      if (eiuProfileImg && eiuProfilePlaceholder) {
+        const profileUrl = eiuData.profilePictureUrl || eiuData.profilePicture || eiuData.profile_picture || eiuData.avatar;
+        
+        // Show placeholder initially to prevent blank state
+        eiuProfileImg.classList.add('hidden');
+        eiuProfilePlaceholder.classList.remove('hidden');
+        
+        if (profileUrl && profileUrl !== 'null' && profileUrl !== '' && profileUrl !== 'undefined') {
+          // Process and normalize the profile picture URL
+          let normalizedUrl = profileUrl;
+          
+          // Handle relative URLs by making them absolute
+          if (profileUrl.startsWith('/') && !profileUrl.startsWith('//')) {
+            normalizedUrl = window.location.origin + profileUrl;
+            console.log('🔗 Converted relative URL to absolute:', normalizedUrl);
+          }
+          
+          // Handle URLs that might need the backend server origin
+          if (profileUrl.startsWith('/uploads/') || profileUrl.startsWith('uploads/')) {
+            const backendOrigin = 'http://localhost:3000'; // Backend server URL
+            normalizedUrl = profileUrl.startsWith('/') ? 
+              backendOrigin + profileUrl : 
+              backendOrigin + '/' + profileUrl;
+            console.log('🔗 Using backend server URL:', normalizedUrl);
+          }
+          
+          console.log('✅ Attempting to load profile picture:', {
+            original: profileUrl,
+            normalized: normalizedUrl
+          });
+          
+          // Enhanced loading strategy with authentication headers
+          const loadProfilePicture = async () => {
+            try {
+              // First, try direct image loading (works for public URLs)
+              const testImg = new Image();
+              
+              // Set up success handler
+                              testImg.onload = function() {
+                 console.log('✅ Profile picture loaded successfully via direct loading');
+                 eiuProfileImg.src = normalizedUrl;
+                eiuProfileImg.classList.remove('hidden');
+                eiuProfilePlaceholder.classList.add('hidden');
+              };
+              
+              // Set up error handler for direct loading
+              testImg.onerror = async function() {
+                console.log('❌ Direct loading failed, trying authenticated fetch');
+                
+                try {
+                  // Try fetching with authentication headers
+                  const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+                  
+                  const response = await fetch(normalizedUrl, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Cache-Control': 'no-cache'
+                    }
+                  });
+                  
+                  if (response.ok) {
+                    const blob = await response.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+                    
+                    console.log('✅ Profile picture loaded via authenticated fetch');
+                    eiuProfileImg.src = objectUrl;
+                    eiuProfileImg.classList.remove('hidden');
+                    eiuProfilePlaceholder.classList.add('hidden');
+                    
+                    // Clean up object URL after image loads
+                    eiuProfileImg.onload = () => {
+                      URL.revokeObjectURL(objectUrl);
+                    };
+                  } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                  }
+                } catch (fetchError) {
+                  console.log('❌ Authenticated fetch also failed:', fetchError.message);
+                  console.log('📷 Showing placeholder due to loading failures');
+                  eiuProfileImg.classList.add('hidden');
+                  eiuProfilePlaceholder.classList.remove('hidden');
+                }
+              };
+              
+                             // Start the loading process
+              testImg.src = normalizedUrl;
+              
+            } catch (error) {
+              console.log('❌ Profile picture loading error:', error);
+              eiuProfileImg.classList.add('hidden');
+              eiuProfilePlaceholder.classList.remove('hidden');
+            }
+          };
+          
+          // Execute the loading function
+          loadProfilePicture();
+          
+          // Fallback timeout for overall loading process
+          setTimeout(() => {
+            if (eiuProfileImg.classList.contains('hidden')) {
+              console.log('⏰ Profile picture loading timeout after all attempts');
+              console.log('🔄 Making final direct assignment attempt');
+              eiuProfileImg.src = normalizedUrl;
+              eiuProfileImg.classList.remove('hidden');
+              eiuProfilePlaceholder.classList.add('hidden');
+              
+              // Final error handler
+              eiuProfileImg.onerror = function() {
+                console.log('❌ Final attempt failed, showing placeholder permanently');
+                this.classList.add('hidden');
+                eiuProfilePlaceholder.classList.remove('hidden');
+              };
+            }
+          }, 3000); // 3 second timeout
+        } else {
+          console.log('📷 No profile picture URL available, showing placeholder');
+          eiuProfileImg.classList.add('hidden');
+          eiuProfilePlaceholder.classList.remove('hidden');
+        }
+      }
+      
+      console.log('✅ EIU data populated from ProgressCalculationService');
+    } else {
+      console.log('❌ No EIU data found in project');
+      // Set all EIU fields to indicate no EIU partner
+      safeSetTextContent('eiuFullName', 'No EIU Partner Assigned');
+      safeSetTextContent('eiuEmail', 'N/A');
+      safeSetTextContent('eiuContact', 'N/A');
+      safeSetTextContent('eiuBirthdate', 'N/A');
+      safeSetTextContent('eiuGroup', 'N/A');
+      safeSetTextContent('eiuDepartment', 'N/A');
+      safeSetTextContent('eiuSubrole', 'N/A');
+      safeSetTextContent('eiuCompany', 'N/A');
+      
+      // Hide profile picture and show placeholder
+      const eiuProfileImg = document.getElementById('eiuProfilePicture');
+      const eiuProfilePlaceholder = document.getElementById('eiuProfilePlaceholder');
+      if (eiuProfileImg && eiuProfilePlaceholder) {
+        eiuProfileImg.classList.add('hidden');
+        eiuProfilePlaceholder.classList.remove('hidden');
+      }
+    }
+
+    // Timeline Info - Enhanced with multiple fallbacks
+    safeSetTextContent('startDate', formatDate(project.startDate || project.projectStartDate || project.timelineStartDate));
+    safeSetTextContent('targetCompletionDate', formatDate(project.targetCompletionDate || project.targetDateOfCompletion || project.endDate || project.projectEndDate || project.timelineEndDate || project.targetDate));
+    safeSetTextContent('expectedDaysOfCompletion', project.expectedDaysOfCompletion ? `${project.expectedDaysOfCompletion} days` : 'N/A');
+    
+    // Calculate actual completion date based on project status and milestones
+    let actualCompletionDate = '–';
+    if (project.status === 'completed' || project.status === 'complete') {
+      // If project is completed, use completionDate or calculate from milestones
+      if (project.completionDate) {
+        actualCompletionDate = formatDate(project.completionDate);
+      } else if (project.milestones && Array.isArray(project.milestones)) {
+        // Find the last completed milestone
+        const completedMilestones = project.milestones.filter(m => m.status === 'completed' || m.status === 'complete');
+        if (completedMilestones.length > 0) {
+          const lastMilestone = completedMilestones.sort((a, b) => new Date(b.completionDate || b.updatedAt) - new Date(a.completionDate || a.updatedAt))[0];
+          actualCompletionDate = formatDate(lastMilestone.completionDate || lastMilestone.updatedAt);
+        }
+      }
+    }
+    safeSetTextContent('actualCompletionDate', actualCompletionDate);
+
+    // Budget Info - FIXED: Proper extraction from actual project data
+    const budget = parseFloat(project.totalBudget || project.budgetAllocation || project.budget || 0);
+    const formattedBudget = budget > 0 ? `₱${budget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₱0.00';
+    
+    // Set the budget value
+    safeSetTextContent('totalBudget', formattedBudget);
+    
+    // Budget description
+    const budgetDesc = project.budgetBreakdown || project.budgetDescription || project.budgetDetails || project.specialRequirements;
+    
+    if (budgetDesc && budgetDesc.trim() !== '' && budgetDesc.toLowerCase() !== 'null' && budgetDesc !== 'undefined') {
+      safeSetTextContent('budgetDescription', budgetDesc.trim());
+    } else {
+      safeSetTextContent('budgetDescription', 'No budget description provided');
+    }
+
+    // Physical Info - FIXED: Proper extraction from actual project data
+    console.log('🏗️ DETAILED Physical description sources:', {
+      physicalProgressRequirements: project.physicalProgressRequirements,
+      physicalProgressRequirementsType: typeof project.physicalProgressRequirements,
+      physicalProgressRequirementsLength: project.physicalProgressRequirements?.length,
+      generalDescription: project.generalDescription,
+      physicalDescription: project.physicalDescription,
+      requiredDocumentation: project.requiredDocumentation,
+      allPhysicalFields: Object.keys(project).filter(key => key.toLowerCase().includes('physical'))
+    });
+    
+    const physicalDesc = project.physicalProgressRequirements || project.generalDescription || project.physicalDescription || project.requiredDocumentation;
+    console.log('🏗️ Selected physical description:', physicalDesc);
+    
+    if (physicalDesc && physicalDesc.trim() !== '' && physicalDesc.toLowerCase() !== 'null' && physicalDesc !== 'undefined') {
+      console.log('✅ Using physical description:', physicalDesc.trim());
+      safeSetTextContent('physicalDescription', physicalDesc.trim());
+    } else {
+      console.log('❌ No valid physical description found, using placeholder');
+      safeSetTextContent('physicalDescription', 'No physical description provided');
+    }
+    
+    // Enhanced photo handling with default fallback
+    const photo = document.getElementById('initialPhoto');
+    const noPhotoContainer = document.getElementById('noPhotoContainer');
+    if (project.initialPhoto && project.initialPhoto !== 'None' && project.initialPhoto !== '' && project.initialPhoto !== 'null') {
+      let photoUrl = project.initialPhoto;
+      if (!photoUrl.startsWith('http')) {
+        photoUrl = photoUrl.startsWith('/') ? `http://localhost:3000${photoUrl}` : `http://localhost:3000/uploads/${photoUrl}`;
+      }
+      photo.src = photoUrl;
+      photo.classList.remove('hidden');
+      noPhotoContainer.classList.add('hidden');
+    } else {
+      // Use default projects-page-header-bg image as fallback
+      photo.src = '/projects-page-header-bg.png';
+      photo.alt = 'Default Project Image';
+      photo.classList.remove('hidden');
+      noPhotoContainer.classList.add('hidden');
+    }
+
+    // Progress circles - Enhanced data fetching from multiple sources
+    const progressData = project.progress || project.automatedProgress || {};
+    const overallProgress = project.overallProgress || progressData.overall || progressData.overallProgress || 0;
+    const timelineProgress = project.timelineProgress || progressData.timeline || progressData.internalTimeline || 0;
+    const budgetProgress = project.budgetProgress || progressData.budget || progressData.internalBudget || 0;
+    const physicalProgress = project.physicalProgress || progressData.physical || progressData.internalPhysical || 0;
+    
+    // Update progress circles with animation
+    updateProgressCircle('overallProgressCircle', 'overallProgressText', overallProgress);
+    updateProgressCircle('timelineProgressCircle', 'timelineProgressText', timelineProgress);
+    updateProgressCircle('budgetProgressCircle', 'budgetProgressText', budgetProgress);
+    updateProgressCircle('physicalProgressCircle', 'physicalProgressText', physicalProgress);
+    
+    // Trigger staggered animation for all progress circles
+    setTimeout(() => {
+      animateAllProgressCircles();
+    }, 200);
+
+    // Enhanced Milestones handling - Support multiple data structures from ProgressCalculationService
+    let milestonesArray = [];
+    
+    // Try different milestone data sources (ProgressCalculationService returns milestones array)
+    console.log('🔍 MILESTONE DEBUGGING - All possible sources:');
+    console.log('  - project.milestones:', project.milestones, 'Type:', typeof project.milestones, 'IsArray:', Array.isArray(project.milestones));
+    console.log('  - project.projectMilestones:', project.projectMilestones, 'Type:', typeof project.projectMilestones, 'IsArray:', Array.isArray(project.projectMilestones));
+    console.log('  - project.ProjectMilestones:', project.ProjectMilestones, 'Type:', typeof project.ProjectMilestones, 'IsArray:', Array.isArray(project.ProjectMilestones));
+    console.log('  - project.Milestones:', project.Milestones, 'Type:', typeof project.Milestones, 'IsArray:', Array.isArray(project.Milestones));
+    console.log('  - project.timelineMilestones:', project.timelineMilestones, 'Type:', typeof project.timelineMilestones);
+    
+    // ENHANCED: Check if milestones are nested or have different structure
+    console.log('🔍 DEEP MILESTONE ANALYSIS:');
+    if (project.milestones) {
+      console.log('  - project.milestones structure:', Object.keys(project.milestones));
+      console.log('  - project.milestones[0]:', project.milestones[0]);
+      console.log('  - project.milestones full content:', project.milestones);
+    }
+    
+    // FIXED: Handle case where milestones might be an object with milestone data
+    if (Array.isArray(project.milestones) && project.milestones.length > 0) {
+      console.log('✅ Using project.milestones');
+      milestonesArray = project.milestones;
+    } else if (project.milestones && typeof project.milestones === 'object' && project.milestones.milestones && Array.isArray(project.milestones.milestones)) {
+      console.log('✅ Using project.milestones.milestones (nested structure)');
+      milestonesArray = project.milestones.milestones;
+    } else if (Array.isArray(project.projectMilestones) && project.projectMilestones.length > 0) {
+      console.log('✅ Using project.projectMilestones');
+      milestonesArray = project.projectMilestones;
+    } else if (project.ProjectMilestones && Array.isArray(project.ProjectMilestones) && project.ProjectMilestones.length > 0) {
+      console.log('✅ Using project.ProjectMilestones');
+      milestonesArray = project.ProjectMilestones;
+    } else if (project.Milestones && Array.isArray(project.Milestones) && project.Milestones.length > 0) {
+      console.log('✅ Using project.Milestones');
+      milestonesArray = project.Milestones;
+    } else if (project.timelineMilestones) {
+      console.log('✅ Trying to parse project.timelineMilestones as JSON');
+      // Parse timeline milestones if it's a JSON string
+      try {
+        milestonesArray = typeof project.timelineMilestones === 'string' 
+          ? JSON.parse(project.timelineMilestones) 
+          : project.timelineMilestones;
+        if (!Array.isArray(milestonesArray)) {
+          console.log('⚠️ Parsed timelineMilestones is not array, using empty array');
+          milestonesArray = [];
+        }
+      } catch (e) {
+        console.error('❌ Error parsing timeline milestones:', e);
+        milestonesArray = [];
+      }
+    } else {
+      console.log('❌ No milestone data found in any expected location');
+      // FALLBACK: Try to fetch milestones directly from database via API
+      console.log('🔄 Attempting fallback milestone fetch...');
+      try {
+        const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        if (token && project.id) {
+          fetch(`http://localhost:3000/api/milestones/project/${project.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.milestones && Array.isArray(data.milestones)) {
+              console.log('✅ Fallback milestone fetch successful:', data.milestones);
+              populateMilestones(data.milestones, project);
+            } else {
+              console.log('❌ Fallback milestone fetch failed or no milestones found');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Fallback milestone fetch error:', error);
+          });
+        }
+      } catch (error) {
+        console.error('❌ Fallback milestone fetch setup error:', error);
+      }
+      milestonesArray = [];
+    }
+    
+    console.log('🎯 DETAILED milestones processing:', { 
+      milestonesArray, 
+      length: milestonesArray.length,
+      type: typeof milestonesArray,
+      source: project.milestones ? 'milestones' : project.projectMilestones ? 'projectMilestones' : project.ProjectMilestones ? 'ProjectMilestones' : project.timelineMilestones ? 'timelineMilestones' : 'none',
+      sampleMilestone: milestonesArray.length > 0 ? milestonesArray[0] : 'none',
+      allMilestoneFields: Object.keys(project).filter(key => key.toLowerCase().includes('milestone')),
+      projectMilestonesData: project.milestones,
+      rawProjectMilestonesData: project.projectMilestones,
+      ProjectMilestonesData: project.ProjectMilestones,
+      timelineMilestonesData: project.timelineMilestones
+    });
+    
+    console.log('🔍 FINAL MILESTONE ARRAY BEING PASSED:', milestonesArray);
+    console.log('🔍 FINAL MILESTONE ARRAY TYPE:', typeof milestonesArray, 'IS ARRAY:', Array.isArray(milestonesArray));
+    
+    // Debug each milestone's status
+    if (milestonesArray && Array.isArray(milestonesArray)) {
+      milestonesArray.forEach((milestone, index) => {
+        console.log(`🔍 Milestone ${index + 1} detailed data:`, {
+          title: milestone.title || milestone.name,
+          status: milestone.status,
+          allFields: Object.keys(milestone),
+          milestoneObject: milestone
+        });
+      });
+    }
+    
+    populateMilestones(milestonesArray, project);
+
+    // Milestone Progress - Pass project progress values to distribute across milestones
+    console.log('🚀 Calling populateMilestoneProgress with:', {
+      overallProgress,
+      timelineProgress,
+      budgetProgress,
+      physicalProgress
+    });
+    populateMilestoneProgress(milestonesArray, {
+      overallProgress: overallProgress,
+      timelineProgress: timelineProgress,
+      budgetProgress: budgetProgress,
+      physicalProgress: physicalProgress
+    });
+
+    // Recent Updates - Enhanced fetching from multiple sources
+    const updatesArray = project.updates || project.ProjectUpdates || project.recentUpdates || [];
+    const activityLogsArray = project.activityLogs || [];
+    
+    console.log('🔍 ProjectDetailsModal - Recent Updates Data:', {
+      projectId: project.id,
+      projectName: project.name,
+      updatesArray: updatesArray,
+      updatesCount: updatesArray.length,
+      activityLogsArray: activityLogsArray,
+      activityLogsCount: activityLogsArray.length,
+      activityLogsDetails: activityLogsArray.map(log => ({
+        id: log.id,
+        action: log.action,
+        details: log.details,
+        createdAt: log.createdAt,
+        user: log.user
+      }))
+    });
+    
+    populateRecentUpdates(updatesArray, project, activityLogsArray);
+
+    // Last updated - Enhanced with multiple fallbacks
+    safeSetTextContent('lastUpdated', formatDate(project.updatedAt || project.lastProgressUpdate || project.lastModified || project.lastUpdate?.createdAt));
+  }
+
+  // Note: fetchDetailedEiuInfo function removed - no longer needed since ProgressCalculationService now includes all EIU fields
+
+  // Helper function to safely set text content
+  function safeSetTextContent(elementId, value) {
+    const element = document.getElementById(elementId);
+    
+    // Add debugging for totalBudget element
+    if (elementId === 'totalBudget') {
+      console.log('💰 safeSetTextContent called for totalBudget:');
+      console.log('  - element found:', !!element);
+      console.log('  - value:', value);
+      console.log('  - value type:', typeof value);
+      console.log('  - value after trim:', value !== null && value !== undefined ? String(value).trim() : 'null/undefined');
+    }
+    
+    if (element) {
+      // Only show N/A if value is null, undefined, or empty string after trimming
+      const displayValue = (value !== null && value !== undefined && String(value).trim() !== '') 
+        ? String(value).trim() 
+        : 'N/A';
+      element.textContent = displayValue;
+      
+      // Add debugging for totalBudget element
+      if (elementId === 'totalBudget') {
+        console.log('  - displayValue:', displayValue);
+        console.log('  - element.textContent after set:', element.textContent);
+      }
+    } else if (elementId === 'totalBudget') {
+      console.error('❌ totalBudget element not found!');
+    }
+  }
+
+  // Helper function to get status badge classes
+  function getStatusBadgeClass(status) {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'ongoing':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'delayed':
+        return 'bg-red-100 text-red-800 animate-pulse';
+      // Legacy status mappings for backward compatibility
+      case 'approved':
+      case 'complete':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'rejected':
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'on_hold':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  }
+
+  // Helper function to format dates
+  function formatDate(dateStr) {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
+  function getProgressColor(progress) {
+    if (progress >= 0 && progress <= 25) return '#EF4444'; // red
+    if (progress >= 26 && progress <= 50) return '#F59E0B'; // yellow
+    if (progress >= 51 && progress <= 75) return '#3B82F6'; // blue
+    if (progress >= 76 && progress <= 100) return '#10B981'; // green
+    return '#6B7280'; // gray fallback
+  }
+
+  function getProgressBarColor(progress) {
+    if (progress >= 0 && progress <= 25) return 'bg-red-500'; // red
+    if (progress >= 26 && progress <= 50) return 'bg-yellow-500'; // yellow
+    if (progress >= 51 && progress <= 75) return 'bg-blue-500'; // blue
+    if (progress >= 76 && progress <= 100) return 'bg-green-500'; // green
+    return 'bg-gray-500'; // gray fallback
+  }
+
+  function updateProgressCircle(circleId, textId, progress) {
+    const circle = document.getElementById(circleId);
+    const text = document.getElementById(textId);
+    if (circle && text) {
+      const percentage = parseFloat(progress || 0);
+      const roundedPercentage = Math.round(percentage * 10) / 10; // Round to 1 decimal place
+      
+      // Set the color based on progress
+      const color = getProgressColor(percentage);
+      circle.style.stroke = color;
+      
+      // Reset to 0% and animate
+      circle.style.strokeDasharray = '0, 100';
+      circle.setAttribute('data-progress', percentage);
+      text.textContent = '0%';
+      
+      // Trigger reflow
+      circle.offsetHeight;
+      
+      // Animate to target progress
+      setTimeout(() => {
+        circle.style.strokeDasharray = `${percentage}, 100`;
+        text.textContent = `${roundedPercentage}%`;
+      }, 100);
+    }
+  }
+
+  function animateAllProgressCircles() {
+    const progressCircles = [
+      { id: 'overallProgressCircle', textId: 'overallProgressText' },
+      { id: 'timelineProgressCircle', textId: 'timelineProgressText' },
+      { id: 'budgetProgressCircle', textId: 'budgetProgressText' },
+      { id: 'physicalProgressCircle', textId: 'physicalProgressText' }
+    ];
+
+    progressCircles.forEach((circle, index) => {
+      const circleElement = document.getElementById(circle.id);
+      const textElement = document.getElementById(circle.textId);
+      
+      if (circleElement && textElement) {
+        const progress = parseFloat(circleElement.getAttribute('data-progress')) || 0;
+        const color = getProgressColor(progress);
+        const roundedPercentage = Math.round(progress * 10) / 10;
+        
+        // Set color
+        circleElement.style.stroke = color;
+        
+        // Reset to 0%
+        circleElement.style.strokeDasharray = '0, 100';
+        textElement.textContent = '0%';
+        
+        // Trigger reflow
+        circleElement.offsetHeight;
+        
+        // Animate with staggered timing
+        setTimeout(() => {
+          circleElement.style.strokeDasharray = `${progress}, 100`;
+          textElement.textContent = `${roundedPercentage}%`;
+        }, 200 + (index * 300)); // Stagger animations
+      }
+    });
+  }
+
+  function populateMilestones(milestones, project) {
+    console.log('🎯 Populating milestones:', { milestones, type: typeof milestones, isArray: Array.isArray(milestones) });
+    console.log('🎯 DETAILED milestone analysis:');
+    console.log('  - Milestones length:', milestones?.length);
+    console.log('  - First milestone:', milestones?.[0]);
+    console.log('  - Full milestones array:', milestones);
+    
+    const container = document.getElementById('milestonesData');
+    if (!container) {
+      console.error('❌ Milestones container not found');
+      return;
+    }
+    
+    container.innerHTML = '';
+
+    console.log('🎯 Milestone validation checks:');
+    console.log('  - milestones exists:', !!milestones);
+    console.log('  - is array:', Array.isArray(milestones));
+    console.log('  - length > 0:', milestones?.length > 0);
+
+    if (!milestones || !Array.isArray(milestones) || milestones.length === 0) {
+      console.log('❌ MILESTONE CONDITION FAILED - Showing no milestones message');
+      console.log('  - Reason: !milestones =', !milestones, ', !Array.isArray =', !Array.isArray(milestones), ', length === 0 =', milestones?.length === 0);
+      container.innerHTML = `
+        <div class="bg-white p-6 rounded-lg border text-center text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <p class="text-sm">No milestones defined for this project</p>
+        </div>
+      `;
+      return;
+    }
+
+    console.log('✅ MILESTONE VALIDATION PASSED - Processing milestones');
+
+    milestones.forEach((milestone, index) => {
+      console.log(`🎯 Processing milestone ${index + 1}:`, milestone);
+      
+      const milestoneDiv = document.createElement('div');
+      milestoneDiv.className = 'bg-white rounded-lg border border-gray-200 p-6';
+      
+      // Enhanced milestone data extraction with ProgressCalculationService structure
+      const title = milestone.title || milestone.name || milestone.milestoneName || milestone.itemOfWork || `Milestone ${index + 1}`;
+      const weight = parseFloat(milestone.weight || milestone.milestoneWeight || milestone.percentage || 0);
+      const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || milestone.budget || milestone.milestonebudget || milestone.allocatedBudget || 0);
+      const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+      const description = milestone.description || milestone.details || milestone.summary || 'No description provided';
+      let status = milestone.status || 'pending';
+      const priority = milestone.priority || 'medium';
+      
+      // Check if milestone is overdue and should be marked as delayed
+      if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const milestoneDate = new Date(dueDate);
+        milestoneDate.setHours(0, 0, 0, 0);
+        
+        if (milestoneDate < today && status === 'pending') {
+          status = 'delayed';
+          console.log(`🚨 Milestone "${title}" is overdue (due: ${dueDate}, today: ${today.toDateString()}), marking as delayed`);
+        }
+      }
+      
+      console.log(`🎯 Milestone ${index + 1} data extraction:`, {
+        title, weight, plannedBudget, dueDate, description, status, priority,
+        rawMilestone: milestone
+      });
+      
+      // Timeline Division data - Enhanced extraction with ProgressCalculationService fields
+      const timelineWeight = parseFloat(milestone.timelineWeight || milestone.timelineDivision?.weight || milestone.timeline?.weight || 33.33);
+      const timelineStartDate = milestone.timelineStartDate || milestone.plannedStartDate || milestone.timelineDivision?.startDate || milestone.timeline?.startDate || milestone.startDate;
+      const timelineEndDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || dueDate;
+      const timelineDescription = milestone.timelineDescription || milestone.timelineDivision?.description || milestone.timeline?.description || 'Timeline requirements not specified';
+      const timelineStatus = milestone.timelineStatus || 'pending';
+      
+      // Budget Division data - Enhanced extraction with ProgressCalculationService fields
+      const budgetWeight = parseFloat(milestone.budgetWeight || milestone.budgetDivision?.weight || milestone.budget?.weight || 33.33);
+      const budgetPlanned = parseFloat(milestone.budgetPlanned || milestone.budgetDivision?.plannedBudget || milestone.budget?.planned || plannedBudget);
+      
+      // FIXED: Enhanced budget breakdown extraction - check all possible field names and avoid empty fallback
+      console.log(`🔍 BUDGET BREAKDOWN DEBUGGING for Milestone ${index + 1}:`);
+      console.log('  - milestone.budgetBreakdown:', milestone.budgetBreakdown);
+      console.log('  - milestone.budgetDivision?.breakdown:', milestone.budgetDivision?.breakdown);
+      console.log('  - milestone.budgetDivision?.rawBudgetBreakdown:', milestone.budgetDivision?.rawBudgetBreakdown);
+      console.log('  - milestone.budgetDivision?.description:', milestone.budgetDivision?.description);
+      console.log('  - milestone.budget?.description:', milestone.budget?.description);
+      console.log('  - milestone.budgetDescription:', milestone.budgetDescription);
+      console.log('  - milestone.breakdown:', milestone.breakdown);
+      console.log('  - 🔍 COMPLETE MILESTONE OBJECT:', JSON.stringify(milestone, null, 2));
+      
+      let budgetBreakdown = milestone.budgetBreakdown || milestone.budgetDivision?.breakdown || milestone.budgetDivision?.rawBudgetBreakdown || milestone.budgetDivision?.description || milestone.budget?.description || milestone.budgetDescription || milestone.breakdown;
+      
+      console.log('  - Selected budgetBreakdown:', budgetBreakdown);
+      console.log('  - Type:', typeof budgetBreakdown);
+      console.log('  - Length:', budgetBreakdown?.length);
+      
+              // Check if milestone-level budget breakdown exists
+        if (!budgetBreakdown || budgetBreakdown.trim() === '' || budgetBreakdown === 'null' || budgetBreakdown === 'undefined') {
+          console.log('  - ❌ No milestone-specific budget breakdown found');
+          budgetBreakdown = 'Budget breakdown not specified';
+        } else {
+          console.log('  - ✅ Valid milestone-level budget breakdown found:', budgetBreakdown.trim());
+          budgetBreakdown = budgetBreakdown.trim();
+        }
+      
+      const budgetStatus = milestone.budgetStatus || 'pending';
+      
+      console.log(`💰 Milestone ${index + 1} budget division:`, {
+        budgetWeight, budgetPlanned, budgetBreakdown, budgetStatus,
+        // DEBUGGING: Check all budget breakdown field variations
+        rawBudgetBreakdown: milestone.budgetBreakdown,
+        budgetDivisionBreakdown: milestone.budgetDivision?.breakdown,
+        budgetDivisionDescription: milestone.budgetDivision?.description,
+        budgetDescription: milestone.budgetDescription,
+        budgetDetails: milestone.budgetDetails,
+        breakdown: milestone.breakdown,
+        allMilestoneKeys: Object.keys(milestone),
+        // DETAILED RAW MILESTONE OBJECT
+        completeMilestoneObject: milestone
+      });
+      
+      // Physical Division data - Enhanced extraction with ProgressCalculationService fields
+      const physicalWeight = parseFloat(milestone.physicalWeight || milestone.physicalDivision?.weight || milestone.physical?.weight || 33.34);
+      const physicalProofType = milestone.physicalProofType || milestone.proofTypes || milestone.physicalProofTypes || milestone.physicalDivision?.proofTypes || milestone.physical?.proofTypes || 'form';
+      const physicalDescription = milestone.physicalDescription || milestone.physicalDivision?.description || milestone.physical?.description || 'Physical requirements not specified';
+      let physicalStatus = milestone.physicalStatus || 'pending';
+      
+      // Update division statuses based on main milestone status
+      let timelineStatusUpdated = timelineStatus;
+      let budgetStatusUpdated = budgetStatus;
+      let physicalStatusUpdated = physicalStatus;
+      
+      if (status === 'delayed') {
+        // If milestone is delayed, mark divisions as delayed too (unless they have specific approval status)
+        if (timelineStatus === 'pending') timelineStatusUpdated = 'delayed';
+        if (budgetStatus === 'pending') budgetStatusUpdated = 'delayed';
+        if (physicalStatus === 'pending') physicalStatusUpdated = 'delayed';
+        console.log(`🚨 Milestone "${title}" is delayed, updating division statuses:`, {
+          timeline: `${timelineStatus} → ${timelineStatusUpdated}`,
+          budget: `${budgetStatus} → ${budgetStatusUpdated}`,
+          physical: `${physicalStatus} → ${physicalStatusUpdated}`
+        });
+      } else if (status === 'completed' || status === 'approved') {
+        // If milestone is completed/approved, mark all divisions as completed too
+        timelineStatusUpdated = 'completed';
+        budgetStatusUpdated = 'completed';
+        physicalStatusUpdated = 'completed';
+        console.log(`✅ Milestone "${title}" is completed, updating division statuses:`, {
+          timeline: `${timelineStatus} → ${timelineStatusUpdated}`,
+          budget: `${budgetStatus} → ${budgetStatusUpdated}`,
+          physical: `${physicalStatus} → ${physicalStatusUpdated}`
+        });
+      }
+      
+      console.log(`🏗️ Milestone ${index + 1} physical division:`, {
+        physicalWeight, physicalProofType, physicalDescription, physicalStatus
+      });
+      
+      milestoneDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <h5 class="font-semibold text-gray-800 text-lg">${title}</h5>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(status)}">${status}</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-2">
+              <div>
+                <span class="font-medium">Weight:</span> <span class="text-blue-600 font-bold">${weight.toFixed(1)}%</span>
+              </div>
+              <div>
+                <span class="font-medium">Budget:</span> <span class="text-green-600 font-bold">₱${parseFloat(plannedBudget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div>
+                <span class="font-medium">Due Date:</span> <span class="font-medium">${formatDate(dueDate)}</span>
+              </div>
+              <div>
+                <span class="font-medium">Priority:</span> <span class="font-medium capitalize">${priority}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="text-gray-600 font-medium text-sm block mb-1">Description</label>
+          <p class="text-gray-800 text-sm bg-gray-50 p-3 rounded">${description}</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Timeline Division -->
+          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <label class="text-blue-800 font-semibold text-sm">Timeline Division</label>
+              </div>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(timelineStatusUpdated)} bg-opacity-75">${timelineStatusUpdated}</span>
+            </div>
+            <div class="space-y-2 text-sm">
+              <div><span class="text-blue-700 font-medium">Weight:</span> <span class="font-bold">${timelineWeight.toFixed(1)}%</span></div>
+              <div><span class="text-blue-700 font-medium">Start:</span> <span class="text-blue-900">${formatDate(timelineStartDate)}</span></div>
+              <div><span class="text-blue-700 font-medium">End:</span> <span class="text-blue-900">${formatDate(timelineEndDate)}</span></div>
+              <div><span class="text-blue-700 font-medium">Description:</span><p class="text-blue-900 text-xs mt-1">${timelineDescription}</p></div>
+            </div>
+          </div>
+          
+          <!-- Budget Division -->
+          <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+                <label class="text-green-800 font-semibold text-sm">Budget Division</label>
+              </div>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(budgetStatusUpdated)} bg-opacity-75">${budgetStatusUpdated}</span>
+            </div>
+            <div class="space-y-2 text-sm">
+              <div><span class="text-green-700 font-medium">Weight:</span> <span class="font-bold">${budgetWeight.toFixed(1)}%</span></div>
+              <div><span class="text-green-700 font-medium">Budget:</span> <span class="text-green-900 font-bold">₱${parseFloat(budgetPlanned || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div><span class="text-green-700 font-medium">Breakdown:</span><p class="text-green-900 text-xs mt-1">${budgetBreakdown}</p></div>
+            </div>
+          </div>
+          
+          <!-- Physical Division -->
+          <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                <label class="text-purple-800 font-semibold text-sm">Physical Division</label>
+              </div>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(physicalStatusUpdated)} bg-opacity-75">${physicalStatusUpdated}</span>
+            </div>
+            <div class="space-y-2 text-sm">
+              <div><span class="text-purple-700 font-medium">Weight:</span> <span class="font-bold">${physicalWeight.toFixed(1)}%</span></div>
+              <div><span class="text-purple-700 font-medium">Proof Types:</span> <span class="text-purple-900 capitalize">${physicalProofType || 'Form'}</span></div>
+              <div><span class="text-purple-700 font-medium">Description:</span><p class="text-purple-900 text-xs mt-1">${physicalDescription}</p></div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(milestoneDiv);
+    });
+  }
+
+  function populateMilestoneProgress(milestones, projectProgress = null) {
+    console.log('📈 Populating milestone progress:', { 
+      milestones, 
+      type: typeof milestones, 
+      isArray: Array.isArray(milestones),
+      projectProgress 
+    });
+    
+    const container = document.getElementById('milestoneProgress');
+    if (!container) {
+      console.error('❌ Milestone progress container not found');
+      return;
+    }
+    
+    container.innerHTML = '';
+
+    if (!milestones || !Array.isArray(milestones) || milestones.length === 0) {
+      container.innerHTML = `
+        <div class="bg-white p-4 rounded-lg border text-center text-gray-500">
+          <p class="text-sm">No milestone progress data available</p>
+          <p class="text-xs text-gray-400 mt-1">Progress will be displayed once EIU submits updates</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Use project progress values if available, otherwise fall back to milestone-specific values
+    const useProjectProgress = projectProgress && (
+      projectProgress.overallProgress > 0 || 
+      projectProgress.timelineProgress > 0 || 
+      projectProgress.budgetProgress > 0 || 
+      projectProgress.physicalProgress > 0
+    );
+
+    console.log('📈 Using project progress for milestones:', useProjectProgress, projectProgress);
+
+    milestones.forEach((milestone, index) => {
+      const progressDiv = document.createElement('div');
+      progressDiv.className = 'bg-white rounded-lg border border-gray-200 p-4';
+      
+      const title = milestone.title || milestone.name || `Milestone ${index + 1}`;
+      
+      // Use project progress values if available, otherwise use milestone-specific values
+      let overallProgress, timelineProgress, budgetProgress, physicalProgress;
+      let timelineBarWidth, budgetBarWidth, physicalBarWidth;
+      let timelineColor, budgetColor, physicalColor;
+      let timelineLoaded, budgetLoaded, physicalLoaded;
+      
+      if (useProjectProgress) {
+        // Debug milestone status
+        console.log(`🔍 Milestone ${index + 1} status debugging:`, {
+          title,
+          status: milestone.status,
+          statusType: typeof milestone.status,
+          allStatusFields: Object.keys(milestone).filter(key => key.toLowerCase().includes('status')),
+          milestoneData: milestone,
+          allStatusValues: Object.keys(milestone)
+            .filter(key => key.toLowerCase().includes('status'))
+            .reduce((acc, key) => {
+              acc[key] = milestone[key];
+              return acc;
+            }, {})
+        });
+        
+        // Check if this specific milestone was approved/completed
+        const isMilestoneApproved = milestone.status === 'completed' || 
+                                   milestone.status === 'approved' || 
+                                   milestone.status === 'compiled_for_secretariat' ||
+                                   milestone.status === 'Complete' ||
+                                   milestone.status === 'complete' ||
+                                   milestone.status === 'under_approval' ||
+                                   milestone.status === 'approved_by_secretariat' ||
+                                   milestone.status === 'in_progress';
+        
+        console.log(`🔍 Milestone ${index + 1} approval check:`, {
+          title,
+          status: milestone.status,
+          isApproved: isMilestoneApproved,
+          statusType: typeof milestone.status,
+          statusLength: milestone.status?.length,
+          statusTrimmed: milestone.status?.trim(),
+          statusLowercase: milestone.status?.toLowerCase(),
+          checks: {
+            completed: milestone.status === 'completed',
+            approved: milestone.status === 'approved',
+            compiled: milestone.status === 'compiled_for_secretariat',
+            Complete: milestone.status === 'Complete',
+            complete: milestone.status === 'complete',
+            under_approval: milestone.status === 'under_approval',
+            approved_by_secretariat: milestone.status === 'approved_by_secretariat',
+            in_progress: milestone.status === 'in_progress'
+          }
+        });
+        
+        if (isMilestoneApproved) {
+          // This milestone was approved - show actual division weights
+          // All divisions have the same weight (e.g., 6.7%)
+          const divisionWeight = parseFloat(milestone.timelineWeight || milestone.budgetWeight || milestone.physicalWeight || 33.33);
+          
+          // Use division weight for capacity display
+          timelineProgress = divisionWeight;
+          budgetProgress = divisionWeight;
+          physicalProgress = divisionWeight;
+        } else {
+          // This milestone is not approved - show 0% progress
+          overallProgress = 0;
+          timelineProgress = 0;
+          budgetProgress = 0;
+          physicalProgress = 0;
+        }
+        
+        // Calculate loaded percentages - use actual project progress data for utilization
+        if (isMilestoneApproved && projectProgress) {
+          timelineLoaded = projectProgress.timelineProgress || timelineProgress;
+          budgetLoaded = projectProgress.budgetProgress; // Always use actual budget progress from project data
+          physicalLoaded = projectProgress.physicalProgress || physicalProgress;
+          
+          console.log(`🔍 BUDGET DEBUG - Milestone ${index + 1}:`, {
+            title,
+            isApproved: isMilestoneApproved,
+            projectProgressExists: !!projectProgress,
+            projectProgressBudget: projectProgress.budgetProgress,
+            timelineProgress: timelineProgress,
+            budgetProgress: budgetProgress,
+            physicalProgress: physicalProgress,
+            calculatedBudgetLoaded: budgetLoaded
+          });
+        } else {
+          timelineLoaded = timelineProgress;
+          budgetLoaded = budgetProgress;
+          physicalLoaded = physicalProgress;
+          
+          console.log(`🔍 BUDGET DEBUG FALLBACK - Milestone ${index + 1}:`, {
+            title,
+            isApproved: isMilestoneApproved,
+            projectProgressExists: !!projectProgress,
+            usingFallback: true,
+            budgetLoaded: budgetLoaded
+          });
+        }
+        
+        // Calculate overall progress as sum of loaded percentages for completed milestones
+        if (isMilestoneApproved) {
+          overallProgress = timelineLoaded + budgetLoaded + physicalLoaded;
+          console.log(`🧮 Overall progress calculation for milestone ${index + 1}:`, {
+            title,
+            timelineLoaded,
+            budgetLoaded,
+            physicalLoaded,
+            sum: timelineLoaded + budgetLoaded + physicalLoaded,
+            overallProgress
+          });
+        }
+        
+        // For progress bar width: calculate fill percentage based on utilization within capacity
+        if (isMilestoneApproved) {
+          // For completed milestones: calculate fill as percentage of capacity utilization
+          timelineBarWidth = timelineProgress > 0 ? (timelineLoaded / timelineProgress) * 100 : 0;
+          budgetBarWidth = budgetProgress > 0 ? (budgetLoaded / budgetProgress) * 100 : 0;
+          physicalBarWidth = physicalProgress > 0 ? (physicalLoaded / physicalProgress) * 100 : 0;
+        } else {
+          // For pending milestones: use actual loaded percentage
+          timelineBarWidth = timelineLoaded;
+          budgetBarWidth = budgetLoaded;
+          physicalBarWidth = physicalLoaded;
+        }
+        
+        console.log(`🎯 Bar widths for milestone ${index + 1}:`, {
+          title,
+          timelineBarWidth,
+          budgetBarWidth,
+          physicalBarWidth,
+          timelineLoaded,
+          budgetLoaded,
+          physicalLoaded,
+          timelineProgress,
+          budgetProgress,
+          physicalProgress,
+          timelineFillPercent: timelineProgress > 0 ? ((timelineLoaded / timelineProgress) * 100).toFixed(1) + '%' : '0%',
+          budgetFillPercent: budgetProgress > 0 ? ((budgetLoaded / budgetProgress) * 100).toFixed(1) + '%' : '0%',
+          physicalFillPercent: physicalProgress > 0 ? ((physicalLoaded / physicalProgress) * 100).toFixed(1) + '%' : '0%'
+        });
+        
+        // For progress bar colors: use green for completed milestones (100% utilization within division weight)
+        timelineColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(timelineProgress);
+        budgetColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(budgetProgress);
+        physicalColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(physicalProgress);
+        
+        console.log(`📈 Milestone ${index + 1} progress calculation:`, {
+          title,
+          isApproved: isMilestoneApproved,
+          overallProgress,
+          timelineProgress,
+          budgetProgress,
+          physicalProgress,
+          timelineBarWidth,
+          budgetBarWidth,
+          physicalBarWidth,
+          timelineLoaded,
+          budgetLoaded,
+          physicalLoaded,
+          projectProgress: projectProgress ? {
+            budgetProgress: projectProgress.budgetProgress,
+            timelineProgress: projectProgress.timelineProgress,
+            physicalProgress: projectProgress.physicalProgress
+          } : 'No project progress data'
+        });
+      } else {
+        // Fallback to milestone-specific values
+        // Check if milestone is approved/completed for fallback case too
+        const isMilestoneApprovedFallback = milestone.status === 'completed' || 
+                                           milestone.status === 'approved' || 
+                                           milestone.status === 'compiled_for_secretariat' ||
+                                           milestone.status === 'Complete' ||
+                                           milestone.status === 'complete' ||
+                                           milestone.status === 'under_approval' ||
+                                           milestone.status === 'approved_by_secretariat' ||
+                                           milestone.status === 'in_progress';
+        
+        if (isMilestoneApprovedFallback) {
+          // Use actual division weights for approved milestones
+          // All divisions have the same weight (e.g., 6.7%)
+          const divisionWeight = parseFloat(milestone.timelineWeight || milestone.budgetWeight || milestone.physicalWeight || 33.33);
+          timelineProgress = divisionWeight;
+          budgetProgress = divisionWeight;
+          physicalProgress = divisionWeight;
+        } else {
+          // Use milestone-specific progress values
+          overallProgress = milestone.overallProgress || milestone.progress || 0;
+          timelineProgress = milestone.timelineProgress || 0;
+          budgetProgress = milestone.budgetProgress || 0;
+          physicalProgress = milestone.physicalProgress || 0;
+        }
+        
+        // For progress bar width: calculate fill percentage based on utilization within capacity (fallback case)
+        if (isMilestoneApprovedFallback) {
+          // For completed milestones: calculate fill as percentage of capacity utilization
+          timelineBarWidth = timelineProgress > 0 ? (timelineLoaded / timelineProgress) * 100 : 0;
+          budgetBarWidth = budgetProgress > 0 ? (budgetLoaded / budgetProgress) * 100 : 0;
+          physicalBarWidth = physicalProgress > 0 ? (physicalLoaded / physicalProgress) * 100 : 0;
+        } else {
+          // For pending milestones: use actual loaded percentage
+          timelineBarWidth = timelineLoaded;
+          budgetBarWidth = budgetLoaded;
+          physicalBarWidth = physicalLoaded;
+        }
+        
+        // For progress bar colors: use green for completed milestones (100% utilization within division weight)
+        timelineColor = isMilestoneApprovedFallback ? 'bg-green-500' : getProgressBarColor(timelineProgress);
+        budgetColor = isMilestoneApprovedFallback ? 'bg-green-500' : getProgressBarColor(budgetProgress);
+        physicalColor = isMilestoneApprovedFallback ? 'bg-green-500' : getProgressBarColor(physicalProgress);
+        
+        // Calculate loaded percentages - use actual project progress data for utilization
+        if (isMilestoneApprovedFallback && projectProgress) {
+          timelineLoaded = projectProgress.timelineProgress || timelineProgress;
+          budgetLoaded = projectProgress.budgetProgress; // Always use actual budget progress from project data
+          physicalLoaded = projectProgress.physicalProgress || physicalProgress;
+        } else {
+          timelineLoaded = timelineProgress;
+          budgetLoaded = budgetProgress;
+          physicalLoaded = physicalProgress;
+        }
+        
+        // Calculate overall progress as sum of loaded percentages for completed milestones (fallback case)
+        if (isMilestoneApprovedFallback) {
+          overallProgress = timelineLoaded + budgetLoaded + physicalLoaded;
+          console.log(`🧮 Overall progress calculation for milestone ${index + 1} (fallback):`, {
+            title,
+            timelineLoaded,
+            budgetLoaded,
+            physicalLoaded,
+            sum: timelineLoaded + budgetLoaded + physicalLoaded,
+            overallProgress
+          });
+        }
+        
+        console.log(`📈 Milestone ${index + 1} FALLBACK progress calculation:`, {
+          title,
+          isApproved: isMilestoneApprovedFallback,
+          overallProgress,
+          timelineProgress,
+          budgetProgress,
+          physicalProgress,
+          timelineLoaded,
+          budgetLoaded,
+          physicalLoaded,
+          projectProgress: projectProgress ? {
+            budgetProgress: projectProgress.budgetProgress,
+            timelineProgress: projectProgress.timelineProgress,
+            physicalProgress: projectProgress.physicalProgress
+          } : 'No project progress data'
+        });
+      }
+      
+      // Check milestone status - prioritize approved/completed status
+      let status = milestone.status || 'pending';
+      
+      console.log(`🔍 Status mapping for milestone "${title}":`, {
+        originalStatus: milestone.status,
+        mappedStatus: status,
+        statusType: typeof milestone.status,
+        statusLength: milestone.status?.length,
+        statusTrimmed: milestone.status?.trim(),
+        statusLowercase: milestone.status?.toLowerCase(),
+        statusChecks: {
+          isCompleted: milestone.status === 'completed',
+          isApproved: milestone.status === 'approved',
+          isCompiled: milestone.status === 'compiled_for_secretariat',
+          isComplete: milestone.status === 'Complete' || milestone.status === 'complete',
+          isUnderApproval: milestone.status === 'under_approval',
+          isApprovedBySecretariat: milestone.status === 'approved_by_secretariat',
+          isInProgress: milestone.status === 'in_progress',
+          isOngoing: milestone.status === 'ongoing',
+          isDelayed: milestone.status === 'delayed'
+        }
+      });
+      
+      // Map database status to display status based on lifecycle
+      if (status === 'completed' || status === 'approved' || status === 'compiled_for_secretariat' ||
+          status === 'Complete' || status === 'complete' || status === 'under_approval' ||
+          status === 'approved_by_secretariat') {
+        status = 'Completed'; // Approved by LGU-IU IOO
+      } else if (status === 'in_progress' || status === 'ongoing') {
+        status = 'Ongoing'; // Updated by EIU and submitted to LGU-IU IOO for approval
+      } else if (status === 'delayed') {
+        status = 'Delayed'; // Overdue based on due date
+      } else {
+        status = 'Pending'; // Not yet updated or submitted by the EIU to LGU IU IOO
+      }
+      
+      // Check if milestone is overdue and should be marked as delayed
+      const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+      if (dueDate && status !== 'under_approval' && status !== 'revision_request') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const milestoneDate = new Date(dueDate);
+        milestoneDate.setHours(0, 0, 0, 0);
+        
+        if (milestoneDate < today && status === 'Pending') {
+          status = 'Delayed';
+          console.log(`🚨 Milestone Progress: "${title}" is overdue, marking as delayed`);
+        }
+      }
+      
+      progressDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-2">
+            <h6 class="font-medium text-gray-800">${title}</h6>
+            <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(status)}">${status}</span>
+          </div>
+          <span class="text-sm font-semibold text-gray-600">${overallProgress.toFixed(2)}% Complete</span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div class="text-center">
+            <div class="text-xs text-gray-500 mb-1">Timeline</div>
+            <div class="text-sm font-semibold text-blue-600">${timelineLoaded.toFixed(1)}%</div>
+            <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+              <div class="h-1 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${timelineColor}" style="width: 0%" data-target-width="${timelineBarWidth}%"></div>
+            </div>
+            ${timelineProgress > 0 ? `
+              <div class="text-xs text-gray-500 mt-1">
+                <div>${timelineProgress.toFixed(1)}% capacity</div>
+                <div>${timelineProgress > 0 ? ((timelineLoaded / timelineProgress) * 100).toFixed(1) : 0}% raw</div>
+                <div>${Math.max(0, timelineProgress - timelineLoaded).toFixed(1)}% remaining of ${timelineProgress.toFixed(1)}%</div>
+                <div>${timelineLoaded.toFixed(1)}% loaded</div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500 mb-1">Budget</div>
+            <div class="text-sm font-semibold text-green-600">${budgetLoaded.toFixed(1)}%</div>
+            <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+              <div class="h-1 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${budgetColor}" style="width: 0%" data-target-width="${budgetBarWidth}%"></div>
+            </div>
+            ${budgetProgress > 0 ? `
+              <div class="text-xs text-gray-500 mt-1">
+                <div>${budgetProgress.toFixed(1)}% capacity</div>
+                <div>${budgetProgress > 0 ? ((budgetLoaded / budgetProgress) * 100).toFixed(1) : 0}% raw</div>
+                <div>${Math.max(0, budgetProgress - budgetLoaded).toFixed(1)}% remaining of ${budgetProgress.toFixed(1)}%</div>
+                <div>${budgetLoaded.toFixed(1)}% loaded</div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-gray-500 mb-1">Physical</div>
+            <div class="text-sm font-semibold text-purple-600">${physicalLoaded.toFixed(1)}%</div>
+            <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+              <div class="h-1 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${physicalColor}" style="width: 0%" data-target-width="${physicalBarWidth}%"></div>
+            </div>
+            ${physicalProgress > 0 ? `
+              <div class="text-xs text-gray-500 mt-1">
+                <div>${physicalProgress.toFixed(1)}% capacity</div>
+                <div>${physicalProgress > 0 ? ((physicalLoaded / physicalProgress) * 100).toFixed(1) : 0}% raw</div>
+                <div>${Math.max(0, physicalProgress - physicalLoaded).toFixed(1)}% remaining of ${physicalProgress.toFixed(1)}%</div>
+                <div>${physicalLoaded.toFixed(1)}% loaded</div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(progressDiv);
+    });
+    
+    // Animate milestone progress bars after a short delay
+    setTimeout(() => {
+      animateMilestoneProgressBars();
+    }, 500);
+  }
+  
+  function setupMilestoneProgressAnimation() {
+    const milestoneProgressSection = document.getElementById('milestoneProgress');
+    if (!milestoneProgressSection) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Section is visible, trigger animation
+          setTimeout(() => {
+            animateMilestoneProgressBars();
+          }, 200);
+          // Disconnect observer after first trigger
+          observer.disconnect();
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+    
+    observer.observe(milestoneProgressSection);
+  }
+  
+  function animateMilestoneProgressBars() {
+    const progressBars = document.querySelectorAll('.milestone-progress-bar');
+    console.log('🎬 Animating milestone progress bars:', progressBars.length);
+    
+    progressBars.forEach((bar, index) => {
+      const targetWidth = bar.getAttribute('data-target-width');
+      console.log(`🎬 Bar ${index + 1}: target width = ${targetWidth}`);
+      
+      if (targetWidth) {
+        // Reset to 0% first
+        bar.style.width = '0%';
+        bar.style.transition = 'width 2s ease-out';
+        // Force reflow
+        bar.offsetHeight;
+        // Animate to target width with staggered timing
+        setTimeout(() => {
+          console.log(`🎬 Animating bar ${index + 1} to ${targetWidth}`);
+          bar.style.width = targetWidth;
+        }, 100 + (index * 300));
+      }
+    });
+  }
+
+  // Helper function to check for delayed milestones
+  function checkForDelayedMilestones(projectData) {
+    if (!projectData || !projectData.milestones) return false;
+    
+    const milestones = Array.isArray(projectData.milestones) ? projectData.milestones : 
+                     (projectData.milestones.milestones ? projectData.milestones.milestones : []);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return milestones.some(milestone => {
+      const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+      const status = milestone.status || 'pending';
+      
+      if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+        const milestoneDate = new Date(dueDate);
+        milestoneDate.setHours(0, 0, 0, 0);
+        return milestoneDate < today && (status === 'pending' || status === 'delayed');
+      }
+      return false;
+    });
+  }
+
+  // Helper function to convert activity actions to readable titles
+  function getActivityTitle(action) {
+    const actionTitles = {
+      'MILESTONE_APPROVED': 'Milestone Approved',
+      'PROJECT_CREATED': 'Project Created',
+      'PROJECT_UPDATED': 'Project Updated',
+      'PROJECT_APPROVED': 'Project Approved',
+      'PROJECT_COMPLETED': 'Project Completed',
+      'VALIDATION_REQUIRED': 'Validation Required',
+      'APPROVAL_REQUIRED': 'Approval Required',
+      'MILESTONE_SUBMITTED': 'Milestone Submitted',
+      'MILESTONE_REJECTED': 'Milestone Rejected',
+      'PROGRESS_UPDATED': 'Progress Updated'
+    };
+    return actionTitles[action] || action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  function populateRecentUpdates(updates, projectData, activityLogs = []) {
+    console.log('📋 Populating recent updates:', { 
+      updates, 
+      type: typeof updates, 
+      isArray: Array.isArray(updates),
+      activityLogs,
+      activityLogsType: typeof activityLogs,
+      activityLogsIsArray: Array.isArray(activityLogs)
+    });
+    
+    const container = document.getElementById('recentUpdates');
+    if (!container) {
+      console.error('❌ Recent updates container not found');
+      return;
+    }
+    
+    container.innerHTML = '';
+
+    // Check if project has delayed status OR if we detect any delayed milestones
+    const hasDelayedMilestones = checkForDelayedMilestones(projectData);
+    const shouldShowDelayCard = (projectData && projectData.status === 'delayed' && projectData.delayInfo && projectData.delayInfo.isDelayed) || hasDelayedMilestones;
+    
+    if (shouldShowDelayCard) {
+      const delayCard = document.createElement('div');
+      delayCard.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
+      
+      // Use backend delay info if available, otherwise calculate from frontend
+      let overdueMilestones, maxDaysOverdue, overdueMilestoneCount;
+      
+      if (projectData.delayInfo && projectData.delayInfo.isDelayed) {
+        // Use backend delay info
+        overdueMilestones = projectData.delayInfo.overdueMilestones || [];
+        maxDaysOverdue = projectData.delayInfo.maxDaysOverdue || 0;
+        overdueMilestoneCount = projectData.delayInfo.overdueMilestoneCount || 0;
+      } else {
+        // Calculate delay info from frontend
+        const milestones = Array.isArray(projectData.milestones) ? projectData.milestones : 
+                         (projectData.milestones?.milestones ? projectData.milestones.milestones : []);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        overdueMilestones = milestones.filter(milestone => {
+          const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+          const status = milestone.status || 'pending';
+          
+          if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+            const milestoneDate = new Date(dueDate);
+            milestoneDate.setHours(0, 0, 0, 0);
+            if (milestoneDate < today && (status === 'pending' || status === 'delayed')) {
+              // Calculate days overdue
+              const daysOverdue = Math.ceil((today - milestoneDate) / (1000 * 60 * 60 * 24));
+              return { ...milestone, daysOverdue };
+            }
+          }
+          return false;
+        }).map(milestone => {
+          const milestoneDate = new Date(milestone.dueDate);
+          milestoneDate.setHours(0, 0, 0, 0);
+          const daysOverdue = Math.ceil((today - milestoneDate) / (1000 * 60 * 60 * 24));
+          return { ...milestone, daysOverdue };
+        });
+        
+        overdueMilestoneCount = overdueMilestones.length;
+        maxDaysOverdue = overdueMilestones.length > 0 ? Math.max(...overdueMilestones.map(m => m.daysOverdue)) : 0;
+      }
+      
+      // Only show delay card if there are actually overdue milestones
+      if (overdueMilestoneCount > 0) {
+        delayCard.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h6 class="font-semibold text-red-800 mb-1">🚨 Milestone Overdue</h6>
+              <p class="text-red-700 text-sm mb-2">
+                ${overdueMilestoneCount} milestone${overdueMilestoneCount > 1 ? 's are' : ' is'} overdue by ${maxDaysOverdue} day${maxDaysOverdue > 1 ? 's' : ''}.
+              </p>
+              <div class="text-xs text-red-600">
+                <p><strong>Reason:</strong> Milestone${overdueMilestoneCount > 1 ? 's' : ''} not updated on time</p>
+                <p><strong>Detected:</strong> ${formatDate(new Date())} (Real-time detection)</p>
+                ${overdueMilestones.length > 0 ? `
+                  <p class="mt-1"><strong>Overdue Milestone${overdueMilestones.length > 1 ? 's' : ''}:</strong></p>
+                  <ul class="ml-4 mt-1">
+                    ${overdueMilestones.slice(0, 3).map(milestone => 
+                      `<li>• ${milestone.title} (Due: ${formatDate(milestone.dueDate)}, ${milestone.daysOverdue} days overdue)</li>`
+                    ).join('')}
+                    ${overdueMilestones.length > 3 ? `<li class="text-red-500">• ... and ${overdueMilestones.length - 3} more</li>` : ''}
+                  </ul>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(delayCard);
+      }
+    }
+
+    // Combine updates and activity logs into a single array
+    const allUpdates = [];
+    
+    // Add project updates
+    if (updates && Array.isArray(updates)) {
+      updates.forEach(update => {
+        allUpdates.push({
+          ...update,
+          type: 'update',
+          displayDate: update.createdAt || update.submissionDate
+        });
+      });
+    }
+    
+    // Add activity logs
+    if (activityLogs && Array.isArray(activityLogs)) {
+      console.log('🔍 Processing activity logs:', activityLogs);
+      activityLogs.forEach(activity => {
+        console.log('🔍 Processing individual activity:', {
+          id: activity.id,
+          action: activity.action,
+          details: activity.details,
+          createdAt: activity.createdAt,
+          user: activity.user
+        });
+        allUpdates.push({
+          ...activity,
+          type: 'activity',
+          displayDate: activity.createdAt,
+          title: getActivityTitle(activity.action),
+          description: activity.details,
+          updateType: 'activity',
+          status: 'completed'
+        });
+      });
+    }
+    
+    // Sort by date (newest first)
+    allUpdates.sort((a, b) => new Date(b.displayDate) - new Date(a.displayDate));
+    
+    console.log('🔍 Final allUpdates array:', {
+      totalCount: allUpdates.length,
+      updates: allUpdates.map(update => ({
+        type: update.type,
+        title: update.title,
+        action: update.action,
+        displayDate: update.displayDate,
+        description: update.description
+      }))
+    });
+    
+    if (allUpdates.length === 0) {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'bg-white p-4 rounded-lg border text-center text-gray-500';
+      emptyState.innerHTML = `
+        <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+        <p class="text-sm">No recent updates available</p>
+        <p class="text-xs text-gray-400 mt-1">Updates will appear when EIU submits progress reports</p>
+      `;
+      container.appendChild(emptyState);
+      return;
+    }
+
+    allUpdates.slice(0, 5).forEach((update, index) => {
+      const updateDiv = document.createElement('div');
+      
+      // Special styling for system delay notifications
+      if (update.updateType === 'system_delay_notification') {
+        updateDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4';
+        
+        // Parse delay information from milestoneUpdates
+        let delayDetails = {};
+        try {
+          if (update.milestoneUpdates) {
+            delayDetails = typeof update.milestoneUpdates === 'string' 
+              ? JSON.parse(update.milestoneUpdates) 
+              : update.milestoneUpdates;
+          }
+        } catch (e) {
+          console.error('Error parsing delay details:', e);
+        }
+        
+        updateDiv.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-between items-start mb-1">
+                <h6 class="font-medium text-red-800">🚨 System Alert: Milestone Overdue</h6>
+                <span class="text-xs text-red-500">${formatDate(update.createdAt || update.submissionDate)}</span>
+              </div>
+              <p class="text-red-700 text-sm mb-2">${update.description || 'Project automatically marked as delayed'}</p>
+              <div class="text-xs text-red-600">
+                <span>Reason: ${delayDetails.reason || 'milestone_overdue'}</span>
+                <span class="ml-4">Type: System Generated</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (update.type === 'activity') {
+        // Activity log styling
+        updateDiv.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4';
+        
+        updateDiv.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-between items-start mb-1">
+                <h6 class="font-medium text-blue-800">${update.title || 'Activity'}</h6>
+                <span class="text-xs text-blue-500">${formatDate(update.displayDate)}</span>
+              </div>
+              <p class="text-blue-700 text-sm mb-2">${update.description || 'No details available'}</p>
+              <div class="text-xs text-blue-600">
+                <span>Action: ${update.action}</span>
+                ${update.user ? `<span class="ml-4">By: ${update.user.name}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Regular update styling
+        updateDiv.className = 'bg-white rounded-lg border border-gray-200 p-4';
+        
+        updateDiv.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <h6 class="font-medium text-gray-800">${update.title || `Update ${index + 1}`}</h6>
+            <span class="text-xs text-gray-500">${formatDate(update.displayDate)}</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-2">${update.description || update.content || 'No description available'}</p>
+          <div class="flex justify-between items-center text-xs text-gray-500">
+            <span>Type: ${update.updateType || update.type || 'General'}</span>
+            <span>Status: ${update.status || 'Submitted'}</span>
+          </div>
+        `;
+      }
+      
+      container.appendChild(updateDiv);
+    });
+  }
+
+  // Close modal when clicking outside
+  document.addEventListener('click', function(event) {
+    const modal = document.getElementById('projectDetailsModal');
+    if (event.target === modal) {
+      closeProjectDetailsModal();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const modal = document.getElementById('projectDetailsModal');
+      if (!modal.classList.contains('hidden')) {
+        closeProjectDetailsModal();
+      }
+    }
+  });
+
+  // Function to show modal with pre-loaded project data (no API call needed)
+  window.showProjectDetailsModalWithData = function(projectData) {
+    console.log('🚀 showProjectDetailsModalWithData called with data:', projectData);
+    console.log('🔍 EIU Personnel in received data:', projectData.eiuPersonnel);
+    console.log('🔍 EIU Personnel ID:', projectData.eiuPersonnelId);
+    console.log('🔍 EIU Personnel keys received by modal:', projectData.eiuPersonnel ? Object.keys(projectData.eiuPersonnel) : 'none');
+    console.log('🔍 EIU Personnel critical fields received:');
+    console.log('  - contactNumber:', projectData.eiuPersonnel?.contactNumber);
+    console.log('  - birthdate:', projectData.eiuPersonnel?.birthdate);
+    console.log('  - profilePicture:', projectData.eiuPersonnel?.profilePicture);
+    console.log('🔍 Project includes delayed status info:', !!projectData.delayInfo);
+    
+    // Detailed EIU data analysis
+    if (projectData.eiuPersonnel) {
+      console.log('📋 EIU Personnel details received by modal:');
+      console.log('  - ID:', projectData.eiuPersonnel.id);
+      console.log('  - Name:', projectData.eiuPersonnel.name || projectData.eiuPersonnel.fullName);
+      console.log('  - Email:', projectData.eiuPersonnel.email || projectData.eiuPersonnel.username);
+      console.log('  - Birthdate:', projectData.eiuPersonnel.birthdate);
+      console.log('  - Contact:', projectData.eiuPersonnel.contactNumber || projectData.eiuPersonnel.phoneNumber);
+      console.log('  - Profile Picture:', projectData.eiuPersonnel.profilePicture);
+      console.log('  - Department:', projectData.eiuPersonnel.department);
+      console.log('  - Company:', projectData.eiuPersonnel.externalCompanyName);
+      console.log('  - Group:', projectData.eiuPersonnel.group);
+      console.log('  - SubRole:', projectData.eiuPersonnel.subRole);
+      console.log('  - All EIU keys:', Object.keys(projectData.eiuPersonnel));
+      
+      // Check for missing critical fields
+      const missingFields = [];
+      if (!projectData.eiuPersonnel.contactNumber && !projectData.eiuPersonnel.phoneNumber) missingFields.push('contactNumber');
+      if (!projectData.eiuPersonnel.birthdate) missingFields.push('birthdate');
+      if (!projectData.eiuPersonnel.department) missingFields.push('department');
+      if (!projectData.eiuPersonnel.externalCompanyName) missingFields.push('externalCompanyName');
+      if (!projectData.eiuPersonnel.profilePicture) missingFields.push('profilePicture');
+      
+      if (missingFields.length > 0) {
+        console.log('⚠️ Missing EIU fields:', missingFields);
+      } else {
+        console.log('✅ All EIU fields are present');
+      }
+    } else {
+      console.log('❌ No EIU Personnel data found in received project data');
+    }
+    
+    // Debug: Check all loading-related elements
+    const allLoadingElements = document.querySelectorAll('[id*="loading"], [id*="Loading"], .loading');
+    console.log('🔍 All loading elements found:', allLoadingElements.length);
+    allLoadingElements.forEach((el, index) => {
+      console.log(`Loading element ${index}:`, {
+        id: el.id,
+        classes: el.className,
+        visible: !el.classList.contains('hidden'),
+        display: el.style.display,
+        text: el.textContent?.includes('Loading') ? 'Contains Loading text' : 'No Loading text'
+      });
+    });
+    
+    const modal = document.getElementById('projectDetailsModal');
+    const loading = document.getElementById('modalLoading');
+    const error = document.getElementById('modalError');
+    const content = document.getElementById('modalProjectData');
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Hide loading state immediately
+    if (loading) {
+      loading.style.display = 'none';
+      loading.classList.add('hidden');
+    }
+    
+    // Hide error state
+    if (error) {
+      error.classList.add('hidden');
+    }
+    
+    // Show content immediately
+    if (content) {
+      content.classList.remove('hidden');
+      content.style.display = 'block';
+    }
+    
+    // Populate modal with the provided data
+    populateModalData(projectData);
+    
+    // Auto-expand basic info section
+    setTimeout(() => {
+      toggleSection('basicInfo');
+    }, 100);
+    
+    // Aggressive loading state removal
+    setTimeout(() => {
+      // Find and hide all possible loading elements
+      const loadingSelectors = [
+        '#modalLoading',
+        '.loading',
+        '[id*="loading"]',
+        '[class*="loading"]'
+      ];
+      
+      loadingSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (el.textContent && el.textContent.includes('Loading project details')) {
+            console.log('🔧 Hiding loading element:', selector, el);
+            el.style.display = 'none';
+            el.classList.add('hidden');
+            // Also hide parent if it's a container
+            if (el.parentElement && el.parentElement.children.length === 1) {
+              el.parentElement.style.display = 'none';
+            }
+          }
+        });
+      });
+    }, 50);
+    
+    console.log('✅ Modal populated with pre-loaded data');
+  };
+
+  // Make functions globally available
+  window.showProjectModal = window.showProjectDetailsModal; // Backward compatibility
+</script> 

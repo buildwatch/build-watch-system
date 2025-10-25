@@ -37,8 +37,74 @@ class AuthService {
         // Update local state
         this.isAuthenticated = true;
         this.currentUser = response.user;
+
+        // Show modern success toast notification
+        let waited = false;
+        const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+        try {
+          if (window && typeof window.showAppToast === 'function') {
+            // Determine theme color from user account
+            const theme = (response.user && (response.user.theme || response.user.role)) || 'blue';
+            const palettes = {
+              blue: {from:'#2563eb',to:'#1d4ed8'},
+              emerald: {from:'#10b981',to:'#059669'},
+              purple: {from:'#7c3aed',to:'#4c1d95'},
+              orange: {from:'#f59e0b',to:'#d97706'}
+            };
+            const colors = palettes[theme] || palettes.blue;
+            const maybe = window.showAppToast({
+              title: 'Welcome back',
+              message: `${response.user.name || response.user.username} successfully signed in`,
+              variant: 'success',
+              duration: 2000,
+              from: colors.from,
+              to: colors.to
+            });
+            if (maybe && typeof maybe.then === 'function') {
+              await maybe; // wait if the toast returns a promise
+              waited = true;
+            }
+          } else {
+            // Create lightweight toast if global not available
+            const theme = (response.user && (response.user.theme || response.user.role)) || 'blue';
+            const palettes = {
+              blue: {from:'#2563eb',to:'#1d4ed8'},
+              emerald: {from:'#10b981',to:'#059669'},
+              purple: {from:'#7c3aed',to:'#4c1d95'},
+              orange: {from:'#f59e0b',to:'#d97706'}
+            };
+            const colors = palettes[theme] || palettes.blue;
+            const toast = document.createElement('div');
+            toast.id = 'login-success-toast';
+            toast.className = 'fixed top-5 right-5 z-[9999]';
+            toast.innerHTML = `
+              <div class="group min-w-[280px] max-w-[360px] bg-white/95 backdrop-blur-xl border border-emerald-200/60 shadow-2xl rounded-2xl overflow-hidden animate-[toastIn_.5s_ease]">
+                <div class="px-5 py-4 flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-xl text-white flex items-center justify-center shadow-md" style="background: linear-gradient(to bottom right, ${colors.from}, ${colors.to});">✓</div>
+                  <div class="flex-1">
+                    <div class="text-emerald-800 font-bold">Welcome back</div>
+                    <div class="text-emerald-700/80 text-sm">${response.user.name || response.user.username} successfully signed in</div>
+                  </div>
+                  <button aria-label="Close" class="text-emerald-700/60 hover:text-emerald-800" onclick="this.closest('#login-success-toast')?.remove()">✕</button>
+                </div>
+                <div class="h-1 bg-emerald-200/60">
+                  <div class="h-full animate-[bar_2s_linear]" style="background: linear-gradient(to right, ${colors.from}, ${colors.to});"></div>
+                </div>
+              </div>
+              <style>
+                @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes bar { from { width: 100%; } to { width: 0%; } }
+              </style>
+            `;
+            document.body.appendChild(toast);
+            await wait(2000);
+            toast.remove();
+            waited = true;
+          }
+        } catch { /* no-op */ }
         
-        // Redirect to appropriate dashboard based on role
+        // Ensure notification fully finishes before redirecting
+        if (!waited) { await wait(2000); }
         this.redirectToDashboard(response.user.role, response.user.subRole);
         
         return {
@@ -72,45 +138,49 @@ class AuthService {
 
   // Perform actual logout
   async performLogout() {
+    // Get current user role before clearing auth
+    const currentRole = this.getUserRole();
+    const currentSubRole = this.getUserSubRole();
+    
+    // Clear local data immediately (don't wait for API)
+    this.clearAuth();
+    
+    // Clear session data
+    sessionService.clearSession();
+    
+    // Redirect to login page immediately
+    window.location.href = '/login/lgu-pmt';
+    
+    // Call logout API in background (non-blocking)
     try {
-      // Call logout API
-      await authAPI.logout();
+      authAPI.logout().catch(error => {
+        console.error('Logout API error (non-blocking):', error);
+      });
     } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      // Get current user role before clearing auth
-      const currentRole = this.getUserRole();
-      const currentSubRole = this.getUserSubRole();
-      
-      // Clear local data regardless of API response
-      this.clearAuth();
-      
-      // Clear session data
-      sessionService.clearSession();
-      
-      // Redirect to single login page
-      window.location.href = '/login/lgu-pmt';
+      console.error('Logout API error (non-blocking):', error);
     }
   }
 
-  // Verify token validity
+  // Verify token validity (non-blocking)
   async verifyToken() {
-    try {
-      const response = await authAPI.verifyToken();
-      
-      if (response.success) {
-        // Update user data
-        this.currentUser = response.user;
-        return true;
-      } else {
-        this.clearAuth();
-        return false;
-      }
-    } catch (error) {
-      console.error('Token verification error:', error);
-      this.clearAuth();
-      return false;
-    }
+    // Don't block the UI for token verification
+    authAPI.verifyToken()
+      .then(response => {
+        if (response.success) {
+          // Update user data
+          this.currentUser = response.user;
+        } else {
+          this.clearAuth();
+        }
+      })
+      .catch(error => {
+        console.error('Token verification error (non-blocking):', error);
+        // Don't clear auth on network errors during development
+        // this.clearAuth();
+      });
+    
+    // Return true if we have local user data
+    return this.currentUser !== null;
   }
 
   // Get current user

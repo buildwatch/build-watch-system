@@ -1,24 +1,33 @@
 ---
 // LGU-IU: Implementing Office-Officer Sidebar Component
-// Theme Color: #F8C734 and #92751F
+// Theme Color: Professional Warm Orange (#F28C00)
 ---
 
-<aside class="w-64 bg-gradient-to-br from-[#F8C734] via-[#E6B800] to-[#92751F] text-white shadow-2xl h-screen flex flex-col relative overflow-hidden">
+<aside class="w-64 bg-gradient-to-br from-[#F28C00] via-[#E67E00] to-[#D2691E] text-white shadow-2xl h-screen flex flex-col relative overflow-hidden">
   <!-- Background Pattern -->
   <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30"></div>
   <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
   <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
   
   <!-- Header Section -->
-  <div class="relative p-6 border-b border-white/20 backdrop-blur-sm">
-    <div class="flex items-center gap-4 mb-4">
-      <div class="w-14 h-14 bg-gradient-to-br from-white to-gray-100 rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-white/20">
-        <span class="text-[#92751F] font-bold text-lg" id="sidebarUserInitials">U</span>
+  <div class="relative p-6 border-b border-white/10 backdrop-blur-sm flex items-center">
+    <div class="flex items-center gap-4 w-full">
+      <div class="w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-white/10 flex-shrink-0">
+        <img 
+          id="iu-sidebar-profile-picture"
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F28C00'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='40' font-weight='bold' text-anchor='middle' dy='.3em' fill='white'%3EIU%3C/text%3E%3C/svg%3E"
+          alt="Municipal Engineer"
+          class="w-full h-full object-cover"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        />
+        <div class="w-full h-full bg-gradient-to-br from-[#F28C00] to-[#E67E00] rounded-2xl flex items-center justify-center shadow-lg" style="display: none;">
+          <span class="text-white font-bold text-lg" id="sidebarUserInitials">IU</span>
+        </div>
       </div>
-      <div>
-        <h1 class="text-xl font-bold tracking-tight text-white drop-shadow-sm" id="sidebarUserName">Loading...</h1>
-        <p class="text-sm text-white/80 font-medium" id="sidebarUserRole">Implementing Office</p>
-        <p class="text-xs text-white/60" id="sidebarUserStatus">Status: Active</p>
+      <div class="nav-text overflow-hidden transition-opacity duration-300">
+        <h1 class="text-xl font-bold tracking-tight text-white drop-shadow-sm whitespace-nowrap" id="sidebarUserName">M.E.O.</h1>
+        <p class="text-sm text-white/80 font-medium whitespace-nowrap" id="sidebarUserRole">LGU-IU</p>
+        <p class="text-xs text-white/60 whitespace-nowrap" id="sidebarUserStatus"><span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block mr-1"></span><span class="font-medium text-green-300">Active</span></p>
       </div>
     </div>
   </div>
@@ -28,99 +37,62 @@
     <nav class="space-y-2 px-3">
       <!-- Dashboard Overview -->
       <a href="/dashboard/iu-implementing-office/ImplementingOfficeDashboard" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
+         class="nav-item nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm"
+         data-tooltip="Dashboard Overview">
+        <div class="nav-icon flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
           </svg>
         </div>
-        <span class="font-medium text-white/90 group-hover:text-white">Dashboard Overview</span>
+        <span class="nav-text font-medium text-white/90 group-hover:text-white">Dashboard Overview</span>
       </a>
 
-      <!-- My Projects & Programs -->
+      <!-- My Project Management -->
       <a href="/dashboard/iu-implementing-office/modules/project-management" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
+         class="nav-item nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm"
+         data-tooltip="My Project Management">
+        <div class="nav-icon flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
         </div>
-        <span class="font-medium text-white/90 group-hover:text-white">My Projects & Programs</span>
+        <span class="nav-text font-medium text-white/90 group-hover:text-white">My Project Management</span>
       </a>
 
-      <!-- Progress Timeline -->
+      <!-- Progress Timeline and Submission Update -->
       <a href="/dashboard/iu-implementing-office/modules/progress-timeline" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
+         class="nav-item nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm relative"
+         data-tooltip="Progress Timeline and Submission Update">
+        <div class="nav-icon flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
         </div>
-        <span class="font-medium text-white/90 group-hover:text-white">Progress Timeline</span>
-      </a>
-
-
-
-      <!-- Summary Module -->
-      <a href="/dashboard/iu-implementing-office/modules/summary-module" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-          </svg>
+        <span class="nav-text font-medium text-white/90 group-hover:text-white">Progress Timeline & Submission Update</span>
+        <!-- Notification Badge (hidden by default, shown when EIU submits) -->
+        <div id="submissionNotificationBadge" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse hidden">
+          <div class="absolute inset-0 bg-red-400 rounded-full animate-ping"></div>
         </div>
-        <span class="font-medium text-white/90 group-hover:text-white">Summary Module</span>
       </a>
 
       <!-- EIU Activity Feed -->
       <a href="/dashboard/iu-implementing-office/modules/eiu-activity-feed" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
+         class="nav-item nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm"
+         data-tooltip="EIU Activity Feed">
+        <div class="nav-icon flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
           </svg>
         </div>
-        <span class="font-medium text-white/90 group-hover:text-white">EIU Activity Feed</span>
+        <span class="nav-text font-medium text-white/90 group-hover:text-white">EIU Activity Feed</span>
       </a>
 
-      <!-- Messages -->
-      <a href="/dashboard/iu-implementing-office/modules/message-center" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-          </svg>
-        </div>
-        <span class="font-medium text-white/90 group-hover:text-white">Messages (MPMEC Secretariat)</span>
-      </a>
-
-      <!-- My Office Profile -->
-      <a href="/dashboard/iu-implementing-office/modules/office-profile" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-        </div>
-        <span class="font-medium text-white/90 group-hover:text-white">My Office Profile</span>
-      </a>
-
-      <!-- Announcements -->
-      <a href="/dashboard/iu-implementing-office/modules/announcements" 
-         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm">
-        <div class="nav-icon">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-          </svg>
-        </div>
-        <span class="font-medium text-white/90 group-hover:text-white">Announcements</span>
-      </a>
     </nav>
   </div>
 
-  <!-- Logout Section -->
+    <!-- Logout Section -->
   <div class="relative p-6 border-t border-white/20 backdrop-blur-sm">
     <button id="iu-implementing-office-logout-btn" 
        class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm text-white group w-full text-left">
@@ -168,6 +140,38 @@
     transform: scale(1.1) rotate(5deg);
   }
 
+  /* Enhanced Sidebar Icon Hover Effects - Matching Topbar Style */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(156, 163, 175, 0.2) 100%);
+    border-radius: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .nav-link:hover::after {
+    opacity: 1;
+  }
+
+  /* Enhanced icon hover effects with neutral theme */
+  .nav-link:hover .nav-icon {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+  }
+
+  /* Specific rotation effects for different icons */
+  .nav-link:nth-child(1):hover .nav-icon { transform: scale(1.1) rotate(12deg); }
+  .nav-link:nth-child(2):hover .nav-icon { transform: scale(1.1) rotate(-6deg); }
+  .nav-link:nth-child(3):hover .nav-icon { transform: scale(1.1) rotate(8deg); }
+  .nav-link:nth-child(4):hover .nav-icon { transform: scale(1.1) rotate(-4deg); }
+  .nav-link:nth-child(5):hover .nav-icon { transform: scale(1.1) rotate(10deg); }
+  .nav-link:nth-child(6):hover .nav-icon { transform: scale(1.1) rotate(-8deg); }
+  .nav-link:nth-child(7):hover .nav-icon { transform: scale(1.1) rotate(6deg); }
+  .nav-link:nth-child(8):hover .nav-icon { transform: scale(1.1) rotate(-12deg); }
+
   /* Active state styling */
   .nav-link.active {
     background: rgba(255, 255, 255, 0.2);
@@ -214,6 +218,9 @@
   document.addEventListener('DOMContentLoaded', function() {
     // Load user data for sidebar
     loadSidebarUserData();
+    
+    // Load profile picture for sidebar
+    loadIUSidebarProfilePicture();
     
     // Get current path
     const currentPath = window.location.pathname;
@@ -298,42 +305,205 @@
         }
       } else {
         console.error('Failed to fetch sidebar user profile');
+        setFallbackValues();
       }
     } catch (error) {
       console.error('Error fetching sidebar user profile:', error);
+      setFallbackValues();
+    }
+  }
+
+  function setFallbackValues() {
+    // Set fallback values if API fails
+    const sidebarUserNameElement = document.getElementById('sidebarUserName');
+    if (sidebarUserNameElement) {
+      sidebarUserNameElement.textContent = 'M.E.O.';
+    }
+    
+    const sidebarUserRoleElement = document.getElementById('sidebarUserRole');
+    if (sidebarUserRoleElement) {
+      sidebarUserRoleElement.textContent = 'LGU-IU';
+    }
+
+    const sidebarUserStatusElement = document.getElementById('sidebarUserStatus');
+    if (sidebarUserStatusElement) {
+      sidebarUserStatusElement.innerHTML = '<span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block mr-1"></span><span class="font-medium text-green-300">Active</span>';
+    }
+
+    const sidebarUserInitialsElement = document.getElementById('sidebarUserInitials');
+    if (sidebarUserInitialsElement) {
+      sidebarUserInitialsElement.textContent = 'IU';
     }
   }
 
   function updateSidebarUserDisplay(user) {
-    // Update user name
+    // Update user name - convert to proper abbreviation format
     const sidebarUserNameElement = document.getElementById('sidebarUserName');
     if (sidebarUserNameElement) {
-      sidebarUserNameElement.textContent = user.fullName || user.name || user.username || 'Unknown User';
+      const fullName = user.fullName || user.name || user.username || 'M.E.O.';
+      
+      // Convert to proper abbreviation format (first.initial + middle.initial + LASTNAME)
+      let abbreviatedName = fullName;
+      
+      if (fullName.includes('Municipal Disaster And Risk Reduction Management Office')) {
+        abbreviatedName = 'M.D.OFFICE';
+      } else if (fullName.includes('Municipal Engineer Office')) {
+        abbreviatedName = 'M.E.OFFICE';
+      } else {
+        // General abbreviation: first.initial + middle.initial + LASTNAME
+        const words = fullName.trim().split(/\s+/);
+        if (words.length === 1) {
+          abbreviatedName = words[0].toUpperCase();
+        } else if (words.length === 2) {
+          // For 2 words: F.LASTNAME
+          abbreviatedName = words[0].charAt(0).toUpperCase() + '.' + words[1].toUpperCase();
+        } else {
+          // For 3+ words: F.M.LASTNAME (first initial + middle initial + last word)
+          const firstInitial = words[0].charAt(0).toUpperCase();
+          const middleInitial = words[1].charAt(0).toUpperCase();
+          const lastName = words[words.length - 1].toUpperCase();
+          abbreviatedName = `${firstInitial}.${middleInitial}.${lastName}`;
+        }
+      }
+      
+      sidebarUserNameElement.textContent = abbreviatedName;
     }
     
-    // Update user role
+    // Update user role - always show "Implementing Office-Officer"
     const sidebarUserRoleElement = document.getElementById('sidebarUserRole');
     if (sidebarUserRoleElement) {
-      sidebarUserRoleElement.textContent = user.subRole || 'Implementing Office-Officer';
+      sidebarUserRoleElement.textContent = 'LGU-IU';
     }
 
     // Update user status
     const sidebarUserStatusElement = document.getElementById('sidebarUserStatus');
     if (sidebarUserStatusElement) {
       const statusText = user.status === 'active' ? 'Active' : user.status || 'Active';
-      sidebarUserStatusElement.textContent = `Status: ${statusText}`;
+      sidebarUserStatusElement.innerHTML = `<span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block mr-1"></span><span class="font-medium text-green-300">${statusText}</span>`;
     }
 
     // Update user initials
     const sidebarUserInitialsElement = document.getElementById('sidebarUserInitials');
     if (sidebarUserInitialsElement) {
-      const fullName = user.fullName || user.name || '';
+      const fullName = user.fullName || user.name || 'M.E.O.';
       const initials = fullName.split(' ')
         .map(name => name.charAt(0))
         .join('')
         .toUpperCase()
         .slice(0, 2);
-      sidebarUserInitialsElement.textContent = initials || 'U';
+      sidebarUserInitialsElement.textContent = initials || 'IU';
     }
   }
+  
+  // Load profile picture from server or localStorage for sidebar (IU-style)
+  async function loadIUSidebarProfilePicture() {
+    try {
+      // Get actual user ID from localStorage
+      const userData = localStorage.getItem('user');
+      let userId = 'IU-0001'; // Default fallback
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          userId = user.employeeId || user.username || user.id || user.userId || 'IU-0001';
+        } catch (error) {
+          console.warn('⚠️ Error parsing user data in IU sidebar, using default userId');
+        }
+      }
+      
+      // First try to get from server
+      console.log('IU Sidebar: Fetching profile picture from server for userId:', userId);
+      const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.profilePictureUrl) {
+          console.log('IU Sidebar: Profile picture loaded from server:', result.profilePictureUrl);
+          
+          // Preload the image to prevent blinking
+          const img = new Image();
+          img.onload = function() {
+            // Update the sidebar profile picture
+            const sidebarProfilePic = document.getElementById('iu-sidebar-profile-picture');
+            if (sidebarProfilePic) {
+              sidebarProfilePic.src = result.profilePictureUrl;
+              // Hide fallback div if it exists
+              const fallbackDiv = sidebarProfilePic.nextElementSibling;
+              if (fallbackDiv) {
+                fallbackDiv.style.display = 'none';
+              }
+            }
+          };
+          img.src = result.profilePictureUrl;
+          
+          // Store in localStorage for future use
+          localStorage.setItem('iu_profile_picture', result.profilePictureUrl);
+          return;
+        }
+      }
+    } catch (error) {
+      console.log('IU Sidebar: Server fetch failed, trying localStorage:', error);
+    }
+    
+    // Fallback to localStorage if server fails
+    const storedUrl = localStorage.getItem('iu_profile_picture');
+    if (storedUrl) {
+      // Preload the image to prevent blinking
+      const img = new Image();
+      img.onload = function() {
+        const sidebarProfilePic = document.getElementById('iu-sidebar-profile-picture');
+        if (sidebarProfilePic) {
+          sidebarProfilePic.src = storedUrl;
+          // Hide fallback div if it exists
+          const fallbackDiv = sidebarProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        }
+      };
+      img.src = storedUrl;
+    }
+  }
+
+  // Listen for storage changes to update profile picture in real-time
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'iu_profile_picture' && e.newValue) {
+      const sidebarProfilePic = document.getElementById('iu-sidebar-profile-picture');
+      if (sidebarProfilePic) {
+        // Preload the image to prevent blinking
+        const img = new Image();
+        img.onload = function() {
+          sidebarProfilePic.src = e.newValue;
+          // Hide fallback div if it exists
+          const fallbackDiv = sidebarProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        };
+        img.src = e.newValue;
+      }
+    }
+  });
+
+  // Listen for profile picture updates
+  window.addEventListener('iuProfilePictureUpdated', function(e) {
+    if (e.detail.profilePictureUrl) {
+      const sidebarProfilePic = document.getElementById('iu-sidebar-profile-picture');
+      if (sidebarProfilePic) {
+        // Preload the image to prevent blinking
+        const img = new Image();
+        img.onload = function() {
+          sidebarProfilePic.src = e.detail.profilePictureUrl;
+          // Hide fallback div if it exists
+          const fallbackDiv = sidebarProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        };
+        img.src = e.detail.profilePictureUrl;
+      }
+      
+      // Store in localStorage for future use
+      localStorage.setItem('iu_profile_picture', e.detail.profilePictureUrl);
+    }
+  });
 </script> 

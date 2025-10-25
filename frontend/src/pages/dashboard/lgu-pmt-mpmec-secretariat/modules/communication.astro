@@ -31,11 +31,8 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 
       <!-- Communication Type Tabs -->
       <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
-        <button id="mpmecTab" class="flex-1 py-2 px-4 rounded-md bg-white text-gray-700 font-medium shadow-sm">
-          MPMEC Communications
-        </button>
-        <button id="implementingTab" class="flex-1 py-2 px-4 rounded-md text-gray-600 hover:text-gray-700">
-          Implementing Office Communications
+        <button id="unifiedTab" class="flex-1 py-2 px-4 rounded-md bg-white text-gray-700 font-medium shadow-sm">
+          All Communications
         </button>
       </div>
 
@@ -98,233 +95,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         </div>
       </div>
 
-      <!-- MPMEC Communications Content -->
-      <div id="mpmecContent" class="communication-content">
-        <!-- Chat Interface for MPMEC -->
+      <!-- Unified Communications Content -->
+      <div id="unifiedContent" class="communication-content">
+        <!-- Chat Interface -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <!-- MPMEC Contacts List -->
+          <!-- All Contacts List -->
           <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-800">MPMEC Committee Members</h2>
-              <button id="addMPMECContactBtn" class="px-3 py-1 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors text-sm">
-                Add Member
+              <h2 class="text-xl font-semibold text-gray-800">All Contacts</h2>
+              <button id="addContactBtn" class="px-3 py-1 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors text-sm">
+                Add Contact
               </button>
             </div>
             
-            <!-- Search MPMEC Contacts -->
-            <div class="relative mb-4">
-              <input type="text" id="mpmecContactSearch" placeholder="Search MPMEC members..." class="w-full pl-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
-              <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </div>
-            
-            <!-- MPMEC Contacts List -->
-            <div class="space-y-2 max-h-96 overflow-y-auto" id="mpmecContactsList">
-              <!-- MPMEC contacts will be loaded here -->
-            </div>
-          </div>
-
-          <!-- MPMEC Chat Area -->
-          <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-800">MPMEC Chat</h2>
-              <button id="refreshMPMECChatBtn" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" title="Refresh chat">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-              </button>
-            </div>
-            
-            <!-- MPMEC Chat Messages -->
-            <div class="space-y-4 mb-4 max-h-96 overflow-y-auto" id="mpmecChatMessages">
-              <!-- MPMEC chat messages will be loaded here -->
-            </div>
-            
-            <!-- MPMEC Message Input -->
-            <div class="flex items-center gap-3">
-              <div class="flex-1 relative">
-                <input type="text" id="mpmecMessageInput" placeholder="Type your message to MPMEC..." class="w-full pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
-                <button id="sendMPMECMessageBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#FE5353] hover:text-[#E54545]">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                  </svg>
-                </button>
-              </div>
-              <button id="attachMPMECFileBtn" class="px-3 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Structured Communications Section -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-800">Structured Communications</h2>
-            <button id="composeStructuredBtn" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors">
-              + New Communication
-            </button>
-          </div>
-          
-          <!-- Communication Categories Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Project Communications -->
-            <button id="projectCommBtn" class="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors text-left">
-              <div class="flex items-center gap-3">
-                <div class="bg-blue-100 p-2 rounded-lg">
-                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-800">Project Discussions</h3>
-                  <p class="text-xs text-gray-600">Discuss specific projects</p>
-                </div>
-              </div>
-            </button>
-
-            <!-- Policy Feedback -->
-            <button id="policyFeedbackBtn" class="p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors text-left">
-              <div class="flex items-center gap-3">
-                <div class="bg-green-100 p-2 rounded-lg">
-                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-800">Policy Feedback</h3>
-                  <p class="text-xs text-gray-600">MPMEC feedback on policies</p>
-                </div>
-              </div>
-            </button>
-
-            <!-- Budget Discussions -->
-            <button id="budgetDiscussionsBtn" class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors text-left">
-              <div class="flex items-center gap-3">
-                <div class="bg-yellow-100 p-2 rounded-lg">
-                  <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-800">Budget Discussions</h3>
-                  <p class="text-xs text-gray-600">Financial matters</p>
-                </div>
-              </div>
-            </button>
-
-            <!-- Compliance Notifications -->
-            <button id="complianceNotificationsBtn" class="p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors text-left">
-              <div class="flex items-center gap-3">
-                <div class="bg-purple-100 p-2 rounded-lg">
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-800">Compliance Updates</h3>
-                  <p class="text-xs text-gray-600">Regulatory notifications</p>
-                </div>
-              </div>
-            </button>
-
-            <!-- Training Announcements -->
-            <button id="trainingAnnouncementsBtn" class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors text-left">
-              <div class="flex items-center gap-3">
-                <div class="bg-indigo-100 p-2 rounded-lg">
-                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-800">Training Announcements</h3>
-                  <p class="text-xs text-gray-600">Capacity building</p>
-                </div>
-              </div>
-            </button>
-
-            <!-- Document Reviews -->
-            <button id="documentReviewsBtn" class="p-4 bg-pink-50 border border-pink-200 rounded-lg hover:bg-pink-100 transition-colors text-left">
-              <div class="flex items-center gap-3">
-                <div class="bg-pink-100 p-2 rounded-lg">
-                  <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-800">Document Reviews</h3>
-                  <p class="text-xs text-gray-600">Policy/procedure reviews</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Communication History -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-800">Communication History</h2>
-            <div class="flex items-center gap-2">
-              <select id="mpmecStatusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
-                <option value="">All Types</option>
-                <option value="chat">Chat Messages</option>
-                <option value="project">Project Discussions</option>
-                <option value="policy">Policy Feedback</option>
-                <option value="budget">Budget Discussions</option>
-                <option value="compliance">Compliance Updates</option>
-                <option value="training">Training Announcements</option>
-                <option value="document">Document Reviews</option>
-              </select>
-              <button onclick="loadMPMECCommunicationData()" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200" id="mpmecHistoryTable">
-                <!-- MPMEC communication history will be loaded here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Implementing Office Communications Content (Chat Style) -->
-      <div id="implementingContent" class="communication-content hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Contacts List -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-800">Implementing Office Contacts</h2>
-              <div class="flex gap-2">
-                <button id="refreshContactsBtn" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm flex items-center gap-1" title="Refresh contacts">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                  </svg>
-                  Refresh
-                </button>
-                <button id="addContactBtn" class="px-3 py-1 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors text-sm">
-                  Add Contact
-                </button>
-              </div>
-            </div>
-            
-            <!-- Search Contacts -->
+            <!-- Search All Contacts -->
             <div class="relative mb-4">
               <input type="text" id="contactSearch" placeholder="Search contacts..." class="w-full pl-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5353] focus:border-transparent">
               <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,27 +116,32 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               </svg>
             </div>
             
-            <!-- Contacts List -->
-            <div class="space-y-2 max-h-96 overflow-y-auto" id="contactsList">
-              <!-- Contacts will be loaded here -->
+            <!-- All Contacts List -->
+            <div class="space-y-2 max-h-96 overflow-y-auto" id="allContactsList">
+              <!-- All contacts will be loaded here -->
             </div>
           </div>
 
           <!-- Chat Area -->
           <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-800">Chat</h2>
-              <button id="refreshChatBtn" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm flex items-center gap-2" title="Refresh chat">
+              <h2 class="text-xl font-semibold text-gray-800" id="chatHeader">Select a contact to start chatting</h2>
+              <button id="refreshChatBtn" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" title="Refresh chat">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
-                Refresh
               </button>
             </div>
             
             <!-- Chat Messages -->
             <div class="space-y-4 mb-4 max-h-96 overflow-y-auto" id="chatMessages">
-              <!-- Chat messages will be loaded here -->
+              <div class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <p class="text-lg font-medium">No conversation selected</p>
+                <p class="text-sm">Choose a contact from the left to start messaging</p>
+              </div>
             </div>
             
             <!-- Message Input -->
@@ -372,37 +161,6 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- Recent Messages -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mt-8">
-          <h2 class="text-xl font-semibold text-gray-800 mb-6">Recent Messages</h2>
-          <div class="space-y-4" id="recentMessagesList">
-            <!-- Recent messages will be loaded here -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Communication History -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mt-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-800">Communication History</h2>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200" id="communicationHistoryTable">
-              <!-- Communication history will be loaded here -->
-            </tbody>
-          </table>
         </div>
       </div>
     </section>
@@ -524,12 +282,301 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 </div>
 
 <script>
-  // Global variables
-  let currentUser = null;
-  let communications = [];
+  // Initialize the communication module
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Secretariat Communication Hub loaded!');
+    
+    // Get current user info
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      currentUser = JSON.parse(userData);
+      console.log('Current user:', currentUser);
+    }
+    
+    // Load unified communication data
+    loadUnifiedCommunicationData();
+    
+    // Set up event listeners
+    setupUnifiedEventListeners();
+    
+    // Set up periodic refresh
+    setInterval(loadUnifiedCommunicationData, 30000); // Refresh every 30 seconds
+  });
+
+  // Unified data loading function
+  async function loadUnifiedCommunicationData() {
+    try {
+      console.log('🔄 Loading unified communication data...');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ No authentication token found');
+        return;
+      }
+      
+      // Load all available users (both MPMEC and Implementing Office)
+      const contactsResponse = await fetch('/api/communications/users/available', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      if (contactsResponse.ok) {
+        const data = await contactsResponse.json();
+        console.log('📊 All available users:', data.users);
+        
+        // Filter users: include both MPMEC (LGU-PMT) and Implementing Office (LGU-IU) users
+        // Exclude current user from contacts
+        const allUsers = data.users.filter(user => 
+          (user.role === 'LGU-PMT' && user.subRole && user.subRole.toLowerCase().includes('mpmec')) ||
+          user.role === 'LGU-IU'
+        ).filter(user => user.id !== currentUser.id);
+        
+        console.log('✅ Filtered contacts:', allUsers);
+        console.log('📈 Total contacts found:', allUsers.length);
+        
+        // Store for later use
+        availableUsers = allUsers;
+        
+        // Load communications
+        const communicationsResponse = await fetch(`/api/communications?limit=1000&_t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (communicationsResponse.ok) {
+          const commData = await communicationsResponse.json();
+          console.log('💬 Communications loaded:', commData.communications.length);
+          
+          // Update the unified contacts list
+          updateUnifiedContactsList(allUsers, commData.communications);
+          
+          // Update statistics
+          updateCommunicationStats(commData);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error loading unified communication data:', error);
+    }
+  }
+
+  // Update unified contacts list with profile pictures
+  function updateUnifiedContactsList(users, communications) {
+    const contactsList = document.getElementById('allContactsList');
+    if (!contactsList) {
+      console.error('❌ allContactsList element not found');
+      return;
+    }
+    
+    console.log('🎯 Updating unified contacts list with', users.length, 'users');
+    
+    if (users.length > 0) {
+      contactsList.innerHTML = users.map(user => {
+        const unreadCount = getUnreadMessageCount(user.id, communications);
+        const userInitials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        const userType = user.role === 'LGU-PMT' ? 'MPMEC' : 'Implementing Office';
+        const userColor = user.role === 'LGU-PMT' ? 'bg-[#FE5353]' : 'bg-blue-500';
+        
+        return `
+          <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors contact-item" data-contact-id="${user.id}" data-contact-type="${user.role}">
+            <div class="w-10 h-10 ${userColor} rounded-full flex items-center justify-center relative chat-head-container" data-user-id="${user.id}" data-user-email="${user.email}">
+              <img class="w-full h-full rounded-full object-cover chat-head-image" style="display: none;" alt="${user.name}" />
+              <span class="text-white font-medium chat-head-fallback">${userInitials}</span>
+              ${unreadCount > 0 ? `<div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">${unreadCount}</div>` : ''}
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-800">${user.name}</p>
+              <p class="text-xs text-gray-600">${userType} • ${user.subRole || user.role}</p>
+            </div>
+            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+          </div>
+        `;
+      }).join('');
+      
+      // ✅ CRITICAL: Load actual profile pictures for all contacts
+      setTimeout(() => {
+        loadChatHeadProfilePictures(users, 'unified');
+      }, 100);
+      
+      // Set up contact click handlers
+      setupContactClickHandlers(users, communications);
+    } else {
+      contactsList.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          <p class="text-sm">No contacts available</p>
+        </div>
+      `;
+    }
+  }
+
+  // Set up contact click handlers
+  function setupContactClickHandlers(users, communications) {
+    document.querySelectorAll('.contact-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const contactId = item.dataset.contactId;
+        const contact = users.find(u => u.id === contactId);
+        
+        if (contact) {
+          // Highlight selected contact
+          document.querySelectorAll('.contact-item').forEach(c => c.classList.remove('bg-gray-100'));
+          item.classList.add('bg-gray-100');
+          
+          // Load conversation with this contact
+          loadConversationWithContact(contactId, contact, communications);
+        }
+      });
+    });
+  }
+
+  // Load conversation with selected contact
+  async function loadConversationWithContact(contactId, contact, communications) {
+    try {
+      console.log('💬 Loading conversation with:', contact.name);
+      
+      // Update chat header
+      const chatHeader = document.getElementById('chatHeader');
+      if (chatHeader) {
+        const userType = contact.role === 'LGU-PMT' ? 'MPMEC' : 'Implementing Office';
+        chatHeader.textContent = `Chat with ${contact.name} (${userType})`;
+      }
+      
+      // Filter messages for this conversation
+      const conversationMessages = communications.filter(msg => {
+        const isFromContact = msg.senderId === contactId && msg.recipientId === currentUser.id;
+        const isToContact = msg.senderId === currentUser.id && msg.recipientId === contactId;
+        return isFromContact || isToContact;
+      });
+      
+      console.log('📝 Conversation messages:', conversationMessages.length);
+      
+      // Sort messages by creation time (oldest first)
+      conversationMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      
+      // Update chat messages
+      updateChatMessages(conversationMessages);
+      
+      // Store selected contact for sending messages
+      selectedContactId = contactId;
+      
+    } catch (error) {
+      console.error('❌ Error loading conversation:', error);
+    }
+  }
+
+  // Set up unified event listeners
+  function setupUnifiedEventListeners() {
+    // Compose message button
+    document.getElementById('composeMessageBtn')?.addEventListener('click', composeMessage);
+    
+    // Send report button
+    document.getElementById('sendReportBtn')?.addEventListener('click', sendWeeklyReport);
+    
+    // Refresh chat button
+    document.getElementById('refreshChatBtn')?.addEventListener('click', loadUnifiedCommunicationData);
+    
+    // Send message button
+    document.getElementById('sendMessageBtn')?.addEventListener('click', sendQuickMessage);
+    
+    // Message input enter key
+    document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendQuickMessage();
+      }
+    });
+    
+    // Attach file button
+    document.getElementById('attachFileBtn')?.addEventListener('click', () => {
+      console.log('📎 Attach file functionality - to be implemented');
+    });
+    
+    // Add contact button
+    document.getElementById('addContactBtn')?.addEventListener('click', () => {
+      console.log('👤 Add contact functionality - to be implemented');
+    });
+    
+    // Search functionality
+    document.getElementById('contactSearch')?.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      document.querySelectorAll('.contact-item').forEach(item => {
+        const name = item.querySelector('.text-gray-800').textContent.toLowerCase();
+        const role = item.querySelector('.text-gray-600').textContent.toLowerCase();
+        const matches = name.includes(searchTerm) || role.includes(searchTerm);
+        item.style.display = matches ? 'flex' : 'none';
+      });
+    });
+    
+    // Modal close handlers
+    document.getElementById('closeComposeModalBtn')?.addEventListener('click', closeComposeModal);
+    document.getElementById('composeModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'composeModal') {
+        closeComposeModal();
+      }
+    });
+    
+    // Form submission
+    document.getElementById('composeForm')?.addEventListener('submit', handleComposeSubmit);
+  }
+
+  // Global variables for unified system
+  let currentUser = {};
   let availableUsers = [];
+  let selectedContactId = null;
+
+  // Send quick message function
+  async function sendQuickMessage() {
+    if (!selectedContactId) {
+      showToast('Please select a contact first', 'error');
+      return;
+    }
+    
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message) {
+      showToast('Please enter a message', 'error');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/communications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          recipientId: selectedContactId,
+          message: message,
+          subject: 'Quick Message',
+          category: 'general'
+        })
+      });
+      
+      if (response.ok) {
+        messageInput.value = '';
+        showToast('Message sent successfully');
+        
+        // Refresh the conversation
+        setTimeout(() => {
+          loadUnifiedCommunicationData();
+        }, 500);
+      } else {
+        showToast('Failed to send message', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showToast('Error sending message', 'error');
+    }
+  }
+
+  // Legacy variables (keeping for compatibility with existing functions)
   let mpmecUsers = [];
-  let currentTab = 'mpmec';
 
   // Function to calculate unread message count for a specific contact
   function getUnreadMessageCount(contactId, communications) {
@@ -813,10 +860,13 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           contactsList.innerHTML = implementingOfficeUsers.map(user => {
             const unreadCount = getUnreadMessageCount(user.id, implementingCommunications);
             console.log(`Secretariat - Contact ${user.name} (${user.id}) unread count:`, unreadCount);
+            const userInitials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
             return `
               <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors contact-item" data-contact-id="${user.id}">
-                <div class="w-10 h-10 bg-[#FE5353] rounded-full flex items-center justify-center relative">
-                  <span class="text-white font-medium">${user.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+                <div class="w-10 h-10 bg-[#FE5353] rounded-full flex items-center justify-center relative chat-head-container" data-user-id="${user.id}" data-user-email="${user.email}">
+                  <img class="w-full h-full rounded-full object-cover chat-head-image" style="display: none;" alt="${user.name}" />
+                  <span class="text-white font-medium chat-head-fallback">${userInitials}</span>
                   ${unreadCount > 0 ? `<div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">${unreadCount}</div>` : ''}
                 </div>
                 <div class="flex-1">
@@ -827,6 +877,11 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               </div>
             `;
           }).join('');
+          
+          // ✅ CRITICAL: Load actual profile pictures for all Implementing Office chat heads
+          setTimeout(() => {
+            loadChatHeadProfilePictures(implementingOfficeUsers, 'implementing');
+          }, 100);
         } else {
           contactsList.innerHTML = `
             <div class="text-center py-8 text-gray-500">
@@ -976,7 +1031,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   }
 
   // Chat functionality for Implementing Office Communications
-  let selectedContactId = null;
+  // Note: selectedContactId is already declared in the unified system above
 
   // Function to mark messages as read
   async function markMessagesAsRead(contactId) {
@@ -1283,10 +1338,13 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           mpmecContactsList.innerHTML = mpmecUsers.map(user => {
             const unreadCount = getUnreadMessageCount(user.id, mpmecCommunications);
             console.log(`Secretariat - MPMEC Contact ${user.name} (${user.id}) unread count:`, unreadCount);
+            const userInitials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
             return `
               <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors mpmec-contact-item" data-contact-id="${user.id}">
-                <div class="w-10 h-10 bg-[#FE5353] rounded-full flex items-center justify-center relative">
-                  <span class="text-white font-medium">${user.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+                <div class="w-10 h-10 bg-[#FE5353] rounded-full flex items-center justify-center relative chat-head-container" data-user-id="${user.id}" data-user-email="${user.email}">
+                  <img class="w-full h-full rounded-full object-cover chat-head-image" style="display: none;" alt="${user.name}" />
+                  <span class="text-white font-medium chat-head-fallback">${userInitials}</span>
                   ${unreadCount > 0 ? `<div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">${unreadCount}</div>` : ''}
                 </div>
                 <div class="flex-1">
@@ -1297,6 +1355,11 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               </div>
             `;
           }).join('');
+          
+          // ✅ CRITICAL: Load actual profile pictures for all MPMEC chat heads
+          setTimeout(() => {
+            loadChatHeadProfilePictures(mpmecUsers, 'mpmec');
+          }, 100);
           
           // Auto-select the first MPMEC contact
           selectedMPMECContactId = mpmecUsers[0].id;
@@ -1463,11 +1526,14 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
         const messageContent = message.message || '';
         const messageTime = new Date(message.createdAt).toLocaleTimeString();
+        const senderId = message.sender?.id || 'unknown';
+        const senderEmail = message.sender?.email || '';
         
         return isIncoming ? (
           `<div class="flex items-start gap-3">
-            <div class="w-8 h-8 bg-[#FE5353] rounded-full flex items-center justify-center flex-shrink-0">
-              <span class="text-white text-xs font-medium">${senderInitials}</span>
+            <div class="w-8 h-8 bg-[#FE5353] rounded-full flex items-center justify-center flex-shrink-0 chat-message-head" data-user-id="${senderId}" data-user-email="${senderEmail}">
+              <img class="w-full h-full rounded-full object-cover chat-message-image" style="display: none;" alt="${senderName}" />
+              <span class="text-white text-xs font-medium chat-message-fallback">${senderInitials}</span>
             </div>
             <div class="flex-1">
               <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
@@ -1490,6 +1556,11 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           </div>`
         );
       }).join('');
+      
+      // ✅ CRITICAL: Load profile pictures for MPMEC chat message heads
+      setTimeout(() => {
+        loadChatMessageProfilePictures(messages);
+      }, 50);
     } else {
       mpmecChatMessages.innerHTML = `
         <div class="text-center py-8 text-gray-500">
@@ -2050,8 +2121,8 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       console.warn('Secretariat - recipientId select not found');
       return;
     }
-    const placeholder = currentTab === 'mpmec' ? 'Select MPMEC member...' : 'Select Implementing Office Officer...';
-    select.innerHTML = `<option value="">${placeholder}</option>`;
+    
+    select.innerHTML = `<option value="">Select recipient...</option>`;
     
     // Ensure availableUsers is an array
     if (!Array.isArray(availableUsers)) {
@@ -2060,19 +2131,11 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       return;
     }
     
-    // Filter users based on current tab
-    const filteredUsers = availableUsers.filter(user => {
-      if (currentTab === 'mpmec') {
-        return user.role === 'LGU-PMT' && user.subRole?.toLowerCase().includes('mpmec');
-      } else {
-        return user.role === 'LGU-IU';
-      }
-    });
-    
-    filteredUsers.forEach(user => {
+    availableUsers.forEach(user => {
       const option = document.createElement('option');
       option.value = user.id;
-      option.textContent = `${user.name} (${user.subRole || user.role})`;
+      const userType = user.role === 'LGU-PMT' ? 'MPMEC' : 'Implementing Office';
+      option.textContent = `${user.name} (${userType} - ${user.subRole || user.role})`;
       select.appendChild(option);
     });
   }
@@ -2134,60 +2197,72 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   }
 
   function composeMessage() {
-    document.getElementById('composeModal').classList.remove('hidden');
+    const modal = document.getElementById('composeModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      updateRecipientOptions();
+    }
   }
 
   function closeComposeModal() {
-    document.getElementById('composeModal').classList.add('hidden');
-    document.getElementById('composeForm').reset();
+    const modal = document.getElementById('composeModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      // Reset form
+      document.getElementById('composeForm').reset();
+    }
   }
 
-  async function sendMessage(event) {
-    event.preventDefault();
+  async function handleComposeSubmit(e) {
+    e.preventDefault();
     
-    const formData = new FormData(event.target);
-    const messageData = {
+    const formData = new FormData(e.target);
+    const data = {
+      recipientId: formData.get('recipientId'),
       subject: formData.get('subject'),
       message: formData.get('message'),
       category: formData.get('category'),
       priority: formData.get('priority'),
-      recipientId: formData.get('recipientId'),
-      isImportant: formData.get('isImportant') === 'on',
-      requestAcknowledgment: formData.get('requestAcknowledgment') === 'on'
+      isImportant: formData.get('isImportant') === 'on'
     };
-
+    
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/communications', {
+      const response = await fetch('/api/communications/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(messageData)
+        body: JSON.stringify(data)
       });
-
+      
       if (response.ok) {
-        showToast('Message sent successfully!');
+        showToast('Message sent successfully');
         closeComposeModal();
-        loadCommunicationData();
         
-        // Reload the current conversation to show the new message
-        if (currentTab === 'implementing' && selectedContactId) {
-          console.log('Secretariat - Reloading conversation after sending message');
-          await loadConversationWithContact(selectedContactId);
-        } else if (currentTab === 'mpmec' && selectedMPMECContactId) {
-          console.log('Secretariat - Reloading MPMEC conversation after sending message');
-          await loadMPMECConversationWithContact(selectedMPMECContactId);
-        }
+        // Refresh data
+        setTimeout(() => {
+          loadUnifiedCommunicationData();
+        }, 500);
       } else {
-        const error = await response.json();
-        showToast(error.error || 'Failed to send message', 'error');
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to send message', 'error');
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      showToast('Failed to send message', 'error');
+      showToast('Error sending message', 'error');
     }
+  }
+
+  // Weekly report functions
+  function sendWeeklyReport() {
+    composeMessage();
+    document.getElementById('subject').value = 'Weekly Progress Report';
+    document.getElementById('category').value = 'report';
+    document.getElementById('priority').value = 'high';
+    document.getElementById('isImportant').checked = true;
+    document.getElementById('message').value = 'Dear Team,\n\nPlease find attached the weekly progress report.\n\nBest regards,\nSecretariat';
   }
 
   async function viewMessage(id) {
@@ -2263,13 +2338,6 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     viewMessage(id);
   }
 
-  function sendWeeklyReport() {
-    composeMessage();
-    document.getElementById('subject').value = 'Weekly Progress Report';
-    document.getElementById('category').value = 'report';
-    document.getElementById('message').value = 'Dear MPMEC Members,\n\nPlease find attached the weekly progress report.\n\nBest regards,\nSecretariat';
-  }
-
   function requestFeedback() {
     composeMessage();
     document.getElementById('subject').value = 'Feedback Request';
@@ -2313,6 +2381,314 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     }, 3000);
   }
 
+  // ✅ CRITICAL: Profile Picture Management for Chat Heads
+  // This system loads actual profile pictures for all chat participants
+  
+  /**
+   * Load profile pictures for chat heads
+   * @param {Array} users - Array of user objects with id and email
+   * @param {string} type - Type of chat ('mpmec' or 'implementing')
+   */
+  async function loadChatHeadProfilePictures(users, type) {
+    console.log(`🎯 Loading ${type} chat head profile pictures for ${users.length} users`);
+    
+    // Process all users in parallel for better performance
+    const profilePromises = users.map(user => loadSingleChatHeadProfilePicture(user, type));
+    
+    try {
+      await Promise.all(profilePromises);
+      console.log(`✅ All ${type} chat head profile pictures loaded`);
+    } catch (error) {
+      console.error(`❌ Error loading ${type} chat head profile pictures:`, error);
+    }
+  }
+
+  /**
+   * Load profile picture for a single chat head
+   * @param {Object} user - User object with id and email
+   * @param {string} type - Type of chat ('mpmec' or 'implementing')
+   */
+  async function loadSingleChatHeadProfilePicture(user, type) {
+    const container = document.querySelector(`[data-user-id="${user.id}"]`);
+    if (!container) {
+      console.log(`⚠️ Container not found for user ${user.id}`);
+      return;
+    }
+
+    const imageElement = container.querySelector('.chat-head-image');
+    const fallbackElement = container.querySelector('.chat-head-fallback');
+    
+    if (!imageElement || !fallbackElement) {
+      console.log(`⚠️ Image or fallback element not found for user ${user.id}`);
+      return;
+    }
+
+    try {
+      console.log(`🔍 Loading profile picture for ${user.name} (${user.email})`);
+      
+      // Try to get profile picture from API
+      const employeeId = user.email || user.userId || user.username || user.id;
+      const response = await fetch(`http://localhost:3000/api/profile/picture/${employeeId}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.profilePictureUrl) {
+          console.log(`📡 Profile picture URL received for ${user.name}:`, data.profilePictureUrl);
+          
+          // Convert to data URL to bypass CORS issues
+          const dataUrl = await convertImageToDataURL(data.profilePictureUrl);
+          if (dataUrl) {
+            console.log(`🎯 Setting profile picture for ${user.name}`);
+            
+            // Set up image load handlers
+            imageElement.onload = () => {
+              console.log(`✅ Profile picture loaded successfully for ${user.name}`);
+              imageElement.style.display = 'block';
+              fallbackElement.style.display = 'none';
+              container.classList.remove('bg-[#FE5353]'); // Remove background color
+            };
+            
+            imageElement.onerror = () => {
+              console.log(`❌ Profile picture failed to load for ${user.name}`);
+              imageElement.style.display = 'none';
+              fallbackElement.style.display = 'block';
+            };
+            
+            // Set the image source
+            imageElement.src = dataUrl;
+            return;
+          }
+        }
+      }
+      
+      console.log(`⚠️ No profile picture available for ${user.name}, keeping fallback`);
+      
+    } catch (error) {
+      console.error(`❌ Error loading profile picture for ${user.name}:`, error);
+    }
+  }
+
+  /**
+   * Convert image URL to data URL to bypass CORS issues
+   * @param {string} serverUrl - The server URL of the image
+   * @returns {Promise<string|null>} Data URL or null if failed
+   */
+  async function convertImageToDataURL(serverUrl) {
+    try {
+      console.log(`🔄 Converting to data URL: ${serverUrl}`);
+      
+      const response = await fetch(serverUrl, { 
+        mode: 'cors',
+        credentials: 'same-origin',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        console.log(`✅ Successfully converted to data URL (${dataUrl.length} chars)`);
+        return dataUrl;
+      } else {
+        console.log(`❌ Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.log(`⚠️ Failed to convert to data URL:`, error);
+    }
+    return null;
+  }
+
+  // ✅ CRITICAL: Update chat message profile pictures as well
+  function updateChatMessages(messages) {
+    console.log('Secretariat - updateChatMessages called with:', messages?.length, 'messages');
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) {
+      console.error('Secretariat - chatMessages element not found');
+      return;
+    }
+    
+    if (messages && messages.length > 0) {
+      console.log('Secretariat - Rendering', messages.length, 'messages');
+      const renderedHTML = messages.map((message, index) => {
+        const isIncoming = message.recipientId === currentUser.id;
+        const senderName = message.sender?.name || 'Unknown';
+        const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+        const messageContent = message.message || '';
+        const messageTime = new Date(message.createdAt).toLocaleTimeString();
+        const senderId = message.sender?.id || 'unknown';
+        const senderEmail = message.sender?.email || '';
+        
+        console.log(`Secretariat - Message ${index + 1}:`, {
+          content: messageContent,
+          sender: senderName,
+          time: messageTime,
+          isIncoming: isIncoming
+        });
+        
+        return isIncoming ? (
+          `<div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-[#FE5353] rounded-full flex items-center justify-center flex-shrink-0 chat-message-head" data-user-id="${senderId}" data-user-email="${senderEmail}">
+              <img class="w-full h-full rounded-full object-cover chat-message-image" style="display: none;" alt="${senderName}" />
+              <span class="text-white text-xs font-medium chat-message-fallback">${senderInitials}</span>
+            </div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-lg p-3 max-w-xs">
+                <p class="text-sm text-gray-800">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+          </div>`
+        ) : (
+          `<div class="flex items-start gap-3 justify-end">
+            <div class="flex-1 text-right">
+              <div class="bg-[#FE5353] text-white rounded-lg p-3 max-w-xs ml-auto">
+                <p class="text-sm">${messageContent}</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">${messageTime}</p>
+            </div>
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-medium">MS</span>
+            </div>
+          </div>`
+        );
+      }).join('');
+      
+      console.log('Secretariat - Setting innerHTML with', renderedHTML.length, 'characters');
+      chatMessages.innerHTML = renderedHTML;
+      
+      // ✅ CRITICAL: Load profile pictures for chat message heads
+      setTimeout(() => {
+        loadChatMessageProfilePictures(messages);
+      }, 50);
+      
+      // Scroll to bottom to show latest messages
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      console.log('Secretariat - Scrolled to bottom, scrollTop:', chatMessages.scrollTop, 'scrollHeight:', chatMessages.scrollHeight);
+    } else {
+      chatMessages.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+          </svg>
+          <p class="text-lg font-medium">No messages yet</p>
+          <p class="text-sm">Start a conversation with Implementing Office Officers</p>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Load profile pictures for chat message heads
+   * @param {Array} messages - Array of message objects
+   */
+  async function loadChatMessageProfilePictures(messages) {
+    console.log(`🎯 Loading profile pictures for ${messages.length} chat messages`);
+    
+    // Get unique senders to avoid duplicate API calls
+    const uniqueSenders = messages.reduce((acc, message) => {
+      const senderId = message.sender?.id;
+      const senderEmail = message.sender?.email;
+      if (senderId && senderEmail && !acc.some(s => s.id === senderId)) {
+        acc.push({
+          id: senderId,
+          email: senderEmail,
+          name: message.sender?.name || 'Unknown'
+        });
+      }
+      return acc;
+    }, []);
+    
+    // Load profile pictures for unique senders
+    const profilePromises = uniqueSenders.map(sender => loadChatMessageProfilePicture(sender));
+    
+    try {
+      await Promise.all(profilePromises);
+      console.log(`✅ All chat message profile pictures loaded`);
+    } catch (error) {
+      console.error(`❌ Error loading chat message profile pictures:`, error);
+    }
+  }
+
+  /**
+   * Load profile picture for a single chat message sender
+   * @param {Object} sender - Sender object with id, email, and name
+   */
+  async function loadChatMessageProfilePicture(sender) {
+    const containers = document.querySelectorAll(`[data-user-id="${sender.id}"].chat-message-head`);
+    if (containers.length === 0) {
+      console.log(`⚠️ No message containers found for sender ${sender.id}`);
+      return;
+    }
+
+    try {
+      console.log(`🔍 Loading chat message profile picture for ${sender.name} (${sender.email})`);
+      
+      // Try to get profile picture from API
+      const employeeId = sender.email || sender.id;
+      const response = await fetch(`http://localhost:3000/api/profile/picture/${employeeId}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.profilePictureUrl) {
+          console.log(`📡 Chat message profile picture URL received for ${sender.name}:`, data.profilePictureUrl);
+          
+          // Convert to data URL to bypass CORS issues
+          const dataUrl = await convertImageToDataURL(data.profilePictureUrl);
+          if (dataUrl) {
+            console.log(`🎯 Setting chat message profile picture for ${sender.name}`);
+            
+            // Update all message containers for this sender
+            containers.forEach(container => {
+              const imageElement = container.querySelector('.chat-message-image');
+              const fallbackElement = container.querySelector('.chat-message-fallback');
+              
+              if (imageElement && fallbackElement) {
+                // Set up image load handlers
+                imageElement.onload = () => {
+                  console.log(`✅ Chat message profile picture loaded for ${sender.name}`);
+                  imageElement.style.display = 'block';
+                  fallbackElement.style.display = 'none';
+                  container.classList.remove('bg-[#FE5353]'); // Remove background color
+                };
+                
+                imageElement.onerror = () => {
+                  console.log(`❌ Chat message profile picture failed for ${sender.name}`);
+                  imageElement.style.display = 'none';
+                  fallbackElement.style.display = 'block';
+                };
+                
+                // Set the image source
+                imageElement.src = dataUrl;
+              }
+            });
+            return;
+          }
+        }
+      }
+      
+      console.log(`⚠️ No profile picture available for chat message sender ${sender.name}, keeping fallback`);
+      
+    } catch (error) {
+      console.error(`❌ Error loading chat message profile picture for ${sender.name}:`, error);
+    }
+  }
+
   // Form submission
-  document.getElementById('composeForm').addEventListener('submit', sendMessage);
+  document.getElementById('composeForm').addEventListener('submit', handleComposeSubmit);
 </script> 

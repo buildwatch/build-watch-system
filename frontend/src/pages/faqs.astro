@@ -5,108 +5,1005 @@ import LGUFooter from "../components/LGUFooter.astro";
 ---
 <Layout title="FAQs | Build Watch LGU" description="Frequently asked questions about Build Watch and LGU project monitoring.">
   <TopBar />
-  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-transparent min-h-[60vh]">
-    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-2 text-center">Frequently Asked Questions</h1>
-    <div class="w-24 h-1 bg-[#EB3C3C] rounded-full mb-6"></div>
-    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
-      Find answers to common questions about the Build Watch system and LGU project monitoring.
-    </p>
-    <!-- Search Bar -->
-    <div class="flex flex-col sm:flex-row gap-4 items-center mb-6 w-full max-w-2xl">
-      <div class="relative w-full">
-        <span class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-        <input type="text" placeholder="Search FAQs..." class="w-full pl-12 pr-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" />
-      </div>
-      <button class="px-6 py-3 bg-[#FE5353] text-white font-bold rounded-lg shadow hover:bg-[#EB3C3C] transition">Search</button>
+  <main class="flex flex-col items-center w-full px-4 pt-32 pb-20 bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen relative overflow-hidden fade-in-faqs">
+    <!-- Enhanced Background Elements -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-20 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute top-40 right-20 w-24 h-24 bg-purple-200/20 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+      <div class="absolute bottom-32 left-1/3 w-40 h-40 bg-indigo-200/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
     </div>
-    <div class="w-full max-w-4xl space-y-6">
-      <!-- FAQ Categories -->
-      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6 flex items-center gap-2"><span class="fa fa-question-circle text-[#EB3C3C]"></span> General Questions</h2>
-        <div class="space-y-4">
-          <!-- Accordion Item -->
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>What is Build Watch?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Build Watch is a comprehensive project monitoring and evaluation system developed for the Municipality of Santa Cruz, Laguna. It provides real-time tracking of infrastructure projects and social development programs to ensure transparency and accountability in local governance.</div>
+
+    <!-- Enhanced Hero Section -->
+    <div class="relative z-10 text-center mb-16 mt-8">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 font-semibold rounded-full mb-6 text-sm animate-fade-in-up">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+        </svg>
+        Frequently Asked Questions
+      </div>
+      
+      <h1 class="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 leading-tight mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        Frequently Asked Questions
+      </h1>
+      
+      <p class="text-xl text-blue-600 max-w-4xl mx-auto leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s;">
+        Find answers to common questions about the Build Watch system and LGU project monitoring
+      </p>
+    </div>
+    <!-- Enhanced Search Section -->
+    <div class="relative z-10 w-full max-w-5xl mb-12">
+      <div class="bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-blue-100/50 hover:shadow-3xl transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.3s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl"></div>
+        <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-lg"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-700 font-black text-2xl">Search FAQs</h2>
+              <p class="text-blue-600/70 text-sm font-medium">Find answers quickly and efficiently</p>
+            </div>
           </div>
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>Who can access Build Watch?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
+          
+          <div class="flex flex-col md:flex-row gap-6 items-end">
+            <div class="flex-1">
+              <label class="block text-blue-800 font-bold mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Search Term
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <input 
+                  type="text" 
+                  id="faq-search" 
+                  placeholder="Search for questions, topics, or keywords..." 
+                  class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl" 
+                />
+              </div>
+            </div>
+            
+            <button 
+              id="search-btn"
+              class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center gap-3 overflow-hidden"
+            >
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span>Search</span>
+              </div>
             </button>
-            <div class="text-[#7A1F1F] hidden">Build Watch is accessible to four main user groups: LGU-PMT (Project Monitoring Team), EIU (External Implementing Units), EMS (External Monitoring Stakeholders), and IU (Internal Units). Each group has specific access levels and functionalities.</div>
           </div>
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>Is Build Watch free to use?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Yes, Build Watch is a free public service provided by the LGU of Santa Cruz, Laguna. There are no fees or charges for accessing project information and monitoring data.</div>
+          
+          <!-- Quick Search Tips -->
+          <div class="flex items-center gap-6 mt-6 text-sm text-blue-600/70">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              <span>Type keywords</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+              </svg>
+              <span>Browse categories</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              <span>Press ESC to clear</span>
+            </div>
           </div>
         </div>
       </div>
-      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6 flex items-center gap-2"><span class="fa fa-tasks text-[#EB3C3C]"></span> Project Monitoring</h2>
-        <div class="space-y-4">
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>How often is project data updated?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Project data is updated in real-time as implementers submit progress reports. The frequency depends on the project type and requirements, but most projects require weekly or monthly updates.</div>
+    </div>
+    <!-- Enhanced FAQ Container -->
+    <div class="relative z-10 w-full max-w-6xl space-y-12" id="faq-container">
+      <!-- General Questions Category - Enhanced -->
+      <div class="faq-category group bg-gradient-to-br from-white/95 to-emerald-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-emerald-100/50 hover:shadow-3xl hover:border-emerald-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.4s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-teal-400/15 to-emerald-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10 p-8">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-emerald-700 font-black text-3xl">General Questions</h2>
+              <p class="text-emerald-600/70 text-sm font-medium">Basic information about Build Watch</p>
+            </div>
           </div>
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>Can I report issues with projects?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Yes, you can report issues through the Build Watch system. Each user group has specific channels for reporting concerns, and the system includes escalation procedures for urgent matters.</div>
-          </div>
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>What types of projects are monitored?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Build Watch monitors both infrastructure projects (like roads, buildings, and facilities) and social development programs (like 4Ps, Social Pension, and community initiatives).</div>
+          <div class="space-y-6">
+            <!-- Enhanced FAQ Item 1 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-emerald-200/50 rounded-2xl overflow-hidden hover:border-emerald-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-emerald-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-emerald-800 group-hover:text-emerald-600 transition-colors duration-300">What is Build Watch?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Essential</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-emerald-100 text-emerald-600 rounded-xl transform transition-all duration-300 group-hover:bg-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-emerald-50/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-200/50">
+                    <p class="text-emerald-800 leading-relaxed text-lg mb-4">
+                      Build Watch is a comprehensive project monitoring and evaluation system developed for the Municipality of Santa Cruz, Laguna. It provides real-time tracking of infrastructure projects and social development programs to ensure transparency and accountability in local governance.
+                    </p>
+                    <div class="flex items-center gap-4 text-sm text-emerald-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Real-time tracking</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Transparency focus</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Multi-project support</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            <!-- Enhanced FAQ Item 2 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-emerald-200/50 rounded-2xl overflow-hidden hover:border-emerald-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-emerald-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-emerald-800 group-hover:text-emerald-600 transition-colors duration-300">Who can access Build Watch?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Access</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-emerald-100 text-emerald-600 rounded-xl transform transition-all duration-300 group-hover:bg-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-emerald-50/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-200/50">
+                    <p class="text-emerald-800 leading-relaxed text-lg mb-4">
+                      Build Watch is accessible to four main user groups: LGU-PMT (Project Monitoring Team), EIU (External Implementing Units), EMS (External Monitoring Stakeholders), and IU (Internal Units). Each group has specific access levels and functionalities.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-emerald-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        <span>LGU-PMT Team</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        <span>External Units (EIU)</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        <span>Monitoring Stakeholders</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        <span>Internal Units</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced FAQ Item 3 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-emerald-200/50 rounded-2xl overflow-hidden hover:border-emerald-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-emerald-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-emerald-800 group-hover:text-emerald-600 transition-colors duration-300">Is Build Watch free to use?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Pricing</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-emerald-100 text-emerald-600 rounded-xl transform transition-all duration-300 group-hover:bg-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-emerald-50/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-200/50">
+                    <p class="text-emerald-800 leading-relaxed text-lg mb-4">
+                      Yes, Build Watch is a free public service provided by the LGU of Santa Cruz, Laguna. There are no fees or charges for accessing project information and monitoring data.
+                    </p>
+                    <div class="flex items-center gap-6 text-sm text-emerald-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>100% Free</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>No hidden fees</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Public service</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6 flex items-center gap-2"><span class="fa fa-cogs text-[#EB3C3C]"></span> Technical Support</h2>
-        <div class="space-y-4">
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>What if I forget my password?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">If you forget your password, contact your system administrator or the LGU IT department. They can help you reset your account credentials securely.</div>
+      
+
+      
+      <!-- Project Monitoring Category - Enhanced -->
+      <div class="faq-category group bg-gradient-to-br from-white/95 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-100/50 hover:shadow-3xl hover:border-purple-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.5s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-indigo-400/15 to-purple-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10 p-8">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-purple-700 font-black text-3xl">Project Monitoring</h2>
+              <p class="text-purple-600/70 text-sm font-medium">Track and manage project progress</p>
+            </div>
           </div>
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>Is my data secure?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Yes, Build Watch implements strict security measures to protect all data. User authentication, data encryption, and regular security audits ensure the safety of sensitive information.</div>
-          </div>
-          <div class="border-b border-[#EB3C3C]/20 pb-4">
-            <button class="w-full flex justify-between items-center text-lg font-bold text-[#7A1F1F] mb-2 focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] transition group" aria-expanded="false">
-              <span>Can I access Build Watch on mobile devices?</span>
-              <span class="ml-4 fa fa-plus group-aria-expanded:fa-minus"></span>
-            </button>
-            <div class="text-[#7A1F1F] hidden">Yes, Build Watch is designed to be responsive and works on desktop computers, tablets, and mobile phones. The interface adapts to different screen sizes for optimal viewing.</div>
+          <div class="space-y-6">
+            <!-- Enhanced Project Monitoring FAQ Item 1 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-purple-200/50 rounded-2xl overflow-hidden hover:border-purple-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-purple-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-purple-800 group-hover:text-purple-600 transition-colors duration-300">How often is project data updated?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">Updates</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-purple-100 text-purple-600 rounded-xl transform transition-all duration-300 group-hover:bg-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/50">
+                    <p class="text-purple-800 leading-relaxed text-lg mb-4">
+                      Project data is updated in real-time as implementers submit progress reports. The frequency depends on the project type and requirements, but most projects require weekly or monthly updates.
+                    </p>
+                    <div class="flex items-center gap-6 text-sm text-purple-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Real-time updates</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Weekly/Monthly</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Automatic sync</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced Project Monitoring FAQ Item 2 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-purple-200/50 rounded-2xl overflow-hidden hover:border-purple-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-purple-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-purple-800 group-hover:text-purple-600 transition-colors duration-300">Can I report issues with projects?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">Reporting</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-purple-100 text-purple-600 rounded-xl transform transition-all duration-300 group-hover:bg-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/50">
+                    <p class="text-purple-800 leading-relaxed text-lg mb-4">
+                      Yes, you can report issues through the Build Watch system. Each user group has specific channels for reporting concerns, and the system includes escalation procedures for urgent matters.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-purple-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884zM18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        </svg>
+                        <span>Multiple channels</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Escalation procedures</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Quick resolution</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Tracking system</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced Project Monitoring FAQ Item 3 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-purple-200/50 rounded-2xl overflow-hidden hover:border-purple-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-purple-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zM8 12a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-purple-800 group-hover:text-purple-600 transition-colors duration-300">What types of projects are monitored?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">Types</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-purple-100 text-purple-600 rounded-xl transform transition-all duration-300 group-hover:bg-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-200/50">
+                    <p class="text-purple-800 leading-relaxed text-lg mb-4">
+                      Build Watch monitors both infrastructure projects (like roads, buildings, and facilities) and social development programs (like 4Ps, Social Pension, and community initiatives).
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-purple-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Infrastructure</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                        <span>Social Programs</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Healthcare</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+                        </svg>
+                        <span>Education</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <!-- Contact Support -->
-      <div class="bg-[#EB3C3C]/10 rounded-2xl p-8 text-center">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-4">Still Have Questions?</h2>
-        <p class="text-[#7A1F1F] mb-6">If you couldn't find the answer you're looking for, our support team is here to help.</p>
-        <a href="/contact-us" class="inline-block px-8 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition"><span class="fa fa-headset mr-2"></span>Contact Support</a>
+      
+
+      
+      <!-- Technical Support Category - Enhanced Card Box -->
+      <div class="faq-category group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-blue-100/50 hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.6s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-cyan-400/15 to-blue-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10 p-8">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-blue-700 font-black text-3xl">Technical Support</h2>
+              <p class="text-blue-600/70 text-sm font-medium">Get help with technical issues</p>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <!-- Enhanced Technical Support FAQ Item 1 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 rounded-2xl overflow-hidden hover:border-blue-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-cyan-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-blue-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-blue-800 group-hover:text-blue-600 transition-colors duration-300">What if I forget my password?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Security</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-xl transform transition-all duration-300 group-hover:bg-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-200/50">
+                    <p class="text-blue-800 leading-relaxed text-lg mb-4">
+                      If you forget your password, contact your system administrator or the LGU IT department. They can help you reset your account credentials securely.
+                    </p>
+                    <div class="flex items-center gap-6 text-sm text-blue-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Secure reset process</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Admin assistance</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Quick resolution</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced Technical Support FAQ Item 2 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 rounded-2xl overflow-hidden hover:border-blue-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-cyan-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-blue-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-blue-800 group-hover:text-blue-600 transition-colors duration-300">Is my data secure?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Privacy</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-xl transform transition-all duration-300 group-hover:bg-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-200/50">
+                    <p class="text-blue-800 leading-relaxed text-lg mb-4">
+                      Yes, Build Watch implements strict security measures to protect all data. User authentication, data encryption, and regular security audits ensure the safety of sensitive information.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-blue-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Data encryption</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Security audits</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-4-4 4-4 .257.007A6 6 0 0118 8z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>User authentication</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Data protection</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced Technical Support FAQ Item 3 -->
+            <div class="faq-item group/item bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 rounded-2xl overflow-hidden hover:border-blue-400/80 hover:shadow-xl transition-all duration-500 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-cyan-50/50 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+              
+              <button class="faq-question relative w-full flex justify-between items-center p-6 text-left hover:bg-blue-50/50 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 group" aria-expanded="false">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-300">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H8a1 1 0 000 2h4a1 1 0 100-2H8.771z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <span class="text-xl font-black text-blue-800 group-hover:text-blue-600 transition-colors duration-300">Can I access Build Watch on mobile devices?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Mobile</div>
+                  <svg class="faq-icon w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-xl transform transition-all duration-300 group-hover:bg-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+              </button>
+              
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                <div class="p-6 pt-0">
+                  <div class="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-200/50">
+                    <p class="text-blue-800 leading-relaxed text-lg mb-4">
+                      Yes, Build Watch is designed to be responsive and works on desktop computers, tablets, and mobile phones. The interface adapts to different screen sizes for optimal viewing.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-blue-600">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H8a1 1 0 000 2h4a1 1 0 100-2H8.771z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Desktop support</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+                        </svg>
+                        <span>Tablet optimized</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Mobile friendly</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Responsive design</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      
+      <!-- Enhanced Contact Support Section -->
+      <div class="faq-category group bg-gradient-to-br from-white/95 to-indigo-50/90 backdrop-blur-sm rounded-3xl p-12 shadow-2xl border border-indigo-100/50 hover:shadow-3xl hover:border-indigo-200/60 transition-all duration-500 text-center relative animate-fade-in-up" style="animation-delay: 0.7s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-center justify-center gap-4 mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <h2 class="text-indigo-700 font-black text-3xl">Still Have Questions?</h2>
+              <p class="text-indigo-600/70 text-sm font-medium">Our support team is here to help</p>
+            </div>
+          </div>
+          
+          <p class="text-indigo-700/80 mb-8 text-lg leading-relaxed max-w-2xl mx-auto">
+            If you couldn't find the answer you're looking for, our dedicated support team is ready to assist you with any questions about Build Watch and project monitoring.
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/contact-us" class="group/btn relative px-8 py-4 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-400 to-blue-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span>Contact Support</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </div>
+            </a>
+            
+            <div class="flex items-center gap-6 text-sm text-indigo-600/70">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span>Quick response</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span>Expert assistance</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
   <LGUFooter />
-</Layout> 
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // FAQ Accordion Functionality
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    const faqAnswers = document.querySelectorAll('.faq-answer');
+    const faqIcons = document.querySelectorAll('.faq-icon');
+    
+    faqQuestions.forEach((question, index) => {
+      question.addEventListener('click', () => {
+        const answer = faqAnswers[index];
+        const icon = faqIcons[index];
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        
+        // Close all other FAQ items
+        faqQuestions.forEach((q, i) => {
+          if (i !== index) {
+            q.setAttribute('aria-expanded', 'false');
+            faqAnswers[i].style.maxHeight = '0px';
+            faqIcons[i].style.transform = 'rotate(0deg)';
+            faqIcons[i].innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>';
+          }
+        });
+        
+        // Toggle current FAQ item
+        if (isExpanded) {
+          question.setAttribute('aria-expanded', 'false');
+          answer.style.maxHeight = '0px';
+          icon.style.transform = 'rotate(0deg)';
+          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>';
+        } else {
+          question.setAttribute('aria-expanded', 'true');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+          icon.style.transform = 'rotate(45deg)';
+          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+        }
+      });
+    });
+    
+    // Search Functionality
+    const searchInput = document.getElementById('faq-search');
+    const searchBtn = document.getElementById('search-btn');
+    const faqItems = document.querySelectorAll('.faq-item');
+    const faqCategories = document.querySelectorAll('.faq-category');
+    
+    function performSearch() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      
+      if (searchTerm === '') {
+        // Show all items if search is empty
+        faqItems.forEach(item => {
+          item.style.display = 'block';
+          item.style.opacity = '1';
+        });
+        faqCategories.forEach(category => {
+          category.style.display = 'block';
+        });
+        return;
+      }
+      
+      let hasVisibleItems = false;
+      
+      faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question span').textContent.toLowerCase();
+        const answer = item.querySelector('.faq-answer div').textContent.toLowerCase();
+        
+        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+          item.style.display = 'block';
+          item.style.opacity = '1';
+          hasVisibleItems = true;
+          
+          // Highlight matching text
+          const questionSpan = item.querySelector('.faq-question span');
+          const answerDiv = item.querySelector('.faq-answer div');
+          
+          // Remove existing highlights
+          questionSpan.innerHTML = questionSpan.textContent;
+          answerDiv.innerHTML = answerDiv.textContent;
+          
+          // Add highlights
+          if (question.includes(searchTerm)) {
+            questionSpan.innerHTML = questionSpan.textContent.replace(
+              new RegExp(searchTerm, 'gi'),
+              match => `<mark class="bg-yellow-200 px-1 rounded">${match}</mark>`
+            );
+          }
+          if (answer.includes(searchTerm)) {
+            answerDiv.innerHTML = answerDiv.textContent.replace(
+              new RegExp(searchTerm, 'gi'),
+              match => `<mark class="bg-yellow-200 px-1 rounded">${match}</mark>`
+            );
+          }
+        } else {
+          item.style.opacity = '0.3';
+        }
+      });
+      
+      // Show/hide categories based on visible items
+      faqCategories.forEach(category => {
+        const visibleItems = category.querySelectorAll('.faq-item[style*="opacity: 1"]');
+        if (visibleItems.length > 0) {
+          category.style.display = 'block';
+        } else {
+          category.style.display = 'none';
+        }
+      });
+    }
+    
+    // Search on input change
+    searchInput.addEventListener('input', performSearch);
+    
+    // Search on button click
+    searchBtn.addEventListener('click', performSearch);
+    
+    // Search on Enter key
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+    
+    // Keyboard navigation for FAQ items
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        // Clear search and close all FAQ items
+        searchInput.value = '';
+        performSearch();
+        
+        faqQuestions.forEach((q, i) => {
+          q.setAttribute('aria-expanded', 'false');
+          faqAnswers[i].style.maxHeight = '0px';
+          faqIcons[i].style.transform = 'rotate(0deg)';
+          faqIcons[i].innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>';
+        });
+      }
+    });
+  });
+</script>
+
+<style>
+  .fade-in-faqs {
+    animation: fadeInFaqs 1.1s cubic-bezier(.4,0,.2,1);
+  }
+  
+  @keyframes fadeInFaqs {
+    from { 
+      opacity: 0; 
+      transform: translateY(40px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: none; 
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% { 
+      transform: translateY(-10px) rotate(2deg);
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% { 
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 4s ease-in-out infinite;
+  }
+  
+  /* Enhanced FAQ item styling */
+  .faq-item {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .faq-question:hover {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+  }
+  
+  /* Enhanced focus styles */
+  .faq-question:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+  
+  /* Search highlight animation */
+  mark {
+    animation: highlightFade 0.3s ease-in-out;
+    background: linear-gradient(120deg, #fef3c7 0%, #fef08a 100%);
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+  
+  @keyframes highlightFade {
+    from { 
+      background: linear-gradient(120deg, #fef3c7 0%, #fef08a 100%);
+      transform: scale(1.1);
+    }
+    to { 
+      background: linear-gradient(120deg, #fef08a 0%, #fde68a 100%);
+      transform: scale(1);
+    }
+  }
+  
+  /* Glass morphism effects */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  
+  /* Enhanced hover effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Smooth accordion transitions */
+  .faq-answer {
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Enhanced icon rotations */
+  .faq-icon {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style> 

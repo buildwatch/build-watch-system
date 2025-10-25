@@ -31,6 +31,7 @@ const communicationRoutes = require('./routes/communications');
 const coordinationRoutes = require('./routes/coordination');
 const eiuActivityRoutes = require('./routes/eiu-activities');
 const policyRoutes = require('./routes/policies');
+const profileRoutes = require('./routes/profile');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,7 +56,8 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
+  exposedHeaders: ['Content-Length', 'Content-Type']
 }));
 
 // Rate limiting - Development-friendly configuration
@@ -119,8 +121,184 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static file serving for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Handle preflight OPTIONS requests for uploaded files
+app.options('/uploads/:filename', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
+
+// Specific route for uploaded files with explicit CORS
+app.get('/uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', filename);
+  
+  // Set explicit CORS headers
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+  
+  // Check if file exists
+  if (!require('fs').existsSync(filePath)) {
+    return res.status(404).json({ error: 'File not found' });
+  }
+  
+  // Determine content type based on file extension
+  const ext = path.extname(filename).toLowerCase();
+  let contentType = 'application/octet-stream';
+  
+  if (ext === '.jpg' || ext === '.jpeg' || ext === '.jfif') {
+    contentType = 'image/jpeg';
+  } else if (ext === '.png') {
+    contentType = 'image/png';
+  } else if (ext === '.gif') {
+    contentType = 'image/gif';
+  } else if (ext === '.webp') {
+    contentType = 'image/webp';
+  } else if (ext === '.mp4') {
+    contentType = 'video/mp4';
+  } else if (ext === '.webm') {
+    contentType = 'video/webm';
+  } else if (ext === '.mov') {
+    contentType = 'video/quicktime';
+  } else if (ext === '.xlsx') {
+    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  } else if (ext === '.xls') {
+    contentType = 'application/vnd.ms-excel';
+  } else if (ext === '.pdf') {
+    contentType = 'application/pdf';
+  } else if (ext === '.doc') {
+    contentType = 'application/msword';
+  } else if (ext === '.docx') {
+    contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+  
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  
+  // Send the file
+  res.sendFile(filePath);
+});
+
+// Static file serving for uploads with CORS headers
+app.use('/uploads', (req, res, next) => {
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    res.status(200).end();
+    return;
+  }
+  
+  // Set CORS headers for actual requests - more permissive for static files
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+  
+  // Add cache control headers
+  res.header('Cache-Control', 'public, max-age=31536000'); // 1 year
+  res.header('Vary', 'Origin');
+  
+  next();
+}, express.static(path.join(__dirname, 'uploads'), {
+  // Static file options
+  maxAge: '1y',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Set proper content type for all file types
+    const ext = path.toLowerCase().split('.').pop();
+    
+    // Images
+    if (ext === 'jpg' || ext === 'jpeg' || ext === 'jfif') {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (ext === 'png') {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (ext === 'gif') {
+      res.setHeader('Content-Type', 'image/gif');
+    } else if (ext === 'svg') {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    } else if (ext === 'webp') {
+      res.setHeader('Content-Type', 'image/webp');
+    } else if (ext === 'bmp') {
+      res.setHeader('Content-Type', 'image/bmp');
+    }
+    
+    // Videos
+    else if (ext === 'mp4') {
+      res.setHeader('Content-Type', 'video/mp4');
+    } else if (ext === 'webm') {
+      res.setHeader('Content-Type', 'video/webm');
+    } else if (ext === 'ogg' || ext === 'ogv') {
+      res.setHeader('Content-Type', 'video/ogg');
+    } else if (ext === 'avi') {
+      res.setHeader('Content-Type', 'video/x-msvideo');
+    } else if (ext === 'mov') {
+      res.setHeader('Content-Type', 'video/quicktime');
+    } else if (ext === 'wmv') {
+      res.setHeader('Content-Type', 'video/x-ms-wmv');
+    }
+    
+    // Documents
+    else if (ext === 'pdf') {
+      res.setHeader('Content-Type', 'application/pdf');
+    } else if (ext === 'doc') {
+      res.setHeader('Content-Type', 'application/msword');
+    } else if (ext === 'docx') {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    } else if (ext === 'xls') {
+      res.setHeader('Content-Type', 'application/vnd.ms-excel');
+    } else if (ext === 'xlsx') {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    } else if (ext === 'ppt') {
+      res.setHeader('Content-Type', 'application/vnd.ms-powerpoint');
+    } else if (ext === 'pptx') {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    }
+    
+    // Text files
+    else if (ext === 'txt') {
+      res.setHeader('Content-Type', 'text/plain');
+    } else if (ext === 'csv') {
+      res.setHeader('Content-Type', 'text/csv');
+    }
+    
+    // Audio
+    else if (ext === 'mp3') {
+      res.setHeader('Content-Type', 'audio/mpeg');
+    } else if (ext === 'wav') {
+      res.setHeader('Content-Type', 'audio/wav');
+    } else if (ext === 'ogg' || ext === 'oga') {
+      res.setHeader('Content-Type', 'audio/ogg');
+    }
+    
+    // Archives
+    else if (ext === 'zip') {
+      res.setHeader('Content-Type', 'application/zip');
+    } else if (ext === 'rar') {
+      res.setHeader('Content-Type', 'application/vnd.rar');
+    } else if (ext === '7z') {
+      res.setHeader('Content-Type', 'application/x-7z-compressed');
+    }
+    
+    // Default fallback
+    else {
+      res.setHeader('Content-Type', 'application/octet-stream');
+    }
+    
+    // Add Content-Disposition header for document downloads
+    if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar', '7z'].includes(ext)) {
+      const filename = path.split('/').pop();
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    }
+  }
+}));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -154,6 +332,46 @@ app.use('/api/communications', communicationRoutes);
 app.use('/api/coordination', coordinationRoutes);
 app.use('/api/eiu-activities', eiuActivityRoutes);
 app.use('/api/policies', policyRoutes);
+app.use('/api/profile', profileRoutes);
+
+// OPTIONS handler for profile pictures
+app.options('/uploads/profile-pictures/:filename', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
+
+// Special route for profile pictures with enhanced CORS
+app.get('/uploads/profile-pictures/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', 'profile-pictures', filename);
+  
+  // Set CORS headers specifically for profile pictures - more permissive
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Allow-Credentials', 'false'); // Changed to false for wildcard origin
+  res.header('Cache-Control', 'public, max-age=31536000');
+  res.header('Vary', 'Origin');
+  
+  // Check if file exists
+  if (!require('fs').existsSync(filePath)) {
+    return res.status(404).json({ error: 'Profile picture not found' });
+  }
+  
+  // Determine content type
+  let contentType = 'image/jpeg'; // default
+  if (filename.endsWith('.png')) contentType = 'image/png';
+  else if (filename.endsWith('.gif')) contentType = 'image/gif';
+  else if (filename.endsWith('.svg')) contentType = 'image/svg+xml';
+  else if (filename.endsWith('.jfif')) contentType = 'image/jpeg';
+  else if (filename.endsWith('.webp')) contentType = 'image/webp';
+  
+  res.setHeader('Content-Type', contentType);
+  res.sendFile(filePath);
+});
 
 // 404 handler
 app.use('/api/*', (req, res) => {

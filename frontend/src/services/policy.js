@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import api from './api.js';
 
 export const policyService = {
   // Get all policies with filtering and pagination

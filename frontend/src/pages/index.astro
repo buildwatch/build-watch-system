@@ -2,7 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="Build Watch | Santa Cruz LGU" description="Santa Cruz LGU Project Monitoring and Evaluation System - Transparent Governance and Real-Time Project Tracking">
-  <div class="min-h-screen flex flex-col bg-[#EB3C3C] font-[Montserrat]">
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.39/build/spline-viewer.js"></script>
+  <div class="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 font-[Montserrat] relative overflow-hidden">
+    {/* 3D Background Container */}
+    <div id="3d-background" class="absolute inset-0 w-full h-full z-0">
+    </div>
+    
     {/* Enhanced Logo Section - Top Middle */}
     <div class="relative z-30 flex justify-center items-center py-6">
       <div class="flex flex-col items-center group cursor-pointer">
@@ -16,16 +21,17 @@ import Layout from "../layouts/Layout.astro";
 
     {/* Hero Section with Carousel */}
     <main class="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-      <div id="carousel-bg" class="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out z-0"></div>
       <div class="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4 py-16 fade-in" id="carousel-content">
-        <h1 id="carousel-title" class="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg leading-tight mb-6 text-center"></h1>
-        <p id="carousel-desc" class="text-lg md:text-xl font-medium text-white/90 mb-10 max-w-2xl text-center"></p>
-        <a href="/home" id="lets-start-btn"
-           class="group px-8 py-4 bg-white text-[#EB3C3C] font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:bg-gray-50 mb-8 relative overflow-hidden">
-          <span class="relative z-10">LET'S START</span>
-          <div class="absolute inset-0 bg-gradient-to-r from-[#EB3C3C] to-[#ED6F6F] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <span class="absolute inset-0 bg-gradient-to-r from-[#EB3C3C] to-[#ED6F6F] opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-bold text-lg flex items-center justify-center">LET'S START</span>
-        </a>
+        <h1 id="carousel-title" class="text-5xl md:text-6xl font-extrabold text-white drop-shadow-2xl leading-tight mb-6 text-center content-slide-title">BUILD WATCH</h1>
+        <p id="carousel-desc" class="text-lg md:text-xl font-medium text-white/90 mb-10 max-w-3xl mx-auto text-center content-slide-subtitle">Empowering Local Governance Through Digital Innovation and Modern Technology Solutions</p>
+        <div class="flex justify-center w-full">
+          <a href="https://www.dime.gov.ph/about" id="learn-more-btn" target="_blank" rel="noopener noreferrer"
+             class="group px-6 py-3 bg-white text-blue-600 font-bold text-base rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:bg-gray-50 mb-8 relative overflow-hidden content-slide-button text-center">
+          <span class="relative z-10">Learn More</span>
+          <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <span class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-bold text-base flex items-center justify-center">Learn More</span>
+          </a>
+        </div>
       </div>
     </main>
 
@@ -40,7 +46,7 @@ import Layout from "../layouts/Layout.astro";
             </svg>
           </button>
           
-          <div class="flex items-center gap-3" id="carousel-indicators"></div>
+          <div class="flex items-center gap-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20" id="carousel-indicators"></div>
           
           <button id="carousel-next" class="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-7 h-7 group-hover:scale-110 transition-transform duration-300">
@@ -64,210 +70,2196 @@ import Layout from "../layouts/Layout.astro";
 
         {/* Enhanced Let's Start Button */}
         <a href="/home" class="group px-8 py-4 font-black text-lg rounded-2xl transition-all duration-500 flex items-center justify-center
-                    bg-white/90 backdrop-blur-sm text-[#EB3C3C] border-2 border-white/50 shadow-xl hover:shadow-2xl hover:scale-105 hover:bg-gradient-to-r hover:from-[#EB3C3C] hover:to-[#ED6F6F] hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 relative overflow-hidden z-10" id="lets-start-btn-sticky">
+                    bg-white/90 backdrop-blur-sm text-blue-600 border-2 border-white/50 shadow-xl hover:shadow-2xl hover:scale-105 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 relative overflow-hidden z-10" id="lets-start-btn-sticky">
           <span class="relative z-10">LET'S START</span>
-          <div class="absolute inset-0 bg-gradient-to-r from-[#EB3C3C] to-[#ED6F6F] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <span class="absolute inset-0 bg-gradient-to-r from-[#EB3C3C] to-[#ED6F6F] opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-white font-black text-lg flex items-center justify-center">LET'S START</span>
+          <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <span class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-white font-black text-lg flex items-center justify-center">LET'S START</span>
         </a>
       </div>
     </div>
   </div>
 </Layout>
 
-  <script is:inline>
-    // Slide data
-    const slides = [
-      {
-        title: 'Building Trust Through Transparent Governance',
-        desc: 'A digital platform by the LGU of Santa Cruz, Laguna that brings public infrastructure and community projects closer to the people—through open monitoring and real-time information.',
-        bg: '/slide-1.png',
-      },
-      {
-        title: 'See the Progress. Know the Process.',
-        desc: 'Track LGU-approved projects with ease—from timelines and budgets to completion status—anytime, anywhere. Empowering citizens through transparency.',
-        bg: '/slide-2.png',
-      },
-      {
-        title: 'Digitalized Monitoring for a Smarter Santa Cruz',
-        desc: 'Modernizing how public projects are managed, viewed, and validated—by making information accessible to citizens, LGU teams, and stakeholders in real time.',
-        bg: '/slide-3.png',
-      },
-      {
-        title: 'Your Projects. Your Town. Your Right to Know.',
-        desc: 'The Project Monitoring System of Santa Cruz, Laguna is a tool for accountability—letting every citizen witness the progress and integrity of their local government projects.',
-        bg: '/slide-4.png',
-      },
-      {
-        title: 'From Manual Logs to Digitalized Process of Monitoring',
-        desc: 'The shift from paper-based reports to a real-time digital system marks a new era of governance for Santa Cruz—making LGU projects transparent, timely, and trustworthy.',
-        bg: '/slide-5.png',
-      },
-    ];
-    let currentSlide = 0;
-    const carouselBg = document.getElementById('carousel-bg');
-    const carouselTitle = document.getElementById('carousel-title');
-    const carouselDesc = document.getElementById('carousel-desc');
-    const indicators = document.getElementById('carousel-indicators');
-    const content = document.getElementById('carousel-content');
-
-    function renderSlide(idx) {
-      // Enhanced animation out
-      content.classList.remove('fade-in');
-      content.classList.add('fade-out');
-      setTimeout(() => {
-        // Update content
-        carouselTitle.textContent = slides[idx].title;
-        carouselDesc.textContent = slides[idx].desc;
-        carouselBg.style.background = `linear-gradient(180deg, rgba(235,60,60,0.92) 0%, rgba(235,60,60,0.7) 40%, rgba(255,255,255,0.1) 100%), url('${slides[idx].bg}') center/cover no-repeat`;
-        // Enhanced animation in
-        content.classList.remove('fade-out');
-        content.classList.add('fade-in');
-        // Enhanced indicators
-        indicators.innerHTML = '';
-        for (let i = 0; i < slides.length; i++) {
-          const dot = document.createElement('span');
-          dot.className = `w-5 h-5 rounded-full inline-block transition-all duration-500 cursor-pointer ${
-            i === idx 
-              ? 'bg-white scale-125 shadow-lg shadow-white/50' 
-              : 'bg-white/40 hover:bg-white/60 hover:scale-110'
-          }`;
-          dot.onclick = () => { 
-            currentSlide = i; 
-            renderSlide(i); 
-          };
-          indicators.appendChild(dot);
-        }
-      }, 300);
+<script is:inline>
+  // Wait for DOM to be fully loaded before running any JavaScript
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Starting initialization...');
+    initializeCarousel();
+  });
+  
+  // Modern 3D Background System - Move slides array outside function for global access
+  const slides = [
+    {
+      title: "BUILD WATCH",
+      subtitle: "Empowering Local Governance Through Digital Innovation and Modern Technology Solutions",
+      description: "A comprehensive digital platform revolutionizing how local government units manage, monitor, and track infrastructure projects with transparency and efficiency.",
+      bg: 'governance-modern',
+      image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTIwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cmFkaWFsR3JhZGllbnQgaWQ9ImdvdmVybmFuY2VHcmFkIiBjeD0iNTAlIiBjeT0iNTAlIiByPSI3MCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjpyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz4KPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjpyZ2JhKDI1NSwyNTUsMjU1LDApIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNnb3Zlcm5hbmNlR3JhZCkiLz4KPC9zdmc+'
+    },
+    {
+      title: "REAL-TIME PROGRESS",
+      subtitle: "Track Every Milestone with Precision and Advanced Analytics Dashboard",
+      description: "Monitor project development in real-time with advanced analytics, automated reporting, and comprehensive progress tracking systems.",
+      bg: 'progress-modern',
+      image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTIwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InByb2dyZXNzR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOnJnYmEoMzQsMTk3LDk0LDAuMSkiLz4KPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjpyZ2JhKDM0LDE5Nyw5NCwwKSIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcHJvZ3Jlc3NHcmFkKSIvPgo8L3N2Zz4='
+    },
+    {
+      title: "DIGITAL TRANSFORMATION",
+      subtitle: "From Manual to Digital Excellence with Cutting-Edge Technology Integration",
+      description: "Experience the future of project management with cutting-edge digital tools, automated workflows, and intelligent decision support systems.",
+      bg: 'digital-modern',
+      image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTIwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cmFkaWFsR3JhZGllbnQgaWQ9ImRpZ2l0YWxHcmFkIiBjeD0iNTAlIiBjeT0iNTAlIiByPSI3MCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjpyZ2JhKDY0LDIwNCwyNDgsMC4xKSIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOnJnYmEoNjQsMjA0LDI0OCwwKSIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZGlnaXRhbEdyYWQpIi8+Cjwvc3ZnPg=='
+    },
+    {
+      title: "TRANSPARENCY & ACCOUNTABILITY",
+      subtitle: "Building Trust Through Open Governance and Comprehensive Public Reporting",
+      description: "Foster public trust with complete transparency, real-time reporting, and comprehensive accountability measures for all project activities.",
+      bg: 'accountability-modern',
+      image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTIwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImFjY291bnRhYmlsaXR5R3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOnJnYmEoMzQsMTk3LDk0LDAuMSkiLz4KPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjpyZ2JhKDM0LDE5Nyw5NCwwKSIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYWNjb3VudGFiaWxpdHlHcmFkKSIvPgo8L3N2Zz4='
+    },
+    {
+      title: "COMMUNITY TRANSFORMATION",
+      subtitle: "Empowering Communities Through Innovation and Sustainable Development Programs",
+      description: "Drive positive change in local communities with data-driven insights, collaborative planning, and sustainable development initiatives.",
+      bg: 'transformation-modern',
+      image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTIwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8cmFkaWFsR3JhZGllbnQgaWQ9InRyYW5zZm9ybWF0aW9uR3JhZCIgY3g9IjUwJSIgY3k9IjUwJSIgcj0iNzAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6cmdiYSgyNTUsMTkzLDcsMC4xKSIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOnJnYmEoMjU1LDE5Myw3LDApIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCN0cmFuc2Zvcm1hdGlvbkdyYWQpIi8+Cjwvc3ZnPg=='
     }
-    document.getElementById('carousel-prev').onclick = () => {
-      currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-      renderSlide(currentSlide);
-    };
-    document.getElementById('carousel-next').onclick = () => {
-      currentSlide = (currentSlide + 1) % slides.length;
-      renderSlide(currentSlide);
-    };
+  ];
 
-    // Auto-advance carousel
-    let autoAdvanceInterval = setInterval(() => {
-      currentSlide = (currentSlide + 1) % slides.length;
-      renderSlide(currentSlide);
-    }, 8000);
+  let currentSlide = 0;
+  
+  function initializeCarousel() {
+  
+  // Get DOM elements with detailed logging
+  const carouselTitle = document.getElementById('carousel-title');
+  const carouselDesc = document.getElementById('carousel-desc');
+  const indicators = document.getElementById('carousel-indicators');
+  const content = document.getElementById('carousel-content');
+  const background3d = document.getElementById('3d-background');
+  
+  console.log('Element search results:', {
+    carouselTitle: carouselTitle,
+    carouselDesc: carouselDesc,
+    indicators: indicators,
+    content: content,
+    background3d: background3d
+  });
 
-    // Pause auto-advance on hover
-    const carouselContainer = document.querySelector('main');
+  function create3DBackground(slide) {
+    console.log('Creating system-specific background for slide:', slide);
+    
+    const background = document.getElementById('3d-background');
+    if (!background) {
+      console.error('3D background element not found');
+      return;
+    }
+    
+    // Clear previous content
+    background.innerHTML = '';
+    
+    console.log('Background container cleared, creating system-specific elements...');
+    
+    // Create main background gradient
+    const bgGradient = document.createElement('div');
+    bgGradient.className = 'absolute inset-0 w-full h-full';
+    bgGradient.style.background = `linear-gradient(135deg, rgba(37,99,235,0.9) 0%, rgba(59,130,246,0.7) 50%, rgba(147,197,253,0.5) 100%)`;
+    bgGradient.style.zIndex = '0';
+    background.appendChild(bgGradient);
+    
+    console.log('Creating content-specific elements for:', slide.bg);
+    
+    // Create content-specific system animations
+    switch(slide.bg) {
+      case 'governance-modern':
+        console.log('Creating governance system elements...');
+        createGovernanceSystemElements(background);
+        break;
+      case 'progress-modern':
+        console.log('Creating progress system elements...');
+        createProgressSystemElements(background);
+        break;
+      case 'digital-modern':
+        console.log('Creating digital system elements...');
+        createDigitalSystemElements(background);
+        break;
+      case 'accountability-modern':
+        console.log('Creating accountability system elements...');
+        createAccountabilitySystemElements(background);
+        break;
+      case 'transformation-modern':
+        console.log('Creating transformation system elements...');
+        createTransformationSystemElements(background);
+        break;
+      default:
+        console.warn('Unknown background type:', slide.bg);
+    }
+    
+    console.log('Interactive background creation completed');
+  }
+
+  function createGovernanceSystemElements(container) {
+    console.log('Creating modern 3D governance background...');
+    
+    // Create modern 3D governance scene
+    const scene3D = document.createElement('div');
+    scene3D.className = 'absolute inset-0 w-full h-full modern-3d-scene';
+    scene3D.style.zIndex = '1';
+    scene3D.style.perspective = '1200px';
+    scene3D.style.perspectiveOrigin = 'center center';
+    scene3D.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.05) 100%)';
+    
+    // Modern government building complex
+    for (let i = 0; i < 6; i++) {
+      const building = document.createElement('div');
+      building.className = 'modern-building';
+      building.style.position = 'absolute';
+      building.style.left = `${10 + i * 15}%`;
+      building.style.bottom = '10%';
+      building.style.width = '100px';
+      building.style.height = `${150 + Math.random() * 100}px`;
+      building.style.background = `linear-gradient(135deg, 
+        rgba(255,255,255,0.15) 0%, 
+        rgba(59,130,246,0.1) 50%, 
+        rgba(255,255,255,0.05) 100%)`;
+      building.style.backdropFilter = 'blur(10px)';
+      building.style.border = '1px solid rgba(255,255,255,0.2)';
+      building.style.borderRadius = '12px 12px 0 0';
+      building.style.transform = `rotateY(${Math.random() * 15 - 7.5}deg) rotateX(3deg) translateZ(${i * 20}px)`;
+      building.style.boxShadow = `
+        0 20px 40px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        0 0 60px rgba(59,130,246,0.2)`;
+      building.style.animation = `modernBuildingFloat ${4 + i * 0.5}s ease-in-out infinite`;
+      building.style.animationDelay = `${i * 0.3}s`;
+      
+      // Add modern windows with LED-like glow
+      for (let j = 0; j < 6; j++) {
+        const window = document.createElement('div');
+        window.className = 'modern-window';
+        window.style.position = 'absolute';
+        window.style.left = '15%';
+        window.style.top = `${10 + j * 15}%`;
+        window.style.width = '70%';
+        window.style.height = '8%';
+        window.style.background = `linear-gradient(90deg, 
+          rgba(64,224,208,0.8) 0%, 
+          rgba(0,191,255,0.9) 50%, 
+          rgba(64,224,208,0.8) 100%)`;
+        window.style.borderRadius = '4px';
+        window.style.boxShadow = `
+          0 0 20px rgba(64,224,208,0.6),
+          inset 0 1px 2px rgba(255,255,255,0.3)`;
+        window.style.animation = `modernWindowPulse ${2 + Math.random() * 2}s ease-in-out infinite`;
+        window.style.animationDelay = `${j * 0.2}s`;
+        building.appendChild(window);
+      }
+      
+      scene3D.appendChild(building);
+    }
+    
+    // Floating holographic data panels
+    for (let i = 0; i < 8; i++) {
+      const panel = document.createElement('div');
+      panel.className = 'holo-panel';
+      panel.style.position = 'absolute';
+      panel.style.left = `${15 + Math.random() * 70}%`;
+      panel.style.top = `${15 + Math.random() * 50}%`;
+      panel.style.width = '120px';
+      panel.style.height = '80px';
+      panel.style.background = `linear-gradient(135deg, 
+        rgba(255,255,255,0.1) 0%, 
+        rgba(0,191,255,0.15) 50%, 
+        rgba(255,255,255,0.05) 100%)`;
+      panel.style.backdropFilter = 'blur(15px)';
+      panel.style.border = '1px solid rgba(0,191,255,0.3)';
+      panel.style.borderRadius = '12px';
+      panel.style.transform = `rotateY(${Math.random() * 45}deg) rotateX(${Math.random() * 30}deg) translateZ(${Math.random() * 100}px)`;
+      panel.style.boxShadow = `
+        0 15px 35px rgba(0,191,255,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.2)`;
+      panel.style.animation = `holoPanelFloat ${5 + Math.random() * 3}s ease-in-out infinite`;
+      panel.style.animationDelay = `${i * 0.4}s`;
+      
+      // Add data lines
+      for (let k = 0; k < 4; k++) {
+        const line = document.createElement('div');
+        line.style.position = 'absolute';
+        line.style.left = '15%';
+        line.style.top = `${20 + k * 18}%`;
+        line.style.width = `${60 + Math.random() * 25}%`;
+        line.style.height = '2px';
+        line.style.background = `linear-gradient(90deg, 
+          transparent 0%, 
+          rgba(0,191,255,0.8) 50%, 
+          transparent 100%)`;
+        line.style.borderRadius = '1px';
+        line.style.animation = `dataFlow ${1 + Math.random()}s ease-in-out infinite`;
+        line.style.animationDelay = `${k * 0.2}s`;
+        panel.appendChild(line);
+      }
+      
+      scene3D.appendChild(panel);
+    }
+    
+    // Particle system
+    for (let i = 0; i < 40; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'modern-particle';
+      particle.style.position = 'absolute';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.width = `${Math.random() * 6 + 2}px`;
+      particle.style.height = `${Math.random() * 6 + 2}px`;
+      particle.style.background = `radial-gradient(circle, 
+        rgba(0,191,255,0.9) 0%, 
+        rgba(64,224,208,0.6) 100%)`;
+      particle.style.borderRadius = '50%';
+      particle.style.boxShadow = `0 0 ${Math.random() * 20 + 10}px rgba(0,191,255,0.6)`;
+      particle.style.animation = `particleFloat ${3 + Math.random() * 4}s ease-in-out infinite`;
+      particle.style.animationDelay = `${Math.random() * 2}s`;
+      scene3D.appendChild(particle);
+    }
+    
+    container.appendChild(scene3D);
+    console.log('Modern 3D governance scene created');
+  }
+
+  function createProgressSystemElements(container) {
+    console.log('Creating modern 3D progress background...');
+    
+    // Create modern progress analytics scene
+    const scene3D = document.createElement('div');
+    scene3D.className = 'absolute inset-0 w-full h-full modern-3d-scene';
+    scene3D.style.zIndex = '1';
+    scene3D.style.perspective = '1200px';
+    scene3D.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(16,185,129,0.05) 100%)';
+    
+    // Animated 3D progress bars
+    for (let i = 0; i < 8; i++) {
+      const progressBar = document.createElement('div');
+      progressBar.className = 'modern-progress-bar';
+      progressBar.style.position = 'absolute';
+      progressBar.style.left = `${5 + i * 12}%`;
+      progressBar.style.bottom = '15%';
+      progressBar.style.width = '60px';
+      progressBar.style.height = `${80 + Math.random() * 120}px`;
+      progressBar.style.background = `linear-gradient(180deg, 
+        rgba(34,197,94,0.2) 0%, 
+        rgba(34,197,94,0.8) 100%)`;
+      progressBar.style.backdropFilter = 'blur(10px)';
+      progressBar.style.border = '1px solid rgba(34,197,94,0.3)';
+      progressBar.style.borderRadius = '8px';
+      progressBar.style.transform = `rotateY(${Math.random() * 20 - 10}deg) translateZ(${i * 15}px)`;
+      progressBar.style.boxShadow = `
+        0 15px 30px rgba(34,197,94,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.2)`;
+      progressBar.style.animation = `progressBarGrow ${3 + i * 0.3}s ease-in-out infinite`;
+      progressBar.style.animationDelay = `${i * 0.2}s`;
+      
+      // Add progress fill animation
+      const fill = document.createElement('div');
+      fill.style.position = 'absolute';
+      fill.style.bottom = '0';
+      fill.style.left = '0';
+      fill.style.width = '100%';
+      fill.style.height = `${30 + Math.random() * 70}%`;
+      fill.style.background = `linear-gradient(180deg, 
+        rgba(34,197,94,0.9) 0%, 
+        rgba(16,185,129,1) 100%)`;
+      fill.style.borderRadius = '0 0 8px 8px';
+      fill.style.boxShadow = '0 0 20px rgba(34,197,94,0.8)';
+      fill.style.animation = `progressFillPulse ${2 + Math.random()}s ease-in-out infinite`;
+      progressBar.appendChild(fill);
+      
+      scene3D.appendChild(progressBar);
+    }
+    
+    // Floating metric cards
+    for (let i = 0; i < 6; i++) {
+      const card = document.createElement('div');
+      card.className = 'metric-card';
+      card.style.position = 'absolute';
+      card.style.left = `${20 + Math.random() * 60}%`;
+      card.style.top = `${20 + Math.random() * 40}%`;
+      card.style.width = '100px';
+      card.style.height = '60px';
+      card.style.background = `linear-gradient(135deg, 
+        rgba(255,255,255,0.15) 0%, 
+        rgba(34,197,94,0.1) 100%)`;
+      card.style.backdropFilter = 'blur(15px)';
+      card.style.border = '1px solid rgba(34,197,94,0.3)';
+      card.style.borderRadius = '12px';
+      card.style.transform = `rotateY(${Math.random() * 30}deg) rotateX(${Math.random() * 20}deg)`;
+      card.style.boxShadow = '0 10px 25px rgba(34,197,94,0.2)';
+      card.style.animation = `metricFloat ${4 + Math.random() * 2}s ease-in-out infinite`;
+      card.style.animationDelay = `${i * 0.5}s`;
+      
+      // Add percentage text effect
+      const percent = document.createElement('div');
+      percent.style.position = 'absolute';
+      percent.style.top = '50%';
+      percent.style.left = '50%';
+      percent.style.transform = 'translate(-50%, -50%)';
+      percent.style.color = 'rgba(34,197,94,0.9)';
+      percent.style.fontSize = '14px';
+      percent.style.fontWeight = 'bold';
+      percent.style.textShadow = '0 0 10px rgba(34,197,94,0.5)';
+      percent.textContent = `${Math.floor(Math.random() * 100)}%`;
+      card.appendChild(percent);
+      
+      scene3D.appendChild(card);
+    }
+    
+    container.appendChild(scene3D);
+    console.log('Modern 3D progress scene created');
+  }
+
+  function createDigitalSystemElements(container) {
+    console.log('Creating modern 3D digital transformation background...');
+    
+    // Create modern digital scene with neural network theme
+    const scene3D = document.createElement('div');
+    scene3D.className = 'absolute inset-0 w-full h-full modern-3d-scene';
+    scene3D.style.zIndex = '1';
+    scene3D.style.perspective = '1200px';
+    scene3D.style.background = 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(124,58,237,0.05) 100%)';
+    
+    // Digital devices representing government digitization
+    const deviceTypes = ['laptop', 'tablet', 'mobile', 'server'];
+    for (let i = 0; i < 8; i++) {
+      const device = document.createElement('div');
+      device.className = 'digital-device';
+      device.style.position = 'absolute';
+      device.style.left = `${10 + Math.random() * 80}%`;
+      device.style.top = `${15 + Math.random() * 70}%`;
+      
+      const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
+      if (deviceType === 'laptop') {
+        device.style.width = '60px';
+        device.style.height = '40px';
+        device.style.borderRadius = '6px';
+      } else if (deviceType === 'tablet') {
+        device.style.width = '35px';
+        device.style.height = '50px';
+        device.style.borderRadius = '8px';
+      } else if (deviceType === 'mobile') {
+        device.style.width = '25px';
+        device.style.height = '45px';
+        device.style.borderRadius = '12px';
+      } else {
+        device.style.width = '50px';
+        device.style.height = '60px';
+        device.style.borderRadius = '4px';
+      }
+      
+      device.style.background = `linear-gradient(135deg, 
+        rgba(139,92,246,0.3) 0%, 
+        rgba(124,58,237,0.6) 100%)`;
+      device.style.backdropFilter = 'blur(8px)';
+      device.style.border = '2px solid rgba(139,92,246,0.4)';
+      device.style.boxShadow = `
+        0 15px 30px rgba(139,92,246,0.4),
+        inset 0 2px 6px rgba(255,255,255,0.2)`;
+      device.style.transform = `rotateY(${Math.random() * 20 - 10}deg) rotateX(${Math.random() * 15 - 7.5}deg)`;
+      device.style.animation = `deviceFloat ${3 + Math.random() * 2}s ease-in-out infinite`;
+      device.style.animationDelay = `${i * 0.4}s`;
+      
+      // Add screen glow
+      const screen = document.createElement('div');
+      screen.style.position = 'absolute';
+      screen.style.top = '10%';
+      screen.style.left = '10%';
+      screen.style.width = '80%';
+      screen.style.height = '60%';
+      screen.style.background = `linear-gradient(135deg, 
+        rgba(139,92,246,0.9) 0%, 
+        rgba(124,58,237,0.7) 100%)`;
+      screen.style.borderRadius = '2px';
+      screen.style.boxShadow = '0 0 15px rgba(139,92,246,0.8)';
+      screen.style.animation = `screenGlow ${2 + Math.random()}s ease-in-out infinite`;
+      device.appendChild(screen);
+      
+      scene3D.appendChild(device);
+    }
+    
+    // Data streams representing digital workflows
+    for (let i = 0; i < 12; i++) {
+      const stream = document.createElement('div');
+      stream.className = 'data-stream';
+      stream.style.position = 'absolute';
+      stream.style.left = `${Math.random() * 90}%`;
+      stream.style.top = `${Math.random() * 80}%`;
+      stream.style.width = `${100 + Math.random() * 150}px`;
+      stream.style.height = '3px';
+      stream.style.background = `linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(139,92,246,0.8) 25%, 
+        rgba(124,58,237,0.9) 75%, 
+        transparent 100%)`;
+      stream.style.transform = `rotate(${Math.random() * 360}deg)`;
+      stream.style.borderRadius = '2px';
+      stream.style.boxShadow = '0 0 10px rgba(139,92,246,0.6)';
+      stream.style.animation = `dataStreamFlow ${2 + Math.random() * 3}s ease-in-out infinite`;
+      stream.style.animationDelay = `${Math.random() * 2}s`;
+      scene3D.appendChild(stream);
+    }
+    
+    // Digital transformation icons (gears, cloud, etc.)
+    for (let i = 0; i < 10; i++) {
+      const icon = document.createElement('div');
+      icon.className = 'digital-icon';
+      icon.style.position = 'absolute';
+      icon.style.left = `${5 + Math.random() * 90}%`;
+      icon.style.top = `${10 + Math.random() * 80}%`;
+      icon.style.width = '30px';
+      icon.style.height = '30px';
+      icon.style.background = `radial-gradient(circle, 
+        rgba(139,92,246,0.8) 0%, 
+        rgba(124,58,237,0.4) 100%)`;
+      icon.style.borderRadius = '50%';
+      icon.style.border = '2px solid rgba(139,92,246,0.6)';
+      icon.style.boxShadow = `
+        0 0 20px rgba(139,92,246,0.7),
+        inset 0 2px 4px rgba(255,255,255,0.3)`;
+      icon.style.animation = `iconSpin ${4 + Math.random() * 3}s linear infinite`;
+      icon.style.animationDelay = `${i * 0.3}s`;
+      
+      // Add inner symbol
+      const symbol = document.createElement('div');
+      symbol.style.position = 'absolute';
+      symbol.style.top = '50%';
+      symbol.style.left = '50%';
+      symbol.style.transform = 'translate(-50%, -50%)';
+      symbol.style.width = '12px';
+      symbol.style.height = '12px';
+      symbol.style.background = 'rgba(255,255,255,0.9)';
+      symbol.style.borderRadius = '2px';
+      symbol.style.boxShadow = '0 0 8px rgba(139,92,246,0.8)';
+      icon.appendChild(symbol);
+      
+      scene3D.appendChild(icon);
+    }
+    
+    container.appendChild(scene3D);
+    console.log('Modern 3D digital transformation scene created');
+  }
+
+  function createAccountabilitySystemElements(container) {
+    console.log('Creating modern 3D transparency & accountability background...');
+    
+    // Create modern transparency dashboard theme
+    const scene3D = document.createElement('div');
+    scene3D.className = 'absolute inset-0 w-full h-full modern-3d-scene';
+    scene3D.style.zIndex = '1';
+    scene3D.style.perspective = '1200px';
+    scene3D.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(217,119,6,0.1) 100%)';
+    scene3D.style.opacity = '1';
+    scene3D.style.visibility = 'visible';
+    
+    // Government oversight documents floating around
+    for (let i = 0; i < 6; i++) {
+      const docElement = document.createElement('div');
+      docElement.className = 'transparency-document';
+      docElement.style.position = 'absolute';
+      docElement.style.left = `${10 + Math.random() * 80}%`;
+      docElement.style.top = `${15 + Math.random() * 60}%`;
+      docElement.style.width = '80px';
+      docElement.style.height = '100px';
+      docElement.style.background = `linear-gradient(135deg, 
+        rgba(255,255,255,0.95) 0%, 
+        rgba(245,158,11,0.3) 100%)`;
+      docElement.style.backdropFilter = 'blur(8px)';
+      docElement.style.border = '3px solid rgba(245,158,11,0.7)';
+      docElement.style.borderRadius = '8px';
+      docElement.style.transform = `rotateY(${Math.random() * 30 - 15}deg) rotateX(${Math.random() * 20 - 10}deg)`;
+      docElement.style.boxShadow = `
+        0 25px 50px rgba(245,158,11,0.6),
+        inset 0 2px 8px rgba(255,255,255,0.5),
+        0 0 30px rgba(245,158,11,0.4)`;
+      docElement.style.animation = `documentFloat ${4 + Math.random() * 3}s ease-in-out infinite`;
+      docElement.style.animationDelay = `${i * 0.5}s`;
+      docElement.style.zIndex = '10';
+      docElement.style.opacity = '1';
+      
+      // Add document lines representing transparency reports
+      for (let j = 0; j < 5; j++) {
+        const line = document.createElement('div');
+        line.style.position = 'absolute';
+        line.style.left = '15%';
+        line.style.top = `${20 + j * 12}%`;
+        line.style.width = `${60 + Math.random() * 25}%`;
+        line.style.height = '2px';
+        line.style.background = `linear-gradient(90deg, 
+          rgba(245,158,11,0.8) 0%, 
+          rgba(217,119,6,0.6) 100%)`;
+        line.style.borderRadius = '1px';
+        line.style.animation = `textFlow ${1.5 + Math.random()}s ease-in-out infinite`;
+        line.style.animationDelay = `${j * 0.2}s`;
+        docElement.appendChild(line);
+      }
+      
+      // Add transparency seal
+      const seal = document.createElement('div');
+      seal.style.position = 'absolute';
+      seal.style.bottom = '10%';
+      seal.style.right = '10%';
+      seal.style.width = '15px';
+      seal.style.height = '15px';
+      seal.style.background = 'rgba(245,158,11,0.9)';
+      seal.style.borderRadius = '50%';
+      seal.style.boxShadow = '0 0 10px rgba(245,158,11,0.8)';
+      docElement.appendChild(seal);
+      
+      scene3D.appendChild(docElement);
+    }
+    
+    // Audit trail connections showing accountability flow
+    for (let i = 0; i < 10; i++) {
+      const trail = document.createElement('div');
+      trail.className = 'audit-trail';
+      trail.style.position = 'absolute';
+      trail.style.left = `${Math.random() * 80 + 10}%`;
+      trail.style.top = `${Math.random() * 70 + 15}%`;
+      trail.style.width = `${150 + Math.random() * 100}px`;
+      trail.style.height = '4px';
+      trail.style.background = `linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(245,158,11,0.9) 30%, 
+        rgba(217,119,6,1) 70%, 
+        transparent 100%)`;
+      trail.style.transform = `rotate(${Math.random() * 360}deg)`;
+      trail.style.borderRadius = '2px';
+      trail.style.boxShadow = '0 0 15px rgba(245,158,11,0.8)';
+      trail.style.animation = `auditFlow ${2 + Math.random() * 3}s ease-in-out infinite`;
+      trail.style.animationDelay = `${Math.random() * 2}s`;
+      trail.style.zIndex = '8';
+      trail.style.opacity = '1';
+      scene3D.appendChild(trail);
+    }
+    
+    // Transparency badges scattered around
+    for (let i = 0; i < 8; i++) {
+      const badge = document.createElement('div');
+      badge.className = 'transparency-badge';
+      badge.style.position = 'absolute';
+      badge.style.left = `${5 + Math.random() * 90}%`;
+      badge.style.top = `${10 + Math.random() * 80}%`;
+      badge.style.width = '50px';
+      badge.style.height = '50px';
+      badge.style.background = `radial-gradient(circle, 
+        rgba(245,158,11,1) 0%, 
+        rgba(217,119,6,0.7) 100%)`;
+      badge.style.borderRadius = '50%';
+      badge.style.border = '3px solid rgba(245,158,11,0.9)';
+      badge.style.boxShadow = `
+        0 0 30px rgba(245,158,11,0.9),
+        inset 0 2px 6px rgba(255,255,255,0.4),
+        0 0 50px rgba(245,158,11,0.5)`;
+      badge.style.animation = `badgePulse ${2 + Math.random() * 2}s ease-in-out infinite`;
+      badge.style.animationDelay = `${i * 0.3}s`;
+      badge.style.zIndex = '12';
+      badge.style.opacity = '1';
+      
+      // Add checkmark symbol
+      const check = document.createElement('div');
+      check.style.position = 'absolute';
+      check.style.top = '50%';
+      check.style.left = '50%';
+      check.style.transform = 'translate(-50%, -50%)';
+      check.style.width = '0';
+      check.style.height = '0';
+      check.style.borderLeft = '6px solid transparent';
+      check.style.borderRight = '6px solid transparent';
+      check.style.borderBottom = '8px solid rgba(255,255,255,0.9)';
+      check.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+      badge.appendChild(check);
+      
+      scene3D.appendChild(badge);
+    }
+    
+    container.appendChild(scene3D);
+    console.log('Modern 3D accountability scene created');
+  }
+
+  function createTransformationSystemElements(container) {
+    console.log('Creating modern 3D community transformation background...');
+    
+    // Create modern community growth theme
+    const scene3D = document.createElement('div');
+    scene3D.className = 'absolute inset-0 w-full h-full modern-3d-scene';
+    scene3D.style.zIndex = '1';
+    scene3D.style.perspective = '1200px';
+    scene3D.style.background = 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(219,39,119,0.05) 100%)';
+    
+    // Community houses representing neighborhoods
+    for (let i = 0; i < 8; i++) {
+      const house = document.createElement('div');
+      house.className = 'community-house';
+      house.style.position = 'absolute';
+      house.style.left = `${15 + Math.random() * 70}%`;
+      house.style.top = `${60 + Math.random() * 25}%`;
+      house.style.width = '40px';
+      house.style.height = '30px';
+      house.style.background = `linear-gradient(135deg, 
+        rgba(236,72,153,0.3) 0%, 
+        rgba(219,39,119,0.5) 100%)`;
+      house.style.backdropFilter = 'blur(6px)';
+      house.style.border = '2px solid rgba(236,72,153,0.4)';
+      house.style.borderRadius = '4px 4px 0 0';
+      house.style.boxShadow = `
+        0 10px 20px rgba(236,72,153,0.3),
+        inset 0 1px 3px rgba(255,255,255,0.2)`;
+      house.style.animation = `houseGlow ${3 + Math.random() * 2}s ease-in-out infinite`;
+      house.style.animationDelay = `${i * 0.4}s`;
+      
+      // Add roof
+      const roof = document.createElement('div');
+      roof.style.position = 'absolute';
+      roof.style.top = '-15px';
+      roof.style.left = '50%';
+      roof.style.transform = 'translateX(-50%)';
+      roof.style.width = '0';
+      roof.style.height = '0';
+      roof.style.borderLeft = '22px solid transparent';
+      roof.style.borderRight = '22px solid transparent';
+      roof.style.borderBottom = '15px solid rgba(236,72,153,0.6)';
+      house.appendChild(roof);
+      
+      // Add door
+      const door = document.createElement('div');
+      door.style.position = 'absolute';
+      door.style.bottom = '0';
+      door.style.left = '50%';
+      door.style.transform = 'translateX(-50%)';
+      door.style.width = '8px';
+      door.style.height = '15px';
+      door.style.background = 'rgba(255,255,255,0.8)';
+      door.style.borderRadius = '4px 4px 0 0';
+      house.appendChild(door);
+      
+      // Add window
+      const window = document.createElement('div');
+      window.style.position = 'absolute';
+      window.style.top = '5px';
+      window.style.right = '8px';
+      window.style.width = '8px';
+      window.style.height = '8px';
+      window.style.background = 'rgba(255,255,255,0.9)';
+      window.style.borderRadius = '2px';
+      window.style.boxShadow = '0 0 8px rgba(236,72,153,0.6)';
+      house.appendChild(window);
+      
+      scene3D.appendChild(house);
+    }
+    
+    // Community growth trees
+    for (let i = 0; i < 6; i++) {
+      const tree = document.createElement('div');
+      tree.className = 'community-tree';
+      tree.style.position = 'absolute';
+      tree.style.left = `${20 + Math.random() * 60}%`;
+      tree.style.top = `${40 + Math.random() * 40}%`;
+      tree.style.width = '20px';
+      tree.style.height = '35px';
+      tree.style.background = `linear-gradient(180deg, 
+        rgba(34,197,94,0.8) 0%, 
+        rgba(22,163,74,0.6) 100%)`;
+      tree.style.borderRadius = '50% 50% 50% 50% / 60% 60% 40% 40%';
+      tree.style.boxShadow = `
+        0 8px 16px rgba(34,197,94,0.4),
+        inset 0 2px 4px rgba(255,255,255,0.3)`;
+      tree.style.animation = `treeGrow ${4 + Math.random() * 2}s ease-in-out infinite`;
+      tree.style.animationDelay = `${i * 0.5}s`;
+      
+      // Add trunk
+      const trunk = document.createElement('div');
+      trunk.style.position = 'absolute';
+      trunk.style.bottom = '-8px';
+      trunk.style.left = '50%';
+      trunk.style.transform = 'translateX(-50%)';
+      trunk.style.width = '4px';
+      trunk.style.height = '12px';
+      trunk.style.background = 'rgba(120,53,15,0.8)';
+      trunk.style.borderRadius = '0 0 2px 2px';
+      tree.appendChild(trunk);
+      
+      scene3D.appendChild(tree);
+    }
+    
+    // Community connection paths
+    for (let i = 0; i < 10; i++) {
+      const path = document.createElement('div');
+      path.className = 'community-path';
+      path.style.position = 'absolute';
+      path.style.left = `${Math.random() * 80 + 10}%`;
+      path.style.top = `${Math.random() * 70 + 15}%`;
+      path.style.width = `${80 + Math.random() * 120}px`;
+      path.style.height = '3px';
+      path.style.background = `linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(236,72,153,0.6) 30%, 
+        rgba(219,39,119,0.8) 70%, 
+        transparent 100%)`;
+      path.style.transform = `rotate(${Math.random() * 360}deg)`;
+      path.style.borderRadius = '2px';
+      path.style.boxShadow = '0 0 8px rgba(236,72,153,0.5)';
+      path.style.animation = `pathFlow ${3 + Math.random() * 2}s ease-in-out infinite`;
+      path.style.animationDelay = `${Math.random() * 2}s`;
+      scene3D.appendChild(path);
+    }
+    
+    // Community people icons
+    for (let i = 0; i < 12; i++) {
+      const person = document.createElement('div');
+      person.className = 'community-person';
+      person.style.position = 'absolute';
+      person.style.left = `${10 + Math.random() * 80}%`;
+      person.style.top = `${20 + Math.random() * 60}%`;
+      person.style.width = '25px';
+      person.style.height = '25px';
+      person.style.background = `radial-gradient(circle, 
+        rgba(236,72,153,0.9) 0%, 
+        rgba(219,39,119,0.5) 100%)`;
+      person.style.borderRadius = '50%';
+      person.style.border = '2px solid rgba(255,255,255,0.4)';
+      person.style.boxShadow = `
+        0 0 15px rgba(236,72,153,0.6),
+        inset 0 1px 2px rgba(255,255,255,0.3)`;
+      person.style.animation = `personMove ${2 + Math.random() * 3}s ease-in-out infinite`;
+      person.style.animationDelay = `${i * 0.3}s`;
+      
+      // Add simple person icon
+      const icon = document.createElement('div');
+      icon.style.position = 'absolute';
+      icon.style.top = '50%';
+      icon.style.left = '50%';
+      icon.style.transform = 'translate(-50%, -50%)';
+      icon.style.width = '8px';
+      icon.style.height = '8px';
+      icon.style.background = 'rgba(255,255,255,0.9)';
+      icon.style.borderRadius = '50%';
+      person.appendChild(icon);
+      
+      scene3D.appendChild(person);
+    }
+    
+    container.appendChild(scene3D);
+    console.log('Modern 3D transformation scene created');
+  }
+
+  function renderSlide(idx) {
+    console.log('Rendering slide:', idx, slides[idx]);
+    console.log('Current slide title:', slides[idx].title);
+    console.log('Current slide background type:', slides[idx].bg);
+    
+    // Update current slide immediately
+    currentSlide = idx;
+    
+    if (!content || !carouselTitle || !carouselDesc) {
+      console.error('Required elements not found in renderSlide');
+      return;
+    }
+    
+    // Add modern slide-out animation first
+    console.log('Starting modern slide transition...');
+    const learnMoreBtn = document.getElementById('learn-more-btn');
+    
+    carouselTitle.classList.add('content-slide-out');
+    carouselDesc.classList.add('content-slide-out');
+    if (learnMoreBtn) {
+      learnMoreBtn.classList.add('content-slide-out');
+    }
+    
+    // Update indicators IMMEDIATELY - no delay
+    updateIndicators(idx);
+    
+    // Create 3D background immediately
+    console.log('Creating 3D background for:', slides[idx].bg);
+    create3DBackground(slides[idx]);
+    
+    // After exit animation, update content and add entrance animation
+    setTimeout(() => {
+      // Update content
+      carouselTitle.textContent = slides[idx].title;
+      carouselDesc.textContent = slides[idx].subtitle;
+      
+      // Remove exit animation and add entrance animation
+      carouselTitle.classList.remove('content-slide-out');
+      carouselDesc.classList.remove('content-slide-out');
+      if (learnMoreBtn) {
+        learnMoreBtn.classList.remove('content-slide-out');
+      }
+      
+      carouselTitle.classList.add('content-slide-in');
+      carouselDesc.classList.add('content-slide-in');
+      if (learnMoreBtn) {
+        learnMoreBtn.classList.add('content-slide-in');
+      }
+      
+      // Ensure content is visible
+      carouselTitle.style.visibility = 'visible';
+      carouselTitle.style.opacity = '1';
+      carouselTitle.style.display = 'block';
+      carouselDesc.style.visibility = 'visible';
+      carouselDesc.style.opacity = '1';
+      carouselDesc.style.display = 'block';
+      content.style.visibility = 'visible';
+      content.style.opacity = '1';
+      
+      // Remove entrance animation class after animation completes
+      setTimeout(() => {
+        carouselTitle.classList.remove('content-slide-in');
+        carouselDesc.classList.remove('content-slide-in');
+        if (learnMoreBtn) {
+          learnMoreBtn.classList.remove('content-slide-in');
+        }
+      }, 800);
+      
+    }, 400);
+    
+    console.log('Slide rendering completed immediately');
+  }
+
+  function updateIndicators(activeIndex) {
+    if (!indicators) {
+      console.error('Indicators container not found!');
+      return;
+    }
+    
+    console.log('Updating indicators - active index:', activeIndex);
+    
+    // Ensure the indicators container is visible and enhanced with blue theme
+    indicators.style.display = 'flex';
+    indicators.style.alignItems = 'center';
+    indicators.style.justifyContent = 'center';
+    indicators.style.minHeight = '60px';
+    indicators.style.visibility = 'visible';
+    indicators.style.opacity = '1';
+    indicators.style.background = 'linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(59,130,246,0.2) 100%)';
+    indicators.style.backdropFilter = 'blur(20px)';
+    indicators.style.borderRadius = '30px';
+    indicators.style.border = '2px solid rgba(59,130,246,0.4)';
+    indicators.style.padding = '12px 20px';
+    indicators.style.boxShadow = '0 12px 40px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
+    indicators.style.position = 'relative';
+    indicators.style.zIndex = '1000';
+    
+    indicators.innerHTML = '';
+    
+    for (let i = 0; i < slides.length; i++) {
+      // Create container for enhanced indicator
+      const indicatorContainer = document.createElement('div');
+      indicatorContainer.style.position = 'relative';
+      indicatorContainer.style.margin = '0 6px';
+      indicatorContainer.style.cursor = 'pointer';
+      indicatorContainer.style.display = 'flex';
+      indicatorContainer.style.alignItems = 'center';
+      indicatorContainer.style.justifyContent = 'center';
+      
+      // Main dot element
+      const dot = document.createElement('div');
+      dot.style.width = '16px';
+      dot.style.height = '16px';
+      dot.style.borderRadius = '50%';
+      dot.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+      dot.style.position = 'relative';
+      dot.style.zIndex = '1001';
+      
+      // Outer ring element for active state
+      const ring = document.createElement('div');
+      ring.style.position = 'absolute';
+      ring.style.top = '50%';
+      ring.style.left = '50%';
+      ring.style.transform = 'translate(-50%, -50%)';
+      ring.style.width = '28px';
+      ring.style.height = '28px';
+      ring.style.borderRadius = '50%';
+      ring.style.border = '3px solid rgba(59,130,246,0.8)';
+      ring.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+      ring.style.opacity = '0';
+      ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
+      
+      // Progress ring for active indicator
+      const progressRing = document.createElement('div');
+      progressRing.style.position = 'absolute';
+      progressRing.style.top = '50%';
+      progressRing.style.left = '50%';
+      progressRing.style.transform = 'translate(-50%, -50%)';
+      progressRing.style.width = '36px';
+      progressRing.style.height = '36px';
+      progressRing.style.borderRadius = '50%';
+      progressRing.style.background = 'conic-gradient(from 0deg, rgba(37,99,235,0.9) 0deg, rgba(59,130,246,0.6) 180deg, rgba(147,197,253,0.4) 360deg)';
+      progressRing.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+      progressRing.style.opacity = '0';
+      progressRing.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(0deg)';
+      
+      // Glow effect
+      const glow = document.createElement('div');
+      glow.style.position = 'absolute';
+      glow.style.top = '50%';
+      glow.style.left = '50%';
+      glow.style.transform = 'translate(-50%, -50%)';
+      glow.style.width = '44px';
+      glow.style.height = '44px';
+      glow.style.borderRadius = '50%';
+      glow.style.background = 'radial-gradient(circle, rgba(59,130,246,0.4) 0%, rgba(37,99,235,0.2) 50%, transparent 70%)';
+      glow.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+      glow.style.opacity = '0';
+      glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
+      
+      if (i === activeIndex) {
+        // Active state styling with blue theme
+        dot.style.backgroundColor = '#3b82f6';
+        dot.style.border = '2px solid #ffffff';
+        dot.style.transform = 'scale(1.2)';
+        dot.style.boxShadow = '0 0 25px rgba(59,130,246,0.9), 0 0 45px rgba(59,130,246,0.5), inset 0 2px 4px rgba(255,255,255,0.3)';
+        
+        ring.style.opacity = '1';
+        ring.style.transform = 'translate(-50%, -50%) scale(1)';
+        ring.style.borderColor = 'rgba(59,130,246,0.9)';
+        ring.style.animation = 'blueIndicatorPulse 2s ease-in-out infinite';
+        
+        progressRing.style.opacity = '1';
+        progressRing.style.transform = 'translate(-50%, -50%) scale(1) rotate(360deg)';
+        
+        glow.style.opacity = '1';
+        glow.style.transform = 'translate(-50%, -50%) scale(1)';
+        
+        console.log('Set active indicator for slide:', i);
+      } else {
+        // Inactive state styling with blue theme
+        dot.style.backgroundColor = 'rgba(59,130,246,0.4)';
+        dot.style.border = '2px solid rgba(255,255,255,0.6)';
+        dot.style.transform = 'scale(1)';
+        dot.style.boxShadow = '0 2px 12px rgba(59,130,246,0.3), inset 0 1px 2px rgba(255,255,255,0.2)';
+        
+        ring.style.opacity = '0';
+        ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        
+        progressRing.style.opacity = '0';
+        progressRing.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(0deg)';
+        
+        glow.style.opacity = '0';
+        glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
+      }
+      
+      // Hover effects with blue theme
+      indicatorContainer.onmouseenter = () => {
+        if (i !== activeIndex) {
+          dot.style.backgroundColor = 'rgba(59,130,246,0.7)';
+          dot.style.border = '2px solid rgba(255,255,255,0.8)';
+          dot.style.transform = 'scale(1.1)';
+          dot.style.boxShadow = '0 4px 18px rgba(59,130,246,0.5), inset 0 1px 3px rgba(255,255,255,0.25)';
+          ring.style.opacity = '0.6';
+          ring.style.transform = 'translate(-50%, -50%) scale(0.9)';
+          ring.style.borderColor = 'rgba(59,130,246,0.7)';
+          glow.style.opacity = '0.4';
+          glow.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        }
+      };
+      
+      indicatorContainer.onmouseleave = () => {
+        if (i !== activeIndex) {
+          dot.style.backgroundColor = 'rgba(59,130,246,0.4)';
+          dot.style.border = '2px solid rgba(255,255,255,0.6)';
+          dot.style.transform = 'scale(1)';
+          dot.style.boxShadow = '0 2px 12px rgba(59,130,246,0.3), inset 0 1px 2px rgba(255,255,255,0.2)';
+          ring.style.opacity = '0';
+          ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
+          glow.style.opacity = '0';
+          glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
+        }
+      };
+      
+      indicatorContainer.onclick = () => { 
+        console.log('Indicator clicked, switching to slide:', i);
+        renderSlide(i); 
+      };
+      
+      // Assemble the indicator
+      indicatorContainer.appendChild(glow);
+      indicatorContainer.appendChild(progressRing);
+      indicatorContainer.appendChild(ring);
+      indicatorContainer.appendChild(dot);
+      indicators.appendChild(indicatorContainer);
+    }
+    
+    console.log('Created', slides.length, 'indicator dots');
+  }
+
+  // Event listeners
+  const prevBtn = document.getElementById('carousel-prev');
+  const nextBtn = document.getElementById('carousel-next');
+  
+  console.log('Carousel buttons found:', { prevBtn: !!prevBtn, nextBtn: !!nextBtn });
+  
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      console.log('Previous button clicked, current slide:', currentSlide);
+      const newSlide = (currentSlide - 1 + slides.length) % slides.length;
+      console.log('Switching to slide:', newSlide);
+      renderSlide(newSlide);
+    };
+  } else {
+    console.error('Previous button not found');
+  }
+
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      console.log('Next button clicked, current slide:', currentSlide);
+      const newSlide = (currentSlide + 1) % slides.length;
+      console.log('Switching to slide:', newSlide);
+      renderSlide(newSlide);
+    };
+  } else {
+    console.error('Next button not found');
+  }
+
+  // Auto-advance
+  let autoAdvanceInterval = setInterval(() => {
+    console.log('Auto-advancing to next slide, current:', currentSlide);
+    const newSlide = (currentSlide + 1) % slides.length;
+    renderSlide(newSlide);
+  }, 10000);
+
+  // Pause on hover
+  const carouselContainer = document.querySelector('main');
+  if (carouselContainer) {
     carouselContainer.addEventListener('mouseenter', () => {
+      console.log('Pausing auto-advance on hover');
       clearInterval(autoAdvanceInterval);
     });
     
     carouselContainer.addEventListener('mouseleave', () => {
+      console.log('Resuming auto-advance on mouse leave');
       autoAdvanceInterval = setInterval(() => {
-        currentSlide = (currentSlide + 1) % slides.length;
-        renderSlide(currentSlide);
-      }, 8000);
+        const newSlide = (currentSlide + 1) % slides.length;
+        renderSlide(newSlide);
+      }, 10000);
     });
+  } else {
+    console.error('Carousel container not found');
+  }
 
-    // Initial render
-    renderSlide(currentSlide);
+  // Initial render - ensure first slide content is displayed
+  console.log('DOM loaded, initializing carousel...');
+  console.log('Elements found:', {
+    carouselTitle: !!carouselTitle,
+    carouselDesc: !!carouselDesc,
+    indicators: !!indicators,
+    content: !!content,
+    background3d: !!background3d
+  });
+  
+  // Set initial content immediately to ensure first slide shows
+  console.log('Setting initial slide content...');
+  if (carouselTitle && carouselDesc && content) {
+    carouselTitle.textContent = slides[0].title;
+    carouselDesc.textContent = slides[0].subtitle;
+    
+    // Make everything visible
+    carouselTitle.style.visibility = 'visible';
+    carouselTitle.style.opacity = '1';
+    carouselTitle.style.display = 'block';
+    
+    carouselDesc.style.visibility = 'visible';
+    carouselDesc.style.opacity = '1';
+    carouselDesc.style.display = 'block';
+    
+    content.style.visibility = 'visible';
+    content.style.opacity = '1';
+    content.style.display = 'block';
+    
+    console.log('Initial content set:', slides[0].title, slides[0].subtitle);
+  }
+  
+  // Create initial 3D background immediately
+  console.log('Creating initial 3D background...');
+  create3DBackground(slides[0]);
+  
+  // Initialize everything immediately with renderSlide
+  console.log('Initializing carousel with first slide...');
+  renderSlide(currentSlide);
 
-    // Enhanced transition to home
-    function addHomeTransition(btnId) {
-      const btn = document.getElementById(btnId);
-      if (!btn) return;
-      btn.onclick = (e) => {
-        e.preventDefault();
-        const main = document.querySelector('main');
-        const logo = document.querySelector('.relative.z-30');
-        const bottomNav = document.querySelector('.relative.z-20');
+  // Button functionality
+  function addLearnMoreTransition(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const main = document.querySelector('main');
+      const logo = document.querySelector('.relative.z-30');
+      const bottomNav = document.querySelector('.relative.z-20');
+      
+      if (main && logo && bottomNav) {
+        main.classList.remove('fade-in');
+        main.classList.add('fade-out');
+        logo.style.transform = 'translateY(-100px)';
+        logo.style.opacity = '0';
+        bottomNav.style.transform = 'translateY(100px)';
+        bottomNav.style.opacity = '0';
         
-        if (main && logo && bottomNav) {
-          // Enhanced exit animation
-          main.classList.remove('fade-in');
-          main.classList.add('fade-out');
-          logo.style.transform = 'translateY(-100px)';
-          logo.style.opacity = '0';
-          bottomNav.style.transform = 'translateY(100px)';
-          bottomNav.style.opacity = '0';
-          
+        setTimeout(() => {
+          window.open('https://www.dime.gov.ph/about', '_blank', 'noopener,noreferrer');
           setTimeout(() => {
-            window.location.href = '/home';
-          }, 800);
-        } else {
-          window.location.href = '/home';
-        }
-      };
-    }
-    addHomeTransition('lets-start-btn');
-    addHomeTransition('lets-start-btn-sticky');
-
-    // Add keyboard navigation
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') {
-        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-        renderSlide(currentSlide);
-      } else if (e.key === 'ArrowRight') {
-        currentSlide = (currentSlide + 1) % slides.length;
-        renderSlide(currentSlide);
+            main.classList.remove('fade-out');
+            main.classList.add('fade-in');
+            logo.style.transform = 'translateY(0)';
+            logo.style.opacity = '1';
+            bottomNav.style.transform = 'translateY(0)';
+            bottomNav.style.opacity = '1';
+          }, 100);
+        }, 600);
+      } else {
+        window.open('https://www.dime.gov.ph/about', '_blank', 'noopener,noreferrer');
       }
-    });
+    };
+  }
+
+  function addHomeTransition(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const main = document.querySelector('main');
+      const logo = document.querySelector('.relative.z-30');
+      const bottomNav = document.querySelector('.relative.z-20');
+      
+      if (main && logo && bottomNav) {
+        main.classList.remove('fade-in');
+        main.classList.add('fade-out');
+        logo.style.transform = 'translateY(-100px)';
+        logo.style.opacity = '0';
+        bottomNav.style.transform = 'translateY(100px)';
+        bottomNav.style.opacity = '0';
+        
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 800);
+      } else {
+        window.location.href = '/home';
+      }
+    };
+  }
+
+  addLearnMoreTransition('learn-more-btn');
+  addHomeTransition('lets-start-btn-sticky');
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') {
+      const newSlide = (currentSlide - 1 + slides.length) % slides.length;
+      renderSlide(newSlide);
+    } else if (e.key === 'ArrowRight') {
+      const newSlide = (currentSlide + 1) % slides.length;
+      renderSlide(newSlide);
+    }
+  });
+  } // Close initializeCarousel function
   </script>
 
-  <style>
-    .fade-in { 
-      animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1); 
-    }
-    .fade-out { 
-      animation: fadeOut 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
-    }
-    
-    @keyframes fadeIn { 
-      from { 
-        opacity: 0; 
-        transform: translateY(40px) scale(0.95);
-      } 
-      to { 
-        opacity: 1; 
-        transform: translateY(0) scale(1);
-      } 
-    }
-    
-    @keyframes fadeOut { 
-      from { 
-        opacity: 1; 
-        transform: translateY(0) scale(1);
-      } 
-      to { 
-        opacity: 0; 
-        transform: translateY(-40px) scale(0.95);
-      } 
-    }
+<style>
+  .fade-in { 
+    animation: fadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+  .fade-out { 
+    animation: fadeOut 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+  }
+  
+  @keyframes fadeIn { 
+    from { 
+      opacity: 0; 
+      transform: translateY(50px) scale(0.92);
+    } 
+    to { 
+      opacity: 1; 
+      transform: translateY(0) scale(1);
+    } 
+  }
+  
+  @keyframes fadeOut { 
+    from { 
+      opacity: 1; 
+      transform: translateY(0) scale(1);
+    } 
+    to { 
+      opacity: 0; 
+      transform: translateY(-50px) scale(0.92);
+    } 
+  }
 
-    /* Enhanced scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
 
-    /* Enhanced focus styles */
-    *:focus {
-      outline: none;
+  
+
+  
+  /* Interactive Background Animations */
+  
+  /* Modern 3D Animations */
+  .modern-3d-scene {
+    transform-style: preserve-3d;
+  }
+  
+  .modern-building, .modern-progress-bar, .holo-panel, .metric-card {
+    transform-style: preserve-3d;
+  }
+  
+  @keyframes modernBuildingFloat {
+    0%, 100% {
+      transform: rotateY(0deg) rotateX(3deg) translateY(0px) translateZ(0px);
+      opacity: 0.9;
     }
-    
-    *:focus-visible {
-      outline: 2px solid rgba(255, 255, 255, 0.8);
-      outline-offset: 2px;
+    33% {
+      transform: rotateY(8deg) rotateX(6deg) translateY(-15px) translateZ(30px);
+      opacity: 1;
     }
-  </style> 
+    66% {
+      transform: rotateY(-5deg) rotateX(1deg) translateY(-20px) translateZ(15px);
+      opacity: 0.95;
+    }
+  }
+  
+  @keyframes modernWindowPulse {
+    0%, 100% {
+      opacity: 0.8;
+      box-shadow: 0 0 20px rgba(64,224,208,0.6);
+      transform: scaleY(1);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 30px rgba(64,224,208,1), 0 0 50px rgba(0,191,255,0.5);
+      transform: scaleY(1.1);
+    }
+  }
+  
+  @keyframes holoPanelFloat {
+    0%, 100% {
+      transform: rotateY(0deg) rotateX(0deg) translateY(0px) translateZ(0px);
+      opacity: 0.9;
+    }
+    25% {
+      transform: rotateY(15deg) rotateX(10deg) translateY(-20px) translateZ(40px);
+      opacity: 1;
+    }
+    50% {
+      transform: rotateY(-10deg) rotateX(-8deg) translateY(-30px) translateZ(20px);
+      opacity: 0.95;
+    }
+    75% {
+      transform: rotateY(20deg) rotateX(12deg) translateY(-15px) translateZ(35px);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes progressBarGrow {
+    0%, 100% {
+      transform: rotateY(0deg) translateY(0px) scaleY(1);
+      opacity: 0.9;
+    }
+    50% {
+      transform: rotateY(10deg) translateY(-10px) scaleY(1.1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes progressFillPulse {
+    0%, 100% {
+      opacity: 0.9;
+      box-shadow: 0 0 20px rgba(34,197,94,0.8);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 40px rgba(34,197,94,1), 0 0 60px rgba(16,185,129,0.6);
+    }
+  }
+  
+  @keyframes metricFloat {
+    0%, 100% {
+      transform: rotateY(0deg) rotateX(0deg) translateY(0px);
+      opacity: 0.9;
+    }
+    50% {
+      transform: rotateY(15deg) rotateX(8deg) translateY(-20px);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes particleFloat {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px) scale(1);
+      opacity: 0.8;
+    }
+    25% {
+      transform: translateY(-30px) translateX(15px) scale(1.2);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(-50px) translateX(-10px) scale(0.8);
+      opacity: 0.9;
+    }
+    75% {
+      transform: translateY(-20px) translateX(25px) scale(1.1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes dataFlow {
+    0% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+  }
+  
+  @keyframes digitalNodePulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+      box-shadow: 0 0 30px rgba(139,92,246,0.8);
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+      box-shadow: 0 0 50px rgba(139,92,246,1), 0 0 70px rgba(124,58,237,0.6);
+    }
+  }
+  
+  @keyframes digitalFlow {
+    0% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+  }
+  
+  @keyframes shieldFloat {
+    0%, 100% {
+      transform: translateY(0px) rotateY(0deg);
+      opacity: 0.9;
+    }
+    50% {
+      transform: translateY(-20px) rotateY(10deg);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes checkPulse {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.3);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes growthExpand {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes communityPulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+      box-shadow: 0 0 25px rgba(236,72,153,0.7);
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+      box-shadow: 0 0 40px rgba(236,72,153,1), 0 0 60px rgba(219,39,119,0.6);
+    }
+  }
+  
+  /* Modern Content Slide Animations */
+  .content-slide-title,
+  .content-slide-subtitle {
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .content-slide-out {
+    animation: modernSlideOut 0.4s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  }
+  
+  .content-slide-in {
+    animation: modernSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  @keyframes modernSlideOut {
+    0% {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+      filter: blur(0px);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-40px) scale(0.95);
+      filter: blur(8px);
+    }
+  }
+  
+  @keyframes modernSlideIn {
+    0% {
+      opacity: 0;
+      transform: translateY(60px) scale(0.9);
+      filter: blur(10px);
+    }
+    60% {
+      opacity: 0.8;
+      transform: translateY(-10px) scale(1.02);
+      filter: blur(2px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+      filter: blur(0px);
+    }
+  }
+  
+  /* Enhanced fade transitions */
+  .fade-in {
+    animation: enhancedFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  .fade-out {
+    animation: enhancedFadeOut 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  }
+  
+  @keyframes enhancedFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+      filter: blur(5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px);
+      filter: blur(0px);
+    }
+  }
+  
+  @keyframes enhancedFadeOut {
+    0% {
+      opacity: 1;
+      transform: translateY(0px);
+      filter: blur(0px);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-20px);
+      filter: blur(3px);
+    }
+  }
+  
+  /* Staggered animation for title, subtitle, and button */
+  .content-slide-title.content-slide-in {
+    animation-delay: 0s;
+  }
+  
+  .content-slide-subtitle.content-slide-in {
+    animation-delay: 0.15s;
+  }
+  
+  .content-slide-button.content-slide-in {
+    animation-delay: 0.3s;
+  }
+  
+  /* Enhanced button transitions */
+  .content-slide-button {
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Special scaling animation for buttons */
+  @keyframes modernButtonSlideIn {
+    0% {
+      opacity: 0;
+      transform: translateY(40px) scale(0.8);
+      filter: blur(8px);
+    }
+    60% {
+      opacity: 0.9;
+      transform: translateY(-5px) scale(1.05);
+      filter: blur(1px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+      filter: blur(0px);
+    }
+  }
+  
+  .content-slide-button.content-slide-in {
+    animation: modernButtonSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  /* Enhanced Content-Specific Animations */
+  @keyframes documentFloat {
+    0%, 100% {
+      transform: rotateY(0deg) rotateX(0deg) translateY(0px);
+      opacity: 0.9;
+    }
+    33% {
+      transform: rotateY(15deg) rotateX(10deg) translateY(-15px);
+      opacity: 1;
+    }
+    66% {
+      transform: rotateY(-10deg) rotateX(-5deg) translateY(-25px);
+      opacity: 0.95;
+    }
+  }
+  
+  @keyframes textFlow {
+    0% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    100% {
+      opacity: 0.7;
+      transform: scaleX(1);
+    }
+  }
+  
+  @keyframes auditFlow {
+    0% {
+      opacity: 0;
+      transform: scaleX(0) rotate(0deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: scaleX(0) rotate(5deg);
+    }
+  }
+  
+  @keyframes badgePulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+      box-shadow: 0 0 20px rgba(245,158,11,0.6);
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+      box-shadow: 0 0 30px rgba(245,158,11,0.9);
+    }
+  }
+  
+  @keyframes deviceFloat {
+    0%, 100% {
+      transform: rotateY(0deg) rotateX(0deg) translateY(0px);
+      opacity: 0.9;
+    }
+    50% {
+      transform: rotateY(10deg) rotateX(5deg) translateY(-20px);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes screenGlow {
+    0%, 100% {
+      opacity: 0.8;
+      box-shadow: 0 0 15px rgba(139,92,246,0.8);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 25px rgba(139,92,246,1);
+    }
+  }
+  
+  @keyframes dataStreamFlow {
+    0% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+  }
+  
+  @keyframes iconSpin {
+    0% {
+      transform: rotate(0deg) scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: rotate(180deg) scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes houseGlow {
+    0%, 100% {
+      opacity: 0.9;
+      box-shadow: 0 10px 20px rgba(236,72,153,0.3);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 15px 30px rgba(236,72,153,0.5);
+    }
+  }
+  
+  @keyframes treeGrow {
+    0%, 100% {
+      transform: scale(1) translateY(0px);
+      opacity: 0.9;
+    }
+    50% {
+      transform: scale(1.1) translateY(-8px);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes pathFlow {
+    0% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+  }
+  
+  @keyframes personMove {
+    0%, 100% {
+      transform: scale(1) translateY(0px);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.15) translateY(-10px);
+      opacity: 1;
+    }
+  }
+  
+  .system-progress-bar {
+    animation: systemProgressBarGlow 2s ease-in-out infinite;
+  }
+  
+  .system-progress-fill {
+    animation: systemProgressFill 1.5s ease-in-out infinite;
+  }
+  
+  .system-milestone {
+    animation: systemMilestoneRotate 3s linear infinite;
+    opacity: 1 !important;
+  }
+  
+  .system-status {
+    animation: systemStatusPulse 1s ease-in-out infinite;
+    opacity: 1 !important;
+  }
+  
+  .system-timeline {
+    animation: systemTimelineFlow 2s ease-in-out infinite;
+  }
+  
+  .system-panel {
+    animation: systemPanelFloat 3s ease-in-out infinite;
+  }
+  
+  .system-connection {
+    animation: systemConnectionFlow 2s ease-in-out infinite;
+  }
+  
+  .system-data-point {
+    animation: systemDataPointPulse 1.5s ease-in-out infinite;
+  }
+  
+  .system-transparency-panel {
+    animation: systemTransparencyGlow 3s ease-in-out infinite;
+  }
+  
+  .system-verification {
+    animation: systemVerificationPulse 2s ease-in-out infinite;
+    opacity: 1 !important;
+  }
+  
+  .system-audit-trail {
+    animation: systemAuditTrailFlow 3s ease-in-out infinite;
+  }
+  
+  .system-transformation-indicator {
+    animation: systemTransformationMove 2s ease-in-out infinite;
+  }
+  
+  .system-community-growth {
+    animation: systemCommunityGrowth 2s ease-in-out infinite;
+    opacity: 1 !important;
+  }
+  
+  .system-development-path {
+    animation: systemDevelopmentPathFlow 3s ease-in-out infinite;
+  }
+  
+  /* Spline 3D Model Animations */
+  @keyframes splineModelFadeIn {
+    0% { 
+      opacity: 0; 
+      transform: scale(0.9);
+    }
+    100% { 
+      opacity: 0.8; 
+      transform: scale(1);
+    }
+  }
+  
+  spline-viewer {
+    animation: splineModelFadeIn 1s ease-out;
+  }
+  
+  @keyframes systemWindowGlow {
+    0%, 100% { 
+      opacity: 0.95; 
+      box-shadow: 0 0 25px rgba(255,255,255,0.9); 
+    }
+    50% { 
+      opacity: 1; 
+      box-shadow: 0 0 40px rgba(255,255,255,1), 0 0 70px rgba(255,255,255,0.95), 0 0 90px rgba(255,255,255,0.8); 
+    }
+  }
+  
+  @keyframes systemDocumentFloat {
+    0%, 100% { 
+      transform: rotate(0deg) translateY(0px); 
+      opacity: 0.98; 
+    }
+    50% { 
+      transform: rotate(15deg) translateY(-40px); 
+      opacity: 1; 
+    }
+  }
+  
+  @keyframes systemLightPulse {
+    0%, 100% { 
+      opacity: 0.95; 
+      box-shadow: 0 0 35px rgba(255,255,255,1), 0 0 70px rgba(255,255,255,0.9), 0 0 105px rgba(255,255,255,0.7); 
+    }
+    50% { 
+      opacity: 0.3; 
+      box-shadow: 0 0 50px rgba(255,255,255,1), 0 0 100px rgba(255,255,255,1), 0 0 150px rgba(255,255,255,1); 
+    }
+  }
+  
+  @keyframes systemEmblemRotate {
+    0% { 
+      transform: rotate(0deg) scale(1); 
+      opacity: 1;
+      box-shadow: 0 0 60px rgba(255,255,255,1), 0 0 120px rgba(255,255,255,0.8), 0 0 180px rgba(255,255,255,0.6);
+    }
+    50% { 
+      transform: rotate(180deg) scale(1.1); 
+      opacity: 1;
+      box-shadow: 0 0 80px rgba(255,255,255,1), 0 0 160px rgba(255,255,255,0.9), 0 0 240px rgba(255,255,255,0.7);
+    }
+    100% { 
+      transform: rotate(360deg) scale(1); 
+      opacity: 1;
+      box-shadow: 0 0 60px rgba(255,255,255,1), 0 0 120px rgba(255,255,255,0.8), 0 0 180px rgba(255,255,255,0.6);
+    }
+  }
+  
+  @keyframes systemProgressBarGlow {
+    0%, 100% { 
+      box-shadow: 0 0 25px rgba(255,255,255,0.5); 
+    }
+    50% { 
+      box-shadow: 0 0 40px rgba(255,255,255,0.8), 0 0 70px rgba(255,255,255,0.5); 
+    }
+  }
+  
+  @keyframes systemProgressFill {
+    0% { 
+      width: 25%; 
+      opacity: 0.95; 
+    }
+    50% { 
+      width: 95%; 
+      opacity: 1; 
+    }
+    100% { 
+      width: 75%; 
+      opacity: 0.98; 
+    }
+  }
+  
+  @keyframes systemMilestoneRotate {
+    0% { 
+      transform: rotate(0deg) scale(1); 
+      opacity: 1;
+      box-shadow: 0 0 40px rgba(34,197,94,0.8), 0 0 80px rgba(34,197,94,0.4);
+    }
+    50% { 
+      transform: rotate(180deg) scale(1.1); 
+      opacity: 1;
+      box-shadow: 0 0 60px rgba(34,197,94,0.9), 0 0 120px rgba(34,197,94,0.6);
+    }
+    100% { 
+      transform: rotate(360deg) scale(1); 
+      opacity: 1;
+      box-shadow: 0 0 40px rgba(34,197,94,0.8), 0 0 80px rgba(34,197,94,0.4);
+    }
+  }
+  
+  @keyframes systemStatusPulse {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 1; 
+      box-shadow: 0 0 25px rgba(34,197,94,0.9), 0 0 50px rgba(34,197,94,0.5); 
+    }
+    50% { 
+      transform: scale(2.2); 
+      opacity: 1; 
+      box-shadow: 0 0 50px rgba(34,197,94,1), 0 0 100px rgba(34,197,94,0.95), 0 0 150px rgba(34,197,94,0.7); 
+    }
+  }
+  
+  @keyframes systemTimelineFlow {
+    0%, 100% { 
+      opacity: 0.7; 
+      transform: scaleX(0.8); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scaleX(1.2); 
+    }
+  }
+  
+  @keyframes systemPanelFloat {
+    0%, 100% { 
+      transform: translateY(0px) scale(1); 
+      opacity: 0.95; 
+    }
+    50% { 
+      transform: translateY(-25px) scale(1.1); 
+      opacity: 1; 
+    }
+  }
+  
+  @keyframes systemConnectionFlow {
+    0%, 100% { 
+      opacity: 0.6; 
+      transform: scaleX(0.7); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scaleX(1.3); 
+    }
+  }
+  
+  @keyframes systemDataPointPulse {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 0.95; 
+      box-shadow: 0 0 20px rgba(59,130,246,0.9), 0 0 40px rgba(59,130,246,0.5); 
+    }
+    50% { 
+      transform: scale(1.8); 
+      opacity: 1; 
+      box-shadow: 0 0 40px rgba(59,130,246,1), 0 0 70px rgba(59,130,246,0.95), 0 0 90px rgba(59,130,246,0.7); 
+    }
+  }
+  
+  @keyframes systemTransparencyGlow {
+    0%, 100% { 
+      opacity: 0.2; 
+      box-shadow: 0 0 20px rgba(255,255,255,0.3); 
+    }
+    50% { 
+      opacity: 0.4; 
+      box-shadow: 0 0 35px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.4); 
+    }
+  }
+  
+  @keyframes systemVerificationPulse {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 1; 
+      box-shadow: 0 0 30px rgba(34,197,94,0.9), 0 0 60px rgba(34,197,94,0.5); 
+    }
+    50% { 
+      transform: scale(1.5); 
+      opacity: 1; 
+      box-shadow: 0 0 50px rgba(34,197,94,1), 0 0 100px rgba(34,197,94,0.95), 0 0 150px rgba(34,197,94,0.7); 
+    }
+  }
+  
+  @keyframes systemAuditTrailFlow {
+    0%, 100% { 
+      opacity: 0.7; 
+      transform: scaleX(0.8); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scaleX(1.2); 
+    }
+  }
+  
+  @keyframes systemTransformationMove {
+    0%, 100% { 
+      transform: translateX(0px) scale(1); 
+      opacity: 0.95; 
+    }
+    50% { 
+      transform: translateX(20px) scale(1.2); 
+      opacity: 1; 
+    }
+  }
+  
+  @keyframes systemCommunityGrowth {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 1;
+      box-shadow: 0 0 50px rgba(34,197,94,0.9), 0 0 100px rgba(34,197,94,0.5);
+    }
+    50% { 
+      transform: scale(1.6); 
+      opacity: 1;
+      box-shadow: 0 0 80px rgba(34,197,94,1), 0 0 160px rgba(34,197,94,0.8);
+    }
+  }
+  
+  @keyframes systemDevelopmentPathFlow {
+    0%, 100% { 
+      opacity: 0.8; 
+      transform: scaleX(0.9); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scaleX(1.1); 
+    }
+  }
+  
+  @keyframes progressBarGlow {
+    0%, 100% { 
+      box-shadow: 0 0 20px rgba(255,255,255,0.4); 
+    }
+    50% { 
+      box-shadow: 0 0 35px rgba(255,255,255,0.7), 0 0 60px rgba(255,255,255,0.4); 
+    }
+  }
+  
+  @keyframes progressFill {
+    0% { 
+      width: 30%; 
+      opacity: 0.95; 
+    }
+    50% { 
+      width: 90%; 
+      opacity: 1; 
+    }
+    100% { 
+      width: 70%; 
+      opacity: 0.98; 
+    }
+  }
+  
+  @keyframes circleRotate {
+    0% { 
+      transform: rotate(0deg); 
+    }
+    100% { 
+      transform: rotate(360deg); 
+    }
+  }
+  
+  @keyframes dataPointPulse {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 0.95; 
+      box-shadow: 0 0 20px rgba(34,197,94,0.8), 0 0 40px rgba(34,197,94,0.4); 
+    }
+    50% { 
+      transform: scale(1.8); 
+      opacity: 1; 
+      box-shadow: 0 0 35px rgba(34,197,94,1), 0 0 60px rgba(34,197,94,0.95), 0 0 80px rgba(34,197,94,0.6); 
+    }
+  }
+  
+  @keyframes nodePulse {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 0.95; 
+      box-shadow: 0 0 25px rgba(59,130,246,0.8), 0 0 50px rgba(59,130,246,0.4); 
+    }
+    50% { 
+      transform: scale(1.7); 
+      opacity: 1; 
+      box-shadow: 0 0 40px rgba(59,130,246,1), 0 0 70px rgba(59,130,246,0.95), 0 0 90px rgba(59,130,246,0.6); 
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { 
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.8;
+    }
+    50% { 
+      transform: translate(-50%, -50%) scale(1.1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes blueIndicatorPulse {
+    0%, 100% { 
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.9;
+      border-color: rgba(59,130,246,0.9);
+      box-shadow: 0 0 0 0 rgba(59,130,246,0.7);
+    }
+    50% { 
+      transform: translate(-50%, -50%) scale(1.15);
+      opacity: 1;
+      border-color: rgba(37,99,235,1);
+      box-shadow: 0 0 0 8px rgba(59,130,246,0);
+    }
+  }
+
+  @keyframes digitalConnectionFlow {
+    0% { 
+      opacity: 0.5; 
+      transform: scaleX(0.5) rotate(0deg); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scaleX(1.5) rotate(180deg); 
+    }
+    100% { 
+      opacity: 0.5; 
+      transform: scaleX(0.5) rotate(360deg); 
+    }
+  }
+  
+  @keyframes dataParticleFlow {
+    0% { 
+      transform: translateX(-50px) translateY(0px); 
+      opacity: 0; 
+    }
+    50% { 
+      transform: translateX(0px) translateY(-35px); 
+      opacity: 1; 
+    }
+    100% { 
+      transform: translateX(50px) translateY(0px); 
+      opacity: 0; 
+    }
+  }
+  
+  @keyframes transparencyGlow {
+    0%, 100% { 
+      border-color: rgba(255,255,255,0.5); 
+      box-shadow: 0 0 20px rgba(255,255,255,0.3); 
+    }
+    50% { 
+      border-color: rgba(255,255,255,0.8); 
+      box-shadow: 0 0 35px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3); 
+    }
+  }
+  
+  @keyframes checkPulse {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 0.95; 
+    }
+    50% { 
+      transform: scale(1.5); 
+      opacity: 1; 
+      box-shadow: 0 0 30px rgba(34,197,94,0.95), 0 0 50px rgba(34,197,94,0.6); 
+    }
+  }
+  
+  @keyframes arrowTransform {
+    0% { 
+      transform: translateX(-20px) scale(1); 
+      opacity: 0.9; 
+    }
+    50% { 
+      transform: translateX(25px) scale(1.4); 
+      opacity: 1; 
+    }
+    100% { 
+      transform: translateX(-20px) scale(1); 
+      opacity: 0.9; 
+    }
+  }
+  
+  @keyframes growthExpand {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 0.9; 
+    }
+    50% { 
+      transform: scale(1.6); 
+      opacity: 1; 
+      box-shadow: 0 0 40px rgba(34,197,94,0.95), 0 0 60px rgba(34,197,94,0.6); 
+    }
+  }
+
+  /* Enhanced scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Enhanced focus styles */
+  *:focus {
+    outline: none;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+  }
+</style> 

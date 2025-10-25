@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { User, ActivityLog } = require('../models');
-const { authenticateToken } = require('../middleware/auth');
+const { Op } = require('sequelize');
+const { User, ActivityLog, Notification, Project, ProjectUpdate, ProjectIssue, RPMESForm, MonitoringReport, SiteVisit, Upload, ProjectValidation } = require('../models');
+const { authenticateToken, updateUserActivity, isUserActive, userActivityTracker } = require('../middleware/auth');
 const { sendUserIdEmail } = require('../services/emailService');
 const { createNotification, createNotificationForRole } = require('./notifications');
 
@@ -36,11 +37,11 @@ router.get('/', authenticateToken, requireSystemAdmin, async (req, res) => {
     const whereClause = {
       // Exclude deleted users and System Administrator account from main table
       status: { [require('sequelize').Op.ne]: 'deleted' },
-      // Exclude System Administrator account (sysad@gmail.com)
+      // Exclude System Administrator account (sysadmin@gmail.com)
       [require('sequelize').Op.and]: [
         { [require('sequelize').Op.or]: [
-          { username: { [require('sequelize').Op.ne]: 'sysad@gmail.com' } },
-          { email: { [require('sequelize').Op.ne]: 'sysad@gmail.com' } }
+          { username: { [require('sequelize').Op.ne]: 'sysadmin' } },
+          { email: { [require('sequelize').Op.ne]: 'sysadmin@gmail.com' } }
         ]}
       ]
     };
@@ -152,7 +153,7 @@ router.get('/validate-eiu/:userId', authenticateToken, async (req, res) => {
         role: 'EIU',
         status: 'active'
       },
-      attributes: ['id', 'name', 'username', 'email', 'role', 'status', 'userId']
+      attributes: { exclude: ['password'] } // Return all fields except password
     });
 
     if (!eiuUser) {
@@ -179,6 +180,7 @@ router.get('/validate-eiu/:userId', authenticateToken, async (req, res) => {
 // Create new user
 router.post('/', authenticateToken, requireSystemAdmin, async (req, res) => {
   try {
+    console.log('User creation request received:', { ...req.body, password: '***' });
     const {
       firstName,
       middleName,
@@ -202,14 +204,141 @@ router.post('/', authenticateToken, requireSystemAdmin, async (req, res) => {
       officeDepartment,
       position,
       contactNumber,
-      address
+      address,
+      externalCompanyName,
+      actualRole,
+      actualSubRole
     } = req.body;
 
-    // Validate required fields
-    if (!firstName || !lastName || !username || !password || !role) {
+    // Comprehensive validation for all required fields
+    const missingFields = [];
+    
+    if (!firstName?.trim()) missingFields.push('First Name');
+    if (!middleName?.trim()) missingFields.push('Middle Name');
+    if (!lastName?.trim()) missingFields.push('Last Name');
+    if (!username?.trim()) missingFields.push('Email');
+    if (!contactNumber?.trim()) missingFields.push('Contact Number');
+    if (!password?.trim()) missingFields.push('Password');
+    if (!birthdate) missingFields.push('Birthdate');
+    if (!group?.trim()) missingFields.push('Group');
+    // For backward compatibility, if actualRole/actualSubRole are not provided, skip validation
+    // The frontend should provide these for proper validation
+    if (actualRole && !actualRole.trim()) missingFields.push('Role');
+    if (actualSubRole && !actualSubRole.trim()) missingFields.push('Subrole');
+    if (!officeDepartment?.trim() && !department?.trim()) missingFields.push('Department/Office');
+    if (!userId?.trim()) missingFields.push('Unique User ID');
+    
+    // Conditional validation: Company Name required for EIU group
+    if (group === 'EIU' && !externalCompanyName?.trim()) {
+      missingFields.push('Company Name (required for EIU Group)');
+    }
+    
+    if (missingFields.length > 0) {
+      console.log('Missing fields validation failed:', missingFields);
       return res.status(400).json({
         success: false,
-        error: 'First name, last name, username, password, and role are required'
+        error: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Format validation
+    if (contactNumber && !contactNumber.startsWith('09')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Contact number must start with 09'
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(username)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Enter a valid email address'
+      });
+    }
+
+    // EMS group restriction
+    if (group === 'EMS') {
+      return res.status(400).json({
+        success: false,
+        error: 'EMS group is not yet implemented'
+      });
+    }
+
+    // ✅ ENHANCED: Check for existing MPMEC Secretariat Admin
+    if (group === 'LGU-PMT' && (actualSubRole === 'Focal Person (Admin)' || subRole?.includes('Focal Person (Admin)'))) {
+      console.log('🔍 Checking for existing MPMEC Secretariat Admin...');
+      
+      const existingSecretariatAdmin = await User.findOne({
+        where: {
+          group: 'LGU-PMT',
+          [Op.or]: [
+            { subRole: { [Op.like]: '%Focal Person (Admin)%' } },
+            { subRole: { [Op.like]: '%MPMEC Secretariat%Admin%' } }
+          ],
+          status: 'active' // Only check active users
+        },
+        paranoid: true // Exclude soft-deleted users
+      });
+
+      if (existingSecretariatAdmin) {
+        console.log('❌ MPMEC Secretariat Admin already exists:', {
+          id: existingSecretariatAdmin.id,
+          name: existingSecretariatAdmin.fullName || existingSecretariatAdmin.name,
+          username: existingSecretariatAdmin.username,
+          subRole: existingSecretariatAdmin.subRole
+        });
+
+        return res.status(409).json({
+          success: false,
+          error: 'MPMEC Secretariat Admin already exists. Delete the current account with safety measures before creating a new one.',
+          existingUser: {
+            name: existingSecretariatAdmin.fullName || existingSecretariatAdmin.name,
+            username: existingSecretariatAdmin.username,
+            userId: existingSecretariatAdmin.userId
+          }
+        });
+      }
+
+      console.log('✅ No existing MPMEC Secretariat Admin found, proceeding with creation');
+    }
+
+    // Validate Group → Role → Subrole combination
+    const validRoleMapping = {
+      'LGU-PMT': ['MPMEC Secretariat', 'MPMEC'],
+      'LGU-IU': ['IO Officer', 'MDC', 'Municipal Officer'],
+      'EIU': ['Contractor', 'Program Partner Agency']
+    };
+    
+    const validSubRoleMapping = {
+      'MPMEC Secretariat': ['Focal Person (Admin)'],
+      'MPMEC': ['Chairperson', 'Vice Chairperson', 'Member'],
+      'IO Officer': ['Department Encoder (Admin)'],
+      'MDC': ['Member'],
+      'Municipal Officer': ['Member'],
+      'Contractor': ['Head'],
+      'Program Partner Agency': ['Head']
+    };
+    
+    // Temporarily disable role/subrole validation for debugging
+    console.log('Role/subrole validation data:', { group, actualRole, actualSubRole });
+    
+    // Check if the selected role is valid for the selected group
+    if (actualRole && validRoleMapping[group] && !validRoleMapping[group].includes(actualRole)) {
+      console.log('Role validation failed:', { group, actualRole, validRoles: validRoleMapping[group] });
+      return res.status(400).json({
+        success: false,
+        error: `Invalid Role for selected Group. Valid roles for ${group}: ${validRoleMapping[group]?.join(', ') || 'None'}`
+      });
+    }
+    
+    // Check if the selected subrole is valid for the selected role
+    if (actualRole && actualSubRole && validSubRoleMapping[actualRole] && !validSubRoleMapping[actualRole].includes(actualSubRole)) {
+      console.log('Subrole validation failed:', { actualRole, actualSubRole, validSubRoles: validSubRoleMapping[actualRole] });
+      return res.status(400).json({
+        success: false,
+        error: `Invalid Subrole for selected Role. Valid subroles for ${actualRole}: ${validSubRoleMapping[actualRole]?.join(', ') || 'None'}`
       });
     }
 
@@ -248,30 +377,31 @@ router.post('/', authenticateToken, requireSystemAdmin, async (req, res) => {
     // Generate full name if not provided
     const generatedFullName = fullName || [firstName, middleName, lastName].filter(Boolean).join(' ');
 
-    // Create user
+    // Create user with all required fields
     const user = await User.create({
-      firstName,
-      middleName,
-      lastName,
+      firstName: firstName.trim(),
+      middleName: middleName.trim(),
+      lastName: lastName.trim(),
       fullName: generatedFullName,
-      userId,
+      userId: userId.trim(), // This is the user-facing ID (e.g., LGU-PMT-0001)
       birthdate,
       projectCode,
       enable2FA: enable2FA || false,
       accountLockout: accountLockout || false,
       name: generatedFullName, // Keep for backward compatibility
-      username,
-      email: username, // Use username as email since we removed the separate email field
+      username: username.trim(),
+      email: username.trim(), // Use username as email
       password: hashedPassword,
-      role,
-      subRole,
+      role: role.trim(),
+      subRole: subRole.trim(),
       idType,
       idNumber,
-      group,
-      department: officeDepartment || department, // Add support for officeDepartment
+      group: group.trim(),
+      department: officeDepartment?.trim() || department?.trim(), // Department/Office field
       position,
-      contactNumber,
+      contactNumber: contactNumber.trim(),
       address,
+      externalCompanyName: externalCompanyName?.trim() || null, // Company name for EIU
       status: 'active'
     });
 
@@ -288,15 +418,50 @@ router.post('/', authenticateToken, requireSystemAdmin, async (req, res) => {
 
     // Create notifications for relevant users based on the new user's role
     try {
-      // Notify System Administrators about new user creation
-      await createNotificationForRole('SYS.AD', 
-        'New User Account Created', 
-        `A new ${user.role} account has been created: ${user.fullName} (${user.username})`, 
-        'Success', 
-        'User Management', 
-        'User', 
-        user.id, 
-        'Normal'
+      // ✅ ENHANCED: Notify System Administrators with profile picture and targeting
+      const systemAdmins = await User.findAll({
+        where: { 
+          role: 'SYS.AD',
+          status: 'active'
+        },
+        attributes: ['id']
+      });
+      
+      for (const admin of systemAdmins) {
+        await createNotification(
+          admin.id,
+          'User Created',
+          `A new user account has been successfully created: ${user.fullName} (${user.userId})`,
+          'Success',
+          'System',
+          'User',
+          user.id,
+          'Medium',
+          {
+            profilePic: user.profilePictureUrl || null, // Use new user's profile picture
+            module: 'user-management',
+            targetId: user.userId, // Use userId for highlighting in table
+            actionUrl: '/dashboard/sysadmin/modules/user-management'
+          }
+        );
+      }
+      
+      // ✅ ENHANCED: Send welcome notification to the newly created user
+      await createNotification(
+        user.id,
+        'Welcome to Build Watch',
+        `Welcome ${user.fullName}! Your account has been successfully created. You can now access your dashboard and start using the system.`,
+        'Success',
+        'System',
+        'User',
+        user.id,
+        'High',
+        {
+          profilePic: req.user.profilePictureUrl || null, // Use creating admin's profile picture
+          module: 'dashboard',
+          targetId: user.userId,
+          actionUrl: '/dashboard'
+        }
       );
 
       // Notify specific role users based on the new user's role
@@ -353,9 +518,10 @@ router.post('/', authenticateToken, requireSystemAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Create user error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      error: 'Failed to create user'
+      error: `Failed to create user: ${error.message}`
     });
   }
 });
@@ -501,19 +667,46 @@ router.put('/:id/soft-delete', authenticateToken, requireSystemAdmin, async (req
       });
     }
 
+    // Store complete user data before soft delete (to preserve profile picture and other info)
+    const userSnapshot = {
+      id: user.id,
+      userId: user.userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: user.fullName,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      contactNumber: user.contactNumber,
+      birthdate: user.birthdate,
+      group: user.group,
+      role: user.role,
+      subRole: user.subRole,
+      department: user.department,
+      position: user.position,
+      profilePictureUrl: user.profilePictureUrl,
+      status: user.status,
+      createdAt: user.createdAt,
+      deletedAt: new Date(),
+      deletedBy: req.user.id,
+      deletedByUser: req.user.name || req.user.fullName || req.user.username
+    };
+
     // Soft delete by updating status and adding deletedAt timestamp
     await user.update({
       status: 'deleted',
       deletedAt: new Date()
     });
 
-    // Log activity
+    // Log activity with complete user snapshot
     await ActivityLog.create({
       userId: req.user.id,
       action: 'SOFT_DELETE_USER',
       entityType: 'User',
       entityId: id,
       details: `Soft deleted user: ${user.name}`,
+      metadata: userSnapshot, // Store complete user data for preservation
       ipAddress: req.ip,
       userAgent: req.get('User-Agent')
     });
@@ -545,11 +738,40 @@ router.put('/:id/restore', authenticateToken, requireSystemAdmin, async (req, re
       });
     }
 
-    // Restore user by updating status and removing deletedAt timestamp
-    await user.update({
+    // Get preserved user data from soft delete log if available
+    let preservedData = null;
+    try {
+      const { ActivityLog } = require('../models');
+      const softDeleteLog = await ActivityLog.findOne({
+        where: {
+          action: 'SOFT_DELETE_USER',
+          entityId: id,
+          metadata: { [require('sequelize').Op.ne]: null }
+        },
+        order: [['createdAt', 'DESC']]
+      });
+
+      if (softDeleteLog && softDeleteLog.metadata) {
+        preservedData = softDeleteLog.metadata;
+      }
+    } catch (logError) {
+      console.log('⚠️ Could not retrieve preserved data:', logError.message);
+    }
+
+    // Prepare restore data - use preserved data if available, otherwise current data
+    const restoreData = {
       status: 'active',
       deletedAt: null
-    });
+    };
+
+    // Restore profile picture if it was preserved and current one is missing
+    if (preservedData && preservedData.profilePictureUrl && !user.profilePictureUrl) {
+      restoreData.profilePictureUrl = preservedData.profilePictureUrl;
+      console.log('✅ Restored profile picture from preserved data:', preservedData.profilePictureUrl);
+    }
+
+    // Restore user by updating status and removing deletedAt timestamp
+    await user.update(restoreData);
 
     // Log activity
     await ActivityLog.create({
@@ -558,6 +780,7 @@ router.put('/:id/restore', authenticateToken, requireSystemAdmin, async (req, re
       entityType: 'User',
       entityId: id,
       details: `Restored user: ${user.name}`,
+      metadata: preservedData ? { restoredFromSnapshot: true, originalSnapshot: preservedData } : null,
       ipAddress: req.ip,
       userAgent: req.get('User-Agent')
     });
@@ -580,14 +803,41 @@ router.put('/:id/restore', authenticateToken, requireSystemAdmin, async (req, re
 router.delete('/:id/permanent-delete', authenticateToken, requireSystemAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    console.log('🔍 Attempting permanent delete for user ID:', id);
+    console.log('🔍 User ID type:', typeof id);
 
-    const user = await User.findByPk(id);
+    // Try to find user by primary key first
+    let user = await User.findByPk(id);
+    
+    // If not found by primary key, try to find by userId field
     if (!user) {
+      console.log('🔍 User not found by primary key, trying userId field...');
+      user = await User.findOne({ where: { userId: id } });
+    }
+    
+    // If still not found, try to find by email
+    if (!user) {
+      console.log('🔍 User not found by userId, trying email...');
+      user = await User.findOne({ where: { email: id } });
+    }
+
+    if (!user) {
+      console.log('❌ User not found with any method');
       return res.status(404).json({
         success: false,
         error: 'User not found'
       });
     }
+
+    console.log('✅ User found:', {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      subRole: user.subRole
+    });
 
     // Prevent deletion of own account
     if (user.id === req.user.id) {
@@ -605,19 +855,207 @@ router.delete('/:id/permanent-delete', authenticateToken, requireSystemAdmin, as
       });
     }
 
-    const userName = user.name;
+    const userName = user.name || user.fullName || user.username;
+    
+    // Store user data for history before deletion
+    const userDataForHistory = {
+      id: user.id,
+      userId: user.userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: user.fullName,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      contactNumber: user.contactNumber,
+      birthdate: user.birthdate,
+      group: user.group,
+      role: user.role,
+      subRole: user.subRole,
+      department: user.department,
+      status: user.status,
+      profilePictureUrl: user.profilePictureUrl,
+      createdAt: user.createdAt,
+      deletedAt: new Date(),
+      deletedBy: req.user.id,
+      deletedByUser: req.user.name || req.user.fullName || req.user.username
+    };
+    
+    // Delete related records first to avoid foreign key constraint violations
+    try {
+      console.log('🔄 Deleting related records for user:', userName);
+      
+      // Delete notifications related to this user
+      await Notification.destroy({
+        where: { userId: user.id }
+      });
+      console.log('✅ Deleted notifications for user:', userName);
+      
+      // Delete activity logs related to this user
+      await ActivityLog.destroy({
+        where: { userId: user.id }
+      });
+      console.log('✅ Deleted activity logs for user:', userName);
+      
+      // Delete project updates submitted by this user
+      await ProjectUpdate.destroy({
+        where: { submittedBy: user.id }
+      });
+      console.log('✅ Deleted project updates submitted by user:', userName);
+      
+      // Also handle project updates submitted TO this user (fix foreign key constraint)
+      await ProjectUpdate.update(
+        { submittedTo: null }, // Set to null instead of deleting the entire update
+        { where: { submittedTo: user.id } }
+      );
+      console.log('✅ Updated project updates submitted to user (set submittedTo to null):', userName);
+      
+      // Handle ALL project foreign key relationships for this user
+      console.log(`🔍 Comprehensive project cleanup for user:`, userName);
+      
+      // 1. Handle implementingOfficeId
+      const implementingOfficeProjects = await Project.findAll({
+        where: { implementingOfficeId: user.id },
+        attributes: ['id', 'title']
+      });
+      console.log(`🔍 Found ${implementingOfficeProjects.length} projects as implementing office`);
+      await Project.update({ implementingOfficeId: null }, { where: { implementingOfficeId: user.id } });
+      
+      // 2. Handle eiuPersonnelId  
+      const eiuPersonnelProjects = await Project.findAll({
+        where: { eiuPersonnelId: user.id },
+        attributes: ['id', 'title']
+      });
+      console.log(`🔍 Found ${eiuPersonnelProjects.length} projects as EIU personnel`);
+      await Project.update({ eiuPersonnelId: null }, { where: { eiuPersonnelId: user.id } });
+      
+      // 3. Handle approvedBy
+      const approvedByProjects = await Project.findAll({
+        where: { approvedBy: user.id },
+        attributes: ['id', 'title']
+      });
+      console.log(`🔍 Found ${approvedByProjects.length} projects approved by this user`);
+      await Project.update({ approvedBy: null }, { where: { approvedBy: user.id } });
+      
+      // 4. Handle secretariatApprovedBy
+      const secretariatApprovedProjects = await Project.findAll({
+        where: { secretariatApprovedBy: user.id },
+        attributes: ['id', 'title']
+      });
+      console.log(`🔍 Found ${secretariatApprovedProjects.length} projects secretariat approved by this user`);
+      await Project.update({ secretariatApprovedBy: null }, { where: { secretariatApprovedBy: user.id } });
+      
+      console.log('✅ All project foreign keys updated for user:', userName);
+      
+      // Handle ProjectIssue foreign keys
+      // Update reportedById
+      await ProjectIssue.update({ reportedById: null }, { where: { reportedById: user.id } });
+      
+      // Update assignedToId  
+      await ProjectIssue.update({ assignedToId: null }, { where: { assignedToId: user.id } });
+      
+      // Update resolvedById
+      await ProjectIssue.update({ resolvedById: null }, { where: { resolvedById: user.id } });
+      
+      // Update escalatedToId
+      await ProjectIssue.update({ escalatedToId: null }, { where: { escalatedToId: user.id } });
+      
+      console.log('✅ All ProjectIssue foreign keys updated for user:', userName);
+      
+      // Delete RPMES forms submitted by this user
+      await RPMESForm.destroy({
+        where: { submittedById: user.id }
+      });
+      console.log('✅ Deleted RPMES forms for user:', userName);
+      
+      // Delete monitoring reports conducted by this user
+      await MonitoringReport.destroy({
+        where: { conductedById: user.id }
+      });
+      console.log('✅ Deleted monitoring reports for user:', userName);
+      
+      // Delete site visits scheduled by this user
+      await SiteVisit.destroy({
+        where: { scheduledById: user.id }
+      });
+      console.log('✅ Deleted site visits for user:', userName);
+      
+      // Delete uploads by this user
+      await Upload.destroy({
+        where: { uploadedById: user.id }
+      });
+      console.log('✅ Deleted uploads for user:', userName);
+      
+      // Delete project validations by this user
+      await ProjectValidation.destroy({
+        where: { validatedBy: user.id }
+      });
+      console.log('✅ Deleted project validations for user:', userName);
+      
+      // Delete site visit participants (many-to-many relationship)
+      await user.sequelize.query(
+        'DELETE FROM site_visit_participants WHERE userId = ?',
+        { replacements: [user.id] }
+      );
+      console.log('✅ Deleted site visit participants for user:', userName);
+      
+    } catch (relatedError) {
+      console.log('⚠️ Error deleting related records:', relatedError.message);
+      // Continue with user deletion even if related records fail
+    }
+    
+    // Now delete the user
     await user.destroy();
 
-    // Log activity
+    console.log('✅ User permanently deleted:', userName);
+
+    // Log activity with user data for history
     await ActivityLog.create({
       userId: req.user.id,
       action: 'PERMANENT_DELETE_USER',
       entityType: 'User',
-      entityId: id,
+      entityId: user.id,
       details: `Permanently deleted user: ${userName}`,
+      metadata: userDataForHistory, // Store user data for history in metadata field
       ipAddress: req.ip,
       userAgent: req.get('User-Agent')
     });
+
+    // ✅ ENHANCED: Notify System Administrators about permanent user deletion
+    try {
+      const systemAdmins = await User.findAll({
+        where: { 
+          role: 'SYS.AD',
+          status: 'active'
+        },
+        attributes: ['id']
+      });
+      
+      for (const admin of systemAdmins) {
+        await createNotification(
+          admin.id,
+          'User Permanently Deleted',
+          `A user account has been permanently deleted from the system: ${userName} (${userDataForHistory.userId || 'N/A'})`,
+          'Warning',
+          'System',
+          'User',
+          userDataForHistory.id,
+          'High',
+          {
+            profilePic: userDataForHistory.profilePictureUrl || null, // Use deleted user's preserved profile picture
+            module: 'user-management',
+            targetId: userDataForHistory.userId || userDataForHistory.id, // Use userId for reference
+            actionUrl: '/dashboard/sysadmin/modules/user-management'
+          }
+        );
+      }
+      
+      console.log('✅ System admin notifications sent for permanent deletion:', userName);
+    } catch (notificationError) {
+      console.error('⚠️ Error creating permanent deletion notifications:', notificationError);
+      // Don't fail the deletion if notifications fail
+    }
 
     res.json({
       success: true,
@@ -625,10 +1063,10 @@ router.delete('/:id/permanent-delete', authenticateToken, requireSystemAdmin, as
     });
 
   } catch (error) {
-    console.error('Permanent delete user error:', error);
+    console.error('❌ Permanent delete user error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to permanently delete user'
+      error: 'Failed to permanently delete user: ' + error.message
     });
   }
 });
@@ -690,9 +1128,10 @@ router.delete('/:id', authenticateToken, requireSystemAdmin, async (req, res) =>
   }
 });
 
-// Get deleted users
+// Get deleted users with enhanced information
 router.get('/deleted', authenticateToken, requireSystemAdmin, async (req, res) => {
   try {
+    // First get users with status 'deleted'
     const deletedUsers = await User.findAll({
       where: {
         status: 'deleted',
@@ -702,9 +1141,55 @@ router.get('/deleted', authenticateToken, requireSystemAdmin, async (req, res) =
       order: [['deletedAt', 'DESC']]
     });
 
+    // Also get user data from soft delete activity logs to fill in any missing information
+    const { ActivityLog } = require('../models');
+    const softDeleteLogs = await ActivityLog.findAll({
+      where: {
+        action: 'SOFT_DELETE_USER',
+        metadata: { [require('sequelize').Op.ne]: null }
+      },
+      attributes: ['metadata', 'createdAt'],
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Enhance deleted users with preserved data from activity logs if available
+    const enhancedDeletedUsers = deletedUsers.map(user => {
+      // Find corresponding soft delete log
+      const logEntry = softDeleteLogs.find(log => {
+        try {
+          const metadata = log.metadata;
+          return metadata && metadata.id === user.id;
+        } catch (e) {
+          return false;
+        }
+      });
+
+      // Use preserved data from log if available, otherwise use current user data
+      if (logEntry && logEntry.metadata) {
+        const preservedData = logEntry.metadata;
+        return {
+          ...user.toJSON(),
+          // Prioritize preserved profile picture over current one to avoid corruption
+          profilePictureUrl: preservedData.profilePictureUrl || user.profilePictureUrl,
+          // Add deletion metadata
+          deletedBy: preservedData.deletedBy,
+          deletedByUser: preservedData.deletedByUser,
+          // Calculate days remaining for permanent deletion (30 days)
+          daysRemaining: Math.max(0, 30 - Math.floor((new Date() - new Date(user.deletedAt)) / (1000 * 60 * 60 * 24))),
+          // Add preserved snapshot for reference
+          preservedSnapshot: preservedData
+        };
+      }
+
+      return {
+        ...user.toJSON(),
+        daysRemaining: Math.max(0, 30 - Math.floor((new Date() - new Date(user.deletedAt)) / (1000 * 60 * 60 * 24)))
+      };
+    });
+
     res.json({
       success: true,
-      users: deletedUsers
+      users: enhancedDeletedUsers
     });
 
   } catch (error) {
@@ -712,6 +1197,73 @@ router.get('/deleted', authenticateToken, requireSystemAdmin, async (req, res) =
     res.status(500).json({
       success: false,
       error: 'Failed to fetch deleted users'
+    });
+  }
+});
+
+// Get deleted users history (permanently deleted users)
+router.get('/deleted-history', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    // Get permanently deleted users from ActivityLog where action is PERMANENT_DELETE_USER
+    const deletedUsersHistory = await ActivityLog.findAll({
+      where: {
+        action: 'PERMANENT_DELETE_USER',
+        metadata: { [require('sequelize').Op.ne]: null }
+      },
+      attributes: ['id', 'metadata', 'createdAt', 'details', 'userId'],
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Get user information for who performed the deletions
+    const deleterIds = [...new Set(deletedUsersHistory.map(log => log.userId))];
+    const deleters = await User.findAll({
+      where: { id: deleterIds },
+      attributes: ['id', 'name', 'fullName', 'username', 'role', 'subRole']
+    });
+
+    // Create a map for quick lookup
+    const deleterMap = {};
+    deleters.forEach(deleter => {
+      deleterMap[deleter.id] = {
+        name: deleter.name || deleter.fullName || deleter.username,
+        role: deleter.role,
+        subRole: deleter.subRole
+      };
+    });
+
+    // Format the metadata for frontend
+    const formattedHistory = deletedUsersHistory.map(log => {
+      try {
+        const userData = log.metadata;
+        const deleter = deleterMap[log.userId];
+        const deleterInfo = deleter ? 
+          (deleter.role === 'SYS.AD' ? 'System Administrator' : deleter.name) : 
+          'Unknown User';
+
+        return {
+          ...userData,
+          permanentDeletedAt: log.createdAt,
+          deletedBy: log.userId,
+          deletedByUser: deleterInfo,
+          deletedByRole: deleter ? deleter.role : null,
+          deletedBySubRole: deleter ? deleter.subRole : null
+        };
+      } catch (parseError) {
+        console.error('Error parsing metadata:', parseError);
+        return null;
+      }
+    }).filter(user => user !== null);
+
+    res.json({
+      success: true,
+      users: formattedHistory
+    });
+
+  } catch (error) {
+    console.error('Get deleted users history error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch deleted users history'
     });
   }
 });
@@ -1116,6 +1668,315 @@ router.post('/update-lgu-iu-departments', authenticateToken, requireSystemAdmin,
     res.status(500).json({
       success: false,
       error: 'Failed to update LGU-IU departments'
+    });
+  }
+});
+
+// Check if email already exists
+router.post('/check-email', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required'
+      });
+    }
+    
+    const existingUser = await User.findOne({
+      where: {
+        [require('sequelize').Op.or]: [
+          { email: email },
+          { username: email }
+        ]
+      },
+      paranoid: false // Include soft-deleted users
+    });
+    
+    res.json({
+      success: true,
+      exists: !!existingUser
+    });
+    
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email uniqueness'
+    });
+  }
+});
+
+// Check if contact number already exists
+router.post('/check-contact', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    const { contactNumber } = req.body;
+    
+    if (!contactNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'Contact number is required'
+      });
+    }
+    
+    const existingUser = await User.findOne({
+      where: {
+        [require('sequelize').Op.or]: [
+          { contactNumber: contactNumber },
+          { phone: contactNumber }
+        ]
+      },
+      paranoid: false // Include soft-deleted users
+    });
+    
+    res.json({
+      success: true,
+      exists: !!existingUser
+    });
+    
+  } catch (error) {
+    console.error('Error checking contact number:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check contact number uniqueness'
+    });
+  }
+});
+
+// ✅ ENHANCED: Check if MPMEC Secretariat Admin already exists
+router.post('/check-mpmec-secretariat-admin', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    console.log('🔍 API: Checking for existing MPMEC Secretariat Admin...');
+    
+    const existingSecretariatAdmin = await User.findOne({
+      where: {
+        group: 'LGU-PMT',
+        [Op.or]: [
+          { subRole: { [Op.like]: '%Focal Person (Admin)%' } },
+          { subRole: { [Op.like]: '%MPMEC Secretariat%Admin%' } }
+        ],
+        status: 'active' // Only check active users
+      },
+      paranoid: true // Exclude soft-deleted users
+    });
+
+    if (existingSecretariatAdmin) {
+      console.log('❌ API: MPMEC Secretariat Admin already exists:', {
+        id: existingSecretariatAdmin.id,
+        name: existingSecretariatAdmin.fullName || existingSecretariatAdmin.name,
+        username: existingSecretariatAdmin.username,
+        subRole: existingSecretariatAdmin.subRole
+      });
+
+      res.json({
+        success: true,
+        exists: true,
+        existingUser: {
+          name: existingSecretariatAdmin.fullName || existingSecretariatAdmin.name,
+          username: existingSecretariatAdmin.username,
+          userId: existingSecretariatAdmin.userId
+        }
+      });
+    } else {
+      console.log('✅ API: No existing MPMEC Secretariat Admin found');
+      res.json({
+        success: true,
+        exists: false,
+        existingUser: null
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Error checking MPMEC Secretariat Admin:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check MPMEC Secretariat Admin existence'
+    });
+  }
+});
+
+// Get unique departments from existing users
+router.get('/departments', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    console.log('📋 Fetching unique departments from existing users...');
+    
+    // Get unique departments from all users (active and soft-deleted)
+    const departments = await User.findAll({
+      attributes: ['department'],
+      where: {
+        department: {
+          [Op.ne]: null // Not null
+        }
+      },
+      group: ['department'],
+      paranoid: false, // Include soft-deleted users
+      raw: true
+    });
+    
+    // Extract department names and sort them
+    const departmentNames = departments
+      .map(dept => dept.department)
+      .filter(dept => dept && dept.trim() !== '') // Filter out empty strings
+      .sort();
+    
+    console.log(`✅ Found ${departmentNames.length} unique departments:`, departmentNames);
+    
+    res.json({
+      success: true,
+      departments: departmentNames
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching departments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch departments'
+    });
+  }
+});
+
+// Update user activity (heartbeat endpoint)
+router.post('/activity/heartbeat', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Update user activity in tracker
+    updateUserActivity(userId);
+    
+    // Also update lastLoginAt in database periodically (every 5 minutes)
+    const activity = userActivityTracker.get(userId);
+    if (activity) {
+      const now = new Date();
+      const lastUpdate = activity.lastDbUpdate || new Date(0);
+      const timeSinceLastUpdate = (now - lastUpdate) / 1000 / 60; // minutes
+      
+      if (timeSinceLastUpdate >= 5) {
+        await User.update(
+          { lastLoginAt: now },
+          { where: { id: userId } }
+        );
+        activity.lastDbUpdate = now;
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'Activity updated',
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Error updating user activity:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update activity'
+    });
+  }
+});
+
+// Get user activity status for multiple users
+router.post('/activity/status', authenticateToken, async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    
+    if (!Array.isArray(userIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'userIds must be an array'
+      });
+    }
+    
+    const statusMap = {};
+    
+    // Get users from database to ensure they exist
+    const users = await User.findAll({
+      where: {
+        [Op.or]: [
+          { id: { [Op.in]: userIds } },
+          { userId: { [Op.in]: userIds } },
+          { email: { [Op.in]: userIds } }
+        ]
+      },
+      attributes: ['id', 'userId', 'email', 'lastLoginAt', 'status']
+    });
+    
+    // Check activity status for each user
+    for (const user of users) {
+      const isActive = isUserActive(user.id);
+      const activity = userActivityTracker.get(user.id);
+      
+      // Use multiple identifiers to ensure we can match users
+      const identifiers = [user.id.toString(), user.userId, user.email].filter(Boolean);
+      
+      for (const identifier of identifiers) {
+        statusMap[identifier] = {
+          isActive: isActive,
+          lastActivity: activity ? activity.lastActivity : user.lastLoginAt,
+          status: user.status,
+          userId: user.id
+        };
+      }
+    }
+    
+    res.json({
+      success: true,
+      statusMap: statusMap,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching user activity status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch activity status'
+    });
+  }
+});
+
+// Get single user activity status
+router.get('/activity/status/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find user by multiple possible identifiers
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { id: userId },
+          { userId: userId },
+          { email: userId }
+        ]
+      },
+      attributes: ['id', 'userId', 'email', 'lastLoginAt', 'status', 'fullName', 'name']
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    const isActive = isUserActive(user.id);
+    const activity = userActivityTracker.get(user.id);
+    
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        userId: user.userId,
+        email: user.email,
+        name: user.fullName || user.name,
+        isActive: isActive,
+        lastActivity: activity ? activity.lastActivity : user.lastLoginAt,
+        status: user.status
+      },
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching user activity status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch activity status'
     });
   }
 });

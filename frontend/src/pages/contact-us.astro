@@ -2,98 +2,1093 @@
 import Layout from "../layouts/Layout.astro";
 import TopBar from "../components/TopBar.astro";
 import LGUFooter from "../components/LGUFooter.astro";
+import SantaCruzMap from "../islands/SantaCruzMap.jsx";
 ---
 <Layout title="Contact Us | Build Watch LGU" description="Contact the Build Watch team for support or inquiries.">
   <TopBar />
-  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-white min-h-[60vh]">
-    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-6 text-center">Contact Us</h1>
-    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
-      Get in touch with the Build Watch team. We're here to help with any questions about project monitoring and evaluation.
-    </p>
-    <div class="w-full max-w-4xl flex flex-col gap-8">
-      <!-- Contact Information -->
-      <div class="bg-white/80 rounded-2xl px-8 py-6 shadow-lg">
-        <h2 class="text-[#EB3C3C] font-bold text-xl mb-4 flex items-center gap-2"><span class="fa fa-info-circle text-[#FE5353]"></span> Contact Information</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-          <div class="flex flex-col gap-2">
-            <h3 class="font-semibold text-[#7A1F1F] mb-2 flex items-center gap-2"><span class="fa fa-building"></span> LGU Santa Cruz Office</h3>
-            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-map-marker-alt"></span> Municipal Hall, Santa Cruz, Laguna</p>
-            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-phone"></span> Phone: (049) XXX-XXXX</p>
-            <p class="text-[#7A1F1F] flex items-center gap-2"><span class="fa fa-envelope"></span> Email: buildwatch@santacruz.gov.ph</p>
+  <main class="flex flex-col items-center w-full px-4 pt-32 pb-20 bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen relative overflow-hidden">
+    <!-- Enhanced Background Elements -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-20 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute top-40 right-20 w-24 h-24 bg-purple-200/20 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+      <div class="absolute bottom-32 left-1/3 w-40 h-40 bg-indigo-200/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Enhanced Hero Section -->
+    <div class="relative z-10 text-center mb-16 mt-8">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 font-semibold rounded-full mb-6 text-sm animate-fade-in-up">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884zM18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" clip-rule="evenodd"/>
+        </svg>
+        Get In Touch
+      </div>
+      
+      <h1 class="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 leading-tight mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        Contact Us
+      </h1>
+      
+      <p class="text-xl text-blue-600 max-w-4xl mx-auto leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s;">
+        Connect with the Build Watch team for seamless project monitoring and support
+      </p>
+    </div>
+    
+    <!-- Full-Width Contact Information Section -->
+    <div class="relative z-10 w-full max-w-[1400px] mb-16">
+      <!-- Enhanced Contact Information Card - Landscape Mode -->
+      <div class="group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-blue-100/50 hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 animate-fade-in-up relative overflow-hidden" style="animation-delay: 0.4s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute top-1/3 left-1/3 w-12 h-12 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-lg animate-pulse"></div>
+        
+        <div class="relative z-10">
+          <!-- Enhanced Header -->
+          <div class="flex items-center justify-between mb-12">
+            <div class="flex items-center gap-6">
+              <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-blue-700 font-black text-4xl group-hover:text-blue-600 transition-colors bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Contact Information
+                </h2>
+                <p class="text-blue-600/80 text-lg font-semibold">Get in touch with us directly</p>
+              </div>
+            </div>
+            
+            <!-- Status Indicator -->
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl px-6 py-3 border border-blue-200/50 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
+                <span class="text-blue-700 font-bold text-base">Available Now</span>
+              </div>
+            </div>
           </div>
-          <div class="flex flex-col gap-2 md:border-l-4 md:border-[#EB3C3C] md:pl-6">
-            <h3 class="font-semibold text-[#7A1F1F] mb-2 flex items-center gap-2"><span class="fa fa-headset"></span> Technical Support</h3>
-            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-info-circle"></span> For system-related issues</p>
-            <p class="text-[#7A1F1F] mb-1 flex items-center gap-2"><span class="fa fa-envelope"></span> Email: support@buildwatch.ph</p>
-            <p class="text-[#7A1F1F] flex items-center gap-2"><span class="fa fa-clock"></span> Hours: Mon-Fri, 8AM-5PM</p>
+
+          <!-- Contact Details Grid - Landscape Layout -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- LGU Office -->
+            <div class="group/item bg-gradient-to-r from-blue-50/50 to-indigo-50/50 backdrop-blur-sm rounded-2xl p-8 border border-blue-100/50 hover:border-blue-200/60 transition-all duration-300 hover:shadow-lg">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center group-hover/item:scale-110 transition-transform duration-300">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-6a1 1 0 00-1-1H9a1 1 0 00-1 1v6a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-blue-700 font-black text-2xl">LGU Santa Cruz Office</h3>
+                  <p class="text-blue-600/70 text-base">Main government office</p>
+                </div>
+              </div>
+              
+              <div class="space-y-4">
+                <div class="group/contact flex items-start gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-blue-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center mt-1">
+                    <!-- Modern Location Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover/contact:shadow-xl transition-all duration-300 group-hover/contact:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-blue-700 font-bold text-base block group-hover/contact:text-blue-600 transition-colors">Address</span>
+                    <span class="text-blue-600/80 text-base leading-relaxed">Municipal Hall, Santa Cruz, Laguna</span>
+                  </div>
+                </div>
+                
+                <div class="group/contact flex items-start gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-green-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center mt-1">
+                    <!-- Modern Phone Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg group-hover/contact:shadow-xl transition-all duration-300 group-hover/contact:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-blue-700 font-bold text-base block group-hover/contact:text-blue-600 transition-colors">Phone</span>
+                    <span class="text-blue-600/80 text-base leading-relaxed">(049) XXX-XXXX</span>
+                  </div>
+                </div>
+                
+                <div class="group/contact flex items-start gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-blue-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center mt-1">
+                    <!-- Modern Email Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg group-hover/contact:shadow-xl transition-all duration-300 group-hover/contact:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-blue-700 font-bold text-base block group-hover/contact:text-blue-600 transition-colors">Email</span>
+                    <span class="text-blue-600/80 text-base leading-relaxed">buildwatch@santacruz.gov.ph</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Technical Support -->
+            <div class="group/item bg-gradient-to-r from-purple-50/50 to-indigo-50/50 backdrop-blur-sm rounded-2xl p-8 border border-purple-100/50 hover:border-purple-200/60 transition-all duration-300 hover:shadow-lg">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center group-hover/item:scale-110 transition-transform duration-300">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-purple-700 font-black text-2xl">Technical Support</h3>
+                  <p class="text-purple-600/70 text-base">System & technical assistance</p>
+                </div>
+              </div>
+              
+              <div class="space-y-4">
+                <div class="group/contact flex items-start gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-purple-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center mt-1">
+                    <!-- Modern Support Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg group-hover/contact:shadow-xl transition-all duration-300 group-hover/contact:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-purple-700 font-bold text-base block group-hover/contact:text-purple-600 transition-colors">Assistance</span>
+                    <span class="text-purple-600/80 text-base leading-relaxed">System-related issues & troubleshooting</span>
+                  </div>
+                </div>
+                
+                <div class="group/contact flex items-start gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-indigo-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center mt-1">
+                    <!-- Modern Support Email Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg group-hover/contact:shadow-xl transition-all duration-300 group-hover/contact:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M14.243 5.757a6 6 0 10-.986 9.284 1 1 0 111.087 1.678A8 8 0 1118 10a3 3 0 01-4.8 2.401A4 4 0 1114 10a1 1 0 102 0c0-1.537-.586-3.07-1.757-4.243zM12 10a2 2 0 10-4 0 2 2 0 004 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-purple-700 font-bold text-base block group-hover/contact:text-purple-600 transition-colors">Support Email</span>
+                    <span class="text-purple-600/80 text-base leading-relaxed">support@buildwatch.ph</span>
+                  </div>
+                </div>
+                
+                <div class="group/contact flex items-start gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-orange-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center mt-1">
+                    <!-- Modern Clock Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg group-hover/contact:shadow-xl transition-all duration-300 group-hover/contact:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <span class="text-purple-700 font-bold text-base block group-hover/contact:text-purple-600 transition-colors">Hours</span>
+                    <span class="text-purple-600/80 text-base leading-relaxed">Monday - Friday, 8:00 AM - 5:00 PM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <!-- Static Map Preview -->
-        <div class="mt-6 rounded-xl overflow-hidden shadow border border-[#EB3C3C]/10">
-          <img src="/map-placeholder.png" alt="Santa Cruz Map" class="w-full h-40 object-cover object-center" />
-        </div>
-        <!-- Social/Contact Icons -->
-        <div class="flex gap-4 mt-4 justify-end">
-          <a href="#" aria-label="Facebook" class="text-[#EB3C3C] hover:text-[#FE5353] text-2xl"><i class="fab fa-facebook"></i></a>
-          <a href="#" aria-label="Twitter" class="text-[#EB3C3C] hover:text-[#FE5353] text-2xl"><i class="fab fa-twitter"></i></a>
-          <a href="#" aria-label="Email" class="text-[#EB3C3C] hover:text-[#FE5353] text-2xl"><i class="fas fa-envelope"></i></a>
+
+          <!-- Enhanced Social Media & Quick Links Section -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Social Media Links -->
+            <div class="bg-gradient-to-r from-emerald-50/50 to-green-50/50 backdrop-blur-sm rounded-2xl p-8 border border-emerald-100/50 hover:border-emerald-200/60 transition-all duration-300 hover:shadow-lg">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-emerald-700 font-black text-2xl">Stay Connected</h3>
+                  <p class="text-emerald-600/70 text-base">Follow us for updates and announcements</p>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <a href="#" aria-label="Facebook" class="group relative flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-blue-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Facebook Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-emerald-700 font-bold text-base group-hover:text-emerald-600 transition-colors">Facebook</span>
+                </a>
+                
+                <a href="#" aria-label="Twitter" class="group relative flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-sky-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Twitter/X Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-emerald-700 font-bold text-base group-hover:text-emerald-600 transition-colors">Twitter</span>
+                </a>
+                
+                <a href="#" aria-label="Email" class="group relative flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-red-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Email Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M2.94 6.412A2 2 0 002 8.108V16a2 2 0 002 2h12a2 2 0 002-2V8.108a2 2 0 00-.94-1.696l-6-3.75a2 2 0 00-2.12 0l-6 3.75zm2.615 2.423a1 1 0 10-1.11 1.664l5 3.333a1 1 0 001.11 0l5-3.333a1 1 0 00-1.11-1.664L10 10.798 5.555 8.835z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-emerald-700 font-bold text-base group-hover:text-emerald-600 transition-colors">Email</span>
+                </a>
+                
+                <a href="#" aria-label="Phone" class="group relative flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-green-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Phone Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-emerald-700 font-bold text-base group-hover:text-emerald-600 transition-colors">Call Us</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Quick Access Links -->
+            <div class="bg-gradient-to-r from-orange-50/50 to-amber-50/50 backdrop-blur-sm rounded-2xl p-8 border border-orange-100/50 hover:border-orange-200/60 transition-all duration-300 hover:shadow-lg">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center">
+                  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-orange-700 font-black text-2xl">Quick Access</h3>
+                  <p class="text-orange-600/70 text-base">Navigate to important resources</p>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-3">
+                <a href="/projects" class="group/link flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-blue-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Projects Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg group-hover/link:shadow-xl transition-all duration-300 group-hover/link:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-orange-700 font-bold text-base group-hover/link:text-orange-600 transition-colors">Projects</span>
+                </a>
+                
+                <a href="/faqs" class="group/link flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-purple-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern FAQ Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg group-hover/link:shadow-xl transition-all duration-300 group-hover/link:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-orange-700 font-bold text-base group-hover/link:text-orange-600 transition-colors">FAQs</span>
+                </a>
+                
+                <a href="/open-data" class="group/link flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-green-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Database Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg group-hover/link:shadow-xl transition-all duration-300 group-hover/link:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/>
+                        <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/>
+                        <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-orange-700 font-bold text-base group-hover/link:text-orange-600 transition-colors">Open Data</span>
+                </a>
+                
+                <a href="/getting-started" class="group/link flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 transition-all duration-300 hover:shadow-md border border-white/20 hover:border-red-200/50">
+                  <div class="w-12 h-12 flex items-center justify-center">
+                    <!-- Modern Rocket Icon -->
+                    <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover/link:shadow-xl transition-all duration-300 group-hover/link:scale-110">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-orange-700 font-bold text-base group-hover/link:text-orange-600 transition-colors">Get Started</span>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- Contact Form -->
-      <div class="bg-white/80 rounded-2xl px-8 py-6 shadow-lg">
-        <h2 class="text-[#EB3C3C] font-bold text-xl mb-4 flex items-center gap-2"><span class="fa fa-paper-plane text-[#FE5353]"></span> Send us a Message</h2>
-        <form class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="firstName">First Name</label>
-              <div class="relative">
-                <span class="fa fa-user absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-                <input id="firstName" type="text" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" required aria-label="First Name" />
+    </div>
+
+    <!-- Full-Width Interactive Map Explorer Section -->
+    <div class="w-full max-w-[1400px] mt-20 mb-20 relative animate-fade-in-up" style="animation-delay: 0.8s;">
+      <div class="group bg-gradient-to-br from-white/95 to-emerald-50/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-emerald-100/50 hover:shadow-3xl hover:border-emerald-200/60 transition-all duration-500 relative overflow-hidden">
+        <!-- Advanced Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-emerald-400/20 to-green-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-blue-400/15 to-emerald-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute top-1/2 right-1/4 w-12 h-12 bg-gradient-to-br from-green-400/10 to-emerald-400/10 rounded-full blur-lg animate-pulse"></div>
+        
+        <div class="relative z-10">
+          <!-- Enhanced Header with Advanced Controls -->
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-gradient-to-br from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-emerald-700 font-black text-4xl group-hover:text-emerald-600 transition-colors bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                  Live Interactive Map Explorer
+                </h2>
+                <p class="text-emerald-600/80 text-lg font-semibold">Discover Santa Cruz, Laguna in Real-Time</p>
               </div>
             </div>
-            <div>
-              <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="lastName">Last Name</label>
-              <div class="relative">
-                <span class="fa fa-user absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-                <input id="lastName" type="text" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" required aria-label="Last Name" />
+            
+            <!-- Advanced Map Controls -->
+            <div class="flex items-center gap-4">
+              <div class="bg-white/70 backdrop-blur-sm rounded-xl px-6 py-3 border border-emerald-200/50 shadow-sm">
+                <div class="flex items-center gap-3">
+                  <div class="w-4 h-4 bg-emerald-500 rounded-full animate-ping"></div>
+                  <span class="text-emerald-700 font-bold text-base">Live Data</span>
+                </div>
+              </div>
+              <button class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110" title="Fullscreen">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Enhanced Interactive Guide Panel -->
+          <div class="bg-gradient-to-r from-white/70 via-emerald-50/50 to-white/70 backdrop-blur-md rounded-2xl p-8 border border-emerald-200/50 mb-8 shadow-lg">
+            <div class="flex items-center gap-4 mb-8">
+              <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979.508.847.736 1.927.736 3.021 0 1.094-.228 2.174-.736 3.021C10.792 13.807 10.304 14 10 14c-.304 0-.792-.193-1.264-.979C8.228 12.174 8 11.094 8 10c0-1.094.228-2.174.736-3.021zM10 8a2 2 0 100 4 2 2 0 000-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-black text-emerald-800 text-2xl">Navigation Guide</h3>
+                <p class="text-emerald-600/70 text-base">Master the interactive features</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="group flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-emerald-100/50 hover:border-emerald-300/50 transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M6.672 1.911a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM2.429 4.74a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26zm8.814-.569a1 1 0 00-1.415-1.414l-.707.707a1 1 0 101.415 1.414l.707-.707zm-7.071 7.072l.707-.707A1 1 0 003.465 9.12l-.708.707a1 1 0 001.415 1.415zm3.2-5.171a1 1 0 00-1.3 1.3l4 10a1 1 0 001.823.075l1.38-2.759 3.018 3.02a1 1 0 001.414-1.415l-3.019-3.02 2.76-1.379a1 1 0 00-.076-1.822l-10-4z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-emerald-700 font-bold text-base block">Click & Explore</span>
+                  <span class="text-emerald-600/70 text-sm">Interactive markers</span>
+                </div>
+              </div>
+              
+              <div class="group flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-emerald-100/50 hover:border-emerald-300/50 transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 9a2 2 0 114 0 2 2 0 01-4 0z"/>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a4 4 0 00-3.446 6.032l-2.261 2.26a1 1 0 101.414 1.415l2.261-2.261A4 4 0 1011 5z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-emerald-700 font-bold text-base block">Zoom Controls</span>
+                  <span class="text-emerald-600/70 text-sm">Detailed exploration</span>
+                </div>
+              </div>
+              
+              <div class="group flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-emerald-100/50 hover:border-emerald-300/50 transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-emerald-700 font-bold text-base block">Drag Navigation</span>
+                  <span class="text-emerald-600/70 text-sm">Pan & explore</span>
+                </div>
+              </div>
+              
+              <div class="group flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-emerald-100/50 hover:border-emerald-300/50 transition-all duration-300 hover:shadow-md">
+                <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-6a1 1 0 00-1-1H9a1 1 0 00-1 1v6a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-emerald-700 font-bold text-base block">Key Locations</span>
+                  <span class="text-emerald-600/70 text-sm">Important facilities</span>
+                </div>
               </div>
             </div>
           </div>
-          <div>
-            <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="email">Email</label>
-            <div class="relative">
-              <span class="fa fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-              <input id="email" type="email" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" required aria-label="Email" />
+
+          <!-- Embedded Map Legend -->
+          <div class="flex items-center justify-center gap-8 mb-8">
+            <div class="flex items-center gap-4 px-6 py-3 bg-white/70 backdrop-blur-sm rounded-xl border border-emerald-200/50 shadow-sm">
+              <div class="w-4 h-4 bg-red-500 rounded-full"></div>
+              <span class="text-emerald-700 font-bold text-base">Government</span>
+            </div>
+            <div class="flex items-center gap-4 px-6 py-3 bg-white/70 backdrop-blur-sm rounded-xl border border-emerald-200/50 shadow-sm">
+              <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+              <span class="text-emerald-700 font-bold text-base">Barangays</span>
+            </div>
+            <div class="flex items-center gap-4 px-6 py-3 bg-white/70 backdrop-blur-sm rounded-xl border border-emerald-200/50 shadow-sm">
+              <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+              <span class="text-emerald-700 font-bold text-base">Projects</span>
             </div>
           </div>
-          <div>
-            <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="subject">Subject</label>
-            <div class="relative">
-              <span class="fa fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-              <select id="subject" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" aria-label="Subject">
-                <option>General Inquiry</option>
-                <option>Technical Support</option>
-                <option>Project Information</option>
-                <option>Feedback</option>
-                <option>Other</option>
-              </select>
+          
+          <!-- Premium Interactive Map Container - True Landscape Format -->
+          <div class="relative rounded-3xl overflow-hidden w-full" style="height: 80vh; min-height: 600px; max-height: 800px;">
+            <!-- Enhanced Map Background -->
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/30 via-white/20 to-blue-50/30"></div>
+            
+            <!-- Advanced Map Controls Panel -->
+            <div class="absolute top-6 right-6 z-20 flex flex-col gap-3">
+              <div class="bg-white/90 backdrop-blur-lg rounded-2xl p-5 shadow-xl border border-emerald-100/50">
+                <h4 class="text-emerald-700 font-bold text-base mb-4">Map Controls</h4>
+                <div class="flex flex-col gap-3">
+                  <button class="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 9a2 2 0 114 0 2 2 0 01-4 0z"/>
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a4 4 0 00-3.446 6.032l-2.261 2.26a1 1 0 101.414 1.415l2.261-2.261A4 4 0 1011 5z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm font-semibold">Zoom In</span>
+                  </button>
+                  <button class="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-blue-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm font-semibold">Zoom Out</span>
+                  </button>
+                  <button class="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-purple-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                    </svg>
+                    <span class="text-sm font-semibold">Reset View</span>
+                  </button>
+                  <button class="group flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-orange-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 4a1 1 0 000 2h.01a1 1 0 100-2H3zM6 4a1 1 0 000 2h11a1 1 0 100-2H6zM3 10a1 1 0 000 2h.01a1 1 0 100-2H3zM6 10a1 1 0 000 2h11a1 1 0 100-2H6zM3 16a1 1 0 000 2h.01a1 1 0 100-2H3zM6 16a1 1 0 000 2h11a1 1 0 100-2H6z"/>
+                    </svg>
+                    <span class="text-sm font-semibold">Layers</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Interactive Map Component - True Wide Landscape Layout -->
+            <div class="relative z-10 p-8 h-full w-full">
+              <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-100/50 shadow-lg overflow-hidden h-full w-full">
+                <SantaCruzMap client:only="react" />
+              </div>
+            </div>
+            
+            <!-- Advanced Map Statistics Panel -->
+            <div class="absolute bottom-6 left-6 z-20">
+              <div class="bg-white/90 backdrop-blur-lg rounded-2xl p-5 shadow-xl border border-emerald-100/50">
+                <h4 class="text-emerald-700 font-bold text-base mb-4">Quick Statistics</h4>
+                <div class="grid grid-cols-1 gap-4">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="text-emerald-700 font-bold text-base block">26 Barangays</span>
+                      <span class="text-emerald-600/70 text-sm">Active communities</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="text-emerald-700 font-bold text-base block">3 Active Projects</span>
+                      <span class="text-emerald-600/70 text-sm">In development</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-6a1 1 0 00-1-1H9a1 1 0 00-1 1v6a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="text-emerald-700 font-bold text-base block">Key Facilities</span>
+                      <span class="text-emerald-600/70 text-sm">Government offices</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <label class="block text-[#7A1F1F] font-medium mb-2" htmlFor="message">Message</label>
-            <div class="relative">
-              <span class="fa fa-comment-dots absolute left-3 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-              <textarea id="message" rows="4" class="w-full pl-10 pr-4 py-2 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" placeholder="Please describe your inquiry or concern..." required aria-label="Message"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Contact Form Section - Landscape Layout -->
+    <div class="w-full max-w-[1400px] mx-auto mt-16">
+      <div class="group bg-gradient-to-br from-blue-50/95 to-sky-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-blue-100/50 hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 animate-fade-in-up relative overflow-hidden" style="animation-delay: 0.5s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-sky-400/20 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-blue-400/15 to-cyan-400/15 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <!-- Enhanced Header Section -->
+        <div class="relative z-10 p-8 pb-4">
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-sky-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-blue-700 font-black text-3xl lg:text-4xl group-hover:text-blue-600 transition-colors">
+                  Send us a Message
+                </h2>
+                <p class="text-blue-600/70 text-base font-medium">We'll respond within 24 hours</p>
+              </div>
+            </div>
+            <div class="hidden lg:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-100 to-sky-100 rounded-full border border-blue-200/50">
+              <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <span class="text-blue-700 font-semibold text-sm">Available Now</span>
             </div>
           </div>
-          <button type="submit" class="w-full px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition">
-            Send Message
-          </button>
-          <!-- Feedback message placeholder -->
-          <div class="text-center text-green-600 font-semibold mt-2 hidden" id="formFeedback">Thank you for your message! We'll get back to you soon.</div>
-        </form>
+        </div>
+
+        <!-- Form Content Grid Layout -->
+        <div class="relative z-10 px-8 pb-8">
+          <div class="grid lg:grid-cols-2 gap-12 items-start">
+          
+            <form class="space-y-8" id="contactForm">
+              <!-- Enhanced Name Fields -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="group/field">
+                  <label class="block text-blue-800 font-bold mb-3 group-hover/field:text-blue-600 transition-colors flex items-center gap-2" htmlFor="firstName">
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                  First Name
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-sky-400/20 rounded-2xl blur opacity-0 group-hover/field:opacity-100 transition-opacity duration-300"></div>
+                  <input 
+                    id="firstName" 
+                    type="text" 
+                      class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl" 
+                    required 
+                    aria-label="First Name"
+                    placeholder="Enter your first name"
+                  />
+                </div>
+              </div>
+                <div class="group/field">
+                  <label class="block text-blue-800 font-bold mb-3 group-hover/field:text-blue-600 transition-colors flex items-center gap-2" htmlFor="lastName">
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                  Last Name
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-sky-400/20 rounded-2xl blur opacity-0 group-hover/field:opacity-100 transition-opacity duration-300"></div>
+                  <input 
+                    id="lastName" 
+                    type="text" 
+                      class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl" 
+                    required 
+                    aria-label="Last Name"
+                    placeholder="Enter your last name"
+                  />
+                </div>
+              </div>
+            </div>
+            
+              <!-- Enhanced Email Field -->
+              <div class="group/field">
+                <label class="block text-blue-800 font-bold mb-3 group-hover/field:text-blue-600 transition-colors flex items-center gap-2" htmlFor="email">
+                  <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  </svg>
+                Email Address
+              </label>
+              <div class="relative">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-sky-400/20 rounded-2xl blur opacity-0 group-hover/field:opacity-100 transition-opacity duration-300"></div>
+                <input 
+                  id="email" 
+                  type="email" 
+                    class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl" 
+                  required 
+                  aria-label="Email"
+                  placeholder="Enter your email address"
+                />
+              </div>
+            </div>
+            
+              <!-- Enhanced Subject Field -->
+              <div class="group/field">
+                <label class="block text-blue-800 font-bold mb-3 group-hover/field:text-blue-600 transition-colors flex items-center gap-2" htmlFor="subject">
+                  <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                  </svg>
+                Subject
+              </label>
+              <div class="relative">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-sky-400/20 rounded-2xl blur opacity-0 group-hover/field:opacity-100 transition-opacity duration-300"></div>
+                <select 
+                  id="subject" 
+                    class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl appearance-none cursor-pointer" 
+                  aria-label="Subject"
+                >
+                    <option value="general">💬 General Inquiry</option>
+                    <option value="technical">🔧 Technical Support</option>
+                    <option value="project">📊 Project Information</option>
+                    <option value="feedback">💡 Feedback & Suggestions</option>
+                    <option value="partnership">🤝 Partnership Opportunities</option>
+                    <option value="other">📝 Other</option>
+                </select>
+                  <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+              </div>
+            </div>
+            
+              <!-- Enhanced Message Field -->
+              <div class="group/field">
+                <label class="block text-blue-800 font-bold mb-3 group-hover/field:text-blue-600 transition-colors flex items-center gap-2" htmlFor="message">
+                  <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                  </svg>
+                Message
+              </label>
+              <div class="relative">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-sky-400/20 rounded-2xl blur opacity-0 group-hover/field:opacity-100 transition-opacity duration-300"></div>
+                <textarea 
+                  id="message" 
+                    rows="6" 
+                    class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl resize-none" 
+                    placeholder="Please describe your inquiry, concern, or feedback in detail. We appreciate your input and will respond promptly..."
+                  required 
+                  aria-label="Message"
+                ></textarea>
+              </div>
+            </div>
+            
+              <!-- Enhanced Submit Button -->
+              <div class="pt-4">
+            <button 
+              type="submit" 
+                  class="group relative w-full px-8 py-5 bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-600 text-white font-black text-lg rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden"
+                >
+                  <!-- Button Background Animation -->
+                  <div class="absolute inset-0 bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-sky-400 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+                  
+                  <!-- Button Content -->
+                  <div class="relative flex items-center gap-3">
+                    <svg class="w-6 h-6 group-hover:translate-x-2 group-hover:rotate-12 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                    </svg>
+                    <span class="group-hover:scale-105 transition-transform duration-300">Send Message</span>
+                    <svg class="w-5 h-5 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+            </button>
+              </div>
+              
+              <!-- Enhanced Success Message -->
+              <div class="text-center hidden animate-fade-in-up" id="formFeedback">
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mt-6">
+                  <div class="flex items-center justify-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="text-green-700 font-black text-xl">Message Sent!</h3>
+                      <p class="text-green-600 text-sm">We'll respond within 24 hours</p>
+                    </div>
+                  </div>
+                  <div class="text-green-700/80 text-sm leading-relaxed">
+                    Thank you for contacting the Build Watch team. Your message has been successfully delivered and we'll get back to you as soon as possible.
+                  </div>
+              </div>
+            </div>
+            </form>
+
+            <!-- Right Column - Contact Information & Features -->
+            <div class="space-y-8">
+              <!-- Quick Contact Info -->
+              <div class="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-100/50">
+                <h3 class="text-blue-700 font-bold text-xl mb-4">Quick Contact</h3>
+                <div class="space-y-4">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-sky-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-blue-700 font-semibold">(049) XXX-XXXX</p>
+                      <p class="text-blue-600/70 text-sm">Available Mon-Fri, 8AM-5PM</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-blue-700 font-semibold">buildwatch@santacruz.gov.ph</p>
+                      <p class="text-blue-600/70 text-sm">We respond within 24 hours</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Features -->
+              <div class="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-100/50">
+                <h3 class="text-blue-700 font-bold text-xl mb-4">Why Contact Us?</h3>
+                <div class="space-y-4">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-sky-500 rounded-full flex items-center justify-center mt-1">
+                      <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-blue-700 font-semibold">Project Inquiries</p>
+                      <p class="text-blue-600/70 text-sm">Get detailed information about ongoing and upcoming projects</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-500 rounded-full flex items-center justify-center mt-1">
+                      <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-blue-700 font-semibold">Technical Support</p>
+                      <p class="text-blue-600/70 text-sm">Need help with the platform? Our team is here to assist</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mt-1">
+                      <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-blue-700 font-semibold">Feedback & Suggestions</p>
+                      <p class="text-blue-600/70 text-sm">Share your thoughts to help us improve our services</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-sky-600 rounded-full flex items-center justify-center mt-1">
+                      <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-blue-700 font-semibold">Partnership Opportunities</p>
+                      <p class="text-blue-600/70 text-sm">Explore collaboration possibilities with our LGU</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Response Time Guarantee -->
+              <div class="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-100/50">
+                <div class="text-center">
+                  <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-blue-700 font-bold text-xl mb-2">24-Hour Response</h3>
+                  <p class="text-blue-600/70 text-sm leading-relaxed">
+                    We guarantee a response to all inquiries within 24 hours during business days. 
+                    For urgent matters, please call our office directly.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
   </main>
   <LGUFooter />
-</Layout> 
+</Layout>
+
+<style>
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Enhanced floating animation for background elements */
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px) rotate(0deg);
+      opacity: 0.6;
+    }
+    50% { 
+      transform: translateY(-20px) rotate(180deg);
+      opacity: 1;
+    }
+  }
+  
+  /* Pulse animation for decorative elements */
+  @keyframes pulse-glow {
+    0%, 100% { 
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% { 
+      transform: scale(1.1);
+      opacity: 1;
+    }
+  }
+  
+  /* Gradient shift animation */
+  @keyframes gradient-shift {
+    0%, 100% { 
+      background-position: 0% 50%;
+    }
+    50% { 
+      background-position: 100% 50%;
+    }
+  }
+  
+  /* Enhanced hover effects */
+  .group:hover .group-hover\:scale-110 {
+    transform: scale(1.1);
+  }
+  
+  /* Glass morphism effect for cards */
+  .glass-card {
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Enhanced input focus effects */
+  input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 10px 25px rgba(99, 102, 241, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  /* Custom scrollbar for textarea */
+  textarea::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  textarea::-webkit-scrollbar-track {
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 10px;
+  }
+  
+  textarea::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+    border-radius: 10px;
+  }
+  
+  textarea::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #4f46e5, #7c3aed);
+  }
+  
+  /* Smooth transitions for all interactive elements */
+  * {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+  
+  /* Responsive background adjustments */
+  @media (max-width: 768px) {
+    .animate-fade-in-up {
+      transform: translateY(20px);
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contactForm');
+    const feedback = document.getElementById('formFeedback');
+    
+    // Enhanced form submission with better UX
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      
+      // Enhanced loading state with multiple phases
+              submitBtn.innerHTML = '<div class="relative flex items-center gap-3"><svg class="w-6 h-6 animate-spin" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg><span>Sending...</span><div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-50 rounded-2xl blur"></div></div>';
+      submitBtn.disabled = true;
+      submitBtn.classList.add('scale-95', 'opacity-75');
+      
+      // Add visual feedback to form
+      form.classList.add('opacity-75', 'pointer-events-none');
+      
+      // Simulate API call with realistic timing
+      setTimeout(() => {
+        // Show success message with enhanced animation
+        feedback.classList.remove('hidden');
+        feedback.classList.add('animate-fade-in-up');
+        
+        // Reset form with smooth transition
+        setTimeout(() => {
+          form.reset();
+          form.classList.remove('opacity-75', 'pointer-events-none');
+        }, 500);
+        
+        // Reset button with success state briefly
+        submitBtn.innerHTML = '<div class="relative flex items-center gap-3"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg><span>Sent Successfully!</span></div>';
+        submitBtn.classList.remove('scale-95', 'opacity-75');
+        submitBtn.classList.add('bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
+        
+        // Return to normal state
+        setTimeout(() => {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
+        }, 2000);
+        
+        // Hide success message after 7 seconds
+        setTimeout(() => {
+          feedback.classList.add('hidden');
+          feedback.classList.remove('animate-fade-in-up');
+        }, 7000);
+        
+        // Smooth scroll to feedback
+        feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 2500);
+    });
+    
+    // Enhanced form field interactions
+    const formFields = document.querySelectorAll('input, select, textarea');
+    formFields.forEach(field => {
+      // Add focus animations
+      field.addEventListener('focus', function() {
+        this.parentElement.classList.add('ring-4', 'ring-indigo-500/20', 'transform', 'scale-[1.02]');
+      });
+      
+      field.addEventListener('blur', function() {
+        this.parentElement.classList.remove('ring-4', 'ring-indigo-500/20', 'transform', 'scale-[1.02]');
+      });
+      
+      // Add typing animation for inputs
+      field.addEventListener('input', function() {
+        this.parentElement.classList.add('shadow-xl');
+        clearTimeout(this.typingTimer);
+        this.typingTimer = setTimeout(() => {
+          this.parentElement.classList.remove('shadow-xl');
+        }, 500);
+      });
+    });
+    
+    // Enhanced social media icons with floating animation
+    const socialIcons = document.querySelectorAll('a[aria-label]');
+    socialIcons.forEach((icon, index) => {
+      icon.style.animationDelay = `${index * 0.1}s`;
+      
+      // Add hover sound effect simulation (visual feedback)
+      icon.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.1) translateY(-4px) rotate(5deg)';
+      });
+      
+      icon.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1) translateY(0px) rotate(0deg)';
+      });
+    });
+    
+    // Enhanced background animations
+    const decorativeElements = document.querySelectorAll('.absolute');
+    decorativeElements.forEach((element, index) => {
+      if (element.classList.contains('blur-xl') || element.classList.contains('blur-2xl') || element.classList.contains('blur-3xl')) {
+        element.style.animation = `pulse-glow ${3 + index * 0.5}s ease-in-out infinite`;
+        element.style.animationDelay = `${index * 0.2}s`;
+      }
+    });
+    
+    // Add parallax effect to background elements on scroll
+    window.addEventListener('scroll', function() {
+      const scrolled = window.pageYOffset;
+      const backgroundElements = document.querySelectorAll('.absolute[class*="blur"]');
+      
+      backgroundElements.forEach((element, index) => {
+        const speed = 0.1 + (index * 0.05);
+        element.style.transform = `translateY(${scrolled * speed}px) scale(${1 + scrolled * 0.0001})`;
+      });
+    });
+    
+    // Enhanced form validation feedback
+    const requiredFields = document.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+      field.addEventListener('invalid', function() {
+        this.classList.add('border-red-500', 'ring-red-500');
+        
+        // Create custom validation message
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'text-red-500 text-sm mt-2 flex items-center gap-2';
+        errorMessage.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>This field is required';
+        
+        // Remove existing error message
+        const existingError = this.parentElement.querySelector('.text-red-500');
+        if (existingError) existingError.remove();
+        
+        this.parentElement.appendChild(errorMessage);
+        
+        // Remove error styling when field becomes valid
+        this.addEventListener('input', function() {
+          if (this.validity.valid) {
+            this.classList.remove('border-red-500', 'ring-red-500');
+            const errorMessage = this.parentElement.querySelector('.text-red-500');
+            if (errorMessage) errorMessage.remove();
+          }
+        }, { once: true });
+      });
+    });
+  });
+</script> 

@@ -166,6 +166,17 @@ module.exports = (sequelize) => {
     deletedAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    profilePictureUrl: {
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    externalCompanyName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: [0, 255]
+      }
     }
   }, {
     tableName: 'users',
@@ -245,6 +256,18 @@ module.exports = (sequelize) => {
     User.hasMany(models.ProjectValidation, {
       foreignKey: 'validatedBy',
       as: 'validatedReports'
+    });
+
+    // User has many Milestone Submissions (as submitter)
+    User.hasMany(models.MilestoneSubmission, {
+      foreignKey: 'submittedBy',
+      as: 'milestoneSubmissions'
+    });
+
+    // User has many Milestone Submissions (as reviewer)
+    User.hasMany(models.MilestoneSubmission, {
+      foreignKey: 'reviewedBy',
+      as: 'reviewedMilestoneSubmissions'
     });
   };
 

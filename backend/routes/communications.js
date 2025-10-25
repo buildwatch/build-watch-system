@@ -416,7 +416,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 router.get('/users/available', authenticateToken, async (req, res) => {
   try {
     let whereClause = {
-      status: 'Active'
+      status: 'active' // Fixed: use lowercase 'active' to match database
     };
 
     // Filter users based on current user's role
@@ -438,13 +438,24 @@ router.get('/users/available', authenticateToken, async (req, res) => {
         { role: 'LGU-PMT' },
         { subRole: { [Op.like]: '%Secretariat%' } }
       ];
+    } else {
+      // For other roles, show all LGU-PMT and LGU-IU users
+      whereClause[Op.or] = [
+        { role: 'LGU-PMT' },
+        { role: 'LGU-IU' }
+      ];
     }
+
+    console.log('🔍 Communications API - Available users query:', JSON.stringify(whereClause, null, 2));
 
     const users = await User.findAll({
       where: whereClause,
-      attributes: ['id', 'name', 'username', 'role', 'subRole', 'department'],
+      attributes: ['id', 'name', 'username', 'email', 'role', 'subRole', 'department'], // Added 'email' for profile pictures
       order: [['name', 'ASC']]
     });
+
+    console.log(`✅ Communications API - Found ${users.length} available users`);
+    console.log('📊 Users:', users.map(u => ({ name: u.name, role: u.role, subRole: u.subRole })));
 
     res.json({
       success: true,

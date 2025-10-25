@@ -2,6 +2,8 @@
 export const prerender = false;
 import Layout from '../../../layouts/Layout.astro';
 import IUImplementingOfficeLayout from '../../../components/IUImplementingOfficeLayout.astro';
+import ProjectCard from '../../../components/ProjectCard.astro';
+import ProjectDetailsModal from '../../../components/ProjectDetailsModal.astro';
 import projectService from '../../../services/projects.js';
 
 const API_URL = 'http://localhost:3000/api';
@@ -276,67 +278,22 @@ loading = false;
           </div>
           
           <div class="p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {projects.slice(0, 4).map(project => {
-                // Use calculated progress from ProgressCalculationService
-                const progress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
-                
-                return (
-                  <div class="group bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-6 hover:shadow-xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-2">
-                    <div class="flex items-start justify-between mb-4">
-                      <div class="flex-1">
-                        <h4 class="font-semibold text-gray-800 mb-2 group-hover:text-amber-700 transition-colors">{project.name}</h4>
-                        <p class="text-sm text-gray-600">{project.projectCode}</p>
-                      </div>
-                      <span class={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300 transform group-hover:scale-105 ${
-                        project.status === 'ongoing' ? 'bg-green-100 text-green-700 group-hover:bg-green-200' :
-                        project.status === 'completed' ? 'bg-blue-100 text-blue-700 group-hover:bg-blue-200' :
-                        project.status === 'pending' ? 'bg-yellow-100 text-yellow-700 group-hover:bg-yellow-200' :
-                        'bg-gray-100 text-gray-700 group-hover:bg-gray-200'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </div>
-                    
-                    <div class="mb-4">
-                      <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm text-gray-600 group-hover:text-amber-600 transition-colors">Progress</span>
-                        <span class="text-sm font-medium text-gray-800 group-hover:text-amber-700 transition-colors">{progress.toFixed(1)}%</span>
-                      </div>
-                      <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                        <div class={`h-3 rounded-full transition-all duration-1000 ease-out ${
-                          project.status === 'completed' ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-amber-500 to-amber-600'
-                        }`} style={`width: ${progress}%`}></div>
-                      </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-                      <div class="p-2 bg-gray-50 rounded-lg group-hover:bg-amber-50 transition-colors">
-                        <span class="text-gray-500 group-hover:text-amber-600 transition-colors">Budget:</span>
-                        <span class="font-medium ml-1 text-gray-800 group-hover:text-amber-700 transition-colors">{projectService.formatBudget(project.totalBudget)}</span>
-                      </div>
-                      <div class="p-2 bg-gray-50 rounded-lg group-hover:bg-amber-50 transition-colors">
-                        <span class="text-gray-500 group-hover:text-amber-600 transition-colors">Location:</span>
-                        <span class="font-medium ml-1 text-gray-800 group-hover:text-amber-700 transition-colors">{project.location}</span>
-                      </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-3">
-                      <button onclick={`viewProject('${project.id}')`} class="group/btn flex-1 px-4 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm font-medium">
-                        View Details
-                      </button>
-                      <button onclick={`updateProgress('${project.id}')`} class="group/btn px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg hover:from-amber-700 hover:to-amber-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm font-medium">
-                        Update
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {projects.slice(0, 6).map(project => (
+                <ProjectCard 
+                  project={project}
+                  userTheme="iu-implementing-office"
+                  onClick="viewProjectDetails"
+                />
+              ))}
             </div>
           </div>
         </div>
       )}
     </section>
+
+    <!-- Project Details Modal -->
+    <ProjectDetailsModal userTheme="iu-implementing-office" />
   </IUImplementingOfficeLayout>
 </Layout>
 
@@ -528,8 +485,29 @@ loading = false;
     }
   }
 
+  // View project details modal function
+  async function viewProjectDetails(projectId) {
+    try {
+      // Check session validity first
+      if (!authService.redirectIfInvalidSession()) {
+        return;
+      }
+
+      // Try to show modal if available, otherwise redirect
+      if (window.showProjectModal) {
+        window.showProjectModal(projectId);
+      } else {
+        // Fallback to redirect to project management page
+        window.location.href = `/dashboard/iu-implementing-office/modules/project-management?projectId=${projectId}`;
+      }
+    } catch (error) {
+      console.error('Error viewing project details:', error);
+    }
+  }
+
   // Make functions globally available
   window.loadDashboard = loadDashboard;
   window.viewProject = viewProject;
   window.updateProgress = updateProgress;
+  window.viewProjectDetails = viewProjectDetails;
 </script> 

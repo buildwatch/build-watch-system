@@ -1,6 +1,7 @@
 const express = require('express');
-const { Project, ProjectUpdate, User, ActivityLog } = require('../models');
+const { Project, ProjectUpdate, User, ActivityLog, ProjectMilestone } = require('../models');
 const { authenticateToken, requireEIU } = require('../middleware/auth');
+const ProjectNotificationService = require('../services/projectNotificationService');
 
 const router = express.Router();
 
@@ -164,6 +165,19 @@ router.get('/projects', authenticateToken, requireEIU, async (req, res) => {
           model: User,
           as: 'eiuPersonnel',
           attributes: ['id', 'name', 'username', 'role', 'subRole']
+        },
+        {
+          model: ProjectMilestone,
+          as: 'milestones',
+          required: false
+        },
+        {
+          model: ProjectUpdate,
+          as: 'updates',
+          required: false,
+          separate: true,
+          limit: 10,
+          order: [['createdAt', 'DESC']]
         }
       ],
       limit: parseInt(limit),
@@ -171,17 +185,100 @@ router.get('/projects', authenticateToken, requireEIU, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    // Calculate progress for each project using ProgressCalculationService
+    // Calculate progress and check delayed status for each project
     const ProgressCalculationService = require('../services/progressCalculationService');
+    const delayedStatusService = require('../services/delayedStatusService');
+    
     const projectsWithProgress = await Promise.all(projects.map(async (project) => {
       try {
         const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, 'eiu');
+        
+        // Use direct progress fields from database if available, otherwise calculate from milestones
+        let overallProgress = 0;
+        let timelineProgress = 0;
+        let budgetProgress = 0;
+        let physicalProgress = 0;
+        
+        if (project.overallProgress !== null && project.overallProgress !== undefined && 
+            project.timelineProgress !== null && project.timelineProgress !== undefined &&
+            project.budgetProgress !== null && project.budgetProgress !== undefined &&
+            project.physicalProgress !== null && project.physicalProgress !== undefined) {
+          // Use direct progress fields from database (more accurate for recent updates)
+          overallProgress = parseFloat(project.overallProgress) || 0;
+          timelineProgress = parseFloat(project.timelineProgress) || 0;
+          budgetProgress = parseFloat(project.budgetProgress) || 0;
+          physicalProgress = parseFloat(project.physicalProgress) || 0;
+          
+          console.log(`🔍 EIU using direct progress fields for project ${project.id}:`, {
+            overall: overallProgress,
+            timeline: timelineProgress,
+            budget: budgetProgress,
+            physical: physicalProgress
+          });
+        } else {
+          // Fallback to milestone-based calculation
+          if (progressData.milestones && progressData.milestones.milestones && progressData.milestones.milestones.length > 0) {
+            progressData.milestones.milestones.forEach(milestone => {
+              const weight = parseFloat(milestone.weight || 0);
+              const approvedDivisions = [milestone.timelineStatus === 'approved', milestone.budgetStatus === 'approved', milestone.physicalStatus === 'approved'].filter(Boolean).length;
+              const milestoneContribution = (approvedDivisions / 3) * weight;
+              overallProgress += milestoneContribution;
+            });
+          }
+          
+          // Use progress data from service for individual divisions
+          timelineProgress = progressData.progress?.timeline || 0;
+          budgetProgress = progressData.progress?.budget || 0;
+          physicalProgress = progressData.progress?.physical || 0;
+        }
+        
+        // Check delayed status for ongoing projects
+        let delayInfo = null;
+        if (project.status === 'ongoing' || project.status === 'delayed') {
+          try {
+            const delayCheck = await delayedStatusService.checkProjectDelayedStatus(project.id);
+            delayInfo = {
+              isDelayed: delayCheck.isDelayed,
+              overdueMilestoneCount: delayCheck.delayInfo.overdueMilestoneCount,
+              maxDaysOverdue: delayCheck.delayInfo.maxDaysOverdue,
+              severity: delayCheck.delayInfo.severity,
+              overdueMilestones: delayCheck.overdueMilestones
+            };
+            
+            // Auto-update status if needed
+            if (delayCheck.isDelayed && project.status !== 'delayed') {
+              await delayedStatusService.updateProjectDelayedStatus(project.id);
+              project.status = 'delayed'; // Update in memory for response
+            }
+          } catch (delayError) {
+            console.error(`Error checking delayed status for project ${project.id}:`, delayError);
+          }
+        }
+        
         return {
           ...project.toJSON(),
-          timelineProgress: progressData.progress.timeline,
-          budgetProgress: progressData.progress.budget,
-          physicalProgress: progressData.progress.physical,
-          overallProgress: Math.round(progressData.progress.overall * 100) / 100
+          status: project.status, // Ensure updated status is included
+          timelineProgress: timelineProgress,
+          budgetProgress: budgetProgress,
+          physicalProgress: physicalProgress,
+          overallProgress: Math.round(overallProgress * 100) / 100,
+          delayInfo, // Add delay information
+          // Add debug information
+          _debug: {
+            usingDirectFields: project.overallProgress !== null && project.overallProgress !== undefined,
+            calculatedTimeline: timelineProgress,
+            calculatedBudget: budgetProgress,
+            calculatedPhysical: physicalProgress,
+            calculatedOverall: Math.round(overallProgress * 100) / 100,
+            serviceTimeline: progressData.progress?.internalTimeline,
+            serviceBudget: progressData.progress?.internalBudget,
+            servicePhysical: progressData.progress?.internalPhysical,
+            serviceOverall: progressData.progress?.overall,
+            originalTimeline: project.timelineProgress,
+            originalBudget: project.budgetProgress,
+            originalPhysical: project.physicalProgress,
+            originalOverall: project.overallProgress
+          }
         };
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);
@@ -196,10 +293,20 @@ router.get('/projects', authenticateToken, requireEIU, async (req, res) => {
           timelineProgress,
           budgetProgress,
           physicalProgress,
-          overallProgress: Math.round(overallProgress * 100) / 100
+          overallProgress: Math.round(overallProgress * 100) / 100,
+          delayInfo: null // No delay info on error
         };
       }
     }));
+
+    // Add cache-busting headers to force fresh data
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Last-Modified': new Date().toUTCString(),
+      'ETag': `"${Date.now()}"`
+    });
 
     res.json({
       success: true,
@@ -747,6 +854,18 @@ router.post('/submit-milestone-update', authenticateToken, requireEIU, async (re
     const projectUpdate = await ProjectUpdate.create(projectUpdateData);
 
     console.log('Project update created successfully:', projectUpdate.id);
+
+    // Get milestone details for notification
+    const milestone = await ProjectMilestone.findByPk(milestoneId);
+    
+    // Create notifications for milestone submission
+    try {
+      await ProjectNotificationService.notifyMilestoneSubmission(projectUpdate, project, milestone);
+      console.log('✅ Notifications created for milestone submission');
+    } catch (notificationError) {
+      console.error('Failed to create notifications:', notificationError);
+      // Don't fail the entire request if notification creation fails
+    }
 
     // Log activity
     try {

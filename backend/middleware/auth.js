@@ -1,12 +1,72 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
+// Store for tracking user activity (in production, this should be Redis or database)
+const userActivityTracker = new Map();
+
+// Function to update user activity
+const updateUserActivity = (userId) => {
+  userActivityTracker.set(userId, {
+    lastActivity: new Date(),
+    isActive: true
+  });
+};
+
+// Function to check if user is active (within last 2 minutes for faster detection)
+const isUserActive = (userId) => {
+  const activity = userActivityTracker.get(userId);
+  if (!activity) return false;
+  
+  const now = new Date();
+  const lastActivity = new Date(activity.lastActivity);
+  const timeDiff = (now - lastActivity) / 1000 / 60; // minutes
+  
+  return timeDiff <= 2; // Consider active if last activity within 2 minutes
+};
+
+// Cleanup inactive users periodically (faster cleanup for real-time updates)
+setInterval(() => {
+  const now = new Date();
+  const inactiveUsers = [];
+  
+  for (const [userId, activity] of userActivityTracker.entries()) {
+    const lastActivity = new Date(activity.lastActivity);
+    const timeDiff = (now - lastActivity) / 1000 / 60; // minutes
+    
+    if (timeDiff > 2) { // Remove after 2 minutes of inactivity
+      inactiveUsers.push(userId);
+    }
+  }
+  
+  // Remove inactive users
+  inactiveUsers.forEach(userId => {
+    userActivityTracker.delete(userId);
+    console.log(`🔄 User ${userId} marked as inactive due to timeout`);
+  });
+  
+  if (inactiveUsers.length > 0) {
+    console.log(`🧹 Cleaned up ${inactiveUsers.length} inactive users`);
+  }
+}, 15000); // Check every 15 seconds for faster real-time updates
+
 // Middleware to verify JWT token
 const authenticateToken = async (req, res, next) => {
+  console.log('🔍 Auth middleware - Request received:', {
+    method: req.method,
+    url: req.url,
+    hasAuthHeader: !!req.headers['authorization']
+  });
+  
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('🔍 Auth middleware - Token check:', {
+    hasToken: !!token,
+    tokenLength: token ? token.length : 0
+  });
+
   if (!token) {
+    console.log('❌ Auth middleware - No token provided');
     return res.status(401).json({
       success: false,
       error: 'Access token required'
@@ -28,6 +88,9 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
+    // Update user activity on every authenticated request
+    updateUserActivity(user.id);
+
     req.user = user;
     next();
   } catch (error) {
@@ -41,15 +104,27 @@ const authenticateToken = async (req, res, next) => {
 // Middleware to check roles (accepts single role or array of roles)
 const requireRole = (roles) => {
   return (req, res, next) => {
+    console.log('🔍 Role middleware - Checking roles:', {
+      userRole: req.user?.role,
+      allowedRoles: roles,
+      hasUser: !!req.user
+    });
+    
     const userRole = req.user.role;
     const allowedRoles = Array.isArray(roles) ? roles : [roles];
     
     if (!allowedRoles.includes(userRole)) {
+      console.log('❌ Role middleware - Access denied:', {
+        userRole,
+        allowedRoles
+      });
       return res.status(403).json({
         success: false,
         error: `Access denied. One of the following roles required: ${allowedRoles.join(', ')}`
       });
     }
+    
+    console.log('✅ Role middleware - Access granted');
     next();
   };
 };
@@ -128,5 +203,9 @@ module.exports = {
   requireEMS,
   requireAdminOrPMT,
   requireAdminOrEIU,
-  requireAdminOrIU
+  requireAdminOrIU,
+  // Activity tracking functions
+  updateUserActivity,
+  isUserActive,
+  userActivityTracker
 }; 

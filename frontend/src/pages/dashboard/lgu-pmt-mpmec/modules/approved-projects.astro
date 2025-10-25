@@ -2,15 +2,23 @@
 export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
 import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
+import ProjectCard from '../../../../components/ProjectCard.astro';
+import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
 
 const API_URL = 'http://localhost:3000/api';
 let userData = null;
 let approvedProjects = [];
 let stats = {
   totalProjects: 0,
-  activeComplete: 0,
+  budgetUtilized: 0,
+  avgProgress: 0,
+  totalDepartments: 0,
+  ongoing: 0,
   pending: 0,
-  totalBudget: '₱0'
+  delayed: 0,
+  completed: 0,
+  totalBudget: '₱0',
+  budgetUtilizedFormatted: '₱0'
 };
 let loading = true;
 let error = '';
@@ -31,8 +39,13 @@ try {
     }
 
     // Fetch all projects for MPMEC (including pending ones)
-    const projectsRes = await fetch(`${API_URL}/projects`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const timestamp = new Date().getTime();
+    const projectsRes = await fetch(`${API_URL}/projects?_t=${timestamp}`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
     });
     if (projectsRes.ok) {
       const data = await projectsRes.json();
@@ -40,16 +53,111 @@ try {
         // MPMEC sees all projects submitted to Secretariat (approved + pending)
         approvedProjects = data.projects.filter(p => p.submittedToSecretariat === true);
         
-        // Calculate statistics
+        // Fetch progress data for each project from the updated backend calculation service
+        for (const project of approvedProjects) {
+          try {
+            const progressTimestamp = new Date().getTime();
+            const progressRes = await fetch(`${API_URL}/projects/progress/${project.id}?_t=${progressTimestamp}`, {
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
+            });
+            
+            if (progressRes.ok) {
+              const progressData = await progressRes.json();
+              if (progressData.success && progressData.data) {
+                const progress = progressData.data.progress;
+                
+                // Update the project object with the new progress data - ensure valid numbers
+                project.progress = progress;
+                project.overallProgress = isNaN(parseFloat(progress.overall)) ? 0 : parseFloat(progress.overall || 0);
+                project.timelineProgress = isNaN(parseFloat(progress.internalTimeline)) ? 0 : parseFloat(progress.internalTimeline || 0);
+                project.budgetProgress = isNaN(parseFloat(progress.internalBudget)) ? 0 : parseFloat(progress.internalBudget || 0);
+                project.physicalProgress = isNaN(parseFloat(progress.internalPhysical)) ? 0 : parseFloat(progress.internalPhysical || 0);
+                
+                console.log(`Updated project ${project.name} with progress:`, {
+                  overall: project.overallProgress,
+                  timeline: project.timelineProgress,
+                  budget: project.budgetProgress,
+                  physical: project.physicalProgress
+                });
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching progress for project ${project.id}:`, error);
+          }
+        }
+        
+        // Calculate comprehensive statistics
         stats.totalProjects = approvedProjects.length;
-        stats.activeComplete = approvedProjects.filter(p => p.status === 'ongoing' || p.status === 'complete').length;
+        stats.ongoing = approvedProjects.filter(p => p.status === 'ongoing').length;
         stats.pending = approvedProjects.filter(p => p.status === 'pending').length;
         
+        // Calculate delayed projects and milestones with milestone-level detection
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let delayedMilestonesCount = 0;
+        
+        stats.delayed = approvedProjects.filter(p => {
+          let projectHasDelayedMilestones = false;
+          
+          // Check if project status is already delayed
+          if (p.status === 'delayed') {
+            projectHasDelayedMilestones = true;
+          }
+          
+          // Check milestone-level delays
+          if (p.milestones && Array.isArray(p.milestones)) {
+            p.milestones.forEach(milestone => {
+              const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+              const status = milestone.status || 'pending';
+              
+              if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+                const milestoneDate = new Date(dueDate);
+                milestoneDate.setHours(0, 0, 0, 0);
+                if (milestoneDate < today && status === 'pending') {
+                  delayedMilestonesCount++;
+                  projectHasDelayedMilestones = true;
+                }
+              }
+            });
+          }
+          
+          return projectHasDelayedMilestones;
+        }).length;
+        
+        // Store delayed milestones count for use in the UI
+        stats.delayedMilestones = delayedMilestonesCount;
+        
+        stats.completed = approvedProjects.filter(p => p.status === 'complete').length;
+        
+        // Calculate total budget
         const totalBudget = approvedProjects.reduce((sum, p) => {
           const budget = parseFloat(p.totalBudget) || 0;
           return sum + budget;
         }, 0);
         stats.totalBudget = `₱${totalBudget.toLocaleString()}`;
+        
+        // Calculate budget utilized (based on budget progress)
+        const budgetUtilized = approvedProjects.reduce((sum, p) => {
+          const budget = parseFloat(p.totalBudget) || 0;
+          const progress = parseFloat(p.budgetProgress) || 0;
+          return sum + (budget * (progress / 100));
+        }, 0);
+        stats.budgetUtilized = budgetUtilized;
+        stats.budgetUtilizedFormatted = `₱${budgetUtilized.toLocaleString()}`;
+        
+        // Calculate average progress
+        const totalProgress = approvedProjects.reduce((sum, p) => {
+          return sum + (parseFloat(p.overallProgress) || 0);
+        }, 0);
+        stats.avgProgress = approvedProjects.length > 0 ? (totalProgress / approvedProjects.length).toFixed(1) : 0;
+        
+        // Calculate total departments
+        const departments = [...new Set(approvedProjects.map(p => p.implementingOfficeName).filter(Boolean))];
+        stats.totalDepartments = departments.length;
       }
     }
   }
@@ -69,6 +177,94 @@ loading = false;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+      }
+
+      /* Icon Container Styles - Matching User Management */
+      .icon-container {
+        @apply w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .icon-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+      
+      .icon-container > * {
+        position: relative;
+        z-index: 2;
+      }
+      
+      .icon-container:hover::before {
+        left: 100%;
+      }
+      
+      .icon-container:hover {
+        @apply transform scale-110 rotate-3;
+      }
+
+      /* Modern Profile Card Styles - Matching User Management */
+      .profile-card {
+        @apply bg-white border border-gray-200 rounded-2xl shadow-lg transition-all duration-500 ease-out hover:shadow-2xl hover:border-blue-600/20 hover:-translate-y-2;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .profile-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.08), transparent);
+        transition: left 0.6s ease-out;
+        z-index: 1;
+      }
+      
+      .profile-card > * {
+        position: relative;
+        z-index: 2;
+      }
+      
+      .profile-card:hover::before {
+        left: 100%;
+      }
+
+      /* Enhanced Action Button Styles with Lifting and Shining Effects */
+      .btn-action {
+        @apply text-sm font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .btn-action > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .btn-action:hover::before {
+        left: 100%;
       }
 
       /* Modern Tab Button Design */
@@ -192,175 +388,362 @@ loading = false;
           transform: translateY(0);
         }
       }
+
+      /* Table Progress Bar Animation */
+      .table-progress-bar-fill {
+        transform-origin: left;
+        animation: fillTableProgress 2s ease-out forwards;
+      }
+      
+      @keyframes fillTableProgress {
+        from {
+          width: 0%;
+        }
+        to {
+          width: var(--table-progress-width);
+        }
+      }
     </style>
-    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
-      <!-- Header -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">LGU-PMT Dashboard</h1>
-          <p class="text-gray-600">Municipal Project Monitoring and Evaluation Committee</p>
-          <p class="text-sm text-gray-500">Review and monitor approved municipal projects.</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="exportProjects()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Export
-          </button>
-          <button onclick="refreshProjects()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <!-- Statistics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Total Projects</p>
-              <p class="text-2xl font-bold text-gray-800" id="totalProjects">{stats.totalProjects}</p>
-            </div>
-            <div class="bg-blue-100 p-3 rounded-xl">
-              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Active/Complete</p>
-              <p class="text-2xl font-bold text-green-600" id="activeComplete">{stats.activeComplete}</p>
-            </div>
-            <div class="bg-green-100 p-3 rounded-xl">
-              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    
+    <!-- Page Header - Matching User Management Structure -->
+    <div class="bg-white border-b border-gray-200 px-8 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Pending</p>
-              <p class="text-2xl font-bold text-yellow-600" id="pending">{stats.pending}</p>
-            </div>
-            <div class="bg-yellow-100 p-3 rounded-xl">
-              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
+              <h1 class="text-3xl font-bold text-black">Approved Projects</h1>
+              <p class="text-sm text-gray-600">Municipal Project Monitoring and Evaluation Committee</p>
             </div>
           </div>
         </div>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Total Projects</p>
+            <p class="text-xs text-black font-semibold">{stats.totalProjects} Active Projects</p>
+          </div>
+          <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+        </div>
+      </div>
+    </div>
 
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Total Budget</p>
-              <p class="text-2xl font-bold text-purple-600" id="totalBudget">{stats.totalBudget}</p>
+    <!-- Main Content -->
+    <main class="bg-gradient-to-br from-gray-50 to-white min-h-screen px-8 py-8">
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 mb-8">
+        <button onclick="exportProjects()" class="btn-action bg-green-600 hover:bg-green-700 text-white px-4 py-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Export Projects
+        </button>
+        <button onclick="refreshProjects()" class="btn-action bg-[#FE5353] hover:bg-[#E54545] text-white px-4 py-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Refresh Data
+        </button>
+      </div>
+
+      <!-- Enhanced Approved Projects Overview Cards - MPMEC Theme -->
+      <div class="space-y-6 mb-8">
+        <!-- Top Row: Primary Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Total Projects/Budget - MPMEC Theme -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Total Projects</p>
+                <p class="text-2xl font-bold text-black" id="totalProjects">{stats.totalProjects}</p>
+                <p class="text-xs text-gray-500 mt-1">{stats.totalBudget}</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 012-2h10a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+              </div>
             </div>
-            <div class="bg-purple-100 p-3 rounded-xl">
-              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-              </svg>
+          </div>
+
+          <!-- Budget Utilized - Professional Light Green -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Budget Utilized</p>
+                <p class="text-2xl font-bold text-black" id="budgetUtilized">{stats.budgetUtilizedFormatted}</p>
+                <p class="text-xs text-green-600 mt-1">{stats.budgetUtilized > 0 ? `${((stats.budgetUtilized / (parseFloat(stats.totalBudget.replace(/[₱,]/g, '')) || 1)) * 100).toFixed(1)}% utilized` : '0% utilized'}</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3-3-3h1m1 0h6m-6 0a3 3 0 110-6H9l3-3-3 3h1m1 0h6"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Average Progress - Professional Light Gold -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Avg Progress</p>
+                <p class="text-2xl font-bold text-black" id="avgProgress">{stats.avgProgress}%</p>
+                <p class="text-xs text-amber-600 mt-1">Overall completion</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Departments - MPMEC Theme -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Total Departments</p>
+                <p class="text-2xl font-bold text-black" id="totalDepartments">{stats.totalDepartments}</p>
+                <p class="text-xs text-blue-600 mt-1">Active departments</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Status Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Ongoing - MPMEC Theme -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Ongoing</p>
+                <p class="text-2xl font-bold text-black" id="ongoing">{stats.ongoing}</p>
+                <p class="text-xs text-blue-600 mt-1">In progress</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending - Professional Light Gold -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Pending</p>
+                <p class="text-2xl font-bold text-black" id="pending">{stats.pending}</p>
+                <p class="text-xs text-amber-600 mt-1">Awaiting review</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delayed - Professional Light Red -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Delayed</p>
+                <p class="text-2xl font-bold text-black" id="delayed">{stats.delayed}</p>
+                <p class="text-xs text-red-600 mt-1">Behind schedule</p>
+                <p class="text-xs text-gray-500 mt-1">Delayed Milestones: <span>{stats.delayedMilestones || 0}</span></p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-red-500 to-red-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Completed - Professional Light Green -->
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Completed</p>
+                <p class="text-2xl font-bold text-black" id="completed">{stats.completed}</p>
+                <p class="text-xs text-green-600 mt-1">Successfully finished</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Filters and Search -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">Search & Filter Projects</h3>
-          <button onclick="clearFilters()" class="text-sm text-[#FE5353] hover:text-[#E54545] font-medium">
-            Clear Filters
-          </button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Search Projects</label>
-            <input type="text" id="searchInput" placeholder="Search by project name..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" onkeyup="filterProjects()">
+      <!-- Enhanced Filters Section -->
+      <div class="profile-card p-8 mb-8">
+        <div class="mb-8">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700" style="width: 40px; height: 40px; border-radius: 12px;">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-black">Search & Filter Projects</h3>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" onchange="filterProjects()">
-              <option value="">All Status</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="pending">Pending</option>
-              <option value="complete">Complete</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <select id="departmentFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" onchange="filterProjects()">
-              <option value="">All Departments</option>
-              <option value="Municipal Disaster And Risk Reduction Management Office">Municipal Disaster And Risk Reduction Management Office</option>
-              <option value="Municipal Social Welfare And Development Office">Municipal Social Welfare And Development Office</option>
-              <option value="Municipal Environment and Natural Resources Office">Municipal Environment and Natural Resources Office</option>
-              <option value="Municipal Health Office">Municipal Health Office</option>
-              <option value="Municipal Agriculture Office">Municipal Agriculture Office</option>
-              <option value="Municipal Engineering Office">Municipal Engineering Office</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FE5353] focus:border-transparent" onchange="filterProjects()">
-              <option value="">All Categories</option>
-              <option value="infrastructure">Infrastructure</option>
-              <option value="health">Health</option>
-              <option value="education">Education</option>
-              <option value="agriculture">Agriculture</option>
-              <option value="social">Social Services</option>
-              <option value="environment">Environment</option>
-              <option value="transportation">Transportation</option>
-            </select>
+          
+          <div class="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Search Projects</label>
+                <input type="text" id="searchInput" placeholder="Search by project name..." class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onkeyup="filterProjects()">
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Status</label>
+                <select id="statusFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onchange="filterProjects()">
+                  <option value="">All Status</option>
+                  <option value="ongoing">Ongoing</option>
+                  <option value="pending">Pending</option>
+                  <option value="complete">Complete</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Department</label>
+                <select id="departmentFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onchange="filterProjects()">
+                  <option value="">All Departments</option>
+                  <option value="Municipal Disaster And Risk Reduction Management Office">Municipal Disaster And Risk Reduction Management Office</option>
+                  <option value="Municipal Social Welfare And Development Office">Municipal Social Welfare And Development Office</option>
+                  <option value="Municipal Environment and Natural Resources Office">Municipal Environment and Natural Resources Office</option>
+                  <option value="Municipal Health Office">Municipal Health Office</option>
+                  <option value="Municipal Agriculture Office">Municipal Agriculture Office</option>
+                  <option value="Municipal Engineering Office">Municipal Engineering Office</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Category</label>
+                <select id="categoryFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onchange="filterProjects()">
+                  <option value="">All Categories</option>
+                  <option value="infrastructure">Infrastructure</option>
+                  <option value="health">Health</option>
+                  <option value="education">Education</option>
+                  <option value="agriculture">Agriculture</option>
+                  <option value="social">Social Services</option>
+                  <option value="environment">Environment</option>
+                  <option value="transportation">Transportation</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 mt-6">
+              <button onclick="filterProjects()" class="btn-action bg-blue-600 hover:bg-blue-700 text-white px-6 py-3">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                Apply Filters
+              </button>
+              <button onclick="clearFilters()" class="btn-action bg-gray-600 hover:bg-gray-700 text-white px-6 py-3">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Clear Filters
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FE5353]"></div>
-          <span class="ml-3 text-gray-600">Loading approved projects...</span>
+        <div class="profile-card">
+          <div class="text-center py-16">
+            <div class="relative">
+              <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-6"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-6 h-6 bg-blue-600 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Loading Approved Projects</h3>
+            <p class="text-gray-600">Fetching project data and progress information...</p>
+          </div>
         </div>
       ) : error ? (
-        <div class="text-center py-12">
-          <p class="text-red-600 mb-4">{error}</p>
-          <button onclick="loadProjects()" class="px-4 py-2 bg-[#FE5353] text-white rounded-lg hover:bg-[#E54545] transition-all">
-            Try Again
-          </button>
+        <div class="profile-card">
+          <div class="text-center py-16">
+            <div class="icon-container bg-gradient-to-br from-red-500 to-red-600 mx-auto mb-6" style="width: 80px; height: 80px;">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-black mb-3">Error Loading Projects</h3>
+            <p class="text-red-600 mb-6">{error}</p>
+            <button onclick="loadProjects()" class="btn-action bg-[#FE5353] hover:bg-[#E54545] text-white px-6 py-3">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Try Again
+            </button>
+          </div>
         </div>
       ) : approvedProjects.length === 0 ? (
-        <div class="text-center py-12">
-          <svg class="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">No Projects Available</h3>
-          <p class="text-gray-600 mb-6">No projects have been submitted to the Secretariat yet. Projects will appear here once they are submitted.</p>
+        <div class="profile-card">
+          <div class="text-center py-16">
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 max-w-md mx-auto">
+              <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700 mx-auto mb-6" style="width: 80px; height: 80px;">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold text-black mb-3">No Projects Available</h3>
+              <p class="text-gray-600 text-lg mb-2">No projects have been submitted to the Secretariat yet</p>
+              <p class="text-gray-500 text-sm">Projects will appear here once they are submitted for review</p>
+              <div class="flex items-center justify-center gap-4 mt-6">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span class="text-xs text-gray-600">Pending</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span class="text-xs text-gray-600">Approved</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span class="text-xs text-gray-600">Complete</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
-        <!-- Projects View Tabs -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <!-- Tab Navigation -->
-          <div class="px-6 py-4 border-b border-gray-200">
+        <!-- Enhanced Projects View Tabs -->
+        <div class="profile-card overflow-hidden">
+          <!-- Enhanced Tab Navigation -->
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-gray-800">Approved Project List</h2>
-              <div class="flex bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" style="width: 280px;">
-                <button id="tableTab" class="tab-button text-sm font-medium text-gray-900 bg-[#FE5353] text-white transition-all duration-300 flex items-center gap-2 active relative">
+              <div class="flex items-center gap-4">
+                <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-black">Approved Project List</h2>
+                  <p class="text-gray-600 mt-1">Review and monitor project progress</p>
+                </div>
+              </div>
+              <div class="flex bg-white/90 backdrop-blur-sm border border-blue-200/50 rounded-xl shadow-sm overflow-hidden" style="width: 280px;">
+                <button id="tableTab" class="tab-button btn-action bg-[#FE5353] hover:bg-[#E54545] text-white px-4 py-2 active relative">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                   </svg>
                   Table View
                 </button>
-                <button id="cardTab" class="tab-button text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-300 flex items-center gap-2 relative">
+                <button id="cardTab" class="tab-button btn-action bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 relative">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                   </svg>
@@ -413,6 +796,7 @@ loading = false;
                             project.status === 'complete' ? 'bg-green-100 text-green-700' :
                             project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
                             project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            project.status === 'delayed' ? 'bg-red-100 text-red-700 animate-pulse' :
                             'bg-gray-100 text-gray-700'
                           }`}>
                             {project.status}
@@ -420,21 +804,27 @@ loading = false;
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="flex items-center">
-                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div class={`h-2 rounded-full ${
-                                project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
-                              }`} style={`width: ${progress}%`}></div>
+                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
+                              <div 
+                                class="h-2 rounded-full transition-all duration-2000 ease-out table-progress-bar-fill"
+                                style="width: 0%"
+                                data-progress={progress}
+                                data-progress-color={progress >= 0 && progress <= 25 ? 'bg-red-500' : progress >= 26 && progress <= 50 ? 'bg-yellow-500' : progress >= 51 && progress <= 75 ? 'bg-blue-500' : progress >= 76 && progress <= 100 ? 'bg-green-500' : 'bg-gray-500'}
+                              ></div>
                             </div>
                             <span class="text-sm text-gray-900">{progress.toFixed(1)}%</span>
                           </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="flex items-center">
-                                                       <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                             <div class={`h-2 rounded-full ${
-                               timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                             }`} style={`width: ${Math.min(timelineProgress, 100)}%`}></div>
-                           </div>
+                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
+                              <div 
+                                class="h-2 rounded-full transition-all duration-2000 ease-out table-progress-bar-fill"
+                                style="width: 0%"
+                                data-progress={Math.min(timelineProgress, 100)}
+                                data-progress-color={timelineProgress >= 0 && timelineProgress <= 25 ? 'bg-red-500' : timelineProgress >= 26 && timelineProgress <= 50 ? 'bg-yellow-500' : timelineProgress >= 51 && timelineProgress <= 75 ? 'bg-blue-500' : timelineProgress >= 76 && timelineProgress <= 100 ? 'bg-green-500' : 'bg-gray-500'}
+                              ></div>
+                            </div>
                             <span class="text-sm text-gray-900">{timelineProgress.toFixed(1)}%</span>
                           </div>
                           <div class="text-xs text-gray-500 mt-1">
@@ -456,12 +846,21 @@ loading = false;
                           })()}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button onclick={`viewProjectDetails('${project.id}')`} class="text-[#FE5353] hover:text-[#E54545] mr-3">
-                            View
-                          </button>
-                          <button onclick={`viewProgress('${project.id}')`} class="text-blue-600 hover:text-blue-800">
-                            Progress
-                          </button>
+                          <div class="flex items-center gap-2">
+                            <button onclick={`viewProjectDetails('${project.id}')`} class="btn-action bg-[#FE5353] hover:bg-[#E54545] text-white px-3 py-1.5 text-xs">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                              </svg>
+                              View
+                            </button>
+                            <button onclick={`viewProgress('${project.id}')`} class="btn-action bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                              </svg>
+                              Progress
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -474,93 +873,13 @@ loading = false;
           <!-- Card View Content -->
           <div id="cardView" class="tab-content hidden p-6">
             <div id="projectsCardBody" class="card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {approvedProjects.map(project => {
-                const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-                const budget = parseFloat(project.totalBudget) || 0;
-                const timelineProgress = parseFloat(project.timelineProgress) || 0;
-                const startDate = project.startDate ? new Date(project.startDate) : null;
-                const endDate = project.endDate ? new Date(project.endDate) : null;
-                
-                return (
-                  <div class="project-card bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div class="p-6">
-                      <!-- Project Header -->
-                      <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
-                          <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">{project.name}</h3>
-                          <p class="text-sm text-gray-500">{project.projectCode}</p>
-                        </div>
-                        <span class={`px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
-                          project.status === 'complete' ? 'bg-green-100 text-green-700' :
-                          project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-                          project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {project.status}
-                        </span>
-                      </div>
-
-                      <!-- Project Info -->
-                      <div class="space-y-3 mb-4">
-                        <div class="flex items-center text-sm text-gray-600">
-                          <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                          </svg>
-                          <span class="truncate">{project.implementingOfficeName}</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                          <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                          </svg>
-                          <span>₱{budget.toLocaleString()}</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                          <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                          </svg>
-                          <span>{startDate ? startDate.toLocaleDateString() : 'N/A'} - {endDate ? endDate.toLocaleDateString() : 'N/A'}</span>
-                        </div>
-                      </div>
-
-                      <!-- Progress Bars -->
-                      <div class="space-y-3 mb-4">
-                        <div>
-                          <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">Overall Progress</span>
-                            <span class="font-medium text-gray-900">{progress.toFixed(1)}%</span>
-                          </div>
-                          <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class={`h-2 rounded-full transition-all duration-300 ${
-                              project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
-                            }`} style={`width: ${progress}%`}></div>
-                          </div>
-                        </div>
-                        <div>
-                          <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">Timeline</span>
-                            <span class="font-medium text-gray-900">{timelineProgress.toFixed(1)}%</span>
-                          </div>
-                          <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class={`h-2 rounded-full transition-all duration-300 ${
-                              timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                            }`} style={`width: ${Math.min(timelineProgress, 100)}%`}></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Action Buttons -->
-                      <div class="flex space-x-2">
-                        <button onclick={`viewProjectDetails('${project.id}')`} class="flex-1 px-3 py-2 bg-[#FE5353] text-white text-sm font-medium rounded-lg hover:bg-[#E54545] transition-colors duration-200">
-                          View Details
-                        </button>
-                        <button onclick={`viewProgress('${project.id}')`} class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                          Progress
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {approvedProjects.map(project => (
+                <ProjectCard 
+                  project={project}
+                  userTheme="mpmec"
+                  onClick="viewProjectDetails"
+                />
+              ))}
             </div>
           </div>
 
@@ -572,29 +891,10 @@ loading = false;
           </div>
         </div>
       )}
-    </section>
+    </main>
 
     <!-- Project Details Modal -->
-    <div id="projectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-      <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Project Details</h3>
-              <button onclick="closeProjectModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          <div class="p-6" id="modalContent">
-            <!-- Project details will be loaded here -->
-          </div>
-        </div>
-      </div>
-    </div>
+    <ProjectDetailsModal userTheme="mpmec" />
   </LGUPMTLayout>
 </Layout>
 
@@ -623,14 +923,57 @@ loading = false;
         }
 
         // Fetch all projects from the API
-        const projectsRes = await fetch(`${API_URL}/projects`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const timestamp = new Date().getTime();
+        const projectsRes = await fetch(`${API_URL}/projects?_t=${timestamp}`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         if (projectsRes.ok) {
           const data = await projectsRes.json();
           if (data.success) {
             // MPMEC sees all projects submitted to Secretariat
             projects = data.projects.filter(p => p.submittedToSecretariat === true);
+            
+            // Fetch progress data for each project from the updated backend calculation service
+            for (const project of projects) {
+              try {
+                const progressTimestamp = new Date().getTime();
+                const progressRes = await fetch(`${API_URL}/projects/progress/${project.id}?_t=${progressTimestamp}`, {
+                  headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                  }
+                });
+                
+                if (progressRes.ok) {
+                  const progressData = await progressRes.json();
+                  if (progressData.success && progressData.data) {
+                    const progress = progressData.data.progress;
+                    
+                    // Update the project object with the new progress data
+                    project.progress = progress;
+                    project.overallProgress = parseFloat(progress.overall || 0);
+                    project.timelineProgress = parseFloat(progress.internalTimeline || 0);
+                    project.budgetProgress = parseFloat(progress.internalBudget || 0);
+                    project.physicalProgress = parseFloat(progress.internalPhysical || 0);
+                    
+                    console.log(`Updated project ${project.name} with progress:`, {
+                      overall: project.overallProgress,
+                      timeline: project.timelineProgress,
+                      budget: project.budgetProgress,
+                      physical: project.physicalProgress
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error(`Error fetching progress for project ${project.id}:`, error);
+              }
+            }
+            
             updateProjectsUI();
           }
         }
@@ -666,8 +1009,13 @@ loading = false;
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const timestamp = new Date().getTime();
+      const response = await fetch(`${API_URL}/projects?_t=${timestamp}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
       
       if (response.ok) {
@@ -675,6 +1023,44 @@ loading = false;
         if (data.success) {
           // MPMEC sees all projects submitted to Secretariat
           projects = data.projects.filter(p => p.submittedToSecretariat === true);
+          
+          // Fetch progress data for each project from the updated backend calculation service
+          for (const project of projects) {
+            try {
+              const progressTimestamp = new Date().getTime();
+              const progressRes = await fetch(`${API_URL}/projects/progress/${project.id}?_t=${progressTimestamp}`, {
+                headers: { 
+                  'Authorization': `Bearer ${token}`,
+                  'Cache-Control': 'no-cache',
+                  'Pragma': 'no-cache'
+                }
+              });
+              
+              if (progressRes.ok) {
+                const progressData = await progressRes.json();
+                if (progressData.success && progressData.data) {
+                  const progress = progressData.data.progress;
+                  
+                  // Update the project object with the new progress data
+                  project.progress = progress;
+                  project.overallProgress = parseFloat(progress.overall || 0);
+                  project.timelineProgress = parseFloat(progress.internalTimeline || 0);
+                  project.budgetProgress = parseFloat(progress.internalBudget || 0);
+                  project.physicalProgress = parseFloat(progress.internalPhysical || 0);
+                  
+                  console.log(`Updated project ${project.name} with progress:`, {
+                    overall: project.overallProgress,
+                    timeline: project.timelineProgress,
+                    budget: project.budgetProgress,
+                    physical: project.physicalProgress
+                  });
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching progress for project ${project.id}:`, error);
+            }
+          }
+          
           updateProjectsUI();
           location.reload(); // Refresh the page to update statistics
         }
@@ -700,24 +1086,19 @@ loading = false;
   // View project details
   async function viewProjectDetails(projectId) {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login/lgu-pmt';
+      // Check session validity first
+      if (!authService.redirectIfInvalidSession()) {
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${projectId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          console.log('=== PROJECT DETAILS FETCHED ===');
-          console.log('Project data from API:', data.project);
-          console.log('Project keys:', Object.keys(data.project));
-          showProjectModal(data.project);
-        }
+      // Use the unified ProjectDetailsModal
+      if (window.showProjectDetailsModal) {
+        console.log('✅ Using unified ProjectDetailsModal for project:', projectId);
+        window.showProjectDetailsModal(projectId);
+      } else {
+        console.error('❌ ProjectDetailsModal not available');
+        // Fallback to redirect to project details page
+        console.log('Modal not available, could redirect to project page');
       }
     } catch (error) {
       console.error('Error viewing project details:', error);
@@ -740,331 +1121,22 @@ loading = false;
     }
   }
 
-  // Show project modal
-  function showProjectModal(project) {
-    console.log('=== RENDERING PROJECT MODAL ===');
-    console.log('Project data:', project);
+  // Show project modal - UPDATED to use unified modal
+  function showProjectModal(projectIdOrProject) {
+    console.log('🔄 Old showProjectModal called, redirecting to unified modal');
+    console.log('Project data/ID:', projectIdOrProject);
     
-    const modal = document.getElementById('projectModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalContent = document.getElementById('modalContent');
+    // Extract project ID if an object was passed
+    const projectId = typeof projectIdOrProject === 'object' ? projectIdOrProject.id : projectIdOrProject;
     
-    // Helper function to safely extract numeric progress values
-    function getProgressValue(project, field, fallback = 0) {
-      if (typeof project[field] === 'number') {
-        return project[field];
-      }
-      if (project.progress && typeof project.progress[field] === 'number') {
-        return project.progress[field];
-      }
-      const alternativeFields = {
-        'overall': ['overallProgress', 'progress', 'totalProgress'],
-        'timeline': ['timelineProgress', 'scheduleProgress'],
-        'budget': ['budgetProgress', 'financialProgress'],
-        'physical': ['physicalProgress', 'completionProgress']
-      };
-      for (const altField of alternativeFields[field] || []) {
-        if (typeof project[altField] === 'number') {
-          return project[altField];
-        }
-      }
-      return fallback;
+    // Use the unified ProjectDetailsModal instead
+    if (window.showProjectDetailsModal) {
+      console.log('✅ Redirecting to unified ProjectDetailsModal for project:', projectId);
+      window.showProjectDetailsModal(projectId);
+      return;
     }
     
-    // Safely handle missing or undefined data
-    const safeData = {
-      projectCode: project.projectCode || project.code || project.id || 'N/A',
-      status: project.status || project.projectStatus || project.state || 'Unknown',
-      category: project.category || project.projectCategory || project.type || 'N/A',
-      implementingOfficeName: project.implementingOfficeName || project.implementingOffice || project.office || project.department || 'N/A',
-      totalBudget: parseFloat(project.totalBudget || project.budget || project.amount || project.cost || 0),
-      amountSpent: parseFloat(project.amountSpent || project.spentAmount || project.expendedAmount || 0),
-      fundingSource: project.fundingSource || project.funding || project.source || 'Not specified',
-      approvedBySecretariat: project.approvedBySecretariat || project.secretariatApproved || false,
-      secretariatApprovalDate: project.secretariatApprovalDate || project.approvalDate || null,
-      overallProgress: getProgressValue(project, 'overall', 0),
-      description: project.description || project.projectDescription || project.details || project.summary || 'No description available',
-      expectedOutputs: project.expectedOutputs || project.outputs || project.deliverables || 'No expected outputs specified',
-      targetBeneficiaries: project.targetBeneficiaries || project.beneficiaries || project.stakeholders || 'No target beneficiaries specified',
-      startDate: project.startDate || project.projectStartDate || project.beginDate || new Date(),
-      endDate: project.endDate || project.projectEndDate || project.finishDate || null,
-      createdAt: project.createdAt || project.created || project.dateCreated || new Date(),
-      updatedAt: project.updatedAt || project.updated || project.lastModified || new Date(),
-      timelineProgress: getProgressValue(project, 'timeline', 0),
-      budgetProgress: getProgressValue(project, 'budget', 0),
-      physicalProgress: getProgressValue(project, 'physical', 0)
-    };
-    
-    // Status logic (consistent with other modules)
-    let statusText, statusClass;
-    if (safeData.status && safeData.status.toLowerCase() === 'completed') {
-      statusText = 'COMPLETED';
-      statusClass = 'bg-green-100 text-green-800';
-    } else if (safeData.approvedBySecretariat === true || safeData.approvedBySecretariat === 'true' || safeData.approvedBySecretariat === 1) {
-      statusText = 'ONGOING';
-      statusClass = 'bg-blue-100 text-blue-800';
-    } else {
-      statusText = 'PENDING';
-      statusClass = 'bg-yellow-100 text-yellow-800';
-    }
-    
-    modalTitle.textContent = project.name || project.projectName || 'Project Details';
-    modalContent.innerHTML = `
-      <div class="space-y-6">
-        <!-- Project Overview Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Basic Info Card -->
-          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-            <h4 class="font-bold text-blue-900 mb-4 flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              Project Overview
-            </h4>
-            <div class="space-y-3">
-              <div>
-                <p class="text-sm text-blue-700 font-medium">Project Code</p>
-                <p class="text-lg font-bold text-blue-900">${safeData.projectCode}</p>
-              </div>
-              <div>
-                <p class="text-sm text-blue-700 font-medium">Status</p>
-                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">${statusText}</span>
-              </div>
-              <div>
-                <p class="text-sm text-blue-700 font-medium">Category</p>
-                <p class="text-lg font-bold text-blue-900 capitalize">${safeData.category}</p>
-              </div>
-              <div>
-                <p class="text-sm text-blue-700 font-medium">Implementing Office</p>
-                <p class="text-sm font-semibold text-blue-900">${safeData.implementingOfficeName}</p>
-              </div>
-              <div>
-                <p class="text-sm text-blue-700 font-medium">Approval Date</p>
-                <p class="text-sm font-semibold text-blue-900">${safeData.secretariatApprovalDate ? new Date(safeData.secretariatApprovalDate).toLocaleDateString() : 'Not approved yet'}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Budget & Progress Card -->
-          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-            <h4 class="font-bold text-green-900 mb-4 flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-              </svg>
-              Budget & Progress
-            </h4>
-            <div class="space-y-3">
-              <div>
-                <p class="text-sm text-green-700 font-medium">Total Budget</p>
-                <p class="text-xl font-bold text-green-900">₱${safeData.totalBudget.toLocaleString()}</p>
-              </div>
-              <div>
-                <p class="text-sm text-green-700 font-medium">Overall Progress</p>
-                <div class="w-full bg-green-200 rounded-full h-3 mt-2">
-                  <div class="bg-green-600 h-3 rounded-full transition-all duration-500" style="width: ${safeData.overallProgress}%"></div>
-                </div>
-                <p class="text-sm font-semibold text-green-900 mt-1">${safeData.overallProgress.toFixed(2)}%</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Timeline Card -->
-          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-            <h4 class="font-bold text-purple-900 mb-4 flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
-              Timeline
-            </h4>
-            <div class="space-y-3">
-              <div>
-                <p class="text-sm text-purple-700 font-medium">Start Date</p>
-                <p class="text-sm font-semibold text-purple-900">${new Date(safeData.startDate).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p class="text-sm text-purple-700 font-medium">End Date</p>
-                <p class="text-sm font-semibold text-purple-900">${safeData.endDate ? new Date(safeData.endDate).toLocaleDateString() : 'Not set'}</p>
-              </div>
-              <div>
-                <p class="text-sm text-purple-700 font-medium">Created</p>
-                <p class="text-sm font-semibold text-purple-900">${new Date(safeData.createdAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Project Information Section -->
-        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h4 class="font-bold text-gray-900 mb-4 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Project Information
-          </h4>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-2">Description</label>
-              <p class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border">${safeData.description}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-2">Expected Outputs</label>
-              <p class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border">${safeData.expectedOutputs}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-2">Target Beneficiaries</label>
-              <p class="text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border">${safeData.targetBeneficiaries}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Budget Information Section -->
-        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h4 class="font-bold text-gray-900 mb-4 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-            </svg>
-            Budget Information
-          </h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-600">Total Budget</label>
-              <p class="text-lg font-bold text-gray-800">₱${safeData.totalBudget.toLocaleString()}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600">Amount Spent</label>
-              <p class="text-lg font-bold text-green-600">₱${safeData.amountSpent.toLocaleString()}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600">Remaining Budget</label>
-              <p class="text-lg font-bold text-blue-600">₱${(safeData.totalBudget - safeData.amountSpent).toLocaleString()}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600">Budget Utilization</label>
-              <p class="text-sm text-gray-600">${(safeData.amountSpent / safeData.totalBudget * 100).toFixed(2)}% utilized</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600">Funding Source</label>
-              <p class="text-sm font-semibold text-gray-800">${safeData.fundingSource}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Progress Breakdown Section -->
-        <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h4 class="font-bold text-gray-900 mb-6 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            Progress Breakdown
-          </h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Timeline Progress -->
-            <div class="text-center">
-              <div class="relative w-24 h-24 mx-auto mb-4">
-                <svg class="w-24 h-24 transform -rotate-90">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#e5e7eb"
-                    stroke-width="8"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#3b82f6"
-                    stroke-width="8"
-                    fill="transparent"
-                    stroke-dasharray="${2 * Math.PI * 40}"
-                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.timelineProgress / 100)}"
-                    class="transition-all duration-500"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <span class="text-lg font-bold text-gray-800">${safeData.timelineProgress.toFixed(2)}%</span>
-                </div>
-              </div>
-              <h5 class="font-semibold text-gray-900 mb-2">Timeline Progress</h5>
-              <p class="text-sm text-gray-600">Project timeline completion</p>
-            </div>
-
-            <!-- Budget Progress -->
-            <div class="text-center">
-              <div class="relative w-24 h-24 mx-auto mb-4">
-                <svg class="w-24 h-24 transform -rotate-90">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#e5e7eb"
-                    stroke-width="8"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#10b981"
-                    stroke-width="8"
-                    fill="transparent"
-                    stroke-dasharray="${2 * Math.PI * 40}"
-                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.budgetProgress / 100)}"
-                    class="transition-all duration-500"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <span class="text-lg font-bold text-gray-800">${safeData.budgetProgress.toFixed(2)}%</span>
-                </div>
-              </div>
-              <h5 class="font-semibold text-gray-900 mb-2">Budget Progress</h5>
-              <p class="text-sm text-gray-600">Budget utilization</p>
-            </div>
-
-            <!-- Physical Progress -->
-            <div class="text-center">
-              <div class="relative w-24 h-24 mx-auto mb-4">
-                <svg class="w-24 h-24 transform -rotate-90">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#e5e7eb"
-                    stroke-width="8"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="#8b5cf6"
-                    stroke-width="8"
-                    fill="transparent"
-                    stroke-dasharray="${2 * Math.PI * 40}"
-                    stroke-dashoffset="${2 * Math.PI * 40 * (1 - safeData.physicalProgress / 100)}"
-                    class="transition-all duration-500"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <span class="text-lg font-bold text-gray-800">${safeData.physicalProgress.toFixed(2)}%</span>
-                </div>
-              </div>
-              <h5 class="font-semibold text-gray-900 mb-2">Physical Progress</h5>
-              <p class="text-sm text-gray-600">Physical completion</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    modal.classList.remove('hidden');
-  }
-
-  // Close project modal
-  function closeProjectModal() {
-    const modal = document.getElementById('projectModal');
-    modal.classList.add('hidden');
+    console.error('❌ Unified ProjectDetailsModal not available');
   }
 
   // Enhanced Tab switching functions with animations
@@ -1074,29 +1146,17 @@ loading = false;
     const tableView = document.getElementById('tableView');
     const cardView = document.getElementById('cardView');
 
-    // Add sink and pop animation to the clicked tab
-    tableTab.classList.add('switching');
-    setTimeout(() => {
-      tableTab.classList.remove('switching');
-    }, 300);
+    if (!tableTab || !cardTab || !tableView || !cardView) return;
 
-    // Update tab styles with active state - modern design
-    tableTab.className = 'tab-button text-sm font-medium transition-all duration-300 flex items-center gap-2 active';
-    cardTab.className = 'tab-button text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 flex items-center gap-2';
+    // Update tab styles
+    tableTab.className = 'tab-button px-6 py-3 text-sm font-medium text-[#FE5353] bg-white border-b-2 border-[#FE5353] transition-all duration-300 flex items-center gap-2 active';
+    cardTab.className = 'tab-button px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 flex items-center gap-2';
 
-    // Animate content switching
-    cardView.classList.add('fade-out');
-    
-    setTimeout(() => {
-      cardView.classList.add('hidden');
-      cardView.classList.remove('block', 'fade-out');
-      tableView.classList.remove('hidden');
-      tableView.classList.add('block', 'fade-in');
-      
-      setTimeout(() => {
-        tableView.classList.remove('fade-in');
-      }, 400);
-    }, 300);
+    // Switch views
+    cardView.classList.add('hidden');
+    cardView.classList.remove('block');
+    tableView.classList.remove('hidden');
+    tableView.classList.add('block');
   }
 
   function switchToCardView() {
@@ -1105,44 +1165,25 @@ loading = false;
     const tableView = document.getElementById('tableView');
     const cardView = document.getElementById('cardView');
 
-    // Add sink and pop animation to the clicked tab
-    cardTab.classList.add('switching');
-    setTimeout(() => {
-      cardTab.classList.remove('switching');
-    }, 300);
+    if (!tableTab || !cardTab || !tableView || !cardView) return;
 
-    // Update tab styles with active state - modern design
-    tableTab.className = 'tab-button text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 flex items-center gap-2';
-    cardTab.className = 'tab-button text-sm font-medium transition-all duration-300 flex items-center gap-2 active';
+    // Update tab styles
+    cardTab.className = 'tab-button px-6 py-3 text-sm font-medium text-[#FE5353] bg-white border-b-2 border-[#FE5353] transition-all duration-300 flex items-center gap-2 active';
+    tableTab.className = 'tab-button px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 flex items-center gap-2';
 
-    // Animate content switching
-    tableView.classList.add('fade-out');
-    
-    setTimeout(() => {
-      tableView.classList.add('hidden');
-      tableView.classList.remove('block', 'fade-out');
-      cardView.classList.remove('hidden');
-      cardView.classList.add('block', 'fade-in');
-      
-      // Trigger staggered card animations
-      const cards = document.querySelectorAll('.project-card');
-      cards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.style.animation = 'cardSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
-      });
-      
-      setTimeout(() => {
-        cardView.classList.remove('fade-in');
-      }, 400);
-    }, 300);
+    // Switch views
+    tableView.classList.add('hidden');
+    tableView.classList.remove('block');
+    cardView.classList.remove('hidden');
+    cardView.classList.add('block');
   }
 
-  // Filter projects
+  // Filter projects function
   function filterProjects() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const departmentFilter = document.getElementById('departmentFilter').value;
-    const categoryFilter = document.getElementById('categoryFilter').value;
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const departmentFilter = document.getElementById('departmentFilter')?.value || '';
+    const categoryFilter = document.getElementById('categoryFilter')?.value || '';
 
     const filteredProjects = projects.filter(project => {
       const matchesSearch = project.name.toLowerCase().includes(searchTerm) || 
@@ -1154,200 +1195,73 @@ loading = false;
       return matchesSearch && matchesStatus && matchesDepartment && matchesCategory;
     });
 
-    updateProjectsTable(filteredProjects);
-    updateProjectsCards(filteredProjects);
+    updateProjectsUI(filteredProjects);
   }
 
-  // Clear filters
+  // Clear filters function
   function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = '';
     document.getElementById('departmentFilter').value = '';
     document.getElementById('categoryFilter').value = '';
-    updateProjectsTable(projects);
-    updateProjectsCards(projects);
+    updateProjectsUI(projects);
   }
 
-  // Update projects UI (both table and card views)
-  function updateProjectsUI() {
-    console.log('Projects updated:', projects);
-    updateProjectsTable(projects);
-    updateProjectsCards(projects);
+  // Update projects UI function
+  function updateProjectsUI(projectsToShow = projects) {
+    updateProjectsTable(projectsToShow);
+    updateProjectsCards(projectsToShow);
   }
 
-  // Update projects table
+  // Update projects table function
   function updateProjectsTable(projectsToShow) {
-    const tbody = document.getElementById('projectsTableBody');
-    const showingCount = document.getElementById('showingCount');
-    const totalCount = document.getElementById('totalCount');
-
+    const tbody = document.querySelector('#projectsTable tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = projectsToShow.map(project => {
-      const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-      const budget = parseFloat(project.totalBudget) || 0;
-      const timelineProgress = parseFloat(project.timelineProgress) || 0;
-      const startDate = project.startDate ? new Date(project.startDate) : null;
-      const endDate = project.endDate ? new Date(project.endDate) : null;
-
-      return `
-        <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div>
-              <div class="text-sm font-medium text-gray-900">${project.name}</div>
-              <div class="text-sm text-gray-500">${project.projectCode}</div>
-            </div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">${project.implementingOfficeName}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">₱${budget.toLocaleString()}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <span class="px-2 py-1 text-xs font-medium rounded-full ${
-              project.status === 'complete' ? 'bg-green-100 text-green-700' :
-              project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-              project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-              'bg-gray-100 text-gray-700'
-            }">
-              ${project.status}
-            </span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="flex items-center">
-              <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                <div class="h-2 rounded-full ${
-                  project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
-                }" style="width: ${progress}%"></div>
-              </div>
-              <span class="text-sm text-gray-900">${progress.toFixed(1)}%</span>
-            </div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="flex items-center">
-              <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                <div class="h-2 rounded-full ${
-                  timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                }" style="width: ${Math.min(timelineProgress, 100)}%"></div>
-              </div>
-              <span class="text-sm text-gray-900">${timelineProgress.toFixed(1)}%</span>
-            </div>
-            <div class="text-xs text-gray-500 mt-1">
-              ${startDate ? startDate.toLocaleDateString() : 'N/A'} - ${endDate ? endDate.toLocaleDateString() : 'N/A'}
-            </div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            ${project.secretariatApprovalDate ? new Date(project.secretariatApprovalDate).toLocaleDateString() : 'N/A'}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-            <button onclick="viewProjectDetails('${project.id}')" class="text-[#FE5353] hover:text-[#E54545] mr-3">
-              View
-            </button>
-            <button onclick="viewProgress('${project.id}')" class="text-blue-600 hover:text-blue-800">
-              Progress
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-
-    showingCount.textContent = projectsToShow.length;
-    totalCount.textContent = projects.length;
+    tbody.innerHTML = projectsToShow.map(project => `
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${project.projectCode || project.id}</td>
+        <td class="px-6 py-4 text-sm text-gray-900">${project.name}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${project.implementingOfficeName || 'N/A'}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱${parseFloat(project.totalBudget || 0).toLocaleString()}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${project.approvedBySecretariat ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+            ${project.approvedBySecretariat ? 'Approved' : 'Pending'}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <button onclick="viewProjectDetails('${project.id}')" class="text-blue-600 hover:text-blue-900">View</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
-  // Update projects cards
+  // Update projects cards function
   function updateProjectsCards(projectsToShow) {
-    const cardBody = document.getElementById('projectsCardBody');
-    if (!cardBody) return;
+    const cardsContainer = document.querySelector('#projectsCards');
+    if (!cardsContainer) return;
 
-    cardBody.innerHTML = projectsToShow.map(project => {
-      const progress = parseFloat(project.progress?.overallProgress || project.overallProgress || 0);
-      const budget = parseFloat(project.totalBudget) || 0;
-      const timelineProgress = parseFloat(project.timelineProgress) || 0;
-      const startDate = project.startDate ? new Date(project.startDate) : null;
-      const endDate = project.endDate ? new Date(project.endDate) : null;
-      
-      return `
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div class="p-6">
-            <!-- Project Header -->
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">${project.name}</h3>
-                <p class="text-sm text-gray-500">${project.projectCode}</p>
-              </div>
-              <span class="px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
-                project.status === 'complete' ? 'bg-green-100 text-green-700' :
-                project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-                project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-gray-100 text-gray-700'
-              }">
-                ${project.status}
-              </span>
-            </div>
-
-            <!-- Project Info -->
-            <div class="space-y-3 mb-4">
-              <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                </svg>
-                <span class="truncate">${project.implementingOfficeName}</span>
-              </div>
-              <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                </svg>
-                <span>₱${budget.toLocaleString()}</span>
-              </div>
-              <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <span>${startDate ? startDate.toLocaleDateString() : 'N/A'} - ${endDate ? endDate.toLocaleDateString() : 'N/A'}</span>
-              </div>
-            </div>
-
-            <!-- Progress Bars -->
-            <div class="space-y-3 mb-4">
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-600">Overall Progress</span>
-                  <span class="font-medium text-gray-900">${progress.toFixed(1)}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="h-2 rounded-full transition-all duration-300 ${
-                    project.status === 'complete' ? 'bg-green-500' : 'bg-[#FE5353]'
-                  }" style="width: ${progress}%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-600">Timeline</span>
-                  <span class="font-medium text-gray-900">${timelineProgress.toFixed(1)}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="h-2 rounded-full transition-all duration-300 ${
-                    timelineProgress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                  }" style="width: ${Math.min(timelineProgress, 100)}%"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex space-x-2">
-              <button onclick="viewProjectDetails('${project.id}')" class="flex-1 px-3 py-2 bg-[#FE5353] text-white text-sm font-medium rounded-lg hover:bg-[#E54545] transition-colors duration-200">
-                View Details
-              </button>
-              <button onclick="viewProgress('${project.id}')" class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                Progress
-              </button>
-            </div>
+    cardsContainer.innerHTML = projectsToShow.map(project => `
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">${project.name}</h3>
+        <p class="text-sm text-gray-600 mb-4">${project.description || 'No description available'}</p>
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Budget:</span>
+            <span class="font-medium">₱${parseFloat(project.totalBudget || 0).toLocaleString()}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Status:</span>
+            <span class="px-2 py-1 text-xs rounded-full ${project.approvedBySecretariat ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+              ${project.approvedBySecretariat ? 'Approved' : 'Pending'}
+            </span>
           </div>
         </div>
-      `;
-    }).join('');
+        <button onclick="viewProjectDetails('${project.id}')" class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+          View Details
+        </button>
+      </div>
+    `).join('');
   }
 
   // Make functions globally available
@@ -1356,9 +1270,44 @@ loading = false;
   window.exportProjects = exportProjects;
   window.viewProjectDetails = viewProjectDetails;
   window.viewProgress = viewProgress;
-  window.closeProjectModal = closeProjectModal;
+
   window.filterProjects = filterProjects;
   window.clearFilters = clearFilters;
   window.switchToTableView = switchToTableView;
   window.switchToCardView = switchToCardView;
+
+  // Animate progress bars in table view
+  function animateTableProgressBars() {
+    const tableProgressBars = document.querySelectorAll('.table-progress-bar-fill');
+    tableProgressBars.forEach((bar, index) => {
+      const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
+      const colorClass = bar.getAttribute('data-progress-color') || 'bg-gray-500';
+      
+      // Apply the color class
+      bar.className = bar.className.replace(/bg-\w+-\d+/, '');
+      bar.classList.add(colorClass);
+      
+      // Set the progress width
+      bar.style.setProperty('--table-progress-width', `${progress}%`);
+      
+      // Reset and start animation
+      bar.style.width = '0%';
+      bar.style.animation = 'none';
+      bar.offsetHeight; // Trigger reflow
+      bar.style.animation = 'fillTableProgress 2s ease-out forwards';
+    });
+  }
+
+  // Initialize table progress bar animation when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(animateTableProgressBars, 500);
+  });
+
+  // Also run on window load
+  window.addEventListener('load', function() {
+    setTimeout(animateTableProgressBars, 800);
+  });
+
+  // Export function globally
+  window.animateTableProgressBars = animateTableProgressBars;
 </script> 

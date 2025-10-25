@@ -5,14 +5,26 @@ import LGUFooter from "../components/LGUFooter.astro";
 ---
 <Layout title="About | Build Watch LGU" description="Learn about Build Watch, the Santa Cruz LGU Project Monitoring and Evaluation System.">
   <TopBar />
-  <main class="flex flex-col items-center w-full px-4 pt-36 pb-12 min-h-[60vh] relative about-bg fade-in-about">
-    <div class="w-full max-w-6xl mx-auto flex flex-col items-center">
-      <!-- Hero Section -->
-      <section class="mb-20 w-full flex flex-col items-center">
-        <span class="text-[#EB3C3C] font-bold text-lg mb-2 block self-start ml-2">About Us</span>
-        <h1 class="text-5xl font-extrabold text-[#7A1F1F] mb-2 self-start ml-2">What is Build Watch?</h1>
-        <div class="w-24 h-1 bg-[#FE5353] rounded-full mb-6 self-start ml-2"></div>
-        <div class="w-full">
+  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 min-h-screen about-bg fade-in-about">
+    <div class="w-full max-w-7xl mx-auto flex flex-col items-center">
+      <!-- Enhanced Hero Section -->
+      <section class="mb-24 w-full animate-fade-in-up">
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 font-semibold rounded-full mb-6 text-sm">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            About Build Watch
+          </div>
+          <h1 class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 mb-6 leading-tight">
+            What is Build Watch?
+          </h1>
+          <p class="text-xl text-blue-600 max-w-4xl mx-auto leading-relaxed">
+            The premier digital platform for transparent, efficient, and accountable local governance in Santa Cruz, Laguna
+          </p>
+        </div>
+        
+        <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
           <p class="text-base md:text-lg text-[#222] mb-4">BUILD WATCH is an official web-based Project Monitoring and Evaluation System developed specifically for the Municipality of Santa Cruz, Laguna to improve the transparency, efficiency, and accountability of local governance.</p>
           <p class="text-base md:text-lg text-[#222] mb-4">Designed to monitor both infrastructure projects—such as the construction of the Santa Cruz Barangay Health Center—and social development programs like the 4Ps (Pantawid Pamilyang Pilipino Program) and Social Pension, BUILD WATCH allows real-time tracking of project progress and performance.</p>
           <p class="text-base md:text-lg text-[#222] mb-4">The system brings together four key user groups that collaborate within a structured digital workflow:</p>
@@ -22,9 +34,15 @@ import LGUFooter from "../components/LGUFooter.astro";
             <li><b>LGU Internal Units (LGU-IU)</b> oversee the strategic and administrative aspects, ensuring alignment with local policies and responding to flagged concerns.</li>
             <li><b>External Monitoring Stakeholders (EMS)</b>—such as NGOs and provincial representatives—provide independent assessments and promote transparency by monitoring on behalf of the public.</li>
           </ul>
-          <p class="text-base md:text-lg text-[#222]">Each group has a clearly defined role, and together, they ensure that every project funded and launched by the LGU is executed with integrity, monitored effectively, and evaluated responsibly.<br/>BUILD WATCH is more than a system—it's a digital commitment to good governance and public trust in Santa Cruz, Laguna.</p>
+          <p class="text-lg text-gray-700">Each group has a clearly defined role, and together, they ensure that every project funded and launched by the LGU is executed with integrity, monitored effectively, and evaluated responsibly.</p>
+          <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl border-l-4 border-blue-600">
+            <p class="text-lg font-semibold text-blue-800">BUILD WATCH is more than a system—it's a digital commitment to good governance and public trust in Santa Cruz, Laguna.</p>
+          </div>
         </div>
       </section>
+      
+      {/* Section Divider */}
+      <div class="w-full h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent mb-20"></div>
       <!-- Mission & Vision Section -->
       <section class="mb-20 relative flex flex-col items-center w-full">
         <div class="absolute left-1/2 -top-14 -translate-x-1/2 w-[600px] max-w-full z-20 flex justify-center">
@@ -35,73 +53,643 @@ import LGUFooter from "../components/LGUFooter.astro";
           </div>
         </div>
         <div class="flex flex-row gap-0 w-full mt-20">
-          <div class="flex-1 rounded-l-2xl rounded-r-none bg-[#EB3C3C]/90 shadow-lg px-10 py-12 flex flex-col items-center justify-center transition hover:bg-[#EB3C3C] hover:shadow-xl">
+          <div class="flex-1 rounded-l-2xl rounded-r-none bg-blue-600/90 shadow-lg px-10 py-12 flex flex-col items-center justify-center transition hover:bg-blue-600 hover:shadow-xl">
             <h2 class="text-3xl font-extrabold text-white mb-4">Our Mission</h2>
             <p class="text-white text-base md:text-lg text-center font-medium">To provide a transparent, efficient, and collaborative digital platform that empowers the LGU, implementers, and stakeholders to monitor, evaluate, and ensure the successful delivery of public projects and programs in Santa Cruz, Laguna.</p>
           </div>
-          <div class="flex-1 rounded-r-2xl rounded-l-none bg-[#EB3C3C]/90 shadow-lg px-10 py-12 flex flex-col items-center justify-center transition hover:bg-[#EB3C3C] hover:shadow-xl">
+          <div class="flex-1 rounded-r-2xl rounded-l-none bg-blue-600/90 shadow-lg px-10 py-12 flex flex-col items-center justify-center transition hover:bg-blue-600 hover:shadow-xl">
             <h2 class="text-3xl font-extrabold text-white mb-4">Our Vision</h2>
             <p class="text-white text-base md:text-lg text-center font-medium">A transparent and accountable local government where every project and program is effectively monitored, digitally connected, and truly felt by the community.</p>
           </div>
         </div>
       </section>
-      <!-- Features Section -->
+      
+      {/* Section Divider */}
+      <div class="w-full h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent mb-20"></div>
+      
+      <!-- Enhanced Features Section -->
       <section class="mb-20 w-full flex flex-col items-center">
-        <div class="bg-white rounded-2xl shadow-lg px-10 py-10 w-full">
-          <h2 class="text-3xl font-extrabold text-[#333] mb-8 text-center">Build Watch Features</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow border border-[#EB3C3C]/10 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-              <span class="text-[#EB3C3C] text-4xl mb-2"><svg xmlns='http://www.w3.org/2000/svg' class='w-8 h-8' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3v18h18'/><rect x='7' y='13' width='2' height='5' fill='#EB3C3C'/><rect x='11' y='9' width='2' height='9' fill='#EB3C3C'/><rect x='15' y='5' width='2' height='13' fill='#EB3C3C'/></svg></span>
-              <h3 class="font-bold text-lg mb-1">Real-Time Project Monitoring</h3>
-              <p class="text-center text-[#7A1F1F] text-base">Track the physical and financial status of LGU projects and programs as updates are submitted from the field.</p>
+        <div class="w-full relative">
+          {/* Section Header */}
+          <div class="text-center mb-16">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 font-semibold rounded-full mb-6 text-sm">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+              </svg>
+              Key Features
             </div>
-            <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow border border-[#EB3C3C]/10 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-              <span class="text-[#EB3C3C] text-4xl mb-2"><svg xmlns='http://www.w3.org/2000/svg' class='w-8 h-8' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 4v16m8-8H4'/></svg></span>
-              <h3 class="font-bold text-lg mb-1">Multi-Role User Access</h3>
-              <p class="text-center text-[#7A1F1F] text-base">Custom portals for implementers, LGU offices, monitors, and administrators based on their assigned roles and functions.</p>
+            <h2 class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 mb-6 leading-tight">
+              Build Watch Features
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Discover the powerful capabilities that make Build Watch the premier project monitoring solution for local governance
+            </p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="group relative bg-gradient-to-br from-white to-blue-50/30 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-blue-100/50 hover:border-blue-200 transform hover:-translate-y-2 hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="relative z-10 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-black text-blue-800 mb-4 group-hover:text-blue-600 transition-colors duration-300">Real-Time Project Monitoring</h3>
+                <p class="text-blue-700 leading-relaxed">Track the physical and financial status of LGU projects and programs as updates are submitted from the field.</p>
+                <div class="w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-6 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+              </div>
             </div>
-            <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow border border-[#EB3C3C]/10 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-              <span class="text-[#EB3C3C] text-4xl mb-2"><svg xmlns='http://www.w3.org/2000/svg' class='w-8 h-8' fill='none' viewBox='0 0 24 24' stroke='currentColor'><rect x='4' y='4' width='16' height='16' rx='2' fill='#EB3C3C' stroke='none'/><rect x='7' y='7' width='10' height='10' rx='1' fill='white' stroke='none'/></svg></span>
-              <h3 class="font-bold text-lg mb-1">Centralized Project Dashboard</h3>
-              <p class="text-center text-[#7A1F1F] text-base">View consolidated data for all ongoing infrastructure and social development projects in one organized dashboard.</p>
+            <div class="group relative bg-gradient-to-br from-white to-green-50/30 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-green-100/50 hover:border-green-200 transform hover:-translate-y-2 hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="relative z-10 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-black text-green-800 mb-4 group-hover:text-green-600 transition-colors duration-300">Multi-Role User Access</h3>
+                <p class="text-green-700 leading-relaxed">Custom portals for implementers, LGU offices, monitors, and administrators based on their assigned roles and functions.</p>
+                <div class="w-full h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full mt-6 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+              </div>
             </div>
-            <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow border border-[#EB3C3C]/10 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-              <span class="text-[#EB3C3C] text-4xl mb-2"><svg xmlns='http://www.w3.org/2000/svg' class='w-8 h-8' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 13l4 4L19 7'/></svg></span>
-              <h3 class="font-bold text-lg mb-1">Data Validation & Reporting</h3>
-              <p class="text-center text-[#7A1F1F] text-base">Enable monitoring bodies to review submissions, validate reports, and escalate implementation concerns when needed.</p>
+            <div class="group relative bg-gradient-to-br from-white to-purple-50/30 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-purple-100/50 hover:border-purple-200 transform hover:-translate-y-2 hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="relative z-10 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-black text-purple-800 mb-4 group-hover:text-purple-600 transition-colors duration-300">Centralized Project Dashboard</h3>
+                <p class="text-purple-700 leading-relaxed">View consolidated data for all ongoing infrastructure and social development projects in one organized dashboard.</p>
+                <div class="w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full mt-6 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+              </div>
             </div>
-            <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow border border-[#EB3C3C]/10 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-              <span class="text-[#EB3C3C] text-4xl mb-2"><svg xmlns='http://www.w3.org/2000/svg' class='w-8 h-8' fill='none' viewBox='0 0 24 24' stroke='currentColor'><circle cx='12' cy='12' r='10' stroke='#EB3C3C' stroke-width='2' fill='none'/><path d='M12 8v4l3 3' stroke='#EB3C3C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg></span>
-              <h3 class="font-bold text-lg mb-1">Transparent Stakeholder Oversight</h3>
-              <p class="text-center text-[#7A1F1F] text-base">Allow external stakeholders such as NGOs and provincial monitors to observe project progress and contribute feedback.</p>
+            <div class="group relative bg-gradient-to-br from-white to-orange-50/30 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-orange-100/50 hover:border-orange-200 transform hover:-translate-y-2 hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="relative z-10 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-black text-orange-800 mb-4 group-hover:text-orange-600 transition-colors duration-300">Data Validation & Reporting</h3>
+                <p class="text-orange-700 leading-relaxed">Enable monitoring bodies to review submissions, validate reports, and escalate implementation concerns when needed.</p>
+                <div class="w-full h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full mt-6 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+              </div>
             </div>
-            <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow border border-[#EB3C3C]/10 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-              <span class="text-[#EB3C3C] text-4xl mb-2"><svg xmlns='http://www.w3.org/2000/svg' class='w-8 h-8' fill='none' viewBox='0 0 24 24' stroke='currentColor'><rect x='6' y='6' width='12' height='12' rx='2' fill='#EB3C3C' stroke='none'/><path d='M9 12l2 2 4-4' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg></span>
-              <h3 class="font-bold text-lg mb-1">Secure System Administration</h3>
-              <p class="text-center text-[#7A1F1F] text-base">Manage users, roles, and data integrity through a secure backend interface exclusive to system administrators.</p>
+            <div class="group relative bg-gradient-to-br from-white to-teal-50/30 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-teal-100/50 hover:border-teal-200 transform hover:-translate-y-2 hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-teal-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="relative z-10 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+            </div>
+                <h3 class="text-xl font-black text-teal-800 mb-4 group-hover:text-teal-600 transition-colors duration-300">Transparent Stakeholder Oversight</h3>
+                <p class="text-teal-700 leading-relaxed">Allow external stakeholders such as NGOs and provincial monitors to observe project progress and contribute feedback.</p>
+                <div class="w-full h-1 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full mt-6 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+            </div>
+            </div>
+            <div class="group relative bg-gradient-to-br from-white to-red-50/30 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-red-100/50 hover:border-red-200 transform hover:-translate-y-2 hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="relative z-10 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+            </div>
+                <h3 class="text-xl font-black text-red-800 mb-4 group-hover:text-red-600 transition-colors duration-300">Secure System Administration</h3>
+                <p class="text-red-700 leading-relaxed">Manage users, roles, and data integrity through a secure backend interface exclusive to system administrators.</p>
+                <div class="w-full h-1 bg-gradient-to-r from-red-400 to-red-600 rounded-full mt-6 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+            </div>
             </div>
           </div>
         </div>
       </section>
-      <!-- Testimonial Section -->
-      <section class="mb-12 flex flex-row gap-8 items-stretch w-full">
-        <div class="flex-1 flex flex-col justify-center">
-          <div class="flex items-start gap-3 mb-4">
-            <svg class="w-8 h-8 text-[#EB3C3C] mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-            </svg>
-            <blockquote class="text-[#222] text-lg italic">"The Build Watch system reflects the kind of innovation we need in local governance—transparent, efficient, and people-centered. It sets a strong example of how digital solutions can truly improve project delivery and public trust."</blockquote>
+      
+      {/* Section Divider */}
+      <div class="w-full h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent mb-20"></div>
+      
+      <!-- Enhanced Testimonials Section -->
+      <section class="mb-20 w-full flex flex-col items-center">
+        <div class="w-full relative">
+          {/* Decorative Background */}
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-white/50 to-blue-50/30 rounded-3xl"></div>
+          <div class="absolute top-10 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl"></div>
+          <div class="absolute bottom-10 right-10 w-40 h-40 bg-blue-300/15 rounded-full blur-3xl"></div>
+          
+          <div class="relative z-10 px-8 py-16">
+            {/* Section Header */}
+            <div class="text-center mb-16">
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 font-semibold rounded-full mb-6 text-sm">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                </svg>
+                Testimonials
+              </div>
+              <h2 class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 mb-6 leading-tight">
+                What People Say About Build Watch
+              </h2>
+              <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Hear from government officials, stakeholders, and community leaders about their experience with Build Watch
+              </p>
+            </div>
+          
+            <!-- Enhanced Premium Slideshow Container -->
+            <div class="relative w-full max-w-7xl mx-auto">
+            <!-- Enhanced Slideshow Track -->
+              <div class="relative w-full h-[600px] overflow-hidden rounded-3xl bg-gradient-to-br from-white/95 to-blue-50/60 backdrop-blur-lg border border-blue-200/30 shadow-2xl hover:shadow-3xl transition-shadow duration-500" 
+                   style="background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 50%, rgba(239,246,255,0.98) 100%); box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);" 
+                   id="testimonials-slideshow">
+                <!-- Enhanced Premium Slide 1: Governor -->
+                <div class="testimonial-slide absolute inset-0 w-full flex flex-col lg:flex-row items-center gap-12 p-12 opacity-0 transition-all duration-700 ease-in-out">
+                  {/* Enhanced Decorative Background Elements */}
+                  <div class="absolute top-8 right-8 w-32 h-32 bg-gradient-to-br from-blue-400/20 via-indigo-400/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
+                  <div class="absolute bottom-8 left-8 w-28 h-28 bg-gradient-to-br from-purple-400/15 via-blue-400/20 to-transparent rounded-full blur-2xl animate-pulse" style="animation-delay: 1.5s;"></div>
+                  
+                  <div class="flex-1 flex flex-col justify-center relative z-10">
+                    <div class="relative">
+                      {/* Enhanced Quote Decoration */}
+                      <div class="absolute -top-6 -left-4 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-indigo-600/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-blue-200/30 shadow-lg">
+                        <svg class="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                      </div>
+                      
+                      {/* Premium Quote Content */}
+                      <blockquote class="text-gray-800 text-2xl lg:text-3xl font-semibold leading-relaxed mb-10 pl-12 relative">
+                        <span class="text-blue-600 font-black text-4xl absolute -top-2 -left-2">"</span>
+                        The Build Watch system reflects the kind of innovation we need in local governance—transparent, efficient, and people-centered. It sets a strong example of how digital solutions can truly improve project delivery and public trust.
+                        <span class="text-blue-600 font-black text-4xl absolute -bottom-4 -right-2">"</span>
+                    </blockquote>
+                  </div>
+                    
+                    {/* Enhanced Author Information */}
+                    <div class="flex items-center gap-6 pl-12">
+                      <div class="relative group">
+                        <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white/50">
+                          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
+                          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                          </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-blue-800 font-black text-2xl mb-1">Gov. Elmer V. Dela Peña</div>
+                        <div class="text-blue-600 text-base font-bold mb-3">Provincial Government of Laguna</div>
+                        <div class="flex items-center gap-1">
+                          {Array.from({length: 5}, (_, i) => (
+                            <svg key={i} class="w-5 h-5 text-yellow-400 fill-current drop-shadow-sm" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                          ))}
+                          <span class="ml-2 text-yellow-600 font-bold text-sm">(5.0)</span>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+                  
+                  {/* Enhanced Image Section */}
+                  <div class="flex-1 flex justify-center relative z-10">
+                    <div class="relative group">
+                      {/* Premium Image Container */}
+                      <div class="relative">
+                        {/* Outer Glow Effect */}
+                        <div class="absolute -inset-4 bg-gradient-to-br from-blue-500/30 via-indigo-500/25 to-purple-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-700"></div>
+                        {/* Inner Shadow Layer */}
+                        <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-blue-50/30 to-indigo-50/40 rounded-3xl"></div>
+                        
+                        <div class="relative w-96 h-96 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/60 group-hover:scale-105 transition-transform duration-700">
+                    <img 
+                      src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                      alt="Governor Elmer V. Dela Peña"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                          
+                          {/* Floating Overlay */}
+                          <div class="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center p-6">
+                            <div class="text-center text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                              <div class="text-sm font-bold mb-1">Provincial Governor</div>
+                              <div class="text-xs opacity-80">Laguna Province</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Floating Achievement Badge */}
+                        <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white text-white font-bold text-sm group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
+                          <div class="text-center">
+                            <div class="text-xs">Top</div>
+                            <div class="text-xs">Leader</div>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Enhanced Premium Slide 2: Mayor -->
+              <div class="testimonial-slide absolute inset-0 w-full flex flex-col lg:flex-row items-center gap-12 p-12 opacity-0 transition-all duration-700 ease-in-out">
+                {/* Enhanced Decorative Background Elements */}
+                <div class="absolute top-8 left-8 w-32 h-32 bg-gradient-to-br from-emerald-400/20 via-green-400/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-8 right-8 w-28 h-28 bg-gradient-to-br from-blue-400/15 via-indigo-400/20 to-transparent rounded-full blur-2xl animate-pulse" style="animation-delay: 1.8s;"></div>
+                
+                <div class="flex-1 flex flex-col justify-center relative z-10">
+                  <div class="relative">
+                    {/* Enhanced Quote Decoration */}
+                    <div class="absolute -top-6 -left-4 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-green-600/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-emerald-200/30 shadow-lg">
+                      <svg class="w-10 h-10 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                    </div>
+                    
+                    {/* Premium Quote Content */}
+                    <blockquote class="text-gray-800 text-2xl lg:text-3xl font-semibold leading-relaxed mb-10 pl-12 relative">
+                      <span class="text-emerald-600 font-black text-4xl absolute -top-2 -left-2">"</span>
+                      Build Watch has revolutionized how we manage projects in Santa Cruz. The real-time monitoring capabilities have significantly improved our project delivery timelines and enhanced transparency with our constituents.
+                      <span class="text-emerald-600 font-black text-4xl absolute -bottom-4 -right-2">"</span>
+                    </blockquote>
+                  </div>
+                  
+                  {/* Enhanced Author Information */}
+                  <div class="flex items-center gap-6 pl-12">
+                    <div class="relative group">
+                      <div class="w-20 h-20 bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white/50">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      </div>
+                      <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full border-4 border-white flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-emerald-800 font-black text-2xl mb-1">Mayor Edgar S. San Luis</div>
+                      <div class="text-emerald-600 text-base font-bold mb-3">Municipality of Santa Cruz, Laguna</div>
+                      <div class="flex items-center gap-1">
+                        {Array.from({length: 5}, (_, i) => (
+                          <svg key={i} class="w-5 h-5 text-yellow-400 fill-current drop-shadow-sm" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                          </svg>
+                        ))}
+                        <span class="ml-2 text-yellow-600 font-bold text-sm">(5.0)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Image Section */}
+                <div class="flex-1 flex justify-center relative z-10">
+                  <div class="relative group">
+                    {/* Premium Image Container */}
+                    <div class="relative">
+                      {/* Outer Glow Effect */}
+                      <div class="absolute -inset-4 bg-gradient-to-br from-emerald-500/30 via-green-500/25 to-blue-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-700"></div>
+                      {/* Inner Shadow Layer */}
+                      <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-emerald-50/30 to-green-50/40 rounded-3xl"></div>
+                      
+                      <div class="relative w-96 h-96 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/60 group-hover:scale-105 transition-transform duration-700">
+                    <img 
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                      alt="Mayor Edgar S. San Luis"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                        
+                        {/* Floating Overlay */}
+                        <div class="absolute inset-0 bg-gradient-to-t from-emerald-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center p-6">
+                          <div class="text-center text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                            <div class="text-sm font-bold mb-1">Municipal Mayor</div>
+                            <div class="text-xs opacity-80">Santa Cruz, Laguna</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Floating Achievement Badge */}
+                      <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white text-white font-bold text-sm group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
+                        <div class="text-center">
+                          <div class="text-xs">Local</div>
+                          <div class="text-xs">Leader</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Enhanced Premium Slide 3: Project Manager -->
+              <div class="testimonial-slide absolute inset-0 w-full flex flex-col lg:flex-row items-center gap-12 p-12 opacity-0 transition-all duration-700 ease-in-out">
+                {/* Enhanced Decorative Background Elements */}
+                <div class="absolute top-8 right-8 w-32 h-32 bg-gradient-to-br from-purple-400/20 via-indigo-400/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-8 left-8 w-28 h-28 bg-gradient-to-br from-pink-400/15 via-purple-400/20 to-transparent rounded-full blur-2xl animate-pulse" style="animation-delay: 2.2s;"></div>
+                
+                <div class="flex-1 flex flex-col justify-center relative z-10">
+                  <div class="relative">
+                    {/* Enhanced Quote Decoration */}
+                    <div class="absolute -top-6 -left-4 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-indigo-600/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-purple-200/30 shadow-lg">
+                      <svg class="w-10 h-10 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                    </div>
+                    
+                    {/* Premium Quote Content */}
+                    <blockquote class="text-gray-800 text-2xl lg:text-3xl font-semibold leading-relaxed mb-10 pl-12 relative">
+                      <span class="text-purple-600 font-black text-4xl absolute -top-2 -left-2">"</span>
+                      As a project manager, Build Watch has streamlined our reporting process tremendously. The digital workflow eliminates paperwork delays and ensures all stakeholders are informed in real-time.
+                      <span class="text-purple-600 font-black text-4xl absolute -bottom-4 -right-2">"</span>
+                    </blockquote>
+                  </div>
+                  
+                  {/* Enhanced Author Information */}
+                  <div class="flex items-center gap-6 pl-12">
+                    <div class="relative group">
+                      <div class="w-20 h-20 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white/50">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      </div>
+                      <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-pink-500 rounded-full border-4 border-white flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-purple-800 font-black text-2xl mb-1">Engr. Maria Santos</div>
+                      <div class="text-purple-600 text-base font-bold mb-3">Municipal Engineering Office</div>
+                      <div class="flex items-center gap-1">
+                        {Array.from({length: 5}, (_, i) => (
+                          <svg key={i} class="w-5 h-5 text-yellow-400 fill-current drop-shadow-sm" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                          </svg>
+                        ))}
+                        <span class="ml-2 text-yellow-600 font-bold text-sm">(5.0)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Image Section */}
+                <div class="flex-1 flex justify-center relative z-10">
+                  <div class="relative group">
+                    {/* Premium Image Container */}
+                    <div class="relative">
+                      {/* Outer Glow Effect */}
+                      <div class="absolute -inset-4 bg-gradient-to-br from-purple-500/30 via-indigo-500/25 to-pink-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-700"></div>
+                      {/* Inner Shadow Layer */}
+                      <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-purple-50/30 to-indigo-50/40 rounded-3xl"></div>
+                      
+                      <div class="relative w-96 h-96 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/60 group-hover:scale-105 transition-transform duration-700">
+                    <img 
+                      src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                      alt="Engr. Maria Santos"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                        
+                        {/* Floating Overlay */}
+                        <div class="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center p-6">
+                          <div class="text-center text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                            <div class="text-sm font-bold mb-1">Project Manager</div>
+                            <div class="text-xs opacity-80">Engineering Office</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Floating Achievement Badge */}
+                      <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white text-white font-bold text-sm group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
+                        <div class="text-center">
+                          <div class="text-xs">Tech</div>
+                          <div class="text-xs">Expert</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Enhanced Premium Slide 4: NGO Representative -->
+              <div class="testimonial-slide absolute inset-0 w-full flex flex-col lg:flex-row items-center gap-12 p-12 opacity-0 transition-all duration-700 ease-in-out">
+                {/* Enhanced Decorative Background Elements */}
+                <div class="absolute top-8 left-8 w-32 h-32 bg-gradient-to-br from-orange-400/20 via-amber-400/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-8 right-8 w-28 h-28 bg-gradient-to-br from-yellow-400/15 via-orange-400/20 to-transparent rounded-full blur-2xl animate-pulse" style="animation-delay: 2.5s;"></div>
+                
+                <div class="flex-1 flex flex-col justify-center relative z-10">
+                  <div class="relative">
+                    {/* Enhanced Quote Decoration */}
+                    <div class="absolute -top-6 -left-4 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-amber-600/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-orange-200/30 shadow-lg">
+                      <svg class="w-10 h-10 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                    </div>
+                    
+                    {/* Premium Quote Content */}
+                    <blockquote class="text-gray-800 text-2xl lg:text-3xl font-semibold leading-relaxed mb-10 pl-12 relative">
+                      <span class="text-orange-600 font-black text-4xl absolute -top-2 -left-2">"</span>
+                      Build Watch represents the future of participatory governance. As an NGO, we can now actively monitor projects and provide valuable feedback, ensuring community needs are truly addressed.
+                      <span class="text-orange-600 font-black text-4xl absolute -bottom-4 -right-2">"</span>
+                    </blockquote>
+                  </div>
+                  
+                  {/* Enhanced Author Information */}
+                  <div class="flex items-center gap-6 pl-12">
+                    <div class="relative group">
+                      <div class="w-20 h-20 bg-gradient-to-br from-orange-600 to-amber-700 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white/50">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      </div>
+                      <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-orange-800 font-black text-2xl mb-1">Atty. Roberto Cruz</div>
+                      <div class="text-orange-600 text-base font-bold mb-3">Citizens' Watch Laguna</div>
+                      <div class="flex items-center gap-1">
+                        {Array.from({length: 5}, (_, i) => (
+                          <svg key={i} class="w-5 h-5 text-yellow-400 fill-current drop-shadow-sm" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                          </svg>
+                        ))}
+                        <span class="ml-2 text-yellow-600 font-bold text-sm">(5.0)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Image Section */}
+                <div class="flex-1 flex justify-center relative z-10">
+                  <div class="relative group">
+                    {/* Premium Image Container */}
+                    <div class="relative">
+                      {/* Outer Glow Effect */}
+                      <div class="absolute -inset-4 bg-gradient-to-br from-orange-500/30 via-amber-500/25 to-yellow-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-700"></div>
+                      {/* Inner Shadow Layer */}
+                      <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-orange-50/30 to-amber-50/40 rounded-3xl"></div>
+                      
+                      <div class="relative w-96 h-96 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/60 group-hover:scale-105 transition-transform duration-700">
+                    <img 
+                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                      alt="Atty. Roberto Cruz"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                        
+                        {/* Floating Overlay */}
+                        <div class="absolute inset-0 bg-gradient-to-t from-orange-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center p-6">
+                          <div class="text-center text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                            <div class="text-sm font-bold mb-1">NGO Representative</div>
+                            <div class="text-xs opacity-80">Citizens' Watch</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Floating Achievement Badge */}
+                      <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white text-white font-bold text-sm group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
+                        <div class="text-center">
+                          <div class="text-xs">Civil</div>
+                          <div class="text-xs">Rights</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Enhanced Premium Slide 5: Community Leader -->
+              <div class="testimonial-slide absolute inset-0 w-full flex flex-col lg:flex-row items-center gap-12 p-12 opacity-0 transition-all duration-700 ease-in-out">
+                {/* Enhanced Decorative Background Elements */}
+                <div class="absolute top-8 right-8 w-32 h-32 bg-gradient-to-br from-rose-400/20 via-pink-400/15 to-transparent rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-8 left-8 w-28 h-28 bg-gradient-to-br from-red-400/15 via-rose-400/20 to-transparent rounded-full blur-2xl animate-pulse" style="animation-delay: 2.8s;"></div>
+                
+                <div class="flex-1 flex flex-col justify-center relative z-10">
+                  <div class="relative">
+                    {/* Enhanced Quote Decoration */}
+                    <div class="absolute -top-6 -left-4 w-20 h-20 bg-gradient-to-br from-rose-500/20 to-pink-600/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-rose-200/30 shadow-lg">
+                      <svg class="w-10 h-10 text-rose-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                    </div>
+                    
+                    {/* Premium Quote Content */}
+                    <blockquote class="text-gray-800 text-2xl lg:text-3xl font-semibold leading-relaxed mb-10 pl-12 relative">
+                      <span class="text-rose-600 font-black text-4xl absolute -top-2 -left-2">"</span>
+                      Finally, we can see exactly what's happening with our community projects! Build Watch has given us transparency and a voice in local development. It's a game-changer for Santa Cruz.
+                      <span class="text-rose-600 font-black text-4xl absolute -bottom-4 -right-2">"</span>
+                    </blockquote>
+                  </div>
+                  
+                  {/* Enhanced Author Information */}
+                  <div class="flex items-center gap-6 pl-12">
+                    <div class="relative group">
+                      <div class="w-20 h-20 bg-gradient-to-br from-rose-600 to-pink-700 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-4 border-white/50">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      </div>
+                      <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-500 rounded-full border-4 border-white flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-rose-800 font-black text-2xl mb-1">Kap. Lourdes Mendoza</div>
+                      <div class="text-rose-600 text-base font-bold mb-3">Barangay Captain, Poblacion I</div>
+                      <div class="flex items-center gap-1">
+                        {Array.from({length: 5}, (_, i) => (
+                          <svg key={i} class="w-5 h-5 text-yellow-400 fill-current drop-shadow-sm" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                          </svg>
+                        ))}
+                        <span class="ml-2 text-yellow-600 font-bold text-sm">(5.0)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Image Section */}
+                <div class="flex-1 flex justify-center relative z-10">
+                  <div class="relative group">
+                    {/* Premium Image Container */}
+                    <div class="relative">
+                      {/* Outer Glow Effect */}
+                      <div class="absolute -inset-4 bg-gradient-to-br from-rose-500/30 via-pink-500/25 to-red-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-700"></div>
+                      {/* Inner Shadow Layer */}
+                      <div class="absolute inset-0 bg-gradient-to-br from-white/40 via-rose-50/30 to-pink-50/40 rounded-3xl"></div>
+                      
+                      <div class="relative w-96 h-96 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/60 group-hover:scale-105 transition-transform duration-700">
+                    <img 
+                      src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                      alt="Kap. Lourdes Mendoza"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                        
+                        {/* Floating Overlay */}
+                        <div class="absolute inset-0 bg-gradient-to-t from-rose-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center p-6">
+                          <div class="text-center text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                            <div class="text-sm font-bold mb-1">Community Leader</div>
+                            <div class="text-xs opacity-80">Barangay Captain</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Floating Achievement Badge */}
+                      <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white text-white font-bold text-sm group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
+                        <div class="text-center">
+                          <div class="text-xs">Voice</div>
+                          <div class="text-xs">People</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Navigation Arrows -->
+            <button class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-blue-600 hover:bg-white hover:scale-110 transition-all duration-300 shadow-lg border border-blue-600/20" id="testimonials-prev">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            
+            <button class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-blue-600 hover:bg-white hover:scale-110 transition-all duration-300 shadow-lg border border-blue-600/20" id="testimonials-next">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+
+            <!-- Enhanced Premium Blue Circle Indicators -->
+            <div class="flex items-center justify-center gap-3 mt-12" id="testimonials-indicators">
+              <div class="flex items-center gap-4 px-10 py-5 bg-white/60 backdrop-blur-lg rounded-full border border-white/50 shadow-xl">
+                <button class="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 testimonial-dot active scale-125 ring-4 ring-white/30" data-index="0"></button>
+                <button class="w-5 h-5 rounded-full bg-white/60 hover:bg-white/80 shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 testimonial-dot" data-index="1"></button>
+                <button class="w-5 h-5 rounded-full bg-white/60 hover:bg-white/80 shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 testimonial-dot" data-index="2"></button>
+                <button class="w-5 h-5 rounded-full bg-white/60 hover:bg-white/80 shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 testimonial-dot" data-index="3"></button>
+                <button class="w-5 h-5 rounded-full bg-white/60 hover:bg-white/80 shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 testimonial-dot" data-index="4"></button>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <a href="#" class="text-[#1A4CA3] font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Gov. Elmer V. Dela Peña</a>
-          </div>
-          <span class="text-[#7A1F1F] text-sm font-semibold ml-8">Department: Provincial Government of Laguna</span>
         </div>
-        <div class="flex-1 bg-white rounded-2xl shadow-lg transition hover:shadow-xl"></div>
       </section>
     </div>
   </main>
@@ -117,5 +705,249 @@ import LGUFooter from "../components/LGUFooter.astro";
       from { opacity: 0; transform: translateY(40px); }
       to { opacity: 1; transform: none; }
     }
+
+    /* Testimonials slideshow styles */
+    .testimonial-slide {
+      transition: opacity 0.7s ease-in-out;
+    }
+
+    .testimonial-slide img {
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .testimonial-slide:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Enhanced indicator styles */
+    .testimonial-dot {
+      transition: all 0.3s ease-in-out;
+    }
+
+    .testimonial-dot:hover {
+      transform: scale(1.2);
+    }
+
+    /* Smooth scrolling for slideshow */
+    #testimonials-slideshow {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
   </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Testimonials Slideshow Functionality
+      const slideshow = document.getElementById('testimonials-slideshow');
+      const prevBtn = document.getElementById('testimonials-prev');
+      const nextBtn = document.getElementById('testimonials-next');
+      const indicators = document.querySelectorAll('.testimonial-dot');
+      const slides = document.querySelectorAll('.testimonial-slide');
+      
+      let currentSlide = 0;
+      const totalSlides = slides.length;
+      let isTransitioning = false;
+      
+      if (slideshow && prevBtn && nextBtn) {
+        // Function to show slide with fade effect
+        function showSlide(index) {
+          if (isTransitioning) return;
+          
+          const newSlide = Math.max(0, Math.min(index, totalSlides - 1));
+          if (newSlide === currentSlide) return;
+          
+          isTransitioning = true;
+          
+          // Fade out current slide
+          slides[currentSlide].style.opacity = '0';
+          
+          // After fade out, show new slide
+          setTimeout(() => {
+            currentSlide = newSlide;
+            
+            // Fade in new slide
+            slides[currentSlide].style.opacity = '1';
+            
+            // Update indicators
+            updateIndicators();
+            
+            // Update navigation button states
+            updateNavigationButtons();
+            
+            // Reset transition flag
+            setTimeout(() => {
+              isTransitioning = false;
+            }, 700);
+          }, 700);
+        }
+        
+        // Function to go to slide
+        function goToSlide(index) {
+          showSlide(index);
+        }
+        
+        // Enhanced Function to update indicators with modern styling
+        function updateIndicators() {
+          indicators.forEach((dot, index) => {
+            if (index === currentSlide) {
+              // Active indicator styling
+              dot.style.background = 'linear-gradient(to right, #2563eb, #4f46e5)';
+              dot.style.transform = 'scale(1.25)';
+              dot.style.boxShadow = '0 0 25px rgba(37, 99, 235, 0.6), 0 4px 15px rgba(0, 0, 0, 0.2)';
+              dot.style.border = '2px solid rgba(255, 255, 255, 0.8)';
+              dot.classList.add('active');
+            } else {
+              // Inactive indicator styling
+              dot.style.background = 'rgba(255, 255, 255, 0.6)';
+              dot.style.transform = 'scale(1)';
+              dot.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+              dot.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+              dot.classList.remove('active');
+            }
+          });
+        }
+        
+        // Function to update navigation button states
+        function updateNavigationButtons() {
+          if (currentSlide === 0) {
+            prevBtn.style.opacity = '0.5';
+            prevBtn.style.pointerEvents = 'none';
+          } else {
+            prevBtn.style.opacity = '1';
+            prevBtn.style.pointerEvents = 'auto';
+          }
+          
+          if (currentSlide === totalSlides - 1) {
+            nextBtn.style.opacity = '0.5';
+            nextBtn.style.pointerEvents = 'none';
+          } else {
+            nextBtn.style.opacity = '1';
+            nextBtn.style.pointerEvents = 'auto';
+          }
+        }
+        
+        // Navigation button event listeners
+        prevBtn.addEventListener('click', () => {
+          goToSlide(currentSlide - 1);
+        });
+        
+        nextBtn.addEventListener('click', () => {
+          goToSlide(currentSlide + 1);
+        });
+        
+        // Indicator click event listeners
+        indicators.forEach((dot, index) => {
+          dot.addEventListener('click', () => {
+            goToSlide(index);
+          });
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            goToSlide(currentSlide - 1);
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            goToSlide(currentSlide + 1);
+          }
+        });
+        
+        // Touch/swipe support for mobile
+        let startX = 0;
+        let isDragging = false;
+        
+        slideshow.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+          isDragging = true;
+        });
+        
+        slideshow.addEventListener('touchmove', (e) => {
+          if (!isDragging) return;
+          e.preventDefault();
+        });
+        
+        slideshow.addEventListener('touchend', (e) => {
+          if (!isDragging) return;
+          
+          const endX = e.changedTouches[0].clientX;
+          const diffX = startX - endX;
+          const threshold = 50; // minimum swipe distance
+          
+          if (Math.abs(diffX) > threshold) {
+            if (diffX > 0) {
+              // Swiped left - go to next
+              goToSlide(currentSlide + 1);
+            } else {
+              // Swiped right - go to previous
+              goToSlide(currentSlide - 1);
+            }
+          }
+          
+          isDragging = false;
+        });
+        
+        // Auto-advance slideshow
+        let autoAdvanceInterval = setInterval(() => {
+          if (!isTransitioning) {
+            if (currentSlide < totalSlides - 1) {
+              showSlide(currentSlide + 1);
+            } else {
+              showSlide(0); // Loop back to first slide
+            }
+          }
+        }, 5000); // Change slide every 5 seconds
+        
+        // Pause auto-advance on hover
+        slideshow.addEventListener('mouseenter', () => {
+          clearInterval(autoAdvanceInterval);
+        });
+        
+        slideshow.addEventListener('mouseleave', () => {
+          autoAdvanceInterval = setInterval(() => {
+            if (!isTransitioning) {
+              if (currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+              } else {
+                showSlide(0);
+              }
+            }
+          }, 5000);
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          // Recalculate and adjust current slide if needed
+          const slideWidth = slideshow.offsetWidth;
+          const scrollPosition = currentSlide * slideWidth;
+          slideshow.scrollTo({
+            left: scrollPosition,
+            behavior: 'auto'
+          });
+        });
+        
+        // Initialize
+        updateIndicators();
+        updateNavigationButtons();
+        
+        // Show first slide
+        slides[0].style.opacity = '1';
+        
+        // Preload images
+        slides.forEach((slide, index) => {
+          const img = slide.querySelector('img');
+          if (img) {
+            img.addEventListener('load', () => {
+              console.log(`Image ${index + 1} loaded successfully`);
+            });
+            img.addEventListener('error', () => {
+              console.error(`Failed to load image ${index + 1}`);
+              // Fallback to a placeholder image
+              img.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+            });
+          }
+        });
+      }
+    });
+  </script>
 </Layout> 

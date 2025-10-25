@@ -163,6 +163,31 @@ class NotificationService {
     return false;
   }
 
+  // Delete all read notifications
+  async deleteAllRead() {
+    try {
+      const token = this.getAuthToken();
+      if (!token) return false;
+
+      const response = await fetch(`${API_BASE_URL}/notifications/delete-read`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Update local count
+        await this.getNotificationCount();
+        return true;
+      }
+    } catch (error) {
+      console.error('Error deleting all read notifications:', error);
+    }
+    return false;
+  }
+
   // Subscribe to notification updates
   onUpdate(callback) {
     this.updateCallbacks.push(callback);
@@ -196,7 +221,7 @@ class NotificationService {
 
     this.pollingInterval = setInterval(async () => {
       await this.getNotificationCount();
-    }, 30000); // Poll every 30 seconds
+    }, 10000); // Poll every 10 seconds for faster updates
   }
 
   // Stop polling
@@ -237,8 +262,52 @@ class NotificationService {
     return date.toLocaleDateString();
   }
 
-  // Get notification icon based on type
-  getNotificationIcon(type) {
+  // Get notification icon based on type and category
+  getNotificationIcon(type, category = null, metadata = null) {
+    // Project-specific icons
+    if (category === 'Project') {
+      if (metadata?.updateType === 'milestone_submission') {
+        return `<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>`;
+      }
+      if (metadata?.updateType === 'secretariat_submission') {
+        return `<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      }
+      if (metadata?.updateType === 'secretariat_verdict') {
+        return `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      }
+      if (metadata?.updateType === 'milestone_resubmission') {
+        return `<svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>`;
+      }
+      if (metadata?.updateType === 'project_completion') {
+        return `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      }
+      if (metadata?.updateType === 'project_progress_update') {
+        return `<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+        </svg>`;
+      }
+    }
+
+    // Reminder-specific icons
+    if (category === 'Reminder') {
+      if (metadata?.updateType === 'milestone_overdue') {
+        return `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      }
+    }
+
+    // Default icons based on type
     const icons = {
       'Info': `<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>

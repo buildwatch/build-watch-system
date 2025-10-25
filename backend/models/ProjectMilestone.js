@@ -14,6 +14,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'milestoneId',
         as: 'updates'
       });
+      
+      // Add association to MilestoneSubmission
+      ProjectMilestone.hasMany(models.MilestoneSubmission, {
+        foreignKey: 'milestoneId',
+        as: 'submissions'
+      });
     }
   }
   

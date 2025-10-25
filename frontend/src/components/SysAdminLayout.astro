@@ -16,3 +16,229 @@ import '../styles/global.css';
 </div>
 
 <LogoutModal />
+
+<script src="/src/scripts/profile-picture-manager.js"></script>
+
+<script>
+  // Global profile data management for System Admin
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Loading System Admin profile data...');
+    loadSystemAdminProfileData();
+  });
+
+  // Also reload profile data when navigating (for SPA-like behavior)
+  window.addEventListener('popstate', function() {
+    console.log('🔄 Page navigation detected, reloading profile data...');
+    setTimeout(() => {
+      loadSystemAdminProfileData();
+    }, 200);
+  });
+
+  // Listen for any navigation changes (for Astro's client-side routing)
+  let currentUrl = window.location.href;
+  setInterval(() => {
+    if (window.location.href !== currentUrl) {
+      console.log('🔄 URL changed, reloading profile data...');
+      currentUrl = window.location.href;
+      setTimeout(() => {
+        loadSystemAdminProfileData();
+      }, 200);
+    }
+  }, 500);
+
+  // Function to load saved profile data from localStorage
+  function loadSystemAdminProfileData() {
+    console.log('📥 Loading saved profile data from localStorage');
+    
+    // Check if we're currently updating profile (prevent override)
+    const isUpdatingProfile = localStorage.getItem('isUpdatingProfile');
+    if (isUpdatingProfile === 'true') {
+      console.log('⚠️ Profile update in progress, skipping global load');
+      return;
+    }
+    
+    // Add a small delay to ensure DOM is fully loaded
+    setTimeout(() => {
+      // Load saved full name (check both user-specific and global keys)
+      const savedFullName = localStorage.getItem('sysadmin_userFullName') || localStorage.getItem('userFullName');
+      if (savedFullName) {
+        console.log('🔄 Found saved full name in localStorage:', savedFullName);
+        updateSystemAdminFullName(savedFullName);
+        console.log('✅ Full name updated from localStorage:', savedFullName);
+      } else {
+        console.log('⚠️ No saved full name found in localStorage');
+      }
+      
+      // Load saved profile data (check both user-specific and global keys)
+      const savedData = localStorage.getItem('sysadmin_userProfileData') || localStorage.getItem('userProfileData');
+      if (savedData) {
+        try {
+          const profileData = JSON.parse(savedData);
+          console.log('📥 Loaded profile data:', profileData);
+          updateSystemAdminProfileInfo(profileData);
+          console.log('✅ Profile info updated from localStorage');
+        } catch (error) {
+          console.error('❌ Error parsing saved profile data:', error);
+        }
+      } else {
+        console.log('⚠️ No saved profile data found in localStorage');
+      }
+    }, 100); // Small delay to ensure DOM is ready
+  }
+
+  // Function to update full name across all System Admin components
+  function updateSystemAdminFullName(newFullName) {
+    console.log('🔄 Updating System Admin full name across all components:', newFullName);
+    
+    // Update topbar name (System Admin topbar structure)
+    const topbarUserName = document.querySelector('#sysadmin-profile-container .text-left p.text-sm.font-semibold');
+    if (topbarUserName) {
+      topbarUserName.textContent = newFullName;
+      console.log('✅ Updated topbar name:', topbarUserName.textContent);
+    } else {
+      console.log('⚠️ Topbar user name element not found');
+    }
+    
+    // Update dropdown name (System Admin dropdown structure)
+    const dropdownUserName = document.querySelector('#sysadmin-profile-dropdown .flex-1 p.text-sm.font-semibold');
+    if (dropdownUserName) {
+      dropdownUserName.textContent = newFullName;
+      console.log('✅ Updated dropdown name:', dropdownUserName.textContent);
+    } else {
+      console.log('⚠️ Dropdown user name element not found');
+    }
+    
+    // Update logout modal name
+    const logoutUserName = document.getElementById('logoutUserName');
+    if (logoutUserName) {
+      logoutUserName.textContent = newFullName;
+      console.log('✅ Updated logout modal name:', logoutUserName.textContent);
+    } else {
+      console.log('⚠️ Logout modal user name element not found');
+    }
+    
+    // Update main profile name (the h2 element in the profile card)
+    const mainProfileName = document.querySelector('.profile-card h2');
+    if (mainProfileName) {
+      mainProfileName.textContent = newFullName;
+      console.log('✅ Updated main profile name');
+    }
+    
+    // Update dashboard welcome message
+    const welcomeMessage = document.querySelector('h1');
+    if (welcomeMessage && welcomeMessage.textContent.includes('Welcome back')) {
+      welcomeMessage.textContent = `Welcome back, ${newFullName}`;
+      console.log('✅ Updated dashboard welcome message');
+    }
+  }
+
+  // Function to update profile information
+  function updateSystemAdminProfileInfo(formData) {
+    console.log('🔄 Updating System Admin profile information:', formData);
+    
+    // Update email in profile information card
+    const emailSpans = document.querySelectorAll('.profile-card .flex.items-center.justify-between span.text-sm.font-bold.text-black');
+    emailSpans.forEach(span => {
+      const parentDiv = span.closest('.flex.items-center.justify-between');
+      if (parentDiv && parentDiv.textContent.includes('Email')) {
+        span.textContent = formData.email;
+        console.log('✅ Updated email in profile card');
+      }
+    });
+    
+    // Update phone in profile information card
+    const phoneSpans = document.querySelectorAll('.profile-card .flex.items-center.justify-between span.text-sm.font-bold.text-black');
+    phoneSpans.forEach(span => {
+      const parentDiv = span.closest('.flex.items-center.justify-between');
+      if (parentDiv && parentDiv.textContent.includes('Contact')) {
+        span.textContent = formData.phone;
+        console.log('✅ Updated phone in profile card');
+      }
+    });
+    
+    // Update location in profile information card
+    const locationSpans = document.querySelectorAll('.profile-card .flex.items-center.justify-between span.text-sm.font-bold.text-black');
+    locationSpans.forEach(span => {
+      const parentDiv = span.closest('.flex.items-center.justify-between');
+      if (parentDiv && parentDiv.textContent.includes('Location')) {
+        span.textContent = formData.location;
+        console.log('✅ Updated location in profile card');
+      }
+    });
+    
+    // Update birthday in profile information card
+    const birthdaySpans = document.querySelectorAll('.profile-card .flex.items-center.justify-between span.text-sm.font-bold.text-black');
+    birthdaySpans.forEach(span => {
+      const parentDiv = span.closest('.flex.items-center.justify-between');
+      if (parentDiv && parentDiv.textContent.includes('Birthday')) {
+        // Format birthday from YYYY-MM-DD to M/D/YYYY
+        const date = new Date(formData.birthday);
+        const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+        span.textContent = formattedDate;
+        console.log('✅ Updated birthday in profile card');
+      }
+    });
+    
+    // Update timezone in profile information card
+    const timezoneSpans = document.querySelectorAll('.profile-card .flex.items-center.justify-between span.text-sm.font-bold.text-black');
+    timezoneSpans.forEach(span => {
+      const parentDiv = span.closest('.flex.items-center.justify-between');
+      if (parentDiv && parentDiv.textContent.includes('Timezone')) {
+        span.textContent = formData.timezone;
+        console.log('✅ Updated timezone in profile card');
+      }
+    });
+  }
+
+  // Function to force clear and reload profile data
+  function forceReloadProfileData() {
+    console.log('🔄 Force reloading profile data...');
+    
+    // Clear any existing data first (check both user-specific and global keys)
+    const savedFullName = localStorage.getItem('sysadmin_userFullName') || localStorage.getItem('userFullName');
+    const savedData = localStorage.getItem('sysadmin_userProfileData') || localStorage.getItem('userProfileData');
+    
+    if (savedFullName) {
+      console.log('🔄 Force updating with saved full name:', savedFullName);
+      updateSystemAdminFullName(savedFullName);
+    }
+    
+    if (savedData) {
+      try {
+        const profileData = JSON.parse(savedData);
+        console.log('🔄 Force updating with saved profile data:', profileData);
+        updateSystemAdminProfileInfo(profileData);
+      } catch (error) {
+        console.error('❌ Error parsing saved profile data:', error);
+      }
+    }
+  }
+
+  // Function to manually test profile data loading
+  function testProfileDataLoading() {
+    console.log('🧪 Testing profile data loading...');
+    console.log('📥 Current localStorage userFullName:', localStorage.getItem('userFullName'));
+    console.log('📥 Current localStorage userProfileData:', localStorage.getItem('userProfileData'));
+    console.log('📥 Current localStorage isUpdatingProfile:', localStorage.getItem('isUpdatingProfile'));
+    
+    // Force reload
+    forceReloadProfileData();
+  }
+
+  // Function to clear all profile data and start fresh
+  function clearProfileData() {
+    console.log('🧹 Clearing all profile data...');
+    localStorage.removeItem('userFullName');
+    localStorage.removeItem('userProfileData');
+    localStorage.removeItem('isUpdatingProfile');
+    console.log('✅ All profile data cleared');
+  }
+
+  // Make functions globally available
+  window.updateSystemAdminFullName = updateSystemAdminFullName;
+  window.updateSystemAdminProfileInfo = updateSystemAdminProfileInfo;
+  window.loadSystemAdminProfileData = loadSystemAdminProfileData;
+  window.forceReloadProfileData = forceReloadProfileData;
+  window.testProfileDataLoading = testProfileDataLoading;
+  window.clearProfileData = clearProfileData;
+</script>

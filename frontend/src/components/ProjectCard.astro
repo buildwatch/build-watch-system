@@ -1,0 +1,384 @@
+---
+interface Props {
+  project: any;
+  userTheme?: 'eiu' | 'iu-implementing-office' | 'secretariat' | 'mpmec' | 'executive' | 'public';
+  onClick?: string; // JavaScript function name to call when clicked
+  showModal?: boolean; // Whether to show modal or redirect to project page
+}
+
+const { project, userTheme = 'public', onClick, showModal = true } = Astro.props;
+
+// Theme-based hover colors
+const themeColors = {
+  'eiu': {
+    hover: 'hover:border-emerald-400 hover:shadow-emerald-100',
+    accent: 'text-emerald-600',
+    button: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+  },
+  'iu-implementing-office': {
+    hover: 'hover:border-amber-400 hover:shadow-amber-100',
+    accent: 'text-amber-600', 
+    button: 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+  },
+  'secretariat': {
+    hover: 'hover:border-blue-400 hover:shadow-blue-100',
+    accent: 'text-blue-600',
+    button: 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+  },
+  'mpmec': {
+    hover: 'hover:border-blue-400 hover:shadow-blue-100',
+    accent: 'text-blue-600',
+    button: 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+  },
+  'executive': {
+    hover: 'hover:border-blue-500 hover:shadow-blue-100',
+    accent: 'text-blue-700',
+    button: 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+  },
+  'public': {
+    hover: 'hover:border-blue-400 hover:shadow-blue-100',
+    accent: 'text-blue-600',
+    button: 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+  }
+};
+
+const theme = themeColors[userTheme];
+
+// Calculate progress values - ensure they are valid numbers
+const overallProgress = isNaN(parseFloat(project.overallProgress || project.progress)) ? 0 : parseFloat(project.overallProgress || project.progress || 0);
+const timelineProgress = isNaN(parseFloat(project.timelineProgress)) ? 0 : parseFloat(project.timelineProgress || 0);
+const budgetProgress = isNaN(parseFloat(project.budgetProgress)) ? 0 : parseFloat(project.budgetProgress || 0);
+const physicalProgress = isNaN(parseFloat(project.physicalProgress)) ? 0 : parseFloat(project.physicalProgress || 0);
+
+// Dynamic progress color based on percentage
+const getProgressColor = (progress) => {
+  if (progress >= 0 && progress <= 25) return 'bg-red-500';
+  if (progress >= 26 && progress <= 50) return 'bg-yellow-500';
+  if (progress >= 51 && progress <= 75) return 'bg-blue-500';
+  if (progress >= 76 && progress <= 100) return 'bg-green-500';
+  return 'bg-gray-500'; // fallback
+};
+
+// Format budget - show full amount for clarity
+const formatBudget = (amount) => {
+  if (!amount) return '₱0.00';
+  const num = parseFloat(amount);
+  if (isNaN(num)) return '₱0.00';
+  
+  // For large amounts, show both full and abbreviated
+  if (num >= 1000000) {
+    const formatted = num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const abbreviated = `${(num / 1000000).toFixed(1)}M`;
+    return `₱${formatted}`;
+  } else if (num >= 1000) {
+    const formatted = num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `₱${formatted}`;
+  }
+  return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+// Check if project has delayed milestones and determine actual status
+const getActualStatus = (proj) => {
+  let actualStatus = proj.status;
+  
+  if (actualStatus !== 'completed' && actualStatus !== 'complete' && actualStatus !== 'ongoing' && proj.milestones && Array.isArray(proj.milestones)) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const hasDelayedMilestones = proj.milestones.some(milestone => {
+      const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+      const status = milestone.status || 'pending';
+      
+      if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+        const milestoneDate = new Date(dueDate);
+        milestoneDate.setHours(0, 0, 0, 0);
+        return milestoneDate < today && status === 'pending';
+      }
+      return false;
+    });
+    
+    if (hasDelayedMilestones) {
+      actualStatus = 'delayed';
+    }
+  }
+  
+  return actualStatus;
+};
+
+// Status color mapping
+const getStatusColor = (status) => {
+  switch(status?.toLowerCase()) {
+    case 'completed':
+    case 'complete':
+      return 'bg-green-100 text-green-700 border-green-200';
+    case 'ongoing':
+      return 'bg-blue-100 text-blue-700 border-blue-200';
+    case 'delayed':
+      return 'bg-red-100 text-red-700 border-red-200 animate-pulse';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    case 'on hold':
+      return 'bg-gray-100 text-gray-700 border-gray-200';
+    default:
+      return 'bg-gray-100 text-gray-600 border-gray-200';
+  }
+};
+
+// Get project image - use correct default image path
+const getProjectImage = (proj) => {
+  if (proj.initialPhoto && proj.initialPhoto !== '' && proj.initialPhoto !== 'None') {
+    return proj.initialPhoto.startsWith('http') ? proj.initialPhoto : `http://localhost:3000${proj.initialPhoto}`;
+  }
+  // Use the correct default image path that exists in the public folder
+  return '/projects-page-header-bg.png';
+};
+
+// Handle click action - FIXED LOGIC
+const handleClick = () => {
+  // If onClick prop is provided, use it regardless of showModal setting
+  if (onClick) {
+    return `${onClick}('${project.id}')`;
+  }
+  
+  // If showModal is true (default), show modal
+  if (showModal) {
+    return `showProjectDetailsModal('${project.id}')`;
+  }
+  
+  // If showModal is false and no onClick, redirect to public project page
+  return `window.location.href='/project/${project.id}'`;
+};
+---
+
+<div 
+  class={`group bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl ${theme.hover}`}
+  onclick={handleClick()}
+  data-project-id={project.id}
+  data-project-card
+>
+  <!-- Project Image -->
+  <div class="h-48 relative overflow-hidden">
+    <img 
+      src={getProjectImage(project)}
+      alt={project.name || project.projectName}
+      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+      loading="lazy"
+      onerror="this.src='/projects-page-header-bg.png'"
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+    
+    <!-- Floating Status Badge -->
+    <div class="absolute top-3 right-3">
+      <span class={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusColor(getActualStatus(project))}`}>
+        {getActualStatus(project) || 'Not Started'}
+      </span>
+    </div>
+
+    <!-- Category Badge -->
+    <div class="absolute top-3 left-3">
+      <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-semibold border border-white/30">
+        {project.category || 'Infrastructure'}
+      </span>
+    </div>
+
+    <!-- Progress Overlay -->
+    <div class="absolute bottom-3 left-3 right-3">
+      <div class="bg-white/90 backdrop-blur-sm rounded-lg p-2">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-medium text-gray-700">Overall Progress</span>
+          <span class="text-xs font-bold text-gray-900">{overallProgress.toFixed(1)}%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div 
+            class={`h-2 rounded-full transition-all duration-2000 ease-out ${getProgressColor(overallProgress)} progress-bar-fill`}
+            style={`width: 0%`}
+            data-progress={overallProgress}
+          ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Details -->
+  <div class="p-6">
+    <!-- Project Title -->
+    <h3 class="text-xl font-bold text-gray-800 mb-2 line-clamp-2">
+      {project.name || project.projectName}
+    </h3>
+
+    <!-- Project Code -->
+    <div class="text-sm text-gray-500 mb-2">
+      <span class="font-medium">Code:</span> {project.projectCode || 'N/A'}
+    </div>
+
+    <!-- Project Description -->
+    {project.description && (
+      <div class="text-sm text-gray-600 mb-3 line-clamp-2">
+        {project.description}
+      </div>
+    )}
+
+    <!-- Key Information Grid -->
+    <div class="space-y-2 mb-4">
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-gray-600 font-medium">Location:</span>
+        <span class="text-gray-800">{project.location || 'N/A'}</span>
+      </div>
+      
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-gray-600 font-medium">Implementing Office:</span>
+        <span class="text-gray-800 text-right">{project.implementingOfficeName || project.implementingOffice || 'N/A'}</span>
+      </div>
+
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-gray-600 font-medium">Budget:</span>
+        <span class="text-gray-800 font-semibold">{formatBudget(project.totalBudget)}</span>
+      </div>
+
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-gray-600 font-medium">Funding Source:</span>
+        <span class="text-gray-800">{project.fundingSource === 'donor_fund' ? 'Municipal Development Fund' : project.fundingSource?.replace('_', ' ').toUpperCase() || 'N/A'}</span>
+      </div>
+    </div>
+
+    <!-- Progress Breakdown -->
+    <div class="space-y-2 mb-4">
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-gray-600">Timeline:</span>
+        <span class={`font-semibold ${theme.accent}`}>{timelineProgress.toFixed(1)}%</span>
+      </div>
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-gray-600">Budget:</span>
+        <span class={`font-semibold ${theme.accent}`}>{budgetProgress.toFixed(1)}%</span>
+      </div>
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-gray-600">Physical:</span>
+        <span class={`font-semibold ${theme.accent}`}>{physicalProgress.toFixed(1)}%</span>
+      </div>
+    </div>
+
+    <!-- Dates -->
+    <div class="flex justify-between items-center text-xs text-gray-500 mb-4">
+      <span>Start: {project.startDate || project.createdDate || 'N/A'}</span>
+      <span>Target: {project.targetCompletionDate || project.targetDateOfCompletion || project.endDate || 'N/A'}</span>
+      <span>Actual: {project.completionDate || project.actualCompletionDate || '–'}</span>
+      <span>Days: {project.expectedDaysOfCompletion ? `${project.expectedDaysOfCompletion} days` : '–'}</span>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="space-y-1 mb-4">
+      <!-- Coordinates (if available) -->
+      {(project.longitude && project.latitude) && (
+        <div class="text-xs text-gray-500">
+          <span class="font-medium">📍 Coordinates:</span> {project.latitude}, {project.longitude}
+        </div>
+      )}
+      
+      <!-- Category (if not already shown in badge) -->
+      <div class="text-xs text-gray-500">
+        <span class="font-medium">🏗️ Category:</span> {project.category?.charAt(0).toUpperCase() + project.category?.slice(1) || 'Infrastructure'}
+      </div>
+      
+      <!-- Priority -->
+      <div class="text-xs text-gray-500">
+        <span class="font-medium">⚡ Priority:</span> 
+        <span class={`font-semibold ${
+          project.priority === 'high' ? 'text-red-600' : 
+          project.priority === 'medium' ? 'text-yellow-600' : 
+          'text-green-600'
+        }`}>
+          {project.priority?.toUpperCase() || 'MEDIUM'}
+        </span>
+      </div>
+    </div>
+
+    <!-- View Details Button (only show if showModal is not explicitly false) -->
+    {showModal !== false && (
+      <button 
+        class={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 ${theme.button}`}
+        onclick={handleClick()}
+      >
+        View Details
+      </button>
+    )}
+  </div>
+</div>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .progress-bar-fill {
+    transform-origin: left;
+    animation: fillProgress 2s ease-out forwards;
+  }
+  
+  @keyframes fillProgress {
+    from {
+      width: 0%;
+    }
+    to {
+      width: var(--progress-width);
+    }
+  }
+</style>
+
+<script>
+  // Live filling animation for progress bars
+  function animateProgressBars() {
+    const progressBars = document.querySelectorAll('.progress-bar-fill');
+    
+    progressBars.forEach(bar => {
+      const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
+      bar.style.setProperty('--progress-width', `${progress}%`);
+      
+      // Reset animation
+      bar.style.animation = 'none';
+      bar.offsetHeight; // Trigger reflow
+      bar.style.animation = 'fillProgress 2s ease-out forwards';
+    });
+  }
+  
+  // Intersection Observer for scroll-triggered animation
+  function setupProgressAnimation() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const progressBar = entry.target.querySelector('.progress-bar-fill');
+          if (progressBar) {
+            const progress = parseFloat(progressBar.getAttribute('data-progress')) || 0;
+            progressBar.style.setProperty('--progress-width', `${progress}%`);
+            
+            // Reset and start animation
+            progressBar.style.animation = 'none';
+            progressBar.offsetHeight; // Trigger reflow
+            progressBar.style.animation = 'fillProgress 2s ease-out forwards';
+          }
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+    
+    // Observe all project cards
+    const projectCards = document.querySelectorAll('[data-project-card]');
+    projectCards.forEach(card => observer.observe(card));
+  }
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupProgressAnimation);
+  } else {
+    setupProgressAnimation();
+  }
+  
+  // Also run on window load for any dynamically loaded content
+  window.addEventListener('load', () => {
+    setTimeout(setupProgressAnimation, 100);
+  });
+</script> 

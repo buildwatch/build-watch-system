@@ -1,4 +1,4 @@
-const { Project, ProjectMilestone, ProjectUpdate, User } = require('../models');
+const { Project, ProjectMilestone, ProjectUpdate, User, ActivityLog } = require('../models');
 const { Op } = require('sequelize');
 
 class ProgressCalculationService {
@@ -22,7 +22,10 @@ class ProgressCalculationService {
           {
             model: User,
             as: 'eiuPersonnel',
-            attributes: ['id', 'name', 'email', 'department']
+            attributes: [
+              'id', 'name', 'email', 'department', 'profilePictureUrl', 'contactNumber',
+              'group', 'subRole', 'externalCompanyName', 'role', 'username', 'birthdate'
+            ]
           },
           {
             model: ProjectMilestone,
@@ -55,6 +58,57 @@ class ProgressCalculationService {
         throw new Error('Project not found');
       }
 
+      // Fetch activity logs for this project (including milestone-related activities)
+      const milestoneIds = project.milestones ? project.milestones.map(m => m.id) : [];
+      
+      // Get ProjectUpdate IDs for this project
+      const projectUpdates = await ProjectUpdate.findAll({
+        where: { projectId: projectId },
+        attributes: ['id']
+      });
+      const projectUpdateIds = projectUpdates.map(update => update.id);
+      
+      const activityLogs = await ActivityLog.findAll({
+        where: { 
+          [Op.or]: [
+            { entityId: projectId, entityType: 'project' },
+            { entityId: projectId, entityType: 'Project' },
+            { entityId: { [Op.in]: milestoneIds }, entityType: 'ProjectMilestone' },
+            { entityId: { [Op.in]: projectUpdateIds }, entityType: 'ProjectUpdate' }
+          ]
+        },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'username']
+          }
+        ],
+        order: [['createdAt', 'DESC']],
+        limit: 20
+      });
+
+      // Debug: Log the expectedDaysOfCompletion field and activity logs
+      console.log('🔍 ProgressCalculationService - Project data:', {
+        id: project.id,
+        name: project.name,
+        expectedDaysOfCompletion: project.expectedDaysOfCompletion,
+        startDate: project.startDate,
+        targetCompletionDate: project.targetCompletionDate,
+        endDate: project.endDate,
+        milestoneCount: project.milestones ? project.milestones.length : 0,
+        milestoneIds: milestoneIds,
+        projectUpdateIds: projectUpdateIds,
+        activityLogsCount: activityLogs.length,
+        activityLogs: activityLogs.map(log => ({
+          id: log.id,
+          action: log.action,
+          entityType: log.entityType,
+          entityId: log.entityId,
+          createdAt: log.createdAt
+        }))
+      });
+
       // Get the latest compiled report
       const compiledReport = await ProjectUpdate.findOne({
         where: {
@@ -69,17 +123,54 @@ class ProgressCalculationService {
         order: [['createdAt', 'DESC']]
       });
 
-      // Calculate milestone-based progress
+      // Check if project has direct progress fields that are more recent
+      const hasDirectProgress = project.overallProgress !== null && project.overallProgress !== undefined && 
+                               project.timelineProgress !== null && project.timelineProgress !== undefined &&
+                               project.budgetProgress !== null && project.budgetProgress !== undefined &&
+                               project.physicalProgress !== null && project.physicalProgress !== undefined;
+      
+      let overallProgress, divisionProgress, internalDivisionProgress;
+      
+      if (hasDirectProgress && project.lastProgressUpdate) {
+        // Use direct progress fields from database (more accurate for recent updates)
+        console.log(`🔍 Using direct progress fields for project ${projectId}:`, {
+          overall: project.overallProgress,
+          timeline: project.timelineProgress,
+          budget: project.budgetProgress,
+          physical: project.physicalProgress,
+          lastUpdate: project.lastProgressUpdate
+        });
+        
+        overallProgress = parseFloat(project.overallProgress) || 0;
+        divisionProgress = {
+          timeline: parseFloat(project.timelineProgress) || 0,
+          budget: parseFloat(project.budgetProgress) || 0,
+          physical: parseFloat(project.physicalProgress) || 0
+        };
+        internalDivisionProgress = {
+          timeline: parseFloat(project.timelineProgress) || 0,
+          budget: parseFloat(project.budgetProgress) || 0,
+          physical: parseFloat(project.physicalProgress) || 0
+        };
+      } else {
+        // Fallback to milestone-based calculation
+        console.log(`🔍 Using milestone-based calculation for project ${projectId}`);
+        
+        // Calculate milestone-based progress
+        const milestoneProgress = await this.calculateMilestoneProgress(projectId);
+        
+        // Calculate division-based progress based on Secretariat approval verdicts (contribution to overall)
+        divisionProgress = await this.calculateDivisionProgress(projectId);
+        
+        // Calculate internal division progress (percentage within each division)
+        internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
+        
+        // Calculate overall progress based on approved divisions
+        overallProgress = this.calculateOverallProgress(divisionProgress);
+      }
+      
+      // Calculate milestone-based progress for milestone data
       const milestoneProgress = await this.calculateMilestoneProgress(projectId);
-      
-      // Calculate division-based progress based on Secretariat approval verdicts (contribution to overall)
-      const divisionProgress = await this.calculateDivisionProgress(projectId);
-      
-      // Calculate internal division progress (percentage within each division)
-      const internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
-      
-      // Calculate overall progress based on approved divisions
-      const overallProgress = this.calculateOverallProgress(divisionProgress);
 
       // Calculate amount spent from approved divisions only
       // Only budget division contributes to utilized budget
@@ -100,7 +191,12 @@ class ProgressCalculationService {
           createdDate: project.createdDate,
           startDate: project.startDate,
           endDate: project.endDate,
+          targetCompletionDate: project.targetCompletionDate,
+          targetDateOfCompletion: project.targetDateOfCompletion,
+          expectedDaysOfCompletion: project.expectedDaysOfCompletion,
           totalBudget: project.totalBudget,
+          budgetBreakdown: project.budgetBreakdown,
+          physicalProgressRequirements: project.physicalProgressRequirements,
           amountSpent: amountSpent,
           workflowStatus: project.workflowStatus,
           approvedBySecretariat: project.approvedBySecretariat,
@@ -109,6 +205,10 @@ class ProgressCalculationService {
           eiuPartner: project.eiuPersonnel?.name || 'Not assigned',
           eiuPersonnelId: project.eiuPersonnelId,
           eiuPersonnelName: project.eiuPersonnel?.name,
+          // Include complete EIU personnel data for ProjectDetailsModal
+          eiuPersonnel: project.eiuPersonnel,
+          // Include raw milestones data for ProjectDetailsModal
+          milestones: project.milestones,
           expectedOutputs: project.expectedOutputs,
           targetBeneficiaries: project.targetBeneficiaries,
           projectManager: project.projectManager,
@@ -125,6 +225,8 @@ class ProgressCalculationService {
           internalPhysical: internalDivisionProgress.physical
         },
         milestones: milestoneProgress,
+        // Include raw milestone data for ProjectDetailsModal
+        projectMilestones: project.milestones,
         compiledReport: compiledReport ? {
           exists: true,
           submittedAt: compiledReport.submittedAt,
@@ -148,7 +250,20 @@ class ProgressCalculationService {
           exists: false
         },
         lastUpdate: project.lastProgressUpdate,
-        automatedProgress: project.automatedProgress
+        automatedProgress: project.automatedProgress,
+        // Include activity logs for Recent Updates section
+        activityLogs: activityLogs.map(activity => ({
+          id: activity.id,
+          action: activity.action,
+          details: activity.details,
+          category: activity.module || 'general',
+          createdAt: activity.createdAt,
+          user: activity.user ? {
+            id: activity.user.id,
+            name: activity.user.name,
+            username: activity.user.username
+          } : null
+        }))
       };
 
       return response;
@@ -198,7 +313,15 @@ class ProgressCalculationService {
       const progress = update?.progress || 0;
       const weight = parseFloat(milestone.weight || 0);
       
-      if (update?.status === 'completed') {
+      // Prioritize ProjectMilestone.status over update status for approved milestones
+      let status = milestone.status || update?.status || 'pending';
+      
+      // If milestone is approved in ProjectMilestone table, use that status
+      if (milestone.status === 'approved' || milestone.status === 'completed') {
+        status = milestone.status;
+      }
+      
+      if (status === 'completed' || status === 'approved') {
         appliedWeight += weight;
       }
 
@@ -209,26 +332,26 @@ class ProgressCalculationService {
         weight: weight,
         plannedBudget: milestone.plannedBudget,
         dueDate: milestone.dueDate,
-        status: update?.status || 'pending',
+        status: status,
         progress: progress,
         completedDate: update?.completedDate || null,
         remarks: update?.remarks || '',
         budgetAllocation: update?.budgetAllocation || 0,
-        budgetBreakdown: update?.budgetBreakdown || '',
+        budgetBreakdown: update?.budgetBreakdown || milestone.budgetBreakdown || '',
         uploadedFiles: update?.uploadedFiles || [],
         // Three-division fields from milestone update
         timelineWeight: update?.timelineWeight || milestone.timelineWeight,
         timelineStartDate: update?.timelineStartDate || milestone.timelineStartDate,
         timelineEndDate: update?.timelineEndDate || milestone.timelineEndDate,
         timelineDescription: update?.timelineDescription || milestone.timelineDescription,
-        timelineStatus: update?.timelineStatus || milestone.timelineStatus,
+        timelineStatus: milestone.timelineStatus || update?.timelineStatus,
         budgetWeight: update?.budgetWeight || milestone.budgetWeight,
         budgetPlanned: update?.budgetPlanned || milestone.budgetPlanned,
-        budgetStatus: update?.budgetStatus || milestone.budgetStatus,
+        budgetStatus: milestone.budgetStatus || update?.budgetStatus,
         physicalWeight: update?.physicalWeight || milestone.physicalWeight,
         physicalProofType: update?.physicalProofType || milestone.physicalProofType,
         physicalDescription: update?.physicalDescription || milestone.physicalDescription,
-        physicalStatus: update?.physicalStatus || milestone.physicalStatus,
+        physicalStatus: milestone.physicalStatus || update?.physicalStatus,
         validationDate: milestone.validationDate,
         validationComments: milestone.validationComments,
         completionNotes: milestone.completionNotes,
@@ -449,7 +572,10 @@ class ProgressCalculationService {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'email', 'department']
+          attributes: [
+            'id', 'name', 'email', 'department', 'profilePictureUrl', 'contactNumber',
+            'group', 'subRole', 'externalCompanyName'
+          ]
         }
       ],
       order: [['createdAt', 'DESC']]

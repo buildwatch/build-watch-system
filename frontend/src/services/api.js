@@ -1,7 +1,9 @@
 // API Service Layer for Build Watch LGU Frontend
 // Connects to Node.js + Express.js + MySQL Backend
 
-const API_BASE_URL = 'http://localhost:3000/api';
+import { getApiUrl } from '../config/api.js';
+
+const API_BASE_URL = getApiUrl();
 
 // Export API_BASE_URL for other services
 export { API_BASE_URL as apiBaseUrl };
@@ -404,6 +406,51 @@ export const dashboardAPI = {
   }
 };
 
+// Home API
+export const homeAPI = {
+  // Get home page statistics
+  async getStats() {
+    return apiCall('/home/stats', {
+      method: 'GET'
+    });
+  },
+
+  // Get featured projects
+  async getFeaturedProjects(limit = 5) {
+    return apiCall(`/home/featured-projects?limit=${limit}`, {
+      method: 'GET'
+    });
+  },
+
+  // Get recent activity
+  async getRecentActivity(limit = 10) {
+    return apiCall(`/home/recent-activity?limit=${limit}`, {
+      method: 'GET'
+    });
+  },
+
+  // Get project locations for map
+  async getProjectLocations() {
+    return apiCall('/home/project-locations', {
+      method: 'GET'
+    });
+  },
+
+  // Get barangay statistics
+  async getBarangayStats() {
+    return apiCall('/home/barangay-stats', {
+      method: 'GET'
+    });
+  },
+
+  // Get Facebook posts from Mayor's official page
+  async getFacebookPosts(limit = 5) {
+    return apiCall(`/home/facebook-posts?limit=${limit}`, {
+      method: 'GET'
+    });
+  }
+};
+
 // Utility functions
 export const apiUtils = {
   // Check if user is authenticated
@@ -455,5 +502,6 @@ export const apiClient = {
   reports: reportsAPI,
   uploads: uploadsAPI,
   dashboard: dashboardAPI,
+  home: homeAPI,
   utils: apiUtils
 }; 

@@ -5,212 +5,1150 @@ import LGUFooter from "../components/LGUFooter.astro";
 ---
 <Layout title="Getting Started | Build Watch LGU" description="Learn how to use Build Watch and get started with project monitoring.">
   <TopBar />
-  <main class="flex flex-col items-center w-full px-4 pt-36 pb-12 bg-transparent min-h-[60vh]">
-    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-2 text-center">Getting Started</h1>
-    <div class="w-24 h-1 bg-[#FE5353] rounded-full mb-6 mx-auto"></div>
-    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
-      Learn how to use Build Watch effectively. This guide will help you navigate the system and understand your role in project monitoring.
-    </p>
-    <div class="w-full max-w-6xl flex flex-col gap-8">
-      <!-- Quick Start Guide -->
-      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6">Quick Start Guide</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="text-center transition hover:scale-105 focus-within:ring-2 focus-within:ring-[#EB3C3C] rounded-lg p-2" tabindex="0">
-            <div class="w-16 h-16 bg-[#EB3C3C] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 8 0v2"/></svg>
+  
+  <!-- Enhanced Background Elements -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute top-1/3 -left-32 w-64 h-64 bg-indigo-400/15 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute bottom-1/4 right-1/3 w-48 h-48 bg-purple-400/10 rounded-full blur-3xl animate-float" style="animation-delay: 4s;"></div>
+  </div>
+
+  <main class="relative flex flex-col items-center w-full px-4 pt-28 pb-16 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 min-h-screen">
+    <!-- Enhanced Hero Section -->
+    <div class="text-center mb-16 animate-fade-in-up">
+      <!-- Premium Badge -->
+      <div class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm rounded-full border border-blue-200/50 mb-8 mt-8">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        <span class="text-blue-700 font-bold text-sm">Quick Start Guide</span>
+      </div>
+      
+      <!-- Gradient Title -->
+      <h1 class="text-6xl md:text-7xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent drop-shadow-lg leading-tight mb-6">
+        Getting Started
+      </h1>
+      
+      <!-- Enhanced Subtitle -->
+      <p class="text-xl text-blue-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+        Master Build Watch effectively with our comprehensive guide designed for all user roles in project monitoring.
+      </p>
+    </div>
+    <div class="w-full max-w-7xl flex flex-col gap-12">
+      <!-- Enhanced Quick Start Guide -->
+      <div class="group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-blue-100/50 p-10 hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.2s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-center gap-4 mb-10">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
             </div>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2">Choose Your Role</h3>
-            <p class="text-[#7A1F1F] text-sm">Select your user group (LGU-PMT, EIU, EMS, or IU) to access the appropriate dashboard and tools.</p>
+            <div>
+              <h2 class="text-blue-700 font-black text-4xl">Quick Start Guide</h2>
+              <p class="text-blue-600/70 text-sm font-medium">Get up and running in 3 simple steps</p>
+            </div>
           </div>
-          <div class="text-center transition hover:scale-105 focus-within:ring-2 focus-within:ring-[#EB3C3C] rounded-lg p-2" tabindex="0">
-            <div class="w-16 h-16 bg-[#EB3C3C] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Step 1: Choose Your Role -->
+            <div class="quick-step group/step bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 rounded-3xl p-8 transition-all duration-500 hover:border-blue-400/80 hover:shadow-2xl hover:-translate-y-2 cursor-pointer relative overflow-hidden" tabindex="0" data-step="1">
+              <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover/step:opacity-100 transition-opacity duration-300"></div>
+              
+              <div class="relative z-10 text-center">
+                <!-- Step Number Badge -->
+                <div class="absolute -top-4 -right-4 w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center font-black text-sm shadow-lg">1</div>
+                
+                <!-- 3D Icon -->
+                <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover/step:shadow-3xl group-hover/step:scale-110 transition-all duration-500 relative">
+                  <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-2xl blur-xl group-hover/step:scale-110 transition-transform duration-500"></div>
+                  <svg class="w-12 h-12 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                
+                <h3 class="text-2xl font-black text-blue-800 mb-4 group-hover/step:text-blue-600 transition-colors duration-300">Choose Your Role</h3>
+                <p class="text-blue-700/80 text-base leading-relaxed mb-6">Select your user group (LGU-PMT, EIU, EMS, or IU) to access the appropriate dashboard and tools.</p>
+                
+                <!-- Interactive CTA -->
+                <div class="flex items-center justify-center gap-2 text-blue-600 font-bold text-sm opacity-0 group-hover/step:opacity-100 transition-all duration-300 transform translate-y-2 group-hover/step:translate-y-0">
+                  <span>Learn More</span>
+                  <svg class="w-4 h-4 group-hover/step:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2">Access Your Dashboard</h3>
-            <p class="text-[#7A1F1F] text-sm">Log in to your personalized dashboard to view projects, submit reports, and monitor progress.</p>
-          </div>
-          <div class="text-center transition hover:scale-105 focus-within:ring-2 focus-within:ring-[#EB3C3C] rounded-lg p-2" tabindex="0">
-            <div class="w-16 h-16 bg-[#EB3C3C] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V5z"/></svg>
+            
+            <!-- Step 2: Access Your Dashboard -->
+            <div class="quick-step group/step bg-white/80 backdrop-blur-sm border-2 border-emerald-200/50 rounded-3xl p-8 transition-all duration-500 hover:border-emerald-400/80 hover:shadow-2xl hover:-translate-y-2 cursor-pointer relative overflow-hidden" tabindex="0" data-step="2">
+              <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 opacity-0 group-hover/step:opacity-100 transition-opacity duration-300"></div>
+              
+              <div class="relative z-10 text-center">
+                <!-- Step Number Badge -->
+                <div class="absolute -top-4 -right-4 w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-full flex items-center justify-center font-black text-sm shadow-lg">2</div>
+                
+                <!-- 3D Icon -->
+                <div class="w-24 h-24 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover/step:shadow-3xl group-hover/step:scale-110 transition-all duration-500 relative">
+                  <div class="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-2xl blur-xl group-hover/step:scale-110 transition-transform duration-500"></div>
+                  <svg class="w-12 h-12 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+                
+                <h3 class="text-2xl font-black text-emerald-800 mb-4 group-hover/step:text-emerald-600 transition-colors duration-300">Access Your Dashboard</h3>
+                <p class="text-emerald-700/80 text-base leading-relaxed mb-6">Log in to your personalized dashboard to view projects, submit reports, and monitor progress.</p>
+                
+                <!-- Interactive CTA -->
+                <div class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm opacity-0 group-hover/step:opacity-100 transition-all duration-300 transform translate-y-2 group-hover/step:translate-y-0">
+                  <span>Learn More</span>
+                  <svg class="w-4 h-4 group-hover/step:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2">Start Monitoring</h3>
-            <p class="text-[#7A1F1F] text-sm">Begin tracking projects, submitting updates, and collaborating with other stakeholders.</p>
+            
+            <!-- Step 3: Start Monitoring -->
+            <div class="quick-step group/step bg-white/80 backdrop-blur-sm border-2 border-purple-200/50 rounded-3xl p-8 transition-all duration-500 hover:border-purple-400/80 hover:shadow-2xl hover:-translate-y-2 cursor-pointer relative overflow-hidden" tabindex="0" data-step="3">
+              <div class="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 opacity-0 group-hover/step:opacity-100 transition-opacity duration-300"></div>
+              
+              <div class="relative z-10 text-center">
+                <!-- Step Number Badge -->
+                <div class="absolute -top-4 -right-4 w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-full flex items-center justify-center font-black text-sm shadow-lg">3</div>
+                
+                <!-- 3D Icon -->
+                <div class="w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover/step:shadow-3xl group-hover/step:scale-110 transition-all duration-500 relative">
+                  <div class="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 rounded-2xl blur-xl group-hover/step:scale-110 transition-transform duration-500"></div>
+                  <svg class="w-12 h-12 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                  </svg>
+                </div>
+                
+                <h3 class="text-2xl font-black text-purple-800 mb-4 group-hover/step:text-purple-600 transition-colors duration-300">Start Monitoring</h3>
+                <p class="text-purple-700/80 text-base leading-relaxed mb-6">Begin tracking projects, submitting updates, and collaborating with other stakeholders.</p>
+                
+                <!-- Interactive CTA -->
+                <div class="flex items-center justify-center gap-2 text-purple-600 font-bold text-sm opacity-0 group-hover/step:opacity-100 transition-all duration-300 transform translate-y-2 group-hover/step:translate-y-0">
+                  <span>Learn More</span>
+                  <svg class="w-4 h-4 group-hover/step:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <!-- User Role Guides -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
-            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            For LGU-PMT Users
-          </h3>
-          <ul class="space-y-2 text-[#7A1F1F] text-sm">
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Monitor all ongoing projects and their progress</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Review and validate submitted reports</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Generate comprehensive project analytics</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Manage user accounts and permissions</span>
-            </li>
-          </ul>
-          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access LGU-PMT Dashboard</a>
-        </div>
-        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
-            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            For EIU Users
-          </h3>
-          <ul class="space-y-2 text-[#7A1F1F] text-sm">
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Submit project progress updates and reports</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Upload supporting documents and photos</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Track project milestones and deadlines</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Respond to monitoring team inquiries</span>
-            </li>
-          </ul>
-          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access EIU Dashboard</a>
-        </div>
-        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
-            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            For EMS Users
-          </h3>
-          <ul class="space-y-2 text-[#7A1F1F] text-sm">
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Monitor project compliance and quality</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Submit independent assessment reports</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Flag issues and concerns for review</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Provide stakeholder feedback</span>
-            </li>
-          </ul>
-          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access EMS Dashboard</a>
-        </div>
-        <div class="bg-white/80 rounded-xl shadow-lg p-6 transition hover:shadow-2xl hover:scale-[1.02] focus-within:ring-2 focus-within:ring-[#EB3C3C]" tabindex="0">
-          <h3 class="flex items-center gap-2 text-xl font-bold text-[#7A1F1F] mb-4">
-            <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            For IU Users
-          </h3>
-          <ul class="space-y-2 text-[#7A1F1F] text-sm">
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Oversee strategic project planning</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Review and approve project proposals</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Coordinate with external stakeholders</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-2 h-2 bg-[#EB3C3C] rounded-full mt-2 flex-shrink-0"></span>
-              <span>Ensure policy compliance and alignment</span>
-            </li>
-          </ul>
-          <a href="/login/lgu-pmt" class="inline-block mt-4 px-4 py-2 bg-[#EB3C3C] text-white font-bold rounded-lg text-sm hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Access IU Dashboard</a>
-        </div>
-      </div>
-      <!-- Training Resources -->
-      <div class="bg-white/80 rounded-2xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-6">Training Resources</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 class="flex items-center gap-2 text-lg font-bold text-[#7A1F1F] mb-3">
-              <svg class="w-5 h-5 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-              Video Tutorials
-            </h3>
-            <ul class="space-y-2 text-[#7A1F1F] text-sm">
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">System Overview</a>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Dashboard Navigation</a>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Report Submission</a>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Data Analysis</a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="flex items-center gap-2 text-lg font-bold text-[#7A1F1F] mb-3">
-              <svg class="w-5 h-5 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              Documentation
-            </h3>
-            <ul class="space-y-2 text-[#7A1F1F] text-sm">
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">User Manual</a>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Best Practices Guide</a>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">Troubleshooting Guide</a>
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#EB3C3C] rounded-full"></span>
-                <a href="#" class="text-[#EB3C3C] hover:underline focus:outline-none focus:ring-2 focus:ring-[#EB3C3C] rounded">API Documentation</a>
-              </li>
-            </ul>
+      
+      <!-- Enhanced User Role Guides -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- LGU-PMT Users -->
+        <div class="role-card group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-blue-100/50 p-8 transition-all duration-500 hover:shadow-3xl hover:border-blue-200/60 hover:-translate-y-2 cursor-pointer relative overflow-hidden animate-fade-in-up" data-role="lgu-pmt" style="animation-delay: 0.4s;">
+          <!-- Decorative Elements -->
+          <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+          <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+          
+          <div class="relative z-10">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-black text-blue-800 group-hover:text-blue-600 transition-colors duration-300">LGU-PMT Users</h3>
+                  <p class="text-blue-600/70 text-sm font-medium">Project Monitoring Team</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Features List -->
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-blue-800/90 font-medium">Monitor all ongoing projects and their progress</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-blue-800/90 font-medium">Review and validate submitted reports</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-blue-800/90 font-medium">Generate comprehensive project analytics</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-blue-800/90 font-medium">Manage user accounts and permissions</span>
+              </div>
+            </div>
+            
+            <!-- Premium Button -->
+            <button class="group/btn relative w-full px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                <span>Access Dashboard</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
+
+        <!-- EIU Users -->
+        <div class="role-card group bg-gradient-to-br from-white/95 to-emerald-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-emerald-100/50 p-8 transition-all duration-500 hover:shadow-3xl hover:border-emerald-200/60 hover:-translate-y-2 cursor-pointer relative overflow-hidden animate-fade-in-up" data-role="eiu" style="animation-delay: 0.5s;">
+          <!-- Decorative Elements -->
+          <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+          <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-teal-400/15 to-emerald-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+          
+          <div class="relative z-10">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-black text-emerald-800 group-hover:text-emerald-600 transition-colors duration-300">EIU Users</h3>
+                  <p class="text-emerald-600/70 text-sm font-medium">External Implementing Units</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Features List -->
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-emerald-800/90 font-medium">Submit project progress updates and reports</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-emerald-800/90 font-medium">Upload supporting documents and photos</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-emerald-800/90 font-medium">Track project milestones and deadlines</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-emerald-800/90 font-medium">Respond to monitoring team inquiries</span>
+              </div>
+            </div>
+            
+            <!-- Premium Button -->
+            <button class="group/btn relative w-full px-8 py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                <span>Access Dashboard</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- EMS Users -->
+        <div class="role-card group bg-gradient-to-br from-white/95 to-orange-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-orange-100/50 p-8 transition-all duration-500 hover:shadow-3xl hover:border-orange-200/60 hover:-translate-y-2 cursor-pointer relative overflow-hidden animate-fade-in-up" data-role="ems" style="animation-delay: 0.6s;">
+          <!-- Decorative Elements -->
+          <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-orange-400/20 to-amber-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+          <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-amber-400/15 to-orange-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+          
+          <div class="relative z-10">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-orange-600 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-black text-orange-800 group-hover:text-orange-600 transition-colors duration-300">EMS Users</h3>
+                  <p class="text-orange-600/70 text-sm font-medium">External Monitoring Stakeholders</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Features List -->
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-orange-800/90 font-medium">Monitor project compliance and quality</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-orange-800/90 font-medium">Submit independent assessment reports</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-orange-800/90 font-medium">Flag issues and concerns for review</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-orange-800/90 font-medium">Provide stakeholder feedback</span>
+              </div>
+            </div>
+            
+            <!-- Premium Button -->
+            <button class="group/btn relative w-full px-8 py-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                <span>Access Dashboard</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- IU Users -->
+        <div class="role-card group bg-gradient-to-br from-white/95 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-100/50 p-8 transition-all duration-500 hover:shadow-3xl hover:border-purple-200/60 hover:-translate-y-2 cursor-pointer relative overflow-hidden animate-fade-in-up" data-role="iu" style="animation-delay: 0.7s;">
+          <!-- Decorative Elements -->
+          <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-purple-400/20 to-violet-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+          <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-violet-400/15 to-purple-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+          
+          <div class="relative z-10">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-black text-purple-800 group-hover:text-purple-600 transition-colors duration-300">IU Users</h3>
+                  <p class="text-purple-600/70 text-sm font-medium">Internal Units</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Features List -->
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-purple-800/90 font-medium">Oversee strategic project planning</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-purple-800/90 font-medium">Review and approve project proposals</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-purple-800/90 font-medium">Coordinate with external stakeholders</span>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center mt-0.5 flex-shrink-0">
+                  <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="text-purple-800/90 font-medium">Ensure policy compliance and alignment</span>
+              </div>
+            </div>
+            
+            <!-- Premium Button -->
+            <button class="group/btn relative w-full px-8 py-4 bg-gradient-to-r from-purple-600 via-violet-600 to-purple-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-violet-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                <span>Access Dashboard</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
-      <!-- Support Section -->
-      <div class="bg-[#EB3C3C]/10 rounded-2xl p-8 text-center">
-        <h2 class="flex items-center justify-center gap-2 text-2xl font-bold text-[#7A1F1F] mb-4">
-          <svg class="w-6 h-6 text-[#EB3C3C]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Need Help?
-        </h2>
-        <p class="text-[#7A1F1F] mb-6">
-          If you need assistance with Build Watch or have questions about your role, our support team is here to help.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/faqs" class="px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">View FAQs</a>
-          <a href="/contact-us" class="px-6 py-3 border border-[#EB3C3C] text-[#EB3C3C] font-bold rounded-lg hover:bg-[#EB3C3C] hover:text-white transition focus:outline-none focus:ring-2 focus:ring-[#EB3C3C]">Contact Support</a>
+      <!-- Revolutionized Training Resources -->
+      <div class="group bg-gradient-to-br from-white/95 to-indigo-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-indigo-100/50 p-10 hover:shadow-3xl hover:border-indigo-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.6s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10">
+          <!-- Premium Header -->
+          <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-lg mb-6">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <span class="font-black text-lg">Training Resources</span>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 via-purple-600 to-indigo-600 mb-4">
+              Master Build Watch
+            </h2>
+            <p class="text-indigo-600/80 text-lg font-medium max-w-2xl mx-auto">
+              Comprehensive learning materials to accelerate your expertise and productivity
+            </p>
+          </div>
+
+          <!-- Enhanced Training Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Video Tutorials Section -->
+            <div class="training-section group/section bg-gradient-to-br from-white/90 to-blue-50/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-100/50 hover:shadow-xl hover:border-blue-200/60 transition-all duration-500">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover/section:scale-110 transition-transform duration-300">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-black text-blue-800 group-hover/section:text-blue-600 transition-colors duration-300">Video Tutorials</h3>
+                  <p class="text-blue-600/70 text-sm font-medium">Interactive step-by-step guides</p>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-blue-50/50 backdrop-blur-sm rounded-xl p-4 border border-blue-100/30 hover:border-blue-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-blue-900 font-black text-sm">System Overview</span>
+                      <p class="text-blue-600/60 text-xs font-medium">Essential platform introduction</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded-full">5 min</span>
+                      <svg class="w-4 h-4 text-blue-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-blue-50/50 backdrop-blur-sm rounded-xl p-4 border border-blue-100/30 hover:border-blue-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-blue-900 font-black text-sm">Dashboard Navigation</span>
+                      <p class="text-blue-600/60 text-xs font-medium">Master interface controls</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded-full">8 min</span>
+                      <svg class="w-4 h-4 text-blue-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-blue-50/50 backdrop-blur-sm rounded-xl p-4 border border-blue-100/30 hover:border-blue-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-blue-900 font-black text-sm">Report Submission</span>
+                      <p class="text-blue-600/60 text-xs font-medium">Efficient reporting workflows</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">12 min</span>
+                      <svg class="w-4 h-4 text-blue-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-blue-50/50 backdrop-blur-sm rounded-xl p-4 border border-blue-100/30 hover:border-blue-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-blue-900 font-black text-sm">Data Analysis</span>
+                      <p class="text-blue-600/60 text-xs font-medium">Advanced analytics techniques</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">15 min</span>
+                      <svg class="w-4 h-4 text-blue-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Documentation Section -->
+            <div class="training-section group/section bg-gradient-to-br from-white/90 to-purple-50/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-100/50 hover:shadow-xl hover:border-purple-200/60 transition-all duration-500">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover/section:scale-110 transition-transform duration-300">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-black text-purple-800 group-hover/section:text-purple-600 transition-colors duration-300">Documentation</h3>
+                  <p class="text-purple-600/70 text-sm font-medium">Comprehensive reference guides</p>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-purple-50/50 backdrop-blur-sm rounded-xl p-4 border border-purple-100/30 hover:border-purple-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-purple-900 font-black text-sm">User Manual</span>
+                      <p class="text-purple-600/60 text-xs font-medium">Complete user guidelines</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded-full">PDF</span>
+                      <svg class="w-4 h-4 text-purple-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-purple-50/50 backdrop-blur-sm rounded-xl p-4 border border-purple-100/30 hover:border-purple-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-purple-900 font-black text-sm">Best Practices Guide</span>
+                      <p class="text-purple-600/60 text-xs font-medium">Expert recommendations</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">PDF</span>
+                      <svg class="w-4 h-4 text-purple-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-purple-50/50 backdrop-blur-sm rounded-xl p-4 border border-purple-100/30 hover:border-purple-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-purple-900 font-black text-sm">Troubleshooting Guide</span>
+                      <p class="text-purple-600/60 text-xs font-medium">Problem-solving resources</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded-full">PDF</span>
+                      <svg class="w-4 h-4 text-purple-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="training-item group/item relative bg-gradient-to-r from-white/70 to-purple-50/50 backdrop-blur-sm rounded-xl p-4 border border-purple-100/30 hover:border-purple-200/50 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                  <div class="relative flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <span class="text-purple-900 font-black text-sm">API Documentation</span>
+                      <p class="text-purple-600/60 text-xs font-medium">Developer resources</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">Web</span>
+                      <svg class="w-4 h-4 text-purple-600 group-hover/item:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Revolutionized Support Section -->
+      <div class="group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-blue-100/50 p-10 hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 relative animate-fade-in-up text-center" style="animation-delay: 0.7s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10">
+          <!-- Premium Support Badge -->
+          <div class="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl shadow-lg mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path>
+            </svg>
+            <span class="font-black text-lg">Expert Support</span>
+          </div>
+
+          <!-- Premium Title -->
+          <h2 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-600 mb-4">
+            Need Help?
+          </h2>
+          
+          <!-- Enhanced Description -->
+          <p class="text-blue-600/80 text-lg font-medium mb-8 max-w-2xl mx-auto leading-relaxed">
+            Our dedicated support team is available 24/7 to assist you with any questions, technical issues, or guidance you need to succeed with Build Watch.
+          </p>
+
+          <!-- Support Options Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- FAQ Support Card -->
+            <div class="group/card bg-gradient-to-br from-white/90 to-blue-50/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-blue-100/50 hover:shadow-xl hover:border-blue-200/60 transition-all duration-500 relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+              <div class="relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4 group-hover/card:scale-110 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-black text-blue-800 mb-2">Frequently Asked Questions</h3>
+                <p class="text-blue-600/70 text-sm font-medium mb-4">Find instant answers to common questions</p>
+                <div class="flex items-center justify-center gap-2 text-blue-700 font-bold text-sm">
+                  <span>Browse FAQs</span>
+                  <svg class="w-4 h-4 group-hover/card:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Support Card -->
+            <div class="group/card bg-gradient-to-br from-white/90 to-cyan-50/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-cyan-100/50 hover:shadow-xl hover:border-cyan-200/60 transition-all duration-500 relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+              <div class="relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4 group-hover/card:scale-110 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-black text-cyan-800 mb-2">Direct Support</h3>
+                <p class="text-cyan-600/70 text-sm font-medium mb-4">Get personalized assistance from our team</p>
+                <div class="flex items-center justify-center gap-2 text-cyan-700 font-bold text-sm">
+                  <span>Contact Us</span>
+                  <svg class="w-4 h-4 group-hover/card:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Premium Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/faqs" class="group/btn relative px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>View FAQs</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                </svg>
+              </div>
+            </a>
+            
+            <a href="/contact-us" class="group/btn relative px-8 py-4 bg-gradient-to-r from-white to-cyan-50 border-2 border-cyan-600 text-cyan-600 font-black rounded-2xl shadow-lg hover:shadow-2xl hover:bg-gradient-to-r hover:from-cyan-600 hover:to-blue-600 hover:text-white hover:border-cyan-700 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                <span>Contact Support</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                </svg>
+              </div>
+            </a>
+          </div>
+
+          <!-- Support Features -->
+          <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div class="flex items-center justify-center gap-2 text-blue-600/80 text-sm font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>24/7 Availability</span>
+            </div>
+            <div class="flex items-center justify-center gap-2 text-blue-600/80 text-sm font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span>Fast Response</span>
+            </div>
+            <div class="flex items-center justify-center gap-2 text-blue-600/80 text-sm font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Expert Guidance</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </main>
   <LGUFooter />
-</Layout> 
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Quick Step Guide Interactions
+    const quickSteps = document.querySelectorAll('.quick-step');
+    
+    quickSteps.forEach(step => {
+      step.addEventListener('click', function() {
+        const stepNumber = this.getAttribute('data-step');
+        showStepModal(stepNumber);
+      });
+      
+      // Keyboard navigation
+      step.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const stepNumber = this.getAttribute('data-step');
+          showStepModal(stepNumber);
+        }
+      });
+    });
+    
+    function showStepModal(stepNumber) {
+      const stepData = {
+        1: {
+          title: 'Choose Your Role',
+          description: 'Select your user group to access the appropriate dashboard and tools.',
+          details: [
+            'LGU-PMT: Project Monitoring Team members',
+            'EIU: External Implementing Units',
+            'EMS: External Monitoring Stakeholders',
+            'IU: Internal Units'
+          ],
+          icon: '👥'
+        },
+        2: {
+          title: 'Access Your Dashboard',
+          description: 'Log in to your personalized dashboard to view projects and submit reports.',
+          details: [
+            'Use your assigned credentials to log in',
+            'Navigate through your role-specific modules',
+            'Access project data and analytics',
+            'Submit progress reports and updates'
+          ],
+          icon: '📊'
+        },
+        3: {
+          title: 'Start Monitoring',
+          description: 'Begin tracking projects and collaborating with stakeholders.',
+          details: [
+            'Review project progress and milestones',
+            'Submit regular updates and reports',
+            'Collaborate with team members',
+            'Monitor compliance and quality standards'
+          ],
+          icon: '🎯'
+        }
+      };
+      
+      const data = stepData[stepNumber];
+      if (!data) return;
+      
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 max-w-2xl mx-4 shadow-2xl transform transition-all duration-300 scale-95 opacity-0">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-2xl">
+                ${data.icon}
+              </div>
+              <h3 class="text-2xl font-bold text-blue-800">${data.title}</h3>
+            </div>
+            <button class="text-blue-800 hover:text-blue-600 transition-colors duration-200" onclick="this.closest('.fixed').remove()">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="text-blue-800/80 mb-6 text-lg">${data.description}</p>
+          <div class="space-y-3">
+            ${data.details.map(detail => `
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-blue-800">${detail}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Animate modal in
+      setTimeout(() => {
+        modal.querySelector('.bg-white').classList.remove('scale-95', 'opacity-0');
+        modal.querySelector('.bg-white').classList.add('scale-100', 'opacity-100');
+      }, 10);
+      
+      // Close modal on backdrop click
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+    }
+    
+    // Role Card Interactions
+    const roleCards = document.querySelectorAll('.role-card');
+    
+    roleCards.forEach(card => {
+      card.addEventListener('click', function() {
+        const role = this.getAttribute('data-role');
+        const button = this.querySelector('button');
+        
+        // Add click animation
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = 'scale(1)';
+        }, 150);
+        
+        // Navigate to appropriate login page
+        navigateToRole(role);
+      });
+    });
+    
+    function navigateToRole(role) {
+      const roleRoutes = {
+        'lgu-pmt': '/login/lgu-pmt',
+        'eiu': '/login/lgu-pmt', // EIU users also use the same login
+        'ems': '/login/lgu-pmt', // EMS users also use the same login
+        'iu': '/login/lgu-pmt'   // IU users also use the same login
+      };
+      
+      const route = roleRoutes[role];
+      if (route) {
+        // Show loading state
+        showLoadingMessage(`Redirecting to ${role.toUpperCase()} login...`);
+        
+        // Navigate after a short delay
+        setTimeout(() => {
+          window.location.href = route;
+        }, 1000);
+      }
+    }
+    
+    // Training Item Interactions
+    const trainingItems = document.querySelectorAll('.training-item');
+    
+    trainingItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const title = this.querySelector('span').textContent;
+        showTrainingModal(title);
+      });
+    });
+    
+    function showTrainingModal(title) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 max-w-2xl mx-4 shadow-2xl transform transition-all duration-300 scale-95 opacity-0">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-blue-800">${title}</h3>
+            <button class="text-blue-800 hover:text-blue-600 transition-colors duration-200" onclick="this.closest('.fixed').remove()">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-4">
+            <p class="text-blue-800/80">This training resource is currently being prepared. It will be available soon to help you master ${title.toLowerCase()}.</p>
+            <div class="bg-blue-600/10 rounded-lg p-4">
+              <p class="text-blue-800 text-sm">
+                <strong>Coming Soon:</strong> Interactive tutorials, step-by-step guides, and best practices for ${title.toLowerCase()}.
+              </p>
+            </div>
+            <button class="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors duration-200">
+              Get Notified When Available
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Animate modal in
+      setTimeout(() => {
+        modal.querySelector('.bg-white').classList.remove('scale-95', 'opacity-0');
+        modal.querySelector('.bg-white').classList.add('scale-100', 'opacity-100');
+      }, 10);
+      
+      // Close modal on backdrop click
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+    }
+    
+    function showLoadingMessage(message) {
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-blue-600 text-white px-6 py-4 rounded-xl shadow-lg transform transition-all duration-300 translate-x-full z-50';
+      notification.innerHTML = `
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Animate in
+      setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+      }, 10);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+          notification.remove();
+        }, 300);
+      }, 3000);
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        // Close any open modals
+        const modals = document.querySelectorAll('.fixed');
+        modals.forEach(modal => modal.remove());
+      }
+    });
+  });
+</script>
+
+<style>
+  /* Enhanced Animations */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(60px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .animate-gradient-shift {
+    animation: gradient-shift 3s ease infinite;
+    background-size: 200% 200%;
+  }
+  
+  /* Enhanced component transitions */
+  .quick-step {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .role-card {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .training-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .training-item:hover {
+    transform: translateX(8px);
+  }
+  
+  /* Modal and notification animations */
+  .fixed .bg-white {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .fixed.top-4 {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Glass morphism effects */
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+  }
+  
+  /* Enhanced shadow utilities */
+  .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+  }
+</style> 

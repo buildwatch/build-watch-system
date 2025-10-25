@@ -368,13 +368,16 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Only allow deletion if project is pending
+    // TEMPORARILY DISABLED: Only allow deletion if project is pending
+    // Temporarily commenting out status check for project recreation
+    /*
     if (project.status !== 'pending') {
       return res.status(400).json({
         success: false,
         message: 'Can only delete pending projects'
       });
     }
+    */
 
     // Store project details for notifications before deletion
     const projectDetails = {

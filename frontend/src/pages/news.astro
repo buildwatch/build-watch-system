@@ -3,134 +3,739 @@ import Layout from "../layouts/Layout.astro";
 import TopBar from "../components/TopBar.astro";
 import LGUFooter from "../components/LGUFooter.astro";
 ---
+
 <Layout title="News & Articles | Build Watch LGU" description="Latest news, announcements, and articles about LGU projects and Build Watch.">
   <TopBar />
-  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-transparent min-h-[60vh]">
-    <h1 class="text-5xl md:text-6xl font-extrabold text-[#EB3C3C] drop-shadow-lg leading-tight mb-2 text-center">News & Articles</h1>
-    <div class="w-24 h-1 bg-[#EB3C3C] rounded-full mb-6"></div>
-    <p class="text-lg md:text-xl font-medium text-[#7A1F1F] mb-8 max-w-2xl text-center">
-      Stay updated with the latest news, announcements, and insights about LGU projects and the Build Watch system.
-    </p>
-    <div class="w-full max-w-6xl flex flex-col gap-8">
-      <!-- Search Bar -->
-      <div class="flex flex-col sm:flex-row gap-4 items-center mb-2">
-        <div class="relative w-full sm:w-96">
-          <span class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[#EB3C3C]"></span>
-          <input type="text" placeholder="Search news or articles..." class="w-full pl-12 pr-4 py-3 rounded-lg border border-[#EB3C3C] bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" />
-        </div>
-        <button class="px-6 py-3 bg-[#FE5353] text-white font-bold rounded-lg shadow hover:bg-[#EB3C3C] transition">Search</button>
+  <main class="flex flex-col items-center w-full px-4 pt-32 pb-20 bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen relative overflow-hidden">
+    <!-- Enhanced Background Elements -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-20 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl animate-pulse"></div>
+      <div class="absolute top-40 right-20 w-24 h-24 bg-purple-200/20 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+      <div class="absolute bottom-32 left-1/3 w-40 h-40 bg-indigo-200/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Enhanced Hero Section -->
+    <div class="relative z-10 text-center mb-16 mt-8">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 font-semibold rounded-full mb-6 text-sm animate-fade-in-up">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5zM15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+        </svg>
+        News & Articles
       </div>
-      <!-- Featured Article -->
-      <article class="bg-white/80 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-        <div class="md:flex">
-          <div class="md:w-1/3 bg-gray-200 flex items-center justify-center text-6xl text-[#EB3C3C]">
-            <span class="fa fa-star"></span>
-          </div>
-          <div class="md:w-2/3 p-8">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="px-3 py-1 bg-[#EB3C3C] text-white text-xs font-bold rounded-full flex items-center gap-1"><span class="fa fa-bolt"></span> Featured</span>
-              <span class="text-[#7A1F1F] text-sm">December 15, 2024</span>
+      
+      <h1 class="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 leading-tight mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        News & Articles
+      </h1>
+      
+      <p class="text-xl text-blue-600 max-w-4xl mx-auto leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s;">
+        Stay updated with the latest news, announcements, and insights about LGU projects and the Build Watch system
+      </p>
+    </div>
+    
+    <!-- Enhanced Content Grid -->
+    <div class="relative z-10 w-full max-w-7xl">
+      <!-- Enhanced Search & Filter Section -->
+      <div class="bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-blue-100/50 hover:shadow-3xl transition-all duration-500 mb-12 animate-fade-in-up" style="animation-delay: 0.3s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl"></div>
+        <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-lg"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
             </div>
-            <h2 class="text-2xl font-bold text-[#7A1F1F] mb-3 group-hover:text-[#EB3C3C] transition">Build Watch System Launches in Santa Cruz, Laguna</h2>
-            <p class="text-[#7A1F1F] mb-4">
-              The Municipality of Santa Cruz, Laguna officially launches the Build Watch system, a comprehensive project monitoring and evaluation platform designed to enhance transparency and accountability in local governance...
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
+            <div>
+              <h2 class="text-blue-700 font-black text-2xl">Search Articles</h2>
+              <p class="text-blue-600/70 text-sm font-medium">Find news and updates quickly</p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col md:flex-row gap-6 items-end">
+            <div class="flex-1">
+              <label class="block text-blue-800 font-bold mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Search Term
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <input 
+                  type="text" 
+                  id="searchInput"
+                  placeholder="Search for news, articles, or announcements..." 
+                  class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl" 
+                />
+              </div>
+            </div>
+            
+            <button 
+              id="searchBtn"
+              class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center gap-3 overflow-hidden"
+            >
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span>Search</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enhanced Search Results Counter -->
+      <div id="searchResults" class="text-center mb-8 animate-fade-in-up" style="animation-delay: 0.4s;">
+        <div class="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full border border-blue-200/50 shadow-lg">
+          <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <span class="text-blue-800 font-bold"><span id="resultsCount">6</span> articles found</span>
+        </div>
+      </div>
+
+      <!-- Enhanced Featured Article -->
+      <article class="group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-blue-100/50 overflow-hidden hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 mb-12 relative animate-fade-in-up" style="animation-delay: 0.5s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-gradient-to-br from-indigo-400/15 to-blue-400/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-center gap-3 p-6 pb-0">
+            <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-orange-600 font-black text-lg">Featured Article</h3>
+              <p class="text-orange-500/70 text-sm font-medium">Latest highlight</p>
+            </div>
+          </div>
+          
+          <div class="lg:flex">
+            <div class="lg:w-2/5 relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                alt="Build Watch System Launch" 
+                class="w-full h-80 lg:h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+              <div class="absolute top-4 left-4">
+                <span class="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold rounded-full flex items-center gap-2 shadow-xl">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+                  </svg>
+                  Hot News
+                </span>
+              </div>
+            </div>
+            <div class="lg:w-3/5 p-8">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <span class="text-blue-800 font-semibold">December 15, 2024</span>
+                <div class="flex items-center gap-1 text-yellow-500">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                  <span class="text-sm font-medium">Featured</span>
+                </div>
+              </div>
+              
+              <h2 class="text-3xl font-black text-blue-800 mb-4 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
+                Build Watch System Launches in Santa Cruz, Laguna
+              </h2>
+              
+              <p class="text-blue-700/80 mb-6 leading-relaxed text-lg">
+                The Municipality of Santa Cruz, Laguna officially launches the Build Watch system, a comprehensive project monitoring and evaluation platform designed to enhance transparency and accountability in local governance. This innovative system will revolutionize how we track and manage infrastructure projects.
+              </p>
+              
+              <div class="flex items-center justify-between">
+                <a href="#" class="group/link inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                  <span>Read Full Article</span>
+                  <svg class="w-5 h-5 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </a>
+                
+                <div class="flex items-center gap-4 text-sm text-blue-600">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <span>1.2k views</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span>24 comments</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </article>
-      <!-- Recent Articles Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <article class="bg-white/80 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-          <div class="h-48 bg-gray-200 flex items-center justify-center text-5xl text-[#EB3C3C]">
-            <span class="fa fa-newspaper"></span>
+
+      <!-- Enhanced Recent Articles Section -->
+      <div class="mb-12">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+            </svg>
           </div>
-          <div class="p-6">
-            <span class="text-[#7A1F1F] text-sm">December 10, 2024</span>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2 group-hover:text-[#EB3C3C] transition">New Health Center Project Begins Construction</h3>
-            <p class="text-[#7A1F1F] text-sm mb-4">
-              Construction of the Santa Cruz Barangay Health Center officially begins, marking a significant milestone in local healthcare infrastructure development.
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold text-sm hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
+          <div>
+            <h2 class="text-emerald-700 font-black text-3xl">Recent Articles</h2>
+            <p class="text-emerald-600/70 text-sm font-medium">Latest news and updates from Santa Cruz LGU</p>
           </div>
-        </article>
-        <!-- Repeat for other articles, each with icon and hover polish -->
-        <article class="bg-white/80 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-          <div class="h-48 bg-gray-200 flex items-center justify-center text-5xl text-[#EB3C3C]">
-            <span class="fa fa-newspaper"></span>
-          </div>
-          <div class="p-6">
-            <span class="text-[#7A1F1F] text-sm">December 5, 2024</span>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2 group-hover:text-[#EB3C3C] transition">4Ps Program Updates Available Online</h3>
-            <p class="text-[#7A1F1F] text-sm mb-4">
-              The Pantawid Pamilyang Pilipino Program (4Ps) updates are now accessible through the Build Watch platform for enhanced monitoring and transparency.
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold text-sm hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
-          </div>
-        </article>
-        <article class="bg-white/80 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-          <div class="h-48 bg-gray-200 flex items-center justify-center text-5xl text-[#EB3C3C]">
-            <span class="fa fa-newspaper"></span>
-          </div>
-          <div class="p-6">
-            <span class="text-[#7A1F1F] text-sm">November 30, 2024</span>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2 group-hover:text-[#EB3C3C] transition">Training Session for Project Monitors</h3>
-            <p class="text-[#7A1F1F] text-sm mb-4">
-              Comprehensive training sessions conducted for project monitoring teams to ensure effective utilization of the Build Watch system.
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold text-sm hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
-          </div>
-        </article>
-        <article class="bg-white/80 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-          <div class="h-48 bg-gray-200 flex items-center justify-center text-5xl text-[#EB3C3C]">
-            <span class="fa fa-newspaper"></span>
-          </div>
-          <div class="p-6">
-            <span class="text-[#7A1F1F] text-sm">November 25, 2024</span>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2 group-hover:text-[#EB3C3C] transition">Road Rehabilitation Project Completed</h3>
-            <p class="text-[#7A1F1F] text-sm mb-4">
-              The major road rehabilitation project in Barangay Pagsawitan has been successfully completed, improving local transportation infrastructure.
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold text-sm hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
-          </div>
-        </article>
-        <article class="bg-white/80 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-          <div class="h-48 bg-gray-200 flex items-center justify-center text-5xl text-[#EB3C3C]">
-            <span class="fa fa-newspaper"></span>
-          </div>
-          <div class="p-6">
-            <span class="text-[#7A1F1F] text-sm">November 20, 2024</span>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2 group-hover:text-[#EB3C3C] transition">Community Feedback Integration</h3>
-            <p class="text-[#7A1F1F] text-sm mb-4">
-              Build Watch now includes community feedback features, allowing residents to provide input on ongoing projects and initiatives.
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold text-sm hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
-          </div>
-        </article>
-        <article class="bg-white/80 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
-          <div class="h-48 bg-gray-200 flex items-center justify-center text-5xl text-[#EB3C3C]">
-            <span class="fa fa-newspaper"></span>
-          </div>
-          <div class="p-6">
-            <span class="text-[#7A1F1F] text-sm">November 15, 2024</span>
-            <h3 class="text-lg font-bold text-[#7A1F1F] mb-2 group-hover:text-[#EB3C3C] transition">Annual Project Review Meeting</h3>
-            <p class="text-[#7A1F1F] text-sm mb-4">
-              The annual project review meeting highlights successful implementations and identifies areas for improvement in the coming year.
-            </p>
-            <a href="#" class="text-[#EB3C3C] font-bold text-sm hover:underline group-hover:text-[#FE5353] transition">Read More →</a>
-          </div>
-        </article>
+        </div>
+        
+        <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Article 1 - Enhanced Health Center -->
+          <article class="group bg-gradient-to-br from-white/95 to-emerald-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-emerald-100/50 overflow-hidden hover:shadow-2xl hover:border-emerald-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.6s;">
+            <!-- Decorative Elements -->
+            <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+            
+            <div class="h-56 relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                alt="Health Center Construction" 
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+              <div class="absolute top-4 left-4">
+                <span class="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                  </svg>
+                  Healthcare
+                </span>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <span class="text-emerald-800 text-sm font-semibold">December 10, 2024</span>
+              </div>
+              
+              <h3 class="text-xl font-black text-emerald-800 mb-3 group-hover:text-emerald-600 transition-colors duration-300 leading-tight">
+                New Health Center Project Begins Construction
+              </h3>
+              
+              <p class="text-emerald-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
+                Construction of the Santa Cruz Barangay Health Center officially begins, marking a significant milestone in local healthcare infrastructure development.
+              </p>
+              
+              <div class="flex items-center justify-between">
+                <a href="#" class="group/link inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:text-emerald-700 transition-colors duration-300">
+                  <span>Read More</span>
+                  <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </a>
+                <div class="flex items-center gap-1 text-xs text-emerald-600/70">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <span>342 views</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Article 2 - Enhanced 4Ps Program -->
+          <article class="group bg-gradient-to-br from-white/95 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-purple-100/50 overflow-hidden hover:shadow-2xl hover:border-purple-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.7s;">
+            <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+            
+            <div class="h-56 relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                alt="4Ps Program Updates" 
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+              <div class="absolute top-4 left-4">
+                <span class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Program
+                </span>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <span class="text-purple-800 text-sm font-semibold">December 5, 2024</span>
+              </div>
+              
+              <h3 class="text-xl font-black text-purple-800 mb-3 group-hover:text-purple-600 transition-colors duration-300 leading-tight">
+                4Ps Program Updates Available Online
+              </h3>
+              
+              <p class="text-purple-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
+                The Pantawid Pamilyang Pilipino Program (4Ps) updates are now accessible through the Build Watch platform for enhanced monitoring and transparency.
+              </p>
+              
+              <div class="flex items-center justify-between">
+                <a href="#" class="group/link inline-flex items-center gap-2 text-purple-600 font-bold text-sm hover:text-purple-700 transition-colors duration-300">
+                  <span>Read More</span>
+                  <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </a>
+                <div class="flex items-center gap-1 text-xs text-purple-600/70">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <span>278 views</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Article 3 - Enhanced Training Session -->
+          <article class="group bg-gradient-to-br from-white/95 to-indigo-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-indigo-100/50 overflow-hidden hover:shadow-2xl hover:border-indigo-200/60 transition-all duration-500 relative animate-fade-in-up" style="animation-delay: 0.8s;">
+            <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+            
+            <div class="h-56 relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                alt="Training Session" 
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+              <div class="absolute top-4 left-4">
+                <span class="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                  </svg>
+                  Training
+                </span>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <span class="text-indigo-800 text-sm font-semibold">November 30, 2024</span>
+              </div>
+              
+              <h3 class="text-xl font-black text-indigo-800 mb-3 group-hover:text-indigo-600 transition-colors duration-300 leading-tight">
+                Training Session for Project Monitors
+              </h3>
+              
+              <p class="text-indigo-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
+                Comprehensive training sessions conducted for project monitoring teams to ensure effective utilization of the Build Watch system.
+              </p>
+              
+              <div class="flex items-center justify-between">
+                <a href="#" class="group/link inline-flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-700 transition-colors duration-300">
+                  <span>Read More</span>
+                  <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </a>
+                <div class="flex items-center gap-1 text-xs text-indigo-600/70">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <span>195 views</span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
-      <!-- Newsletter Signup -->
-      <div class="bg-[#EB3C3C]/10 rounded-2xl p-8 text-center mt-8">
-        <h2 class="text-2xl font-bold text-[#7A1F1F] mb-4 flex items-center justify-center gap-2"><span class="fa fa-envelope text-[#EB3C3C]"></span> Stay Updated</h2>
-        <p class="text-[#7A1F1F] mb-6">Subscribe to our newsletter for the latest news and updates about LGU projects and the Build Watch system.</p>
-        <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-          <input type="email" placeholder="Enter your email" class="flex-1 px-4 py-3 border border-[#EB3C3C] rounded-lg bg-white text-[#7A1F1F] focus:ring-2 focus:ring-[#FE5353] focus:border-[#FE5353] transition" />
-          <button class="px-6 py-3 bg-[#EB3C3C] text-white font-bold rounded-lg shadow hover:bg-[#d32f2f] transition">Subscribe</button>
+
+      <!-- Enhanced Newsletter Section -->
+      <div class="group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-blue-100/50 hover:shadow-3xl hover:border-blue-200/60 transition-all duration-500 mt-16 relative animate-fade-in-up" style="animation-delay: 0.9s;">
+        <!-- Decorative Elements -->
+        <div class="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-purple-400/15 to-blue-400/15 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="relative z-10 text-center">
+          <div class="flex items-center justify-center gap-4 mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <h2 class="text-blue-700 font-black text-3xl">Stay Updated</h2>
+              <p class="text-blue-600/70 text-sm font-medium">Never miss important news</p>
+            </div>
+          </div>
+          
+          <p class="text-blue-700/80 mb-8 text-lg leading-relaxed max-w-2xl mx-auto">
+            Subscribe to our newsletter for the latest news, announcements, and insights about LGU projects and the Build Watch system. Get updates delivered directly to your inbox.
+          </p>
+          
+          <div class="flex flex-col md:flex-row gap-4 max-w-lg mx-auto">
+            <div class="flex-1 relative group/input">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-2xl blur opacity-0 group-hover/input:opacity-100 transition-opacity duration-300"></div>
+              <input 
+                type="email" 
+                placeholder="Enter your email address..." 
+                class="relative w-full px-5 py-4 border-2 border-blue-200/50 rounded-2xl bg-white/80 backdrop-blur-sm text-blue-900 placeholder-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:border-blue-400 hover:bg-white shadow-lg focus:shadow-xl" 
+              />
+            </div>
+            
+            <button class="group/btn relative px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white font-black rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 flex items-center justify-center gap-3 overflow-hidden">
+              <!-- Button Background Animation -->
+              <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 blur-xl opacity-0 group-hover/btn:opacity-30 transition-opacity duration-500"></div>
+              
+              <!-- Button Content -->
+              <div class="relative flex items-center gap-3">
+                <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                <span>Subscribe Now</span>
+              </div>
+            </button>
+          </div>
+          
+          <div class="flex items-center justify-center gap-8 mt-8 text-sm text-blue-600/70">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>No spam</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>Weekly updates</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>Unsubscribe anytime</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </main>
   <LGUFooter />
+
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% { 
+        transform: translateY(-10px) rotate(2deg);
+      }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { 
+        opacity: 0.5;
+        transform: scale(1);
+      }
+      50% { 
+        opacity: 0.8;
+        transform: scale(1.05);
+      }
+    }
+    
+    @keyframes gradient-shift {
+      0%, 100% { 
+        background-position: 0% 50%;
+      }
+      50% { 
+        background-position: 100% 50%;
+      }
+    }
+    
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .animate-pulse-glow {
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+    
+    .animate-gradient {
+      animation: gradient-shift 8s ease-in-out infinite;
+      background-size: 200% 200%;
+    }
+    
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    /* Enhanced glass morphism effects */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    /* Enhanced hover effects */
+    .hover-lift {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .hover-lift:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+
+  <script>
+    // Mock news data
+    const newsData = [
+      {
+        id: 1,
+        title: "Build Watch System Launches in Santa Cruz, Laguna",
+        description: "The Municipality of Santa Cruz, Laguna officially launches the Build Watch system, a comprehensive project monitoring and evaluation platform designed to enhance transparency and accountability in local governance. This innovative system will revolutionize how we track and manage infrastructure projects.",
+        date: "December 15, 2024",
+        image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: true,
+        tags: ["launch", "system", "build watch", "santa cruz", "laguna"]
+      },
+      {
+        id: 2,
+        title: "New Health Center Project Begins Construction",
+        description: "Construction of the Santa Cruz Barangay Health Center officially begins, marking a significant milestone in local healthcare infrastructure development.",
+        date: "December 10, 2024",
+        image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: false,
+        tags: ["health center", "construction", "healthcare", "infrastructure"]
+      },
+      {
+        id: 3,
+        title: "4Ps Program Updates Available Online",
+        description: "The Pantawid Pamilyang Pilipino Program (4Ps) updates are now accessible through the Build Watch platform for enhanced monitoring and transparency.",
+        date: "December 5, 2024",
+        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: false,
+        tags: ["4ps", "program", "online", "monitoring", "transparency"]
+      },
+      {
+        id: 4,
+        title: "Training Session for Project Monitors",
+        description: "Comprehensive training sessions conducted for project monitoring teams to ensure effective utilization of the Build Watch system.",
+        date: "November 30, 2024",
+        image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: false,
+        tags: ["training", "monitors", "project", "build watch"]
+      },
+      {
+        id: 5,
+        title: "Road Rehabilitation Project Completed",
+        description: "The major road rehabilitation project in Barangay Pagsawitan has been successfully completed, improving local transportation infrastructure.",
+        date: "November 25, 2024",
+        image: "https://images.unsplash.com/photo-1545454675-3531b543be5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: false,
+        tags: ["road", "rehabilitation", "completed", "infrastructure", "pagsawitan"]
+      },
+      {
+        id: 6,
+        title: "Community Feedback Integration",
+        description: "Build Watch now includes community feedback features, allowing residents to provide input on ongoing projects and initiatives.",
+        date: "November 20, 2024",
+        image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: false,
+        tags: ["community", "feedback", "integration", "residents", "projects"]
+      },
+      {
+        id: 7,
+        title: "Annual Project Review Meeting",
+        description: "The annual project review meeting highlights successful implementations and identifies areas for improvement in the coming year.",
+        date: "November 15, 2024",
+        image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+        featured: false,
+        tags: ["annual", "review", "meeting", "projects", "implementation"]
+      }
+    ];
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const articlesGrid = document.getElementById('articlesGrid');
+    const resultsCount = document.getElementById('resultsCount');
+    const searchResults = document.getElementById('searchResults');
+
+    function performSearch() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      
+      if (searchTerm === '') {
+        // Show all articles
+        showAllArticles();
+        return;
+      }
+
+      const filteredArticles = newsData.filter(article => {
+        const searchableText = `${article.title} ${article.description} ${article.tags.join(' ')}`.toLowerCase();
+        return searchableText.includes(searchTerm);
+      });
+
+      displaySearchResults(filteredArticles);
+    }
+
+    function showAllArticles() {
+      // Show all articles except featured (which is always visible)
+      const regularArticles = newsData.filter(article => !article.featured);
+      displaySearchResults(regularArticles);
+    }
+
+    function displaySearchResults(articles) {
+      resultsCount.textContent = articles.length;
+      
+      if (articles.length === 0) {
+        articlesGrid.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <div class="text-6xl text-gray-300 mb-4">
+              <span class="fa fa-search"></span>
+            </div>
+            <h3 class="text-xl font-bold text-blue-800 mb-2">No articles found</h3>
+            <p class="text-blue-800">Try adjusting your search terms or browse all articles.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Clear current articles (except featured)
+      const articlesToRemove = articlesGrid.querySelectorAll('article:not(:first-child)');
+      articlesToRemove.forEach(article => article.remove());
+
+      // Add filtered articles
+      articles.forEach(article => {
+        if (!article.featured) {
+          const articleElement = createArticleElement(article);
+          articlesGrid.appendChild(articleElement);
+        }
+      });
+    }
+
+    function createArticleElement(article) {
+      const articleDiv = document.createElement('article');
+      const colors = ['emerald', 'purple', 'indigo', 'teal', 'rose'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      articleDiv.className = `group bg-gradient-to-br from-white/95 to-${color}-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-${color}-100/50 overflow-hidden hover:shadow-2xl hover:border-${color}-200/60 transition-all duration-500 relative animate-fade-in-up`;
+      
+      articleDiv.innerHTML = `
+        <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-${color}-400/20 to-${color}-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div class="h-56 relative overflow-hidden">
+          <img 
+            src="${article.image}" 
+            alt="${article.title}" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          <div class="absolute top-4 left-4">
+            <span class="px-3 py-1.5 bg-gradient-to-r from-${color}-500 to-${color}-600 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Article
+            </span>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-6 h-6 bg-${color}-100 rounded-lg flex items-center justify-center">
+              <svg class="w-3 h-3 text-${color}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-${color}-800 text-sm font-semibold">${article.date}</span>
+          </div>
+          
+          <h3 class="text-xl font-black text-${color}-800 mb-3 group-hover:text-${color}-600 transition-colors duration-300 leading-tight">
+            ${article.title}
+          </h3>
+          
+          <p class="text-${color}-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
+            ${article.description}
+          </p>
+          
+          <div class="flex items-center justify-between">
+            <a href="#" class="group/link inline-flex items-center gap-2 text-${color}-600 font-bold text-sm hover:text-${color}-700 transition-colors duration-300">
+              <span>Read More</span>
+              <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </a>
+            <div class="flex items-center gap-1 text-xs text-${color}-600/70">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span>${Math.floor(Math.random() * 500) + 100} views</span>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return articleDiv;
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', performSearch);
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+
+    // Initialize
+    showAllArticles();
+  </script>
 </Layout> 

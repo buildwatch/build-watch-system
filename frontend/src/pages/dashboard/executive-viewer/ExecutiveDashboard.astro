@@ -2,8 +2,12 @@ export const prerender = false;
 ---
 import Layout from '../../../layouts/Layout.astro';
 import ExecutiveLayout from '../../../components/ExecutiveLayout.astro';
+import ProjectCard from '../../../components/ProjectCard.astro';
+import ProjectDetailsModal from '../../../components/ProjectDetailsModal.astro';
 
-// Initialize with empty data - will be populated by client-side JavaScript
+const API_URL = 'http://localhost:3000/api';
+
+// Initialize with default values
 let dashboardStats = {
   totalProjects: 0,
   ongoingProjects: 0,
@@ -18,9 +22,60 @@ let dashboardStats = {
 let recentProjects = [];
 let criticalAlerts = [];
 let departmentPerformance = [];
+let loading = true;
+let error = '';
+
+// Fetch executive dashboard data from API on server side
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    console.log('Executive Dashboard: Fetching data from API...');
+    
+    // Fetch executive dashboard data
+    const response = await fetch(`${API_URL}/executive/dashboard`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        dashboardStats = data.stats || dashboardStats;
+        recentProjects = data.recentProjects || [];
+        criticalAlerts = data.criticalAlerts || [];
+        departmentPerformance = data.departmentPerformance || [];
+        loading = false;
+        console.log('Executive Dashboard: Data loaded successfully', {
+          totalProjects: dashboardStats.totalProjects,
+          recentProjectsCount: recentProjects.length
+        });
+      } else {
+        error = data.message || 'Failed to load dashboard data';
+        loading = false;
+      }
+    } else {
+      error = `Failed to fetch dashboard data: ${response.status}`;
+      loading = false;
+    }
+  } else {
+    error = 'Authentication required';
+    loading = false;
+  }
+} catch (err) {
+  console.error('Executive Dashboard: Error fetching data:', err);
+  error = 'Failed to load dashboard data';
+  loading = false;
+}
 ---
 
 <Layout title="Executive Dashboard">
+  <style>
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
   <ExecutiveLayout>
     <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
       <!-- Header -->
@@ -142,36 +197,35 @@ let departmentPerformance = [];
 
         <!-- Recent Projects -->
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up" style="animation-delay: 0.8s;">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Projects</h3>
-          <div class="space-y-4" data-section="recentProjects">
-            {recentProjects.map((project, index) => (
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg animate-fade-in-up" style={`animation-delay: ${0.9 + index * 0.1}s`}>
-                <div class="flex-1">
-                  <h4 class="font-medium text-gray-800">{project.name}</h4>
-                  <p class="text-sm text-gray-600">{project.department} • {project.budget}</p>
-                  <div class="flex items-center gap-2 mt-2">
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                      <div class={`h-2 rounded-full ${
-                        project.status === 'completed' ? 'bg-green-500' :
-                        project.status === 'delayed' ? 'bg-red-500' :
-                        'bg-blue-500'
-                      }`} style="width: {project.progress}%"></div>
-                    </div>
-                    <span class="text-xs text-gray-500">{project.progress}%</span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    project.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    project.status === 'delayed' ? 'bg-red-100 text-red-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
-                    {project.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Projects</h3>
+            <a href="/dashboard/executive-viewer/modules/projects" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</a>
           </div>
+          
+          {loading ? (
+            <div class="flex items-center justify-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span class="ml-3 text-gray-600">Loading projects...</span>
+            </div>
+          ) : error ? (
+            <div class="text-center py-8">
+              <p class="text-red-600 mb-4">{error}</p>
+            </div>
+          ) : recentProjects.length === 0 ? (
+            <div class="text-center py-8">
+              <p class="text-gray-500">No recent projects found</p>
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" data-section="recentProjects">
+              {recentProjects.slice(0, 4).map(project => (
+                <ProjectCard 
+                  project={project}
+                  userTheme="executive"
+                  onClick="viewProjectDetails"
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -252,6 +306,9 @@ let departmentPerformance = [];
         </div>
       </div>
     </section>
+
+    <!-- Project Details Modal -->
+    <ProjectDetailsModal userTheme="executive" />
   </ExecutiveLayout>
 </Layout>
 
@@ -334,8 +391,8 @@ let departmentPerformance = [];
       // Update dashboard stats
       updateDashboardStats(stats);
       
-      // Update recent projects
-      updateRecentProjects(projects);
+      // Recent projects are now rendered server-side via ProjectCard components
+      // No JavaScript update needed
       
       // Update critical alerts
       updateCriticalAlerts(alerts);
@@ -367,36 +424,10 @@ let departmentPerformance = [];
     if (budgetProgressEl) budgetProgressEl.style.width = stats.budgetUtilization + '%';
   }
 
-  // Update recent projects
-  function updateRecentProjects(projects) {
-    const projectsContainer = document.querySelector('[data-section="recentProjects"]');
-    if (!projectsContainer) return;
-    
-    if (projects.length === 0) {
-      projectsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No recent projects found</p>';
-      return;
-    }
-    
-    projectsContainer.innerHTML = projects.map(project => `
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-        <div class="flex-1">
-          <h4 class="font-medium text-gray-800">${project.name}</h4>
-          <p class="text-sm text-gray-600">${project.department || 'Unknown'} • ${executiveService.formatBudget(project.totalBudget || 0)}</p>
-          <div class="flex items-center gap-2 mt-2">
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="h-2 rounded-full ${getStatusColor(project.status)}" style="width: ${project.progress?.overallProgress || project.overallProgress || 0}%"></div>
-            </div>
-            <span class="text-xs text-gray-500">${project.progress?.overallProgress || project.overallProgress || 0}%</span>
-          </div>
-        </div>
-        <div class="text-right">
-          <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}">
-            ${project.status}
-          </span>
-        </div>
-      </div>
-    `).join('');
-  }
+  // Recent projects are now handled by server-side rendering
+  // No need to update them via JavaScript since ProjectCard components are rendered by Astro
+
+
 
   // Update critical alerts
   function updateCriticalAlerts(alerts) {
@@ -482,6 +513,43 @@ let departmentPerformance = [];
     return 'Needs Attention';
   }
 
+  // Helper functions for ProjectCard-style design
+  function getProjectImage(initialPhoto) {
+    if (!initialPhoto || initialPhoto === 'None' || initialPhoto === '') {
+      return '/projects-page-header-bg.png';
+    }
+    return initialPhoto.startsWith('http') ? initialPhoto : `/uploads/${initialPhoto}`;
+  }
+
+  function getStatusBadgeColor(status) {
+    switch(status?.toLowerCase()) {
+      case 'completed':
+      case 'complete':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'ongoing':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'delayed':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'on hold':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+  }
+
+  function formatBudget(amount) {
+    if (!amount || isNaN(amount)) return '₱0.00';
+    const num = parseFloat(amount);
+    if (num >= 1000000) {
+      return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    } else if (num >= 1000) {
+      return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
   function showLoadingState() {
     // Add loading indicators
     const loadingElements = document.querySelectorAll('[data-loading]');
@@ -499,4 +567,27 @@ let departmentPerformance = [];
       el.classList.remove('bg-gray-200');
     });
   }
+
+  // View project details
+  async function viewProjectDetails(projectId) {
+    try {
+      // Check session validity first
+      if (!authService.redirectIfInvalidSession()) {
+        return;
+      }
+
+      // Try to show modal if available, otherwise redirect
+      if (window.showProjectModal) {
+        window.showProjectModal(projectId);
+      } else {
+        // Fallback to redirect to projects page
+        window.location.href = `/dashboard/executive-viewer/modules/projects?projectId=${projectId}`;
+      }
+    } catch (error) {
+      console.error('Error viewing project details:', error);
+    }
+  }
+
+  // Make function available globally
+  window.viewProjectDetails = viewProjectDetails;
 </script> 

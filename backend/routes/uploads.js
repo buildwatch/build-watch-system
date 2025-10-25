@@ -16,14 +16,17 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 100 * 1024 * 1024 // 100MB limit for videos and large files
   },
   fileFilter: (req, file, cb) => {
-    // Allow images and documents
+    // Allow images, videos, and documents
     if (file.mimetype.startsWith('image/') || 
+        file.mimetype.startsWith('video/') ||
         file.mimetype === 'application/pdf' ||
         file.mimetype === 'application/msword' ||
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.mimetype === 'application/vnd.ms-excel' ||
+        file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       cb(null, true);
     } else {
       cb(new Error('Invalid file type'), false);

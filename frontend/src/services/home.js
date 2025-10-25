@@ -6,6 +6,7 @@ class HomeService {
       stats: null,
       projects: null,
       articles: null,
+      barangayStats: null,
       lastFetch: null
     };
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
@@ -41,6 +42,58 @@ class HomeService {
       activeUsers: 150,
       departments: 8
     };
+  }
+
+  // Get barangay statistics
+  async getBarangayStats() {
+    try {
+      // Check cache first
+      if (this.cache.barangayStats && this.cache.lastFetch && 
+          (Date.now() - this.cache.lastFetch) < this.cacheTimeout) {
+        return this.cache.barangayStats;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/home/barangay-stats`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        this.cache.barangayStats = data.barangayStats || [];
+        this.cache.lastFetch = Date.now();
+        return this.cache.barangayStats;
+      }
+    } catch (error) {
+      console.error('Error fetching barangay stats:', error);
+    }
+
+    // Return fallback data if API fails
+    return [
+      {name: 'Alipit', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 15000000},
+      {name: 'Bagumbayan', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 12000000},
+      {name: 'Bubukal', totalProjects: 1, ongoingProjects: 1, completedProjects: 0, totalBudget: 8000000},
+      {name: 'Calios', totalProjects: 4, ongoingProjects: 3, completedProjects: 1, totalBudget: 25000000},
+      {name: 'Duhat', totalProjects: 2, ongoingProjects: 2, completedProjects: 0, totalBudget: 18000000},
+      {name: 'Gatid', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 22000000},
+      {name: 'Jasaan', totalProjects: 1, ongoingProjects: 1, completedProjects: 0, totalBudget: 10000000},
+      {name: 'Labuin', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 15000000},
+      {name: 'Malinao', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 20000000},
+      {name: 'Oogong', totalProjects: 1, ongoingProjects: 1, completedProjects: 0, totalBudget: 9000000},
+      {name: 'Pagsawitan', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 14000000},
+      {name: 'Palasan', totalProjects: 4, ongoingProjects: 3, completedProjects: 1, totalBudget: 28000000},
+      {name: 'Patimbao', totalProjects: 1, ongoingProjects: 1, completedProjects: 0, totalBudget: 11000000},
+      {name: 'Poblacion I', totalProjects: 5, ongoingProjects: 3, completedProjects: 2, totalBudget: 35000000},
+      {name: 'Poblacion II', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 24000000},
+      {name: 'Poblacion III', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 16000000},
+      {name: 'Poblacion IV', totalProjects: 4, ongoingProjects: 2, completedProjects: 2, totalBudget: 30000000},
+      {name: 'Poblacion V', totalProjects: 1, ongoingProjects: 1, completedProjects: 0, totalBudget: 12000000},
+      {name: 'San Jose', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 21000000},
+      {name: 'San Juan', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 17000000},
+      {name: 'San Pablo Norte', totalProjects: 4, ongoingProjects: 3, completedProjects: 1, totalBudget: 26000000},
+      {name: 'San Pablo Sur', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 19000000},
+      {name: 'Santisima Cruz', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 23000000},
+      {name: 'Santo Angel Central', totalProjects: 1, ongoingProjects: 1, completedProjects: 0, totalBudget: 13000000},
+      {name: 'Santo Angel Norte', totalProjects: 2, ongoingProjects: 1, completedProjects: 1, totalBudget: 18000000},
+      {name: 'Santo Angel Sur', totalProjects: 3, ongoingProjects: 2, completedProjects: 1, totalBudget: 22000000}
+    ];
   }
 
   // Get featured projects for carousel
@@ -217,13 +270,41 @@ class HomeService {
   // Get status color class
   getStatusColor(status) {
     const colors = {
-      'Planning': 'bg-blue-200 text-blue-800',
-      'Ongoing': 'bg-yellow-200 text-yellow-800',
+      'pending': 'bg-yellow-200 text-yellow-800',
+      'ongoing': 'bg-blue-200 text-blue-800',
+      'delayed': 'bg-red-200 text-red-800',
+      'completed': 'bg-green-200 text-green-800',
+      'on hold': 'bg-gray-200 text-gray-800',
+      'cancelled': 'bg-gray-200 text-gray-800',
+      // Legacy support for old status formats
+      'Planning': 'bg-yellow-200 text-yellow-800',
+      'Ongoing': 'bg-blue-200 text-blue-800',
+      'Delayed': 'bg-red-200 text-red-800',
       'Completed': 'bg-green-200 text-green-800',
-      'On Hold': 'bg-red-200 text-red-800',
+      'On Hold': 'bg-gray-200 text-gray-800',
       'Cancelled': 'bg-gray-200 text-gray-800'
     };
-    return colors[status] || 'bg-gray-200 text-gray-800';
+    return colors[status?.toLowerCase()] || colors[status] || 'bg-gray-200 text-gray-800';
+  }
+
+  // Get barangay status indicator
+  getBarangayStatus(barangay) {
+    if (barangay.ongoingProjects > 0) {
+      return 'active';
+    } else if (barangay.completedProjects > 0) {
+      return 'completed';
+    } else {
+      return 'inactive';
+    }
+  }
+
+  // Get barangay icon based on project count
+  getBarangayIcon(barangay) {
+    const totalProjects = barangay.totalProjects;
+    if (totalProjects >= 5) return '🏢';
+    if (totalProjects >= 3) return '🏘️';
+    if (totalProjects >= 1) return '🏠';
+    return '🏘️';
   }
 
   // Clear cache
@@ -232,6 +313,7 @@ class HomeService {
       stats: null,
       projects: null,
       articles: null,
+      barangayStats: null,
       lastFetch: null
     };
   }

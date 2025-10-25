@@ -2,6 +2,8 @@ export const prerender = false;
 ---
 import Layout from '../../../../layouts/Layout.astro';
 import ExecutiveLayout from '../../../../components/ExecutiveLayout.astro';
+import ProjectCard from '../../../../components/ProjectCard.astro';
+import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
 
 // Initialize with empty data - will be populated by client-side JavaScript
 let projects = [];
@@ -79,81 +81,13 @@ let searchQuery = '';
       </div>
 
       <!-- Projects Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8" id="projectsGrid">
         {projects.map(project => (
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
-            <!-- Project Header -->
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-800 mb-1">{project.name}</h3>
-                <p class="text-sm text-gray-600">{project.department} • {project.location}</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  project.status === 'completed' ? 'bg-green-100 text-green-700' :
-                  project.status === 'delayed' ? 'bg-red-100 text-red-700' :
-                  project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
-                  {project.status}
-                </span>
-                <span class={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  project.risk === 'high' ? 'bg-red-100 text-red-700' :
-                  project.risk === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                  project.risk === 'low' ? 'bg-green-100 text-green-700' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
-                  {project.risk} risk
-                </span>
-              </div>
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="mb-4">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700">Progress</span>
-                <span class="text-sm text-gray-600">{project.progress}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class={`h-2 rounded-full transition-all duration-300 ${
-                  project.status === 'completed' ? 'bg-green-500' :
-                  project.status === 'delayed' ? 'bg-red-500' :
-                  project.status === 'ongoing' ? 'bg-blue-500' :
-                  'bg-gray-400'
-                }`} style="width: {project.progress}%"></div>
-              </div>
-            </div>
-
-            <!-- Budget Information -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p class="text-xs text-gray-500">Total Budget</p>
-                <p class="text-sm font-semibold text-gray-800">{project.budget}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500">Utilized</p>
-                <p class="text-sm font-semibold text-gray-800">{project.utilized}</p>
-              </div>
-            </div>
-
-            <!-- Timeline -->
-            <div class="mb-4">
-              <p class="text-xs text-gray-500 mb-1">Timeline</p>
-              <p class="text-sm text-gray-700">{project.timeline}</p>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex gap-2">
-              <button class="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all">
-                View Details
-              </button>
-              <button class="px-3 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
+          <ProjectCard 
+            project={project}
+            userTheme="executive"
+            onClick="viewProjectDetails"
+          />
         ))}
       </div>
 
@@ -180,6 +114,9 @@ let searchQuery = '';
         </div>
       </div>
     </section>
+
+    <!-- Project Details Modal -->
+    <ProjectDetailsModal userTheme="executive" />
   </ExecutiveLayout>
 </Layout>
 
@@ -206,71 +143,137 @@ let searchQuery = '';
     }
   }
 
+  // Helper functions for consistent formatting
+  function formatBudget(amount) {
+    if (!amount || isNaN(amount)) return '₱0.00';
+    const numAmount = parseFloat(amount);
+    return '₱' + numAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function getProjectImage(initialPhoto) {
+    if (!initialPhoto || initialPhoto === 'None' || initialPhoto === '') {
+      return '/projects-page-header-bg.png';
+    }
+    return initialPhoto.startsWith('http') ? initialPhoto : `/uploads/${initialPhoto}`;
+  }
+
+  function getStatusColor(status) {
+    switch (status?.toLowerCase()) {
+      case 'completed': case 'complete': return 'bg-green-500';
+      case 'ongoing': case 'active': return 'bg-blue-500';
+      case 'delayed': case 'overdue': return 'bg-red-500';
+      case 'pending': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  }
+
   function updateProjectsDisplay(projects) {
-    const projectsGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2');
+    const projectsGrid = document.querySelector('#projectsGrid');
     if (!projectsGrid) return;
 
     if (projects.length === 0) {
-      projectsGrid.innerHTML = '<div class="col-span-2 text-center py-8"><p class="text-gray-500">No projects found</p></div>';
+      projectsGrid.innerHTML = '<div class="col-span-3 text-center py-8"><p class="text-gray-500">No projects found</p></div>';
       return;
     }
 
     projectsGrid.innerHTML = projects.map(project => `
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
-        <!-- Project Header -->
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex-1">
-            <h3 class="text-lg font-semibold text-gray-800 mb-1">${project.name}</h3>
-            <p class="text-sm text-gray-600">${project.department || 'Unknown'} • ${project.location || 'Unknown'}</p>
+      <div class="group bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:border-blue-400 hover:shadow-blue-100 hover:shadow-xl cursor-pointer transform hover:scale-[1.02]"
+           onclick="viewProjectDetails('${project.id}')">
+        
+        <!-- Project Image -->
+        <div class="relative h-48 overflow-hidden">
+          <img 
+            src="${getProjectImage(project.initialPhoto)}" 
+            alt="${project.name || 'Project'}"
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onerror="this.src='/projects-page-header-bg.png'"
+          />
+          
+          <!-- Status and Priority Badges -->
+          <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
+            <div class="flex flex-col gap-2">
+              <span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                ${(project.status || 'Unknown').charAt(0).toUpperCase() + (project.status || 'Unknown').slice(1)}
+              </span>
+              ${project.category ? `<span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">🏗️ ${(project.category || '').charAt(0).toUpperCase() + (project.category || '').slice(1)}</span>` : ''}
+            </div>
+            ${project.priority ? `<span class="px-2 py-1 rounded-full text-xs font-semibold ${project.priority === 'high' ? 'bg-red-100 text-red-700' : project.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}">⚡ ${(project.priority || '').charAt(0).toUpperCase() + (project.priority || '').slice(1)}</span>` : ''}
           </div>
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}">
-              ${project.status}
-            </span>
-            <span class="px-2 py-1 rounded-full text-xs font-semibold ${getRiskColor(project.risk || 'low')}">
-              ${project.risk || 'low'} risk
-            </span>
+
+          <!-- Progress Overlay -->
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+            <div class="flex items-center justify-between text-white text-sm">
+              <span class="font-medium">Overall Progress</span>
+              <span class="font-bold">${(isNaN(parseFloat(project.overallProgress)) ? 0 : parseFloat(project.overallProgress || 0)).toFixed(1)}%</span>
+            </div>
+            <div class="w-full bg-white/20 rounded-full h-2 mt-1">
+              <div class="h-2 rounded-full bg-white transition-all duration-500" style="width: ${isNaN(parseFloat(project.overallProgress)) ? 0 : parseFloat(project.overallProgress || 0)}%"></div>
+            </div>
           </div>
         </div>
 
-        <!-- Progress Bar -->
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700">Progress</span>
-            <span class="text-sm text-gray-600">${project.progress?.overallProgress || project.overallProgress || 0}%</span>
+        <!-- Project Details -->
+        <div class="p-6">
+          <!-- Title and Code -->
+          <div class="mb-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-2">${project.name || 'Untitled Project'}</h3>
+            <p class="text-sm font-medium text-blue-600">${project.projectCode || 'No Code'}</p>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="h-2 rounded-full transition-all duration-300 ${getStatusColor(project.status)}" style="width: ${project.progress?.overallProgress || project.overallProgress || 0}%"></div>
-          </div>
-        </div>
 
-        <!-- Budget Information -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p class="text-xs text-gray-500">Total Budget</p>
-            <p class="text-sm font-semibold text-gray-800">${executiveService.formatBudget(project.totalBudget || 0)}</p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500">Utilized</p>
-            <p class="text-sm font-semibold text-gray-800">${executiveService.formatBudget(project.utilizedBudget || 0)}</p>
-          </div>
-        </div>
+          <!-- Description -->
+          ${project.description ? `<div class="mb-4"><p class="text-sm text-gray-600 line-clamp-2">${project.description}</p></div>` : ''}
 
-        <!-- Timeline -->
-        <div class="mb-4">
-          <p class="text-xs text-gray-500 mb-1">Timeline</p>
-          <p class="text-sm text-gray-700">${formatTimeline(project.startDate, project.endDate)}</p>
-        </div>
+          <!-- Location and Office -->
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center text-sm text-gray-600">
+              <span class="w-4 h-4 mr-2">📍</span>
+              <span class="truncate">${project.location || 'Location not specified'}</span>
+            </div>
+            <div class="flex items-center text-sm text-gray-600">
+              <span class="w-4 h-4 mr-2">🏢</span>
+              <span class="truncate">${project.implementingOfficeName || 'Office not specified'}</span>
+            </div>
+          </div>
 
-        <!-- Actions -->
-        <div class="flex gap-2">
-          <button class="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all">
+          <!-- Additional Information -->
+          <div class="grid grid-cols-2 gap-3 mb-4 text-xs text-gray-600">
+            ${project.latitude && project.longitude ? `<div><span class="font-medium">📍 Coordinates:</span><br>${project.latitude}, ${project.longitude}</div>` : ''}
+            <div><span class="font-medium">💰 Budget:</span><br>${formatBudget(project.totalBudget)}</div>
+            <div><span class="font-medium">📅 Start:</span><br>${project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}</div>
+            <div><span class="font-medium">🎯 End:</span><br>${project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}</div>
+          </div>
+
+          <!-- Progress Breakdown -->
+          <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="text-center">
+              <div class="text-xs text-gray-500 mb-1">Timeline</div>
+              <div class="text-sm font-semibold text-blue-600">${(isNaN(parseFloat(project.timelineProgress)) ? 0 : parseFloat(project.timelineProgress || 0)).toFixed(1)}%</div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+                <div class="h-1 rounded-full ${getStatusColor('ongoing')} transition-all duration-300" style="width: ${isNaN(parseFloat(project.timelineProgress)) ? 0 : parseFloat(project.timelineProgress || 0)}%"></div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-xs text-gray-500 mb-1">Budget</div>
+              <div class="text-sm font-semibold text-green-600">${(isNaN(parseFloat(project.budgetProgress)) ? 0 : parseFloat(project.budgetProgress || 0)).toFixed(1)}%</div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+                <div class="h-1 rounded-full bg-green-500 transition-all duration-300" style="width: ${isNaN(parseFloat(project.budgetProgress)) ? 0 : parseFloat(project.budgetProgress || 0)}%"></div>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-xs text-gray-500 mb-1">Physical</div>
+              <div class="text-sm font-semibold text-purple-600">${(isNaN(parseFloat(project.physicalProgress)) ? 0 : parseFloat(project.physicalProgress || 0)).toFixed(1)}%</div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+                <div class="h-1 rounded-full bg-purple-500 transition-all duration-300" style="width: ${isNaN(parseFloat(project.physicalProgress)) ? 0 : parseFloat(project.physicalProgress || 0)}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- View Details Button -->
+          <button 
+            class="w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 bg-blue-50 text-blue-600 hover:bg-blue-100"
+            onclick="event.stopPropagation(); viewProjectDetails('${project.id}');"
+          >
             View Details
-          </button>
-          <button class="px-3 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
           </button>
         </div>
       </div>
@@ -346,14 +349,7 @@ let searchQuery = '';
     });
   }
 
-  function getStatusColor(status) {
-    switch (status?.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'delayed': return 'bg-red-100 text-red-700';
-      case 'ongoing': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  }
+
 
   function getRiskColor(risk) {
     switch (risk?.toLowerCase()) {
@@ -372,9 +368,32 @@ let searchQuery = '';
   }
 
   function showErrorMessage(message) {
-    const projectsGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2');
+    const projectsGrid = document.querySelector('#projectsGrid');
     if (projectsGrid) {
-      projectsGrid.innerHTML = `<div class="col-span-2 text-center py-8"><p class="text-red-500">${message}</p></div>`;
+      projectsGrid.innerHTML = `<div class="col-span-3 text-center py-8"><p class="text-red-500">${message}</p></div>`;
     }
   }
+
+  // View project details
+  async function viewProjectDetails(projectId) {
+    try {
+      // Check session validity first
+      if (!authService.redirectIfInvalidSession()) {
+        return;
+      }
+
+      // Try to show modal if available, otherwise redirect
+      if (window.showProjectModal) {
+        window.showProjectModal(projectId);
+      } else {
+        // Fallback - could implement a basic redirect or alert
+        console.log('Modal not available for project:', projectId);
+      }
+    } catch (error) {
+      console.error('Error viewing project details:', error);
+    }
+  }
+
+  // Make function available globally
+  window.viewProjectDetails = viewProjectDetails;
 </script> 

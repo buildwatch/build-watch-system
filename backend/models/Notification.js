@@ -79,6 +79,21 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('Active', 'Archived', 'Deleted'),
       defaultValue: 'Active',
       allowNull: false
+    },
+    profilePic: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      comment: 'Profile picture URL for the user involved in the notification'
+    },
+    module: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Module/feature the notification is related to (e.g., user-management)'
+    },
+    targetId: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Target identifier for highlighting specific items (e.g., User ID for user management)'
     }
   }, {
     tableName: 'notifications',

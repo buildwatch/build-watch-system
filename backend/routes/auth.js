@@ -188,6 +188,13 @@ router.post('/login', async (req, res) => {
 // Logout endpoint
 router.post('/logout', authenticateToken, async (req, res) => {
   try {
+    // Import activity tracking functions
+    const { updateUserActivity, userActivityTracker } = require('../middleware/auth');
+    
+    // Mark user as inactive immediately on logout
+    const userId = req.user.id;
+    userActivityTracker.delete(userId); // Remove from activity tracker
+    
     // Log logout activity
     await ActivityLog.create({
       userId: req.user.id,
@@ -501,6 +508,77 @@ router.get('/profile/:userId', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('EIU account validation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Password verification endpoint for UUID reveal
+router.post('/verify-password', authenticateToken, async (req, res) => {
+  try {
+    const { password, targetUserId } = req.body;
+    const adminUserId = req.user.id; // The admin requesting the reveal
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password is required'
+      });
+    }
+
+    if (!targetUserId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Target user ID is required'
+      });
+    }
+
+    // Get the target user whose UUID is being revealed
+    const targetUser = await User.findByPk(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'Target user not found'
+      });
+    }
+
+    // Verify the target user's password (not the admin's password)
+    const isPasswordValid = await bcrypt.compare(password, targetUser.password);
+    
+    if (!isPasswordValid) {
+      // Log failed password verification attempt
+      await ActivityLog.create({
+        userId: adminUserId,
+        action: 'UUID_REVEAL_FAILED',
+        details: `Failed password verification for UUID reveal of user ${targetUserId}`,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent')
+      });
+
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid password for the target user'
+      });
+    }
+
+    // Log successful password verification
+    await ActivityLog.create({
+      userId: adminUserId,
+      action: 'UUID_REVEAL_SUCCESS',
+      details: `Successful password verification for UUID reveal of user ${targetUserId}`,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent')
+    });
+
+    res.json({
+      success: true,
+      message: 'Password verified successfully'
+    });
+
+  } catch (error) {
+    console.error('Password verification error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
