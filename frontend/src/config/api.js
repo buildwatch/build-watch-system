@@ -1,11 +1,11 @@
 // API Configuration
 // Update this URL to point to your VPS backend
-export const API_BASE_URL = 'http://148.230.96.155:3000/api';
+export const API_BASE_URL = 'https://build-watch.com:3000/api';
 
 // Alternative configurations
 export const API_CONFIG = {
   development: 'http://localhost:3000/api',
-  production: 'http://148.230.96.155:3000/api',
+  production: 'https://build-watch.com:3000/api',
   // Add your domain here when you have one
   // domain: 'https://yourdomain.com/api'
 };
