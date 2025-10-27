@@ -53,8 +53,10 @@ app.use(cors({
   origin: [
     'http://localhost:4321', // Astro dev default
     'http://localhost:4322', // Astro fallback port
-    'https://build-watch.com', // Production frontend
+    'https://build-watch.com', // Production frontend (HTTPS)
     'http://build-watch.com', // Production frontend (HTTP)
+    'https://www.build-watch.com', // Production frontend with www (HTTPS)
+    'http://www.build-watch.com', // Production frontend with www (HTTP)
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],

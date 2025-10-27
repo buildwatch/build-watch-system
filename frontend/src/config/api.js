@@ -1,13 +1,14 @@
 // API Configuration
-// Update this URL to point to your VPS backend
-export const API_BASE_URL = 'https://build-watch.com:3000/api';
+// For production, we need to use the correct protocol
+export const API_BASE_URL = typeof window !== 'undefined' && (window.location.hostname === 'build-watch.com' || window.location.hostname === 'www.build-watch.com')
+  ? 'http://build-watch.com:3000/api'  // Use HTTP since backend doesn't have SSL on port 3000
+  : 'http://localhost:3000/api';
 
 // Alternative configurations
 export const API_CONFIG = {
   development: 'http://localhost:3000/api',
-  production: 'https://build-watch.com:3000/api',
-  // Add your domain here when you have one
-  // domain: 'https://yourdomain.com/api'
+  production: 'http://build-watch.com:3000/api',  // Use HTTP, not HTTPS
+  // Note: In the future, set up Nginx reverse proxy to handle HTTPS
 };
 
 // Get the appropriate API URL based on environment
