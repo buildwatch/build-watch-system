@@ -3,7 +3,12 @@ export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
 import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
 
-const API_URL = 'http://localhost:3000/api/users';
+// Determine API URL based on environment
+const isProduction = import.meta.env.PROD;
+const isLocalhost = Astro.url.hostname === 'localhost' || Astro.url.hostname === '127.0.0.1' || !isProduction;
+const API_URL = isLocalhost 
+  ? 'http://localhost:3000/api/users' 
+  : 'http://build-watch.com:3000/api/users';
 const page = Astro.url.searchParams.get('page') || 1;
 const search = Astro.url.searchParams.get('search') || '';
 const sortBy = Astro.url.searchParams.get('sortBy') || 'createdAt';
