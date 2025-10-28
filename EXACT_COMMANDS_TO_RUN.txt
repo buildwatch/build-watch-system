@@ -1,0 +1,22 @@
+# EXACT COMMANDS TO COPY AND RUN ON YOUR SERVER
+# Run each command and wait for completion before running the next one
+
+cd /root
+
+# 1. Restore the original file
+cp buildwatch_lgu_FRESH_export.sql.backup buildwatch_lgu_FRESH_export.sql
+
+# 2. Remove all lines with FOREIGN KEY
+awk '!/FOREIGN KEY/' buildwatch_lgu_FRESH_export.sql > clean.sql
+
+# 3. Fix trailing commas (this is the tricky part)
+# We need to join lines temporarily to fix comma before closing paren
+# First, join lines that are separated by newline
+# Then fix commas before ), remove the joins
+perl -0777 -pi -e 's/,\n\s*\)(\s*ENGINE)/\n)$1/g' clean.sql
+
+# 4. Import
+mysql -u root -p buildwatch_lgu < clean.sql
+
+# DONE!
+

@@ -2,25 +2,27 @@
 import Layout from "../../layouts/Layout.astro";
 ---
 <Layout title="Build Watch Portal | Login">
-  <div class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-800 via-blue-600 to-white font-[Montserrat]">
+  <div class="min-h-screen w-full flex items-center justify-center font-[Montserrat] relative" style="background-image: url('/about-page-bg.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <!-- Blue overlay to blend with the background image -->
+    <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(10, 69, 224, 0.95) 0%, rgba(8, 52, 168, 0.9) 25%, rgba(10, 69, 224, 0.85) 50%, rgba(12, 86, 240, 0.8) 75%, rgba(15, 103, 255, 0.75) 100%);"></div>
     <!-- Left Side - Welcome Content -->
-    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-800 to-blue-600 text-white p-12 flex-col justify-center items-center rounded-r-3xl shadow-xl min-h-[600px] animate-slide-in-left">
-      <div class="max-w-md animate-fade-in-up" style="animation-delay: 0.2s;">
-        <img src="/top-logo.png" alt="Build Watch Logo" class="h-32 w-auto mb-8 drop-shadow-lg animate-fade-in-up" style="animation-delay: 0.4s;" />
-        <h1 class="text-4xl font-extrabold mb-6 animate-fade-in-up" style="animation-delay: 0.6s;">Build Watch Portal</h1>
-        <p class="text-xl mb-8 text-white/90 animate-fade-in-up" style="animation-delay: 0.8s;">
+    <div class="hidden lg:flex lg:w-1/2 text-white p-12 flex-col justify-center items-center rounded-[32px] shadow-2xl min-h-[600px] animate-slide-in-left relative z-10 border border-white/30"
+      style="background: transparent; backdrop-filter: blur(60px) saturate(200%) brightness(110%); box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.15), inset 0.06px 0 rgba(255, 255, 255, 0.2);">
+      <div class="max-w-md text-center animate-fade-in-up" style="animation-delay: 0.2s;">
+        <h1 class="text-5xl font-extrabold mb-6 animate-fade-in-up" style="animation-delay: 0.6s;">Build Watch Portal</h1>
+        <p class="text-2xl mb-8 text-white/90 animate-fade-in-up" style="animation-delay: 0.8s;">
           Unified Access Portal for All User Types
         </p>
-        <ul class="space-y-4 text-white/80 animate-fade-in-up" style="animation-delay: 1s;">
-          <li class="flex items-center gap-3 animate-slide-in-left" style="animation-delay: 1.2s;">
+        <ul class="space-y-4 text-white/80 animate-fade-in-up text-left" style="animation-delay: 1s;">
+          <li class="flex items-center gap-3 justify-center animate-slide-in-left" style="animation-delay: 1.2s;">
             <span class="w-2 h-2 bg-white rounded-full inline-block flex-shrink-0"></span>
             <span>Single sign-on for all user types</span>
           </li>
-          <li class="flex items-center gap-3 animate-slide-in-left" style="animation-delay: 1.4s;">
+          <li class="flex items-center gap-3 justify-center animate-slide-in-left" style="animation-delay: 1.4s;">
             <span class="w-2 h-2 bg-white rounded-full inline-block flex-shrink-0"></span>
             <span>Role-based dashboard access</span>
           </li>
-          <li class="flex items-center gap-3 animate-slide-in-left" style="animation-delay: 1.6s;">
+          <li class="flex items-center gap-3 justify-center animate-slide-in-left" style="animation-delay: 1.6s;">
             <span class="w-2 h-2 bg-white rounded-full inline-block flex-shrink-0"></span>
             <span>Secure authentication system</span>
           </li>
@@ -29,9 +31,10 @@ import Layout from "../../layouts/Layout.astro";
     </div>
     
     <!-- Right Side - Login Form -->
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 bg-transparent animate-slide-in-right">
-      <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 sm:p-10 flex flex-col items-center animate-fade-in-up"
-        style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(60px) saturate(200%) brightness(110%); box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2); animation-delay: 0.3s;">
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 bg-transparent animate-slide-in-right relative z-10">
+      
+      <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 sm:p-10 flex flex-col items-center animate-fade-in-up relative z-10"
+        style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(60px) saturate(200%) brightness(110%); box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.15), inset 다른.06px 0 rgba(255, 255, 255, 0.2); animation-delay: 0.3s;">
         <div class="flex flex-col items-center w-full">
           <img src="/login-logo.png" alt="Build Watch Logo" class="h-32 w-auto mb-6 animate-fade-in-up" style="animation-delay: 0.5s;" />
           <h2 class="text-3xl font-extrabold text-[#fff] mb-3 tracking-wide animate-fade-in-up" style="animation-delay: 0.7s;">LOGIN</h2>

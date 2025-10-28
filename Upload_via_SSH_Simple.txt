@@ -1,0 +1,49 @@
+===============================================
+UPLOAD DATABASE FILE VIA SSH - SIMPLE METHOD
+===============================================
+
+YOU HAVE 2 OPTIONS:
+
+OPTION 1: Upload via File Manager (Browser)
+--------------------------------------------
+1. Click "OS & Panel" in the left sidebar
+2. Look for "File Manager" or "Files"
+3. Click "Upload" button
+4. Select: buildwatch_lgu_FRESH_export.sql
+
+
+OPTION 2: Upload via Terminal/PowerShell (Easiest!)
+----------------------------------------------------
+1. Open PowerShell on your LOCAL computer
+2. Navigate to your project folder:
+   cd "C:\Users\BuildWatch\Downloads\Build Watch"
+
+3. Run this command:
+   scp buildwatch_lgu_FRESH_export.sql root@148.230.96.155:/root/
+
+4. Enter password: buildwatch_123
+
+5. Wait for upload to complete
+
+6. Done! File is now on server at /root/buildwatch_lgu_FRESH_export.sql
+
+
+OPTION 3: If File Manager not available, use the Hostinger Terminal
+--------------------------------------------------------------------
+1. Click "Terminal" button (top right of Hostinger panel)
+2. You'll see a terminal interface
+3. Type these commands:
+
+# Navigate to root directory
+cd /root
+
+# Use this command to check what's there
+ls -la
+
+# We can't upload directly from this terminal
+# So we need to use one of the other methods above
+
+===============================================
+RECOMMENDED: Use OPTION 2 (PowerShell)
+===============================================
+

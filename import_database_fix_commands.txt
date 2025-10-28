@@ -1,0 +1,38 @@
+# STEP-BY-STEP COMMANDS TO FIX AND IMPORT YOUR DATABASE
+# Run these commands on your server in order
+
+# Step 1: Go to the directory with the SQL file
+cd /root
+
+# Step 2: Use perl to properly handle foreign key removal
+# This will:
+# - Remove all lines containing "CONSTRAINT ... FOREIGN KEY"
+# - Also remove trailing commas from the line before a removed CONSTRAINT line
+perl -i.backup -pe '
+    # Remove CONSTRAINT lines containing FOREIGN KEY
+    if (/CONSTRAINT.*FOREIGN KEY/) {
+        # If previous line ended with comma, remove that comma too
+        s/$prev =~ s/,$//r/e if (defined $prev && $prev =~ /,$/);
+        # Skip this line
+        $_ = "";
+    }
+    $prev = $_;
+' buildwatch_lgu_FRESH_export.sql
+
+# Step 3: Alternatively, a simpler two-step approach:
+# Create clean file without CONSTRAINT lines
+cd /root
+awk '!/CONSTRAINT.*FOREIGN KEY/' buildwatch_lgu_FRESH_export.sql > temp_clean.sql
+
+# Remove trailing commas right before closing parentheses
+sed -i 's/,)[[:space:]]*$/) ENGINE=InnoDB/' temp_clean.sql
+# Actually, the above won't work. Let me give you the correct command:
+
+# Step 3a: Fix the pattern where we have ",)" - remove the comma
+sed -i 's/,gon\s*\n\s*)/g' temp_clean.sql
+
+# OR better yet, use this perl one-liner:
+perl -pi -e 's/,\s*\)(\s*ENGINE)/)$1/g' temp_clean.sql
+
+# Step 4: Import the cleaned file
+mysql -u root -p buildwatch_lgu < temp_clean.sql

@@ -23,7 +23,7 @@ router.get('/stats', async (req, res) => {
       }
     });
 
-    // Get all projects to calculate utilized budget using ProgressCalculationService
+    // Get all projects to calculate utilized budget and average progress using ProgressCalculationService
     const allProjects = await Project.findAll({
       where: {
         status: {
@@ -32,9 +32,11 @@ router.get('/stats', async (req, res) => {
       }
     });
 
-    // Calculate utilized budget using ProgressCalculationService
+    // Calculate utilized budget and average progress using ProgressCalculationService
     const ProgressCalculationService = require('../services/progressCalculationService');
     let utilizedBudget = 0;
+    let totalProgress = 0;
+    let projectsWithProgress = 0;
     
     for (const project of allProjects) {
       try {
@@ -42,13 +44,28 @@ router.get('/stats', async (req, res) => {
         // Use budget division progress for utilized budget calculation
         const budgetProgress = progress?.progress?.budget || 0;
         utilizedBudget += (parseFloat(project.totalBudget) || 0) * (budgetProgress / 100);
+        
+        // Calculate average progress
+        const overallProgress = progress?.progress?.overall || 0;
+        if (overallProgress > 0) {
+          totalProgress += overallProgress;
+          projectsWithProgress++;
+        }
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);
         // Fallback to database progress
         const projectProgress = parseFloat(project.overallProgress) || 0;
         utilizedBudget += (parseFloat(project.totalBudget) || 0) * (projectProgress / 100);
+        
+        if (projectProgress > 0) {
+          totalProgress += projectProgress;
+          projectsWithProgress++;
+        }
       }
     }
+    
+    // Calculate average progress
+    const averageProgress = projectsWithProgress > 0 ? Math.round((totalProgress / projectsWithProgress) * 100) / 100 : 0;
 
     // Get user statistics
     const userStats = await User.count({
@@ -85,6 +102,7 @@ router.get('/stats', async (req, res) => {
       totalBudget: totalBudget,
       utilizedBudget: utilizedBudget,
       budgetUtilization: Math.round(budgetUtilization * 100) / 100,
+      averageProgress: averageProgress,
       activeDepartments: departmentStats.length
     });
 

@@ -1,0 +1,132 @@
+===============================================
+DATABASE EXPORT STEP-BY-STEP INSTRUCTIONS
+===============================================
+
+STEP 1: EXPORT YOUR LOCAL DATABASE
+===================================
+
+METHOD A: Using MySQL Workbench (EASIEST)
+------------------------------------------
+1. Open MySQL Workbench
+2. Double-click on your localhost connection
+3. In the left panel, find "buildwatch_lgu" database
+4. RIGHT-CLICK on "buildwatch_lgu"
+5. Select "Data Export"
+6. You'll see a list of all tables - SELECT ALL
+7. Below, you'll see "Export Options" section
+8. Check "Export to Self-Contained File"
+9. Click the "..." button next to it
+10. Choose where to save: C:\Users\BuildWatch\Downloads\Build Watch\
+11. Type filename: buildwatch_lgu_local_export.sql
+12. Click "Open" or "Save"
+13. Click "Start Export" button (bottom right)
+14. Wait for export to complete
+15. You should see "Successfully exported" message
+
+
+METHOD B: Using Command Line
+-----------------------------
+1. Open Command Prompt (CMD) or PowerShell
+2. Navigate to your project folder:
+   cd "C:\Users\BuildWatch\Downloads\Build Watch"
+
+3. Run this command:
+   mysqldump -u root -p buildwatch_lgu > buildwatch_lgu_local_export.sql
+
+4. Enter your MySQL root password when prompted
+
+5. Wait for it to finish (may take 1-2 minutes)
+
+6. Check if file was created:
+   dir buildwatch_lgu_local_export.sql
+
+
+STEP 2: VERIFY EXPORT FILE
+===========================
+1. Go to: C:\Users\BuildWatch\Downloads\Build Watch\
+2. Look for file: buildwatch_lgu_local_export.sql
+3. Check file size - it should be several MB (not 0 KB)
+
+
+STEP 3: UPLOAD TO SERVER
+=========================
+Now you need to upload this file to your Hostinger VPS server.
+
+METHOD A: Using Hostinger File Manager
+---------------------------------------
+1. Login to Hostinger VPS Panel
+2. Open "File Manager"
+3. Navigate to: /root/
+4. Click "Upload" button
+5. Select: buildwatch_lgu_local_export.sql
+6. Click "Upload"
+7. Wait for upload to complete
+
+
+METHOD B: Using SCP (if you have SSH)
+--------------------------------------
+1. Open PowerShell on your local machine
+2. Navigate to project folder:
+   cd "C:\Users\BuildWatch\Downloads\Build Watch"
+
+3. Run this command (replace YOUR_SERVER_IP):
+   scp buildwatch_lgu_local_export.sql root@YOUR_SERVER_IP:/root/
+
+4. Enter password when prompted
+
+
+STEP 4: IMPORT ON SERVER (Run on Hostinger Terminal)
+====================================================
+
+1. SSH into your Hostinger VPS terminal
+2. Run these commands:
+
+# First, let's make a quick backup of existing database (just in case)
+cd /root
+mysqldump -u root -p buildwatch_lgu > buildwatch_lgu_old_backup.sql
+# Enter password: buildwatch_123
+
+# Verify the exported file exists
+ls -lh buildwatch_lgu_local_export.sql
+
+# IMPORT the local database (this will REPLACE all data)
+mysql -u root -p buildwatch_lgu < buildwatch_lgu_local_export.sql
+# Enter password: buildwatch_123
+
+# Test to verify import worked
+mysql -u root -p -e "USE buildwatch_lgu; SELECT COUNT(*) as users FROM users; SELECT COUNT(*) as projects FROM projects;"
+# Enter password: buildwatch_123
+
+
+STEP 5: RESTART BACKEND SERVER
+===============================
+
+# Navigate to backend
+cd /root/build-watch-system/backend
+
+# Restart the backend
+pm2 restart buildwatch-backend 2>/dev/null || pm2 start server.js --name "buildwatch-backend"
+
+# Check if it's running
+pm2 status
+
+
+STEP 6: TEST THE WEBSITE
+========================
+
+1. Open your browser
+2. Visit: https://build-watch.com
+3. Try logging in with your real credentials
+4. Check if all data is showing correctly
+
+
+TROUBLESHOOTING
+===============
+
+If something goes wrong, restore the backup:
+mysql -u root -p buildwatch_lgu < buildwatch_lgu_old_backup.sql
+
+===============================================
+END OF INSTRUCTIONS
+===============================================
+

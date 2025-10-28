@@ -35,46 +35,88 @@ import Layout from "../layouts/Layout.astro";
       </div>
     </main>
 
-    {/* Enhanced Bottom Navigation */}
-    <div class="relative z-20 px-6 py-6">
-      <div class="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 px-8 py-6 flex items-center justify-between gap-6 relative">
-        {/* Enhanced Carousel Controls */}
-        <div class="flex items-center gap-6">
-          <button id="carousel-prev" class="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-7 h-7 group-hover:scale-110 transition-transform duration-300">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-          
-          <div class="flex items-center gap-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20" id="carousel-indicators"></div>
-          
-          <button id="carousel-next" class="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-7 h-7 group-hover:scale-110 transition-transform duration-300">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Enhanced Slogan - Absolutely Centered */}
-        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          <div class="text-center max-w-md">
-            <span class="text-white text-lg md:text-xl font-bold drop-shadow-lg block">
+    {/* Enhanced Bottom Navigation - Mobile Responsive */}
+    <div class="relative z-20 px-4 sm:px-6 py-4 sm:py-6">
+      <div class="bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 px-4 sm:px-8 py-4 sm:py-6">
+        {/* Mobile Layout - Stacked */}
+        <div class="flex flex-col space-y-4 sm:hidden">
+          {/* Slogan Section */}
+          <div class="text-center">
+            <span class="text-white text-base font-bold drop-shadow-lg block">
               Built to <span class="text-yellow-300 font-black">Monitor</span>. 
               Designed for <span class="text-yellow-300 font-black">Trust</span>.
             </span>
-            <div class="mt-2 text-white/80 text-sm font-medium">
+            <div class="mt-1 text-white/80 text-xs font-medium">
               Transparent Governance • Real-Time Tracking • Community Engagement
             </div>
           </div>
+          
+          {/* Carousel Controls */}
+          <div class="flex items-center justify-center gap-4">
+            <button id="carousel-prev" class="group w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-5 h-5 group-hover:scale-110 transition-transform duration-300">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            
+            <div class="flex items-center gap-2 px-3 py-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/20" id="carousel-indicators"></div>
+            
+            <button id="carousel-next" class="group w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-5 h-5 group-hover:scale-110 transition-transform duration-300">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Let's Start Button - Full Width on Mobile */}
+          <a href="/home" class="group w-full px-6 py-3 font-black text-base rounded-xl transition-all duration-500 flex items-center justify-center
+                      bg-white/90 backdrop-blur-sm text-blue-600 border-2 border-white/50 shadow-xl hover:shadow-2xl hover:scale-105 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 relative overflow-hidden z-10" id="lets-start-btn-sticky">
+            <span class="relative z-10">LET'S START</span>
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <span class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-white font-black text-base flex items-center justify-center">LET'S START</span>
+          </a>
         </div>
 
-        {/* Enhanced Let's Start Button */}
-        <a href="/home" class="group px-8 py-4 font-black text-lg rounded-2xl transition-all duration-500 flex items-center justify-center
-                    bg-white/90 backdrop-blur-sm text-blue-600 border-2 border-white/50 shadow-xl hover:shadow-2xl hover:scale-105 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 relative overflow-hidden z-10" id="lets-start-btn-sticky">
-          <span class="relative z-10">LET'S START</span>
-          <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <span class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-white font-black text-lg flex items-center justify-center">LET'S START</span>
-        </a>
+        {/* Desktop Layout - Horizontal */}
+        <div class="hidden sm:flex items-center justify-between gap-6 relative">
+          {/* Enhanced Carousel Controls */}
+          <div class="flex items-center gap-6">
+            <button id="carousel-prev" class="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-7 h-7 group-hover:scale-110 transition-transform duration-300">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            
+            <div class="flex items-center gap-4 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20" id="carousel-indicators"></div>
+            
+            <button id="carousel-next" class="group w-12 h-12 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg hover:bg-white/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="white" class="w-7 h-7 group-hover:scale-110 transition-transform duration-300">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Enhanced Slogan - Absolutely Centered */}
+          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div class="text-center max-w-md">
+              <span class="text-white text-lg md:text-xl font-bold drop-shadow-lg block">
+                Built to <span class="text-yellow-300 font-black">Monitor</span>. 
+                Designed for <span class="text-yellow-300 font-black">Trust</span>.
+              </span>
+              <div class="mt-2 text-white/80 text-sm font-medium">
+                Transparent Governance • Real-Time Tracking • Community Engagement
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Let's Start Button */}
+          <a href="/home" class="group px-8 py-4 font-black text-lg rounded-2xl transition-all duration-500 flex items-center justify-center
+                      bg-white/90 backdrop-blur-sm text-blue-600 border-2 border-white/50 shadow-xl hover:shadow-2xl hover:scale-105 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 relative overflow-hidden z-10" id="lets-start-btn-sticky">
+            <span class="relative z-10">LET'S START</span>
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <span class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-white font-black text-lg flex items-center justify-center">LET'S START</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -921,199 +963,207 @@ import Layout from "../layouts/Layout.astro";
   }
 
   function updateIndicators(activeIndex) {
-    if (!indicators) {
-      console.error('Indicators container not found!');
+    // Get all indicator containers (mobile and desktop)
+    const indicatorContainers = document.querySelectorAll('#carousel-indicators');
+    
+    if (indicatorContainers.length === 0) {
+      console.error('Indicators containers not found!');
       return;
     }
     
-    console.log('Updating indicators - active index:', activeIndex);
+    console.log('Updating indicators - active index:', activeIndex, 'containers found:', indicatorContainers.length);
     
-    // Ensure the indicators container is visible and enhanced with blue theme
-    indicators.style.display = 'flex';
-    indicators.style.alignItems = 'center';
-    indicators.style.justifyContent = 'center';
-    indicators.style.minHeight = '60px';
-    indicators.style.visibility = 'visible';
-    indicators.style.opacity = '1';
-    indicators.style.background = 'linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(59,130,246,0.2) 100%)';
-    indicators.style.backdropFilter = 'blur(20px)';
-    indicators.style.borderRadius = '30px';
-    indicators.style.border = '2px solid rgba(59,130,246,0.4)';
-    indicators.style.padding = '12px 20px';
-    indicators.style.boxShadow = '0 12px 40px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
-    indicators.style.position = 'relative';
-    indicators.style.zIndex = '1000';
-    
-    indicators.innerHTML = '';
-    
-    for (let i = 0; i < slides.length; i++) {
-      // Create container for enhanced indicator
-      const indicatorContainer = document.createElement('div');
-      indicatorContainer.style.position = 'relative';
-      indicatorContainer.style.margin = '0 6px';
-      indicatorContainer.style.cursor = 'pointer';
-      indicatorContainer.style.display = 'flex';
-      indicatorContainer.style.alignItems = 'center';
-      indicatorContainer.style.justifyContent = 'center';
+    // Update each indicator container
+    indicatorContainers.forEach((indicators, containerIndex) => {
+      // Ensure the indicators container is visible and enhanced with blue theme
+      indicators.style.display = 'flex';
+      indicators.style.alignItems = 'center';
+      indicators.style.justifyContent = 'center';
+      indicators.style.minHeight = containerIndex === 0 ? '40px' : '60px'; // Smaller for mobile
+      indicators.style.visibility = 'visible';
+      indicators.style.opacity = '1';
+      indicators.style.background = 'linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(59,130,246,0.2) 100%)';
+      indicators.style.backdropFilter = 'blur(20px)';
+      indicators.style.borderRadius = containerIndex === 0 ? '20px' : '30px'; // Smaller for mobile
+      indicators.style.border = '2px solid rgba(59,130,246,0.4)';
+      indicators.style.padding = containerIndex === 0 ? '8px 12px' : '12px 20px'; // Smaller for mobile
+      indicators.style.boxShadow = '0 12px 40px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
+      indicators.style.position = 'relative';
+      indicators.style.zIndex = '1000';
       
-      // Main dot element
-      const dot = document.createElement('div');
-      dot.style.width = '16px';
-      dot.style.height = '16px';
-      dot.style.borderRadius = '50%';
-      dot.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-      dot.style.position = 'relative';
-      dot.style.zIndex = '1001';
+      indicators.innerHTML = '';
       
-      // Outer ring element for active state
-      const ring = document.createElement('div');
-      ring.style.position = 'absolute';
-      ring.style.top = '50%';
-      ring.style.left = '50%';
-      ring.style.transform = 'translate(-50%, -50%)';
-      ring.style.width = '28px';
-      ring.style.height = '28px';
-      ring.style.borderRadius = '50%';
-      ring.style.border = '3px solid rgba(59,130,246,0.8)';
-      ring.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-      ring.style.opacity = '0';
-      ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
-      
-      // Progress ring for active indicator
-      const progressRing = document.createElement('div');
-      progressRing.style.position = 'absolute';
-      progressRing.style.top = '50%';
-      progressRing.style.left = '50%';
-      progressRing.style.transform = 'translate(-50%, -50%)';
-      progressRing.style.width = '36px';
-      progressRing.style.height = '36px';
-      progressRing.style.borderRadius = '50%';
-      progressRing.style.background = 'conic-gradient(from 0deg, rgba(37,99,235,0.9) 0deg, rgba(59,130,246,0.6) 180deg, rgba(147,197,253,0.4) 360deg)';
-      progressRing.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-      progressRing.style.opacity = '0';
-      progressRing.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(0deg)';
-      
-      // Glow effect
-      const glow = document.createElement('div');
-      glow.style.position = 'absolute';
-      glow.style.top = '50%';
-      glow.style.left = '50%';
-      glow.style.transform = 'translate(-50%, -50%)';
-      glow.style.width = '44px';
-      glow.style.height = '44px';
-      glow.style.borderRadius = '50%';
-      glow.style.background = 'radial-gradient(circle, rgba(59,130,246,0.4) 0%, rgba(37,99,235,0.2) 50%, transparent 70%)';
-      glow.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-      glow.style.opacity = '0';
-      glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
-      
-      if (i === activeIndex) {
-        // Active state styling with blue theme
-        dot.style.backgroundColor = '#3b82f6';
-        dot.style.border = '2px solid #ffffff';
-        dot.style.transform = 'scale(1.2)';
-        dot.style.boxShadow = '0 0 25px rgba(59,130,246,0.9), 0 0 45px rgba(59,130,246,0.5), inset 0 2px 4px rgba(255,255,255,0.3)';
+      for (let i = 0; i < slides.length; i++) {
+        // Create container for enhanced indicator
+        const indicatorContainer = document.createElement('div');
+        indicatorContainer.style.position = 'relative';
+        indicatorContainer.style.margin = '0 4px'; // Smaller margin for mobile
+        indicatorContainer.style.cursor = 'pointer';
+        indicatorContainer.style.display = 'flex';
+        indicatorContainer.style.alignItems = 'center';
+        indicatorContainer.style.justifyContent = 'center';
         
-        ring.style.opacity = '1';
-        ring.style.transform = 'translate(-50%, -50%) scale(1)';
-        ring.style.borderColor = 'rgba(59,130,246,0.9)';
-        ring.style.animation = 'blueIndicatorPulse 2s ease-in-out infinite';
+        // Main dot element - smaller for mobile
+        const dot = document.createElement('div');
+        dot.style.width = containerIndex === 0 ? '12px' : '16px';
+        dot.style.height = containerIndex === 0 ? '12px' : '16px';
+        dot.style.borderRadius = '50%';
+        dot.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        dot.style.position = 'relative';
+        dot.style.zIndex = '1001';
         
-        progressRing.style.opacity = '1';
-        progressRing.style.transform = 'translate(-50%, -50%) scale(1) rotate(360deg)';
-        
-        glow.style.opacity = '1';
-        glow.style.transform = 'translate(-50%, -50%) scale(1)';
-        
-        console.log('Set active indicator for slide:', i);
-      } else {
-        // Inactive state styling with blue theme
-        dot.style.backgroundColor = 'rgba(59,130,246,0.4)';
-        dot.style.border = '2px solid rgba(255,255,255,0.6)';
-        dot.style.transform = 'scale(1)';
-        dot.style.boxShadow = '0 2px 12px rgba(59,130,246,0.3), inset 0 1px 2px rgba(255,255,255,0.2)';
-        
+        // Outer ring element for active state - smaller for mobile
+        const ring = document.createElement('div');
+        ring.style.position = 'absolute';
+        ring.style.top = '50%';
+        ring.style.left = '50%';
+        ring.style.transform = 'translate(-50%, -50%)';
+        ring.style.width = containerIndex === 0 ? '20px' : '28px';
+        ring.style.height = containerIndex === 0 ? '20px' : '28px';
+        ring.style.borderRadius = '50%';
+        ring.style.border = '2px solid rgba(59,130,246,0.8)';
+        ring.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         ring.style.opacity = '0';
         ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
         
+        // Progress ring for active indicator - smaller for mobile
+        const progressRing = document.createElement('div');
+        progressRing.style.position = 'absolute';
+        progressRing.style.top = '50%';
+        progressRing.style.left = '50%';
+        progressRing.style.transform = 'translate(-50%, -50%)';
+        progressRing.style.width = containerIndex === 0 ? '26px' : '36px';
+        progressRing.style.height = containerIndex === 0 ? '26px' : '36px';
+        progressRing.style.borderRadius = '50%';
+        progressRing.style.background = 'conic-gradient(from 0deg, rgba(37,99,235,0.9) 0deg, rgba(59,130,246,0.6) 180deg, rgba(147,197,253,0.4) 360deg)';
+        progressRing.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         progressRing.style.opacity = '0';
         progressRing.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(0deg)';
         
+        // Glow effect - smaller for mobile
+        const glow = document.createElement('div');
+        glow.style.position = 'absolute';
+        glow.style.top = '50%';
+        glow.style.left = '50%';
+        glow.style.transform = 'translate(-50%, -50%)';
+        glow.style.width = containerIndex === 0 ? '32px' : '44px';
+        glow.style.height = containerIndex === 0 ? '32px' : '44px';
+        glow.style.borderRadius = '50%';
+        glow.style.background = 'radial-gradient(circle, rgba(59,130,246,0.4) 0%, rgba(37,99,235,0.2) 50%, transparent 70%)';
+        glow.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         glow.style.opacity = '0';
         glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
-      }
-      
-      // Hover effects with blue theme
-      indicatorContainer.onmouseenter = () => {
-        if (i !== activeIndex) {
-          dot.style.backgroundColor = 'rgba(59,130,246,0.7)';
-          dot.style.border = '2px solid rgba(255,255,255,0.8)';
-          dot.style.transform = 'scale(1.1)';
-          dot.style.boxShadow = '0 4px 18px rgba(59,130,246,0.5), inset 0 1px 3px rgba(255,255,255,0.25)';
-          ring.style.opacity = '0.6';
-          ring.style.transform = 'translate(-50%, -50%) scale(0.9)';
-          ring.style.borderColor = 'rgba(59,130,246,0.7)';
-          glow.style.opacity = '0.4';
-          glow.style.transform = 'translate(-50%, -50%) scale(0.8)';
-        }
-      };
-      
-      indicatorContainer.onmouseleave = () => {
-        if (i !== activeIndex) {
+        
+        if (i === activeIndex) {
+          // Active state styling with blue theme
+          dot.style.backgroundColor = '#3b82f6';
+          dot.style.border = '2px solid #ffffff';
+          dot.style.transform = 'scale(1.2)';
+          dot.style.boxShadow = '0 0 25px rgba(59,130,246,0.9), 0 0 45px rgba(59,130,246,0.5), inset 0 2px 4px rgba(255,255,255,0.3)';
+          
+          ring.style.opacity = '1';
+          ring.style.transform = 'translate(-50%, -50%) scale(1)';
+          ring.style.borderColor = 'rgba(59,130,246,0.9)';
+          ring.style.animation = 'blueIndicatorPulse 2s ease-in-out infinite';
+          
+          progressRing.style.opacity = '1';
+          progressRing.style.transform = 'translate(-50%, -50%) scale(1) rotate(360deg)';
+          
+          glow.style.opacity = '1';
+          glow.style.transform = 'translate(-50%, -50%) scale(1)';
+          
+          console.log(`Set active indicator for slide: ${i} in container: ${containerIndex}`);
+        } else {
+          // Inactive state styling with blue theme
           dot.style.backgroundColor = 'rgba(59,130,246,0.4)';
           dot.style.border = '2px solid rgba(255,255,255,0.6)';
           dot.style.transform = 'scale(1)';
           dot.style.boxShadow = '0 2px 12px rgba(59,130,246,0.3), inset 0 1px 2px rgba(255,255,255,0.2)';
+          
           ring.style.opacity = '0';
           ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
+          
+          progressRing.style.opacity = '0';
+          progressRing.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(0deg)';
+          
           glow.style.opacity = '0';
           glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
         }
-      };
-      
-      indicatorContainer.onclick = () => { 
-        console.log('Indicator clicked, switching to slide:', i);
-        renderSlide(i); 
-      };
-      
-      // Assemble the indicator
-      indicatorContainer.appendChild(glow);
-      indicatorContainer.appendChild(progressRing);
-      indicatorContainer.appendChild(ring);
-      indicatorContainer.appendChild(dot);
-      indicators.appendChild(indicatorContainer);
-    }
+        
+        // Hover effects with blue theme
+        indicatorContainer.onmouseenter = () => {
+          if (i !== activeIndex) {
+            dot.style.backgroundColor = 'rgba(59,130,246,0.7)';
+            dot.style.border = '2px solid rgba(255,255,255,0.8)';
+            dot.style.transform = 'scale(1.1)';
+            dot.style.boxShadow = '0 4px 18px rgba(59,130,246,0.5), inset 0 1px 3px rgba(255,255,255,0.25)';
+            ring.style.opacity = '0.6';
+            ring.style.transform = 'translate(-50%, -50%) scale(0.9)';
+            ring.style.borderColor = 'rgba(59,130,246,0.7)';
+            glow.style.opacity = '0.4';
+            glow.style.transform = 'translate(-50%, -50%) scale(0.8)';
+          }
+        };
+        
+        indicatorContainer.onmouseleave = () => {
+          if (i !== activeIndex) {
+            dot.style.backgroundColor = 'rgba(59,130,246,0.4)';
+            dot.style.border = '2px solid rgba(255,255,255,0.6)';
+            dot.style.transform = 'scale(1)';
+            dot.style.boxShadow = '0 2px 12px rgba(59,130,246,0.3), inset 0 1px 2px rgba(255,255,255,0.2)';
+            ring.style.opacity = '0';
+            ring.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            glow.style.opacity = '0';
+            glow.style.transform = 'translate(-50%, -50%) scale(0.5)';
+          }
+        };
+        
+        indicatorContainer.onclick = () => { 
+          console.log(`Indicator clicked in container ${containerIndex}, switching to slide:`, i);
+          renderSlide(i); 
+        };
+        
+        // Assemble the indicator
+        indicatorContainer.appendChild(glow);
+        indicatorContainer.appendChild(progressRing);
+        indicatorContainer.appendChild(ring);
+        indicatorContainer.appendChild(dot);
+        indicators.appendChild(indicatorContainer);
+      }
+    });
     
-    console.log('Created', slides.length, 'indicator dots');
+    console.log('Created', slides.length, 'indicator dots in', indicatorContainers.length, 'containers');
   }
 
-  // Event listeners
-  const prevBtn = document.getElementById('carousel-prev');
-  const nextBtn = document.getElementById('carousel-next');
+  // Event listeners - Handle both mobile and desktop buttons
+  const prevBtns = document.querySelectorAll('#carousel-prev');
+  const nextBtns = document.querySelectorAll('#carousel-next');
   
-  console.log('Carousel buttons found:', { prevBtn: !!prevBtn, nextBtn: !!nextBtn });
+  console.log('Carousel buttons found:', { prevBtns: prevBtns.length, nextBtns: nextBtns.length });
   
-  if (prevBtn) {
-    prevBtn.onclick = () => {
-      console.log('Previous button clicked, current slide:', currentSlide);
-      const newSlide = (currentSlide - 1 + slides.length) % slides.length;
-      console.log('Switching to slide:', newSlide);
-      renderSlide(newSlide);
-    };
-  } else {
-    console.error('Previous button not found');
-  }
+  // Add event listeners to all previous buttons (mobile and desktop)
+  prevBtns.forEach((prevBtn, index) => {
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        console.log(`Previous button ${index} clicked, current slide:`, currentSlide);
+        const newSlide = (currentSlide - 1 + slides.length) % slides.length;
+        console.log('Switching to slide:', newSlide);
+        renderSlide(newSlide);
+      };
+    }
+  });
 
-  if (nextBtn) {
-    nextBtn.onclick = () => {
-      console.log('Next button clicked, current slide:', currentSlide);
-      const newSlide = (currentSlide + 1) % slides.length;
-      console.log('Switching to slide:', newSlide);
-      renderSlide(newSlide);
-    };
-  } else {
-    console.error('Next button not found');
-  }
+  // Add event listeners to all next buttons (mobile and desktop)
+  nextBtns.forEach((nextBtn, index) => {
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        console.log(`Next button ${index} clicked, current slide:`, currentSlide);
+        const newSlide = (currentSlide + 1) % slides.length;
+        console.log('Switching to slide:', newSlide);
+        renderSlide(newSlide);
+      };
+    }
+  });
 
   // Auto-advance
   let autoAdvanceInterval = setInterval(() => {

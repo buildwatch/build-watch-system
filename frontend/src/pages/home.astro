@@ -138,12 +138,18 @@ let stats, featuredProjects, articles, barangayStats;
 
 try {
   stats = await homeService.getHomeStats();
+  console.log('Fetched stats:', stats);
 } catch (error) {
   console.error('Error fetching stats:', error);
   stats = {
-    ongoingProjects: 32,
-    totalBudget: 120000000,
-    completedProjects: 18
+    ongoingProjects: 4,
+    totalBudget: 11224543,
+    completedProjects: 0,
+    totalProjects: 4,
+    budgetUtilization: 68,
+    utilizedBudget: 7632689,
+    averageProgress: 75,
+    activeDepartments: 3
   };
 }
 
@@ -170,7 +176,7 @@ try {
 ---
 <Layout title="Home | Build Watch LGU" description="Santa Cruz LGU Project Monitoring and Evaluation System - Home">
   <TopBar />
-  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen fade-in-home">
+  <main class="flex flex-col items-center w-full px-4 pt-40 pb-12 bg-white min-h-screen fade-in-home">
     {/* Hero Header with Summary & CTA */}
     <div id="hero" class="w-full max-w-7xl mx-auto text-center mb-20 animate-fade-in-up">
       <div class="relative py-16 px-4">
@@ -196,33 +202,33 @@ try {
         </p>
           <div class="flex flex-col sm:flex-row gap-8 justify-center mb-16">
             {/* Primary Action Button */}
-            <a href="/projects" class="group relative inline-flex items-center gap-4 px-12 py-6 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 text-white font-bold text-lg rounded-3xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 overflow-hidden">
+            <a href="/projects" class="group relative inline-flex items-center justify-center gap-4 px-12 py-6 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 text-white font-bold text-lg rounded-3xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 overflow-hidden">
               {/* Button Background Animation */}
               <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               
               {/* Button Content */}
-              <div class="relative flex items-center gap-4">
+              <div class="relative flex items-center justify-center gap-4">
                 <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
                 <span>View Projects</span>
-        </div>
+              </div>
             </a>
             
             {/* Secondary Action Button */}
-            <a href="/open-data" class="group relative inline-flex items-center gap-4 px-12 py-6 bg-white/90 backdrop-blur-sm text-blue-600 font-bold text-lg rounded-3xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 border-2 border-blue-200/50 hover:border-blue-300 overflow-hidden">
+            <a href="/open-data" class="group relative inline-flex items-center justify-center gap-4 px-12 py-6 bg-white/90 backdrop-blur-sm text-blue-600 font-bold text-lg rounded-3xl shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-500 border-2 border-blue-200/50 hover:border-blue-300 overflow-hidden">
               {/* Button Background Animation */}
               <div class="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div class="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-indigo-400/10 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               
               {/* Button Content */}
-              <div class="relative flex items-center gap-4">
+              <div class="relative flex items-center justify-center gap-4">
                 <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 <span>Track Progress</span>
-          </div>
+              </div>
             </a>
           </div>
           {/* Enhanced Statistics Cards */}
@@ -281,7 +287,7 @@ try {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
                   </svg>
                 </div>
-                <div class="text-3xl font-black text-amber-600 mb-1" id="avg-progress">75%</div>
+                <div class="text-3xl font-black text-amber-600 mb-1" id="avg-progress">{stats.averageProgress || 75}%</div>
                 <div class="text-amber-800 font-semibold text-sm">Avg Progress</div>
                 <div class="w-full h-0.5 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full mt-2 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
               </div>
@@ -297,7 +303,7 @@ try {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                   </svg>
                 </div>
-                <div class="text-3xl font-black text-indigo-600 mb-1" id="budget-utilization">68%</div>
+                <div class="text-3xl font-black text-indigo-600 mb-1" id="budget-utilization">{stats.budgetUtilization || 68}%</div>
                 <div class="text-indigo-800 font-semibold text-sm">Budget Utilization</div>
                 <div class="w-full h-0.5 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full mt-2 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
               </div>
@@ -360,51 +366,108 @@ try {
           <div class="relative overflow-hidden rounded-3xl shadow-2xl backdrop-blur-md border border-white/40"
                style="background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 50%, rgba(239,246,255,0.98) 100%);">
             <div id="gov-slideshow" class="flex transition-transform duration-700 ease-in-out" style="transform: translateX(0%);">
-              {/* Slide 1 */}
-              <div class="min-w-full grid grid-cols-1 lg:grid-cols-2 items-center gap-10 p-10 relative">
-                <div class="relative order-2 lg:order-1">
-                  <h3 class="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-blue-700 to-purple-800 mb-4 leading-tight">Transparent Governance</h3>
-                  <p class="text-lg text-indigo-700/80 mb-6 max-w-2xl">Real-time project monitoring and open data access that empowers citizens and fosters trust in public service.</p>
-                  <a href="/open-data" class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    Learn More
-                  </a>
+              {/* Mayor Slide - First Slide */}
+              <div class="min-w-full relative">
+                {/* Desktop: Full image with Learn More button inside */}
+                <div class="hidden lg:block relative">
+                  <img src="/mayor-slideshow-bg.jpg" alt="Mayor Slideshow" class="w-full h-[600px] xl:h-[700px] object-cover object-center rounded-3xl" loading="lazy" decoding="async"/>
+                  {/* Learn More button inside image on bottom left with white glow */}
+                  <div class="absolute bottom-8 left-8">
+                    <a href="/about" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all backdrop-blur-sm relative overflow-hidden">
+                      {/* White corner glow effect */}
+                      <div class="absolute -top-2 -left-2 w-4 h-4 bg-white rounded-full blur-sm opacity-80"></div>
+                      <div class="absolute -top-1 -left-1 w-3 h-3 bg-white rounded-full blur-sm opacity-60"></div>
+                      <div class="absolute -top-0.5 -left-0.5 w-2 h-2 bg-white rounded-full blur-sm opacity-40"></div>
+                      {/* Button content */}
+                      <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                      <span class="relative z-10">Learn More</span>
+                    </a>
+                  </div>
                 </div>
-                <div class="relative order-1 lg:order-2">
-                  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1200&q=80" alt="Transparent Governance" class="w-full h-72 lg:h-96 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='/about-page-bg.png'"/>
-                  <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-600/20 to-transparent"></div>
+                
+                {/* Mobile: Keep existing layout - don't touch */}
+                <div class="lg:hidden">
+                  <div class="flex justify-center mb-8">
+                    <img src="/mayor-slideshow-bg.jpg" alt="Mayor Slideshow" class="w-full max-w-3xl h-64 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async"/>
+                  </div>
+                  {/* Enhanced bold text and button for mobile */}
+                  <div class="flex flex-col items-center px-4">
+                    <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-800 mb-3 leading-tight">Municipality of Santa Cruz</h2>
+                    <p class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-600 mb-6">Building a Better Future Together</p>
+                    <a href="/about" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                      Learn More
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide 1 */}
+              <div class="min-w-full flex flex-col lg:flex-col items-center justify-center text-center p-8 lg:p-12 relative">
+                <div class="max-w-4xl mx-auto w-full">
+                  {/* Image at top for desktop */}
+                  <div class="flex justify-center mb-8 lg:mb-12 relative">
+                    <img src="/slide-1.jpg" alt="Transparent Governance" class="w-full max-w-3xl h-64 lg:h-80 xl:h-96 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async"/>
+                    {/* Blue color aura overlay */}
+                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-600/20 to-transparent"></div>
+                  </div>
+                  {/* Content at bottom */}
+                  <div class="flex flex-col items-center">
+                    <h3 class="text-3xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-blue-700 to-purple-800 mb-6 leading-tight">Transparent Governance</h3>
+                    <p class="text-lg text-indigo-700/80 mb-8 max-w-3xl mx-auto">Real-time project monitoring and open data access that empowers citizens and fosters trust in public service.</p>
+                    <div class="flex justify-center">
+                      <a href="/open-data" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        Learn More
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Slide 2 */}
-              <div class="min-w-full grid grid-cols-1 lg:grid-cols-2 items-center gap-10 p-10 relative">
-                <div class="relative order-2 lg:order-1">
-                  <h3 class="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-700 mb-4 leading-tight">Citizen-Centered Services</h3>
-                  <p class="text-lg text-emerald-700/80 mb-6 max-w-2xl">Seamless, digital-first services designed to reduce processing time and improve access for every barangay.</p>
-                  <a href="/contact-us" class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12z"/></svg>
-                    Contact Us
-                  </a>
-                </div>
-                <div class="relative order-1 lg:order-2">
-                  <img src="https://images.unsplash.com/photo-1521337584798-8d7f0e62a3c2?auto=format&fit=crop&w=1200&q=80" alt="Citizen Services" class="w-full h-72 lg:h-96 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='/about-page-bg.png'"/>
-                  <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-emerald-600/20 to-transparent"></div>
+              <div class="min-w-full flex flex-col lg:flex-col items-center justify-center text-center p-8 lg:p-12 relative">
+                <div class="max-w-4xl mx-auto w-full">
+                  {/* Image at top for desktop */}
+                  <div class="flex justify-center mb-8 lg:mb-12 relative">
+                    <img src="/slide-2.jpg" alt="Citizen Services" class="w-full max-w-3xl h-64 lg:h-80 xl:h-96 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async"/>
+                    {/* Green color aura overlay */}
+                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-emerald-600/20 to-transparent"></div>
+                  </div>
+                  {/* Content at bottom */}
+                  <div class="flex flex-col items-center">
+                    <h3 class="text-3xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-700 mb-6 leading-tight">Citizen-Centered Services</h3>
+                    <p class="text-lg text-emerald-700/80 mb-8 max-w-3xl mx-auto">Seamless, digital-first services designed to reduce processing time and improve access for every barangay.</p>
+                    <div class="flex justify-center">
+                      <a href="/contact-us" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12z"/></svg>
+                        Contact Us
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Slide 3 */}
-              <div class="min-w-full grid grid-cols-1 lg:grid-cols-2 items-center gap-10 p-10 relative">
-                <div class="relative order-2 lg:order-1">
-                  <h3 class="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 mb-4 leading-tight">Digital Innovation</h3>
-                  <p class="text-lg text-purple-700/80 mb-6 max-w-2xl">Modern platform capabilities, automated reporting, and data-driven insights for decisive leadership.</p>
-                  <a href="/news" class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z"/></svg>
-                    Read Updates
-                  </a>
-                </div>
-                <div class="relative order-1 lg:order-2">
-                  <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80" alt="Digital Innovation" class="w-full h-72 lg:h-96 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='/about-page-bg.png'"/>
-                  <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-purple-600/20 to-transparent"></div>
+              <div class="min-w-full flex flex-col lg:flex-col items-center justify-center text-center p-8 lg:p-12 relative">
+                <div class="max-w-4xl mx-auto w-full">
+                  {/* Image at top for desktop */}
+                  <div class="flex justify-center mb-8 lg:mb-12 relative">
+                    <img src="/slide-3.png" alt="Digital Innovation" class="w-full max-w-3xl h-64 lg:h-80 xl:h-96 object-cover object-center rounded-2xl shadow-xl" loading="lazy" decoding="async"/>
+                    {/* Purple to blue color aura overlay */}
+                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-purple-600/20 via-pink-600/15 to-blue-600/10"></div>
+                  </div>
+                  {/* Content at bottom */}
+                  <div class="flex flex-col items-center">
+                    <h3 class="text-3xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 mb-6 leading-tight">Digital Innovation</h3>
+                    <p class="text-lg text-purple-700/80 mb-8 max-w-3xl mx-auto">Modern platform capabilities, automated reporting, and data-driven insights for decisive leadership.</p>
+                    <div class="flex justify-center">
+                      <a href="/news" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z"/></svg>
+                        Read Updates
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -425,6 +488,7 @@ try {
 
           {/* Dots */}
           <div id="gov-dots" class="flex items-center justify-center gap-3 mt-6">
+            <button class="gov-dot w-3 h-3 rounded-full bg-indigo-300/60 hover:bg-indigo-400 transition-colors" aria-label="Mayor Slide"></button>
             <button class="gov-dot w-3 h-3 rounded-full bg-indigo-300/60 hover:bg-indigo-400 transition-colors" aria-label="Slide 1"></button>
             <button class="gov-dot w-3 h-3 rounded-full bg-indigo-300/60 hover:bg-indigo-400 transition-colors" aria-label="Slide 2"></button>
             <button class="gov-dot w-3 h-3 rounded-full bg-indigo-300/60 hover:bg-indigo-400 transition-colors" aria-label="Slide 3"></button>
@@ -973,10 +1037,12 @@ try {
 
           {/* Enhanced Premium Blue Circle Indicators */}
           <div class="flex justify-center items-center gap-3 mt-12">
-            <div class="flex items-center gap-3 px-8 py-4 bg-white/40 backdrop-blur-md rounded-full border border-white/40 shadow-lg" id="barangay-indicators">
-              {/* Dynamically generated indicators based on number of barangays */}
-              {barangayStats && barangayStats.length > 0 && Array.from({length: Math.ceil(barangayStats.length / 4)}, (_, index) => (
-                <div key={index} class={`w-4 h-4 rounded-full shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 barangay-indicator ${index === 0 ? 'bg-gradient-to-r from-emerald-600 to-blue-600 scale-125 shadow-emerald-500/50 ring-4 ring-white/30' : 'bg-white/50 hover:bg-white/70'}`} data-slide={index}></div>
+            <div class="flex items-center gap-2 px-6 py-4 bg-white/40 backdrop-blur-md rounded-full border border-white/40 shadow-lg max-w-full overflow-x-auto" id="barangay-indicators">
+              {/* Dynamically generated indicators for all 26 barangays */}
+              {barangayStats && barangayStats.length > 0 && Array.from({length: barangayStats.length}, (_, index) => (
+                <div key={index} class={`w-8 h-8 rounded-full shadow-lg cursor-pointer transition-all duration-500 hover:scale-125 barangay-indicator flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-gradient-to-r from-emerald-600 to-blue-600 scale-125 shadow-emerald-500/50 ring-4 ring-white/30 text-white' : 'bg-white/50 hover:bg-white/70 text-blue-600'}`} data-slide={index}>
+                  {index + 1}
+                </div>
               ))}
             </div>
           </div>
@@ -3749,11 +3815,17 @@ try {
             indicator.style.transform = 'scale(1.3)';
             indicator.style.boxShadow = '0 0 25px rgba(37, 99, 235, 0.6), 0 0 50px rgba(67, 56, 202, 0.3)';
             indicator.style.border = '2px solid rgba(255, 255, 255, 0.8)';
+            indicator.style.color = 'white';
+            indicator.classList.remove('text-blue-600');
+            indicator.classList.add('text-white');
           } else {
             indicator.style.background = 'rgba(255, 255, 255, 0.4)';
             indicator.style.transform = 'scale(1)';
             indicator.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
             indicator.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            indicator.style.color = '#2563eb';
+            indicator.classList.remove('text-white');
+            indicator.classList.add('text-blue-600');
           }
         });
       }
@@ -3800,8 +3872,8 @@ try {
       barangayIndicators.forEach((indicator, index) => {
         indicator.addEventListener('click', (e) => {
           e.preventDefault();
-          // Jump to the first card of the selected group/page
-          goToBarangaySlide(index * visibleCount);
+          // Jump directly to the specific barangay
+          goToBarangaySlide(index);
         });
         
         // Enhanced hover effects for indicators
@@ -3809,6 +3881,7 @@ try {
           if (index !== currentBarangayIndex) {
             indicator.style.background = 'rgba(255, 255, 255, 0.7)';
             indicator.style.transform = 'scale(1.15)';
+            indicator.style.color = '#2563eb';
           }
         });
         
@@ -3816,6 +3889,7 @@ try {
           if (index !== currentBarangayIndex) {
             indicator.style.background = 'rgba(255, 255, 255, 0.4)';
             indicator.style.transform = 'scale(1)';
+            indicator.style.color = '#2563eb';
           }
         });
       });
@@ -4748,10 +4822,14 @@ try {
         const ongoingCount = document.getElementById('ongoing-projects-count');
         const totalBudget = document.getElementById('total-budget');
         const completedCount = document.getElementById('completed-projects-count');
+        const avgProgress = document.getElementById('avg-progress');
+        const budgetUtilization = document.getElementById('budget-utilization');
         
         if (ongoingCount) ongoingCount.textContent = stats.ongoingProjects;
         if (totalBudget) totalBudget.textContent = homeService.formatBudget(stats.totalBudget);
         if (completedCount) completedCount.textContent = stats.completedProjects;
+        if (avgProgress) avgProgress.textContent = `${stats.averageProgress || 75}%`;
+        if (budgetUtilization) budgetUtilization.textContent = `${stats.budgetUtilization || 68}%`;
         
         // Update barangay carousel if data changed
         if (barangayStats && barangayStats.length > 0) {

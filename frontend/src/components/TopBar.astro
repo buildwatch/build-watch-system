@@ -20,88 +20,248 @@ const rightLinks = [
   <div class="absolute top-0 left-1/4 w-32 h-32 bg-white/5 rounded-full -translate-y-16"></div>
   <div class="absolute top-0 right-1/4 w-24 h-24 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
   
-  <div class="relative px-4 md:px-10 py-4 flex items-center justify-between">
-    <!-- Left Navigation Links -->
-    <div class="flex items-center gap-6">
-      {navLinks.map(link => (
-        <a
-          href={link.href}
-          class={`nav-link group relative font-bold text-base tracking-wider px-4 py-2.5 rounded-xl transition-all duration-300 overflow-hidden ${
-            pathname === link.href
-              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm scale-105'
-              : 'text-white/90 hover:text-white hover:bg-white/15 hover:shadow-lg hover:scale-105 backdrop-blur-sm'
-          }`}
+  <div class="relative px-4 md:px-10 py-4">
+    <!-- Desktop Layout -->
+    <div class="hidden lg:flex items-center justify-between">
+      <!-- Left Navigation Links -->
+      <div class="flex items-center gap-6">
+        {navLinks.map(link => (
+          <a
+            href={link.href}
+            class={`nav-link group relative font-bold text-base tracking-wider px-4 py-2.5 rounded-xl transition-all duration-300 overflow-hidden ${
+              pathname === link.href
+                ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm scale-105'
+                : 'text-white/90 hover:text-white hover:bg-white/15 hover:shadow-lg hover:scale-105 backdrop-blur-sm'
+            }`}
+          >
+            <!-- Hover background effect -->
+            <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <!-- Active indicator -->
+            {pathname === link.href && (
+              <div class="absolute top-0 left-0 w-full h-0.5 bg-white rounded-full"></div>
+            )}
+            
+            <span class="relative z-10">{link.label}</span>
+          </a>
+        ))}
+      </div>
+
+      <!-- Center Logo -->
+      <a href="/" class="flex items-center justify-center mx-4 select-none group relative">
+        <!-- Logo glow effect -->
+        <div class="absolute inset-0 bg-white/10 rounded-2xl blur-xl group-hover:bg-white/20 transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+        
+        <img 
+          src="/top-logo.png" 
+          alt="Build Watch Logo" 
+          class="w-60 h-24 object-contain relative z-10 transition-transform duration-300 group-hover:scale-105" 
+          draggable="false" 
+        />
+      </a>
+
+      <!-- Right Navigation Links and Actions -->
+      <div class="flex items-center gap-6">
+        {rightLinks.map(link => (
+          <a
+            href={link.href}
+            class={`nav-link group relative font-bold text-base tracking-wider px-4 py-2.5 rounded-xl transition-all duration-300 overflow-hidden ${
+              pathname === link.href
+                ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm scale-105'
+                : 'text-white/90 hover:text-white hover:bg-white/15 hover:shadow-lg hover:scale-105 backdrop-blur-sm'
+            }`}
+          >
+            <!-- Hover background effect -->
+            <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <!-- Active indicator -->
+            {pathname === link.href && (
+              <div class="absolute top-0 left-0 w-full h-0.5 bg-white rounded-full"></div>
+            )}
+            
+            <span class="relative z-10">{link.label}</span>
+          </a>
+        ))}
+        
+        <!-- Login Button -->
+        <a 
+          href="/login/lgu-pmt" 
+          class="login-btn group relative ml-4 px-6 py-2.5 border-2 border-white/80 text-white font-bold text-base rounded-xl bg-transparent hover:bg-white hover:text-blue-600 transition-all duration-300 overflow-hidden backdrop-blur-sm"
         >
-          <!-- Hover background effect -->
-          <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <!-- Button glow effect -->
+          <div class="absolute inset-0 bg-white/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           
-          <!-- Active indicator -->
-          {pathname === link.href && (
-            <div class="absolute bottom-0 left-0 w-full h-0.5 bg-white rounded-full"></div>
-          )}
+          <!-- Hover sweep effect -->
+          <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 transform -skew-x-12 -translate-x-full group-hover:translate-x-full"></div>
           
-          <span class="relative z-10">{link.label}</span>
+          <span class="relative z-10">Login</span>
         </a>
-      ))}
+        
+        <!-- Version Control -->
+        <div class="version-control group relative ml-2 px-4 py-2.5 border border-white/60 text-white/80 font-medium text-sm rounded-lg bg-white/10 backdrop-blur-sm">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span class="relative z-10">v0.1.0</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Center Logo -->
-    <a href="/" class="flex items-center justify-center mx-4 select-none group relative">
-      <!-- Logo glow effect -->
-      <div class="absolute inset-0 bg-white/10 rounded-2xl blur-xl group-hover:bg-white/20 transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
-      
-      <img 
-        src="/top-logo.png" 
-        alt="Build Watch Logo" 
-        class="w-60 h-24 object-contain relative z-10 transition-transform duration-300 group-hover:scale-105" 
-        draggable="false" 
-      />
-    </a>
-
-    <!-- Right Navigation Links and Actions -->
-    <div class="flex items-center gap-6">
-      {rightLinks.map(link => (
-        <a
-          href={link.href}
-          class={`nav-link group relative font-bold text-base tracking-wider px-4 py-2.5 rounded-xl transition-all duration-300 overflow-hidden ${
-            pathname === link.href
-              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm scale-105'
-              : 'text-white/90 hover:text-white hover:bg-white/15 hover:shadow-lg hover:scale-105 backdrop-blur-sm'
-          }`}
-        >
-          <!-- Hover background effect -->
-          <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          
-          <!-- Active indicator -->
-          {pathname === link.href && (
-            <div class="absolute bottom-0 left-0 w-full h-0.5 bg-white rounded-full"></div>
-          )}
-          
-          <span class="relative z-10">{link.label}</span>
-        </a>
-      ))}
-      
-      <!-- Login Button -->
-      <a 
-        href="/login/lgu-pmt" 
-        class="login-btn group relative ml-4 px-6 py-2.5 border-2 border-white/80 text-white font-bold text-base rounded-xl bg-transparent hover:bg-white hover:text-blue-600 transition-all duration-300 overflow-hidden backdrop-blur-sm"
-      >
-        <!-- Button glow effect -->
-        <div class="absolute inset-0 bg-white/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        
-        <!-- Hover sweep effect -->
-        <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 transform -skew-x-12 -translate-x-full group-hover:translate-x-full"></div>
-        
-        <span class="relative z-10">Login</span>
+    <!-- Mobile Layout -->
+    <div class="lg:hidden flex items-center justify-between">
+      <!-- Mobile Logo -->
+      <a href="/" class="flex items-center justify-center select-none group relative">
+        <img 
+          src="/top-logo.png" 
+          alt="Build Watch Logo" 
+          class="w-32 h-12 object-contain relative z-10 transition-transform duration-300 group-hover:scale-105" 
+          draggable="false" 
+        />
       </a>
-      
-      <!-- Version Control -->
-      <div class="version-control group relative ml-2 px-4 py-2.5 border border-white/60 text-white/80 font-medium text-sm rounded-lg bg-white/10 backdrop-blur-sm">
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          <span class="relative z-10">v0.1.0</span>
+
+      <!-- Mobile Menu Button -->
+      <button 
+        id="mobile-menu-button"
+        class="mobile-menu-btn relative p-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300"
+        aria-label="Toggle mobile menu"
+      >
+        <div class="w-6 h-6 flex flex-col justify-center items-center">
+          <span class="hamburger-line block w-5 h-0.5 bg-white rounded-full transition-all duration-300"></span>
+          <span class="hamburger-line block w-5 h-0.5 bg-white rounded-full mt-1 transition-all duration-300"></span>
+          <span class="hamburger-line block w-5 h-0.5 bg-white rounded-full mt-1 transition-all duration-300"></span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div 
+      id="mobile-menu-overlay"
+      class="mobile-menu-overlay fixed inset-0 bg-black/70 backdrop-blur-lg z-40 opacity-0 invisible transition-all duration-300 lg:hidden"
+    >
+      <!-- Mobile Menu Panel -->
+      <div class="mobile-menu-panel absolute top-0 right-0 w-96 h-screen shadow-2xl transform translate-x-full transition-transform duration-300" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%) !important; background-color: #2563eb !important;">
+        <!-- Panel Focus Effect -->
+        <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 opacity-60"></div>
+        <div class="absolute inset-0 backdrop-blur-sm"></div>
+        
+        <!-- Mobile Menu Header -->
+        <div class="relative flex items-center justify-center p-4 border-b border-white/30 bg-gradient-to-r from-white/10 to-transparent">
+          <div class="flex items-center gap-3">
+            <img 
+              src="/top-logo.png" 
+              alt="Build Watch Logo" 
+              class="w-28 h-12 object-contain" 
+              draggable="false" 
+            />
+          </div>
+          <button 
+            id="mobile-menu-close"
+            class="absolute right-4 p-3 rounded-lg bg-white/20 hover:bg-white/30 transition-all duration-300 border border-white/30"
+            aria-label="Close mobile menu"
+          >
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Mobile Menu Content -->
+        <div class="relative p-4 space-y-4 overflow-y-auto h-full pb-20">
+          <!-- Main Navigation -->
+          <div>
+            <div class="mb-1">
+              <h3 class="text-white text-xl font-black uppercase tracking-wider mb-4 drop-shadow-lg">Navigation</h3>
+            </div>
+            <div class="space-y-3">
+              {navLinks.map(link => (
+                <a
+                  href={link.href}
+                  class={`mobile-nav-link group relative flex items-center gap-4 px-5 py-4 rounded-lg transition-all duration-300 ${
+                    pathname === link.href
+                      ? 'bg-white text-blue-600 shadow-lg border-l-3 border-blue-400 scale-102'
+                      : 'text-white hover:text-blue-600 hover:bg-white hover:shadow-md hover:scale-101'
+                  }`}
+                >
+                  <div class={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    pathname === link.href 
+                      ? 'bg-blue-600 shadow-md' 
+                      : 'bg-white/60 group-hover:bg-blue-600 group-hover:shadow-md'
+                  }`}></div>
+                  <span class="font-semibold text-base">{link.label}</span>
+                  {pathname === link.href && (
+                    <div class="ml-auto flex items-center gap-1">
+                      <div class="w-5 h-5 bg-blue-600 rounded-full animate-pulse shadow-xl border-2 border-blue-400 ring-2 ring-blue-300 ring-opacity-50"></div>
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Additional Links -->
+          <div>
+            <div class="mb-1">
+              <h3 class="text-white text-xl font-black uppercase tracking-wider mb-4 drop-shadow-lg">Resources</h3>
+            </div>
+            <div class="space-y-3">
+              {rightLinks.map(link => (
+                <a
+                  href={link.href}
+                  class={`mobile-nav-link group relative flex items-center gap-4 px-5 py-4 rounded-lg transition-all duration-300 ${
+                    pathname === link.href
+                      ? 'bg-white text-blue-600 shadow-lg border-l-3 border-blue-400 scale-102'
+                      : 'text-white hover:text-blue-600 hover:bg-white hover:shadow-md hover:scale-101'
+                  }`}
+                >
+                  <div class={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    pathname === link.href 
+                      ? 'bg-blue-600 shadow-md' 
+                      : 'bg-white/60 group-hover:bg-blue-600 group-hover:shadow-md'
+                  }`}></div>
+                  <span class="font-semibold text-base">{link.label}</span>
+                  {pathname === link.href && (
+                    <div class="ml-auto flex items-center gap-1">
+                      <div class="w-5 h-5 bg-blue-600 rounded-full animate-pulse shadow-xl border-2 border-blue-400 ring-2 ring-blue-300 ring-opacity-50"></div>
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Login Button -->
+          <div class="pt-6 border-t-2 border-white/30">
+            <a 
+              href="/login/lgu-pmt" 
+              class="mobile-login-btn group relative w-full flex items-center justify-center gap-4 px-8 py-5 bg-gradient-to-r from-white via-white to-blue-50 text-blue-600 font-black text-xl rounded-xl hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 hover:text-white hover:shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 shadow-xl border-2 border-white/30 overflow-hidden"
+            >
+              <!-- Button Background Effect -->
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <!-- Icon -->
+              <svg class="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+              </svg>
+              
+              <!-- Text -->
+              <span class="relative z-10 transition-all duration-300">Login to Dashboard</span>
+              
+              <!-- Hover Text Overlay -->
+              <span class="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-black text-xl flex items-center justify-center gap-4">Login to Dashboard</span>
+            </a>
+            
+            <!-- Version Label at Bottom -->
+            <div class="flex items-center justify-center mt-4">
+              <div class="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full border border-white/30">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span class="text-white text-sm font-semibold">v0.1.0</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -160,8 +320,136 @@ const rightLinks = [
     backdrop-filter: blur(10px);
   }
 
+  /* Mobile Menu Styles */
+  .mobile-menu-overlay {
+    backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .mobile-menu-panel {
+    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%) !important;
+    background-color: #2563eb !important;
+  }
+
+  .mobile-menu-panel * {
+    background-color: transparent !important;
+  }
+
+  .mobile-menu-panel > div {
+    background-color: transparent !important;
+  }
+
+  /* Force blue background on all mobile menu elements */
+  #mobile-menu-overlay .mobile-menu-panel {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%) !important;
+    background-color: #2563eb !important;
+  }
+
+  #mobile-menu-overlay .mobile-menu-panel * {
+    background-color: transparent !important;
+  }
+
+  /* Override any conflicting styles */
+  .mobile-menu-panel,
+  .mobile-menu-panel *,
+  .mobile-menu-panel > *,
+  .mobile-menu-panel div {
+    background-color: transparent !important;
+  }
+
+  /* Force the main panel to be blue */
+  .mobile-menu-panel {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%) !important;
+    background-color: #2563eb !important;
+  }
+
+  /* Hamburger Animation */
+  .mobile-menu-btn.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .mobile-menu-btn.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-btn.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+  }
+
+  /* Mobile Menu Animations */
+  .mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mobile-menu-overlay.active .mobile-menu-panel {
+    transform: translateX(0);
+  }
+
+  /* Mobile Navigation Link Styles */
+  .mobile-nav-link {
+    position: relative;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .mobile-nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent);
+    transition: width 0.3s ease;
+  }
+
+  .mobile-nav-link:hover::before {
+    width: 100%;
+  }
+
+  .mobile-nav-link:hover {
+    transform: translateX(2px) scale(1.01);
+  }
+
+  .mobile-nav-link.active {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    color: #2563eb !important;
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+    border-left: 3px solid #60a5fa;
+  }
+
+  /* Mobile Login Button */
+  .mobile-login-btn {
+    position: relative;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .mobile-login-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent);
+    transition: width 0.3s ease;
+  }
+
+  .mobile-login-btn:hover::before {
+    width: 100%;
+  }
+
+  .mobile-login-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.6);
+  }
+
   /* Responsive adjustments */
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .nav-link {
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
@@ -184,14 +472,85 @@ const rightLinks = [
   }
 
   /* Custom focus styles for accessibility */
-  .nav-link:focus, .login-btn:focus {
+  .nav-link:focus, .login-btn:focus, .mobile-menu-btn:focus, .mobile-nav-link:focus {
     outline: 2px solid rgba(255, 255, 255, 0.5);
     outline-offset: 2px;
+  }
+
+  /* Prevent body scroll when mobile menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
   }
 </style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu functionality
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const body = document.body;
+
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+      const isOpen = mobileMenuOverlay.classList.contains('active');
+      
+      if (isOpen) {
+        closeMobileMenu();
+      } else {
+        openMobileMenu();
+      }
+    }
+
+    function openMobileMenu() {
+      mobileMenuOverlay.classList.add('active');
+      mobileMenuButton.classList.add('active');
+      body.classList.add('mobile-menu-open');
+      
+      // Add subtle vibration for mobile devices
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    }
+
+    function closeMobileMenu() {
+      mobileMenuOverlay.classList.remove('active');
+      mobileMenuButton.classList.remove('active');
+      body.classList.remove('mobile-menu-open');
+    }
+
+    // Event listeners for mobile menu
+    if (mobileMenuButton) {
+      mobileMenuButton.addEventListener('click', toggleMobileMenu);
+    }
+
+    if (mobileMenuClose) {
+      mobileMenuClose.addEventListener('click', closeMobileMenu);
+    }
+
+    // Close mobile menu when clicking overlay
+    if (mobileMenuOverlay) {
+      mobileMenuOverlay.addEventListener('click', function(e) {
+        if (e.target === mobileMenuOverlay) {
+          closeMobileMenu();
+        }
+      });
+    }
+
+    // Close mobile menu on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && mobileMenuOverlay.classList.contains('active')) {
+        closeMobileMenu();
+      }
+    });
+
+    // Close mobile menu when window is resized to desktop
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 1024 && mobileMenuOverlay.classList.contains('active')) {
+        closeMobileMenu();
+      }
+    });
+
     // Add scroll effect to navbar
     const navbar = document.querySelector('nav');
     let lastScrollTop = 0;
@@ -214,7 +573,7 @@ const rightLinks = [
 
     // Add active state management for better UX
     const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
     
     navLinks.forEach(link => {
       const href = link.getAttribute('href');
@@ -224,7 +583,7 @@ const rightLinks = [
     });
 
     // Add hover sound effect (optional - for enhanced UX)
-    const buttons = document.querySelectorAll('.nav-link, .login-btn, .signup-btn');
+    const buttons = document.querySelectorAll('.nav-link, .login-btn, .mobile-nav-link, .mobile-login-btn');
     
     buttons.forEach(button => {
       button.addEventListener('mouseenter', function() {
@@ -232,6 +591,17 @@ const rightLinks = [
         if ('vibrate' in navigator) {
           navigator.vibrate(10);
         }
+      });
+    });
+
+    // Close mobile menu when clicking on navigation links
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        // Small delay to allow navigation to start
+        setTimeout(() => {
+          closeMobileMenu();
+        }, 100);
       });
     });
   });
