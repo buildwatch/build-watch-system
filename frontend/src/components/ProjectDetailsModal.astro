@@ -638,10 +638,24 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
       if (!token) return;
       
-      // Use dynamic API URL
-      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3000/api' 
-        : 'http://build-watch.com:3000/api';
+      // Use dynamic API URL (same logic as config/api.js)
+      const getApiUrl = () => {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3000/api';
+        }
+        if (hostname.includes('build-watch.com')) {
+          // For HTTPS, use same domain without port (Nginx reverse proxy expected)
+          if (protocol === 'https:') {
+            return protocol + '//' + hostname + '/api';
+          } else {
+            return 'http://' + hostname + ':3000/api';
+          }
+        }
+        return 'http://localhost:3000/api';
+      };
+      const apiUrl = getApiUrl();
       
       // Check delayed status via API
       const delayedStatusResponse = await fetch(`${apiUrl}/projects/${project.id}/delayed-status`, {

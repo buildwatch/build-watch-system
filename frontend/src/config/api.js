@@ -6,6 +6,7 @@ export const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
+    const port = window.location.port;
     
     // Check if we're in development (localhost)
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -13,14 +14,17 @@ export const getApiUrl = () => {
     }
     
     // Check if we're in production (build-watch.com)
-    if (hostname.includes('build-watch.com') || hostname === 'www.build-watch.com') {
-      // Use same protocol as frontend to avoid mixed content warnings
-      // If frontend is HTTPS, try HTTPS for backend (may require reverse proxy)
-      // Otherwise, use HTTP on port 3000
+    if (hostname.includes('build-watch.com')) {
+      // For production, use the same protocol and domain WITHOUT port
+      // This assumes Nginx reverse proxy is configured to route /api to backend
+      // If Nginx proxies /api to localhost:3000, use relative path
+      // Otherwise, we'll use absolute URL with same protocol
       if (protocol === 'https:') {
-        // Try HTTPS first, fallback to HTTP if needed
-        return 'https://' + hostname + ':3000/api';
+        // HTTPS: Use same domain without port (Nginx reverse proxy expected)
+        // Browsers will block HTTP requests from HTTPS pages (mixed content)
+        return protocol + '//' + hostname + '/api';
       } else {
+        // HTTP: Can use port 3000 directly
         return 'http://' + hostname + ':3000/api';
       }
     }

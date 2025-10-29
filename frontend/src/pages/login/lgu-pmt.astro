@@ -164,7 +164,7 @@ import Layout from "../../layouts/Layout.astro";
         errorMessage.classList.add('hidden');
         
         try {
-          // Get API URL dynamically based on environment
+          // Get API URL dynamically based on environment (using same logic as config/api.js)
           const getApiUrl = () => {
             const hostname = window.location.hostname;
             const protocol = window.location.protocol;
@@ -172,9 +172,12 @@ import Layout from "../../layouts/Layout.astro";
               return 'http://localhost:3000/api';
             }
             if (hostname.includes('build-watch.com')) {
-              return protocol === 'https:' 
-                ? `https://${hostname}:3000/api`
-                : `http://${hostname}:3000/api`;
+              // For HTTPS, use same domain without port (Nginx reverse proxy expected)
+              if (protocol === 'https:') {
+                return protocol + '//' + hostname + '/api';
+              } else {
+                return 'http://' + hostname + ':3000/api';
+              }
             }
             return 'http://localhost:3000/api';
           };
