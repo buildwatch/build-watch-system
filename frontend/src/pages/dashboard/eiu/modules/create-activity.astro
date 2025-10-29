@@ -3,7 +3,14 @@ export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
 import EIULayout from '../../../../components/EIULayout.astro';
 
-const API_URL = 'http://localhost:3000/api';
+// Determine API URL based on environment (server-side)
+const isProduction = import.meta.env.PROD;
+const isLocalhost = Astro.url.hostname === 'localhost' || Astro.url.hostname === '127.0.0.1' || !isProduction;
+const API_URL = isLocalhost 
+  ? 'http://localhost:3000/api' 
+  : (Astro.url.protocol === 'https:' 
+      ? `${Astro.url.protocol}//${Astro.url.hostname}/api`
+      : `http://${Astro.url.hostname}:3000/api`);
 let userData = null;
 let projects = [];
 let loading = true;
@@ -243,6 +250,23 @@ loading = false;
     }
   });
 
+  // Get API URL dynamically (client-side)
+  const getApiUrl = () => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    if (hostname.includes('build-watch.com')) {
+      if (protocol === 'https:') {
+        return protocol + '//' + hostname + '/api';
+      } else {
+        return 'http://' + hostname + ':3000/api';
+      }
+    }
+    return 'http://localhost:3000/api';
+  };
+
   // Handle form submission
   document.getElementById('createActivityForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -292,7 +316,8 @@ loading = false;
         }
       }
       
-      const response = await fetch('http://localhost:3000/api/eiu-activities', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/eiu-activities`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -334,7 +359,8 @@ loading = false;
   async function loadMyActivities() {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/eiu-activities/my-activities', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/eiu-activities/my-activities`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -460,7 +486,8 @@ loading = false;
   async function viewMyActivityDetails(activityId) {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/eiu-activities/${activityId}`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/eiu-activities/${activityId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

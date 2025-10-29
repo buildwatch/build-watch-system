@@ -5,7 +5,14 @@ import EIULayout from '../../../../components/EIULayout.astro';
 import ProjectCard from '../../../../components/ProjectCard.astro';
 import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
 
-const API_URL = 'http://localhost:3000/api';
+// Determine API URL based on environment (server-side)
+const isProduction = import.meta.env.PROD;
+const isLocalhost = Astro.url.hostname === 'localhost' || Astro.url.hostname === '127.0.0.1' || !isProduction;
+const API_URL = isLocalhost 
+  ? 'http://localhost:3000/api' 
+  : (Astro.url.protocol === 'https:' 
+      ? `${Astro.url.protocol}//${Astro.url.hostname}/api`
+      : `http://${Astro.url.hostname}:3000/api`);
 let userData = null;
 let projects = [];
 let selectedProject = null;
@@ -1799,8 +1806,25 @@ loading = false;
 </Layout>
 
 <script>
-  // API Configuration
-  const API_URL = 'http://localhost:3000/api';
+  // API Configuration (client-side)
+  // Get API URL dynamically based on environment (same logic as config/api.js)
+  const getApiUrl = () => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    if (hostname.includes('build-watch.com')) {
+      // For HTTPS, use same domain without port (Caddy reverse proxy expected)
+      if (protocol === 'https:') {
+        return protocol + '//' + hostname + '/api';
+      } else {
+        return 'http://' + hostname + ':3000/api';
+      }
+    }
+    return 'http://localhost:3000/api';
+  };
+  const API_URL = getApiUrl();
   
   // Global variables
   let projects = [];
@@ -8606,7 +8630,8 @@ window.restoreVideosFromStorage = function(milestoneId) {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/milestones/milestone-submissions', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/milestones/milestone-submissions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -8727,7 +8752,8 @@ window.restoreVideosFromStorage = function(milestoneId) {
 
       console.log('📤 Sending notification payload:', notificationPayload);
 
-      const response = await fetch('http://localhost:3000/api/notifications/create-lgu-notification', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/create-lgu-notification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -8767,7 +8793,8 @@ window.restoreVideosFromStorage = function(milestoneId) {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/notifications/test-lgu-notification', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/test-lgu-notification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -8956,7 +8983,8 @@ window.restoreVideosFromStorage = function(milestoneId) {
             
             console.log('📤 Starting upload for:', fileData.file.name);
             
-            const uploadResponse = await fetch('http://localhost:3000/api/uploads/single', {
+            const apiUrl = getApiUrl();
+            const uploadResponse = await fetch(`${apiUrl}/uploads/single`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -8974,7 +9002,7 @@ window.restoreVideosFromStorage = function(milestoneId) {
                 name: fileData.name,
                 size: fileData.size,
                 type: fileData.type,
-                url: `http://localhost:3000/uploads/${uploadResult.upload.fileName}`,
+                url: `${apiUrl.replace('/api', '')}/uploads/${uploadResult.upload.fileName}`,
                 uploadDate: new Date().toISOString(),
                 originalName: uploadResult.upload.originalName,
                 fileName: uploadResult.upload.fileName

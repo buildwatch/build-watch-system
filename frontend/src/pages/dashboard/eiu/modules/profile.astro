@@ -1360,6 +1360,24 @@ import EIULayout from '../../../../components/EIULayout.astro';
 </div>
 
 <script>
+  // Get API URL dynamically based on environment (same logic as config/api.js)
+  const getApiUrl = () => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    if (hostname.includes('build-watch.com')) {
+      // For HTTPS, use same domain without port (Nginx reverse proxy expected)
+      if (protocol === 'https:') {
+        return protocol + '//' + hostname + '/api';
+      } else {
+        return 'http://' + hostname + ':3000/api';
+      }
+    }
+    return 'http://localhost:3000/api';
+  };
+
   // Function to load user profile data from database
   async function loadProfileData() {
     try {
@@ -1369,7 +1387,8 @@ import EIULayout from '../../../../components/EIULayout.astro';
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/auth/profile', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/auth/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1589,7 +1608,8 @@ import EIULayout from '../../../../components/EIULayout.astro';
       
       console.log('🔍 Loading EIU profile picture from server for:', userId);
       try {
-        const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/profile/picture/${userId}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.profilePictureUrl) {
@@ -1954,7 +1974,8 @@ import EIULayout from '../../../../components/EIULayout.astro';
           console.log('🔍 Uploading profile picture for userId:', userId);
           
           // Upload to server
-          const response = await fetch('http://localhost:3000/api/profile/upload-picture', {
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/profile/upload-picture`, {
             method: 'POST',
             body: formData
           });
