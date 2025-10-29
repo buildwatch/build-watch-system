@@ -164,7 +164,23 @@ import Layout from "../../layouts/Layout.astro";
         errorMessage.classList.add('hidden');
         
         try {
-          const response = await fetch('http://localhost:3000/api/auth/login', {
+          // Get API URL dynamically based on environment
+          const getApiUrl = () => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return protocol === 'https:' 
+                ? `https://${hostname}:3000/api`
+                : `http://${hostname}:3000/api`;
+            }
+            return 'http://localhost:3000/api';
+          };
+          const apiUrl = getApiUrl();
+          console.log('Login API URL:', apiUrl);
+          const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

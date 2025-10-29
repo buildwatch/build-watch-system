@@ -1,5 +1,5 @@
 const express = require('express');
-const { Project, User, ActivityLog } = require('../models');
+const { Project, User, ActivityLog, ProjectUpdate } = require('../models');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -32,30 +32,74 @@ router.get('/stats', async (req, res) => {
       }
     });
 
-    // Calculate utilized budget and average progress using ProgressCalculationService
+    // Calculate utilized budget from actual spending data and average progress using ProgressCalculationService
     const ProgressCalculationService = require('../services/progressCalculationService');
+
     let utilizedBudget = 0;
     let totalProgress = 0;
     let projectsWithProgress = 0;
     
     for (const project of allProjects) {
       try {
-        const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'executive');
-        // Use budget division progress for utilized budget calculation
-        const budgetProgress = progress?.progress?.budget || 0;
-        utilizedBudget += (parseFloat(project.totalBudget) || 0) * (budgetProgress / 100);
+        // Get actual spending from project updates (both budgetUsed and amountSpent fields)
+        const projectUpdates = await ProjectUpdate.findAll({
+          where: {
+            projectId: project.id,
+            status: {
+              [Op.in]: ['iu_approved', 'secretariat_approved']
+            }
+          },
+          attributes: ['budgetUsed', 'amountSpent', 'milestoneUpdates']
+        });
         
-        // Calculate average progress
+        let projectSpent = 0;
+        
+        // Calculate actual spending from project updates
+        projectUpdates.forEach(update => {
+          const budgetUsed = parseFloat(update.budgetUsed) || 0;
+          const amountSpent = parseFloat(update.amountSpent) || 0;
+          
+          // Use the higher value between budgetUsed and amountSpent
+          projectSpent += Math.max(budgetUsed, amountSpent);
+          
+          // Also check milestoneUpdates JSON for additional spending data
+          if (update.milestoneUpdates) {
+            try {
+              const milestoneData = typeof update.milestoneUpdates === 'string' 
+                ? JSON.parse(update.milestoneUpdates) 
+                : update.milestoneUpdates;
+              
+              if (Array.isArray(milestoneData)) {
+                milestoneData.forEach(milestone => {
+                  const milestoneSpent = parseFloat(milestone.budget?.used || milestone.budgetUsed || 0);
+                  projectSpent += milestoneSpent;
+                });
+              } else if (milestoneData && typeof milestoneData === 'object') {
+                const milestoneSpent = parseFloat(milestoneData.budget?.used || milestoneData.budgetUsed || 0);
+                projectSpent += milestoneSpent;
+              }
+            } catch (error) {
+              console.error(`Error parsing milestoneUpdates for project ${project.id}:`, error);
+            }
+          }
+        });
+        
+        utilizedBudget += projectSpent;
+        
+        // Calculate average progress using ProgressCalculationService
+        const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'executive');
         const overallProgress = progress?.progress?.overall || 0;
         if (overallProgress > 0) {
           totalProgress += overallProgress;
           projectsWithProgress++;
         }
+        
+        console.log(`Project ${project.projectCode}: Spent ₱${projectSpent.toLocaleString()}, Progress ${overallProgress}%`);
+        
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);
         // Fallback to database progress
         const projectProgress = parseFloat(project.overallProgress) || 0;
-        utilizedBudget += (parseFloat(project.totalBudget) || 0) * (projectProgress / 100);
         
         if (projectProgress > 0) {
           totalProgress += projectProgress;

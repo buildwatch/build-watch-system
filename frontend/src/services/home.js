@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+import { getApiUrl } from '../config/api.js';
+
+// Dynamic API URL - calls getApiUrl() each time to ensure correct environment detection
+// This way, localhost will use localhost:3000, and production will use production URL
 
 class HomeService {
   constructor() {
@@ -21,7 +24,7 @@ class HomeService {
         return this.cache.stats;
       }
 
-      const response = await fetch(`${API_BASE_URL}/home/stats`);
+      const response = await fetch(`${getApiUrl()}/home/stats`);
       
       if (response.ok) {
         const data = await response.json();
@@ -52,14 +55,14 @@ class HomeService {
     // Return fallback data if API fails - but log this as an issue
     console.warn('Using fallback data for home stats - API connection failed');
     return {
-      ongoingProjects: 4, // Updated to match actual data
-      totalBudget: 11224543, // Updated to match actual data (P11.2M)
-      completedProjects: 0, // Updated to match actual data
-      totalProjects: 4, // Updated to match actual data
-      budgetUtilization: 68, // Updated to match actual data
-      utilizedBudget: 7632689, // Calculated from budgetUtilization
-      averageProgress: 75, // Updated to match actual data
-      activeDepartments: 3 // Updated to match actual data
+      ongoingProjects: 0,
+      totalBudget: 0,
+      completedProjects: 0,
+      totalProjects: 0,
+      budgetUtilization: 0, // No fallback - show 0% when API fails
+      utilizedBudget: 0,
+      averageProgress: 0,
+      activeDepartments: 0
     };
   }
 
@@ -72,7 +75,7 @@ class HomeService {
         return this.cache.barangayStats;
       }
 
-      const response = await fetch(`${API_BASE_URL}/home/barangay-stats`);
+      const response = await fetch(`${getApiUrl()}/home/barangay-stats`);
       
       if (response.ok) {
         const data = await response.json();
@@ -126,7 +129,7 @@ class HomeService {
 
       // Add timestamp to force fresh data
       const timestamp = new Date().getTime();
-      const response = await fetch(`${API_BASE_URL}/home/featured-projects?limit=${limit}&_t=${timestamp}`);
+      const response = await fetch(`${getApiUrl()}/home/featured-projects?limit=${limit}&_t=${timestamp}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -202,7 +205,7 @@ class HomeService {
         return this.cache.articles.slice(0, limit);
       }
 
-      const response = await fetch(`${API_BASE_URL}/articles?limit=${limit}`);
+      const response = await fetch(`${getApiUrl()}/articles?limit=${limit}`);
       
       if (response.ok) {
         const data = await response.json();

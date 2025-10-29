@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { getApiUrl } from '../config/api.js';
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -194,8 +195,7 @@ function MapLegend() {
   );
 }
 
-// API configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+// API configuration - will call getApiUrl() dynamically to ensure correct environment detection
 
 // Santa Cruz, Laguna coordinates (approximate center)
 const SANTA_CRUZ_CENTER = [14.2783, 121.4153];
@@ -248,7 +248,8 @@ const generateProjectCoordinates = (projectId, location) => {
 const getProjectImage = (project) => {
   // Check if project has an initial photo
   if (project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None') {
-    return project.initialPhoto.startsWith('http') ? project.initialPhoto : `http://localhost:3000${project.initialPhoto}`;
+    const backendUrl = getApiUrl().replace('/api', '');
+    return project.initialPhoto.startsWith('http') ? project.initialPhoto : `${backendUrl}${project.initialPhoto}`;
   }
   
   // Array of construction and infrastructure images
@@ -779,7 +780,7 @@ export default function ProjectsIsland() {
       if (currentFilters.category) params.append('category', currentFilters.category);
       if (currentFilters.priority) params.append('priority', currentFilters.priority);
 
-      const response = await fetch(`${API_BASE_URL}/projects/public?${params}`);
+      const response = await fetch(`${getApiUrl()}/projects/public?${params}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

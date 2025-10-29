@@ -293,19 +293,19 @@ try {
               </div>
             </div>
 
-            {/* Budget Utilization */}
-            <div class="group relative bg-gradient-to-br from-white/90 to-indigo-50/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-indigo-100/50 hover:border-indigo-200 transform hover:-translate-y-2 hover:scale-105">
-              <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            {/* Budget Utilization - Dynamic Color Based on Percentage */}
+            <div class="group relative bg-gradient-to-br from-red-50/80 to-red-100/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-red-100/50 hover:border-red-200 transform hover:-translate-y-2 hover:scale-105 budget-utilization-card" data-utilization={stats.budgetUtilization || 0}>
+              <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div class="relative z-10 text-center">
-                <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                <div class="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
                   <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                   </svg>
                 </div>
-                <div class="text-3xl font-black text-indigo-600 mb-1" id="budget-utilization">{stats.budgetUtilization || 68}%</div>
-                <div class="text-indigo-800 font-semibold text-sm">Budget Utilization</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full mt-2 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                <div class="text-3xl font-black text-red-600 mb-1" id="budget-utilization">{stats.budgetUtilization || 0}%</div>
+                <div class="text-red-800 font-semibold text-sm">Budget Utilization</div>
+                <div class="w-full h-0.5 bg-gradient-to-r from-red-400 to-red-600 rounded-full mt-2 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
               </div>
             </div>
           </div>
@@ -834,6 +834,21 @@ try {
               const statusColor = status === 'active' ? 'bg-green-400' : status === 'completed' ? 'bg-blue-400' : 'bg-gray-400';
               const statusText = status === 'active' ? 'Active' : status === 'completed' ? 'Completed' : 'No Projects';
               
+              // Progress logic aligned with ProjectCard.astro
+              const progressPercentage = Math.round((bgy.completedProjects / bgy.totalProjects) * 100) || 0;
+              let progressColor = 'bg-gray-500';
+              if (progressPercentage >= 0 && progressPercentage <= 25) progressColor = 'bg-red-500';
+              else if (progressPercentage >= 26 && progressPercentage <= 50) progressColor = 'bg-yellow-500';
+              else if (progressPercentage >= 51 && progressPercentage <= 75) progressColor = 'bg-blue-500';
+              else if (progressPercentage >= 76 && progressPercentage <= 100) progressColor = 'bg-green-500';
+              
+              // Matching text color for percentage label
+              let progressTextColor = 'text-gray-600';
+              if (progressColor === 'bg-red-500') progressTextColor = 'text-red-600';
+              else if (progressColor === 'bg-yellow-500') progressTextColor = 'text-yellow-600';
+              else if (progressColor === 'bg-blue-500') progressTextColor = 'text-blue-600';
+              else if (progressColor === 'bg-green-500') progressTextColor = 'text-green-600';
+              
               return (
                 <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden flex flex-col w-full border-2 border-blue-100/50 hover:shadow-2xl hover:border-blue-300/50 transition-all duration-500 cursor-pointer transform hover:scale-[1.05] hover:-translate-y-3 group relative flex-shrink-0 min-w-[380px] max-w-[380px]"
                      key={bgy.name} 
@@ -986,16 +1001,24 @@ try {
                       <div class="relative z-10 mb-6">
                         <div class="flex items-center justify-between text-gray-600 text-sm mb-3 font-bold">
                           <span class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
+                            <div class={`w-2 h-2 rounded-full ${progressColor}`}></div>
                             Overall Progress
                           </span>
-                          <span class="text-lg font-black text-blue-600">{Math.round((bgy.completedProjects / bgy.totalProjects) * 100)}%</span>
+                          <span class={`text-lg font-black ${progressTextColor}`}>{progressPercentage}%</span>
                         </div>
                         <div class="w-full bg-gray-200/40 rounded-full h-3 overflow-hidden shadow-inner">
-                          <div class="bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-600 h-3 rounded-full transition-all duration-1000 ease-out relative" 
-                               style="width: {Math.round((bgy.completedProjects / bgy.totalProjects) * 100)}%">
-                            <div class="absolute inset-0 bg-white/30 rounded-full animate-pulse"></div>
-                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full animate-shimmer"></div>
+                          <div 
+                            class={`h-3 rounded-full transition-all duration-1000 ease-out relative barangay-progress-bar-fill ${progressColor}`}
+                            style="width: 0%"
+                            data-progress={progressPercentage}
+                            data-progress-color={progressColor}
+                          >
+                            {progressPercentage > 0 && (
+                              <div class="absolute inset-0 bg-white/30 rounded-full animate-pulse"></div>
+                            )}
+                            {progressPercentage > 0 && (
+                              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full animate-shimmer"></div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -3553,6 +3576,21 @@ try {
       transition: width 1s ease-out;
     }
 
+    /* Barangay progress bar animation */
+    .barangay-progress-bar-fill {
+      transform-origin: left;
+      animation: fillBarangayProgress 2s ease-out forwards;
+    }
+    
+    @keyframes fillBarangayProgress {
+      from {
+        width: 0%;
+      }
+      to {
+        width: var(--progress-width);
+      }
+    }
+
     /* Enhanced Status badge pulse animation for Active status */
     @keyframes statusPulse {
       0%, 100% {
@@ -4276,24 +4314,82 @@ try {
       });
     }
 
+    // Barangay progress bar animation function
+    function animateBarangayProgressBars() {
+      console.log('🎯 Starting barangay progress bar animation...');
+      const progressBars = document.querySelectorAll('.barangay-progress-bar-fill');
+      console.log('📊 Found barangay progress bars:', progressBars.length);
+      
+      if (progressBars.length === 0) {
+        console.warn('⚠️ No barangay progress bars found!');
+        return;
+      }
+      
+      progressBars.forEach((bar, index) => {
+        try {
+          const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
+          const colorClass = bar.getAttribute('data-progress-color') || 'bg-red-500';
+          
+          console.log(`📈 Barangay Bar ${index}: progress=${progress}%, color=${colorClass}`);
+          
+          // Apply the color class
+          bar.className = bar.className.replace(/bg-\w+-\d+/, '');
+          bar.classList.add(colorClass);
+          
+          // Force reset to 0% width
+          bar.style.setProperty('width', '0%', 'important');
+          bar.style.setProperty('display', 'block', 'important');
+          bar.style.setProperty('visibility', 'visible', 'important');
+          bar.style.setProperty('height', '12px', 'important');
+          bar.offsetHeight; // Trigger reflow
+          
+          console.log(`🔄 Barangay Bar ${index} reset to 0% width`);
+          
+          // Only animate if progress > 0
+          if (progress > 0) {
+            // Start animation after a small delay to ensure proper rendering
+            setTimeout(() => {
+              bar.style.setProperty('width', `${progress}%`, 'important');
+              console.log(`✅ Started animation for barangay bar ${index} to ${progress}%`);
+            }, 300);
+          } else {
+            // Keep at 0% width for 0 progress
+            bar.style.setProperty('width', '0%', 'important');
+            console.log(`⏸️ Barangay bar ${index} kept at 0% (no progress)`);
+          }
+        } catch (error) {
+          console.error(`❌ Error animating barangay bar ${index}:`, error);
+        }
+      });
+    }
+
     // Initialize project progress bar animation when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 DOM Content Loaded, initializing project progress bars...');
-      setTimeout(animateProjectProgressBars, 500);
+      console.log('🚀 DOM Content Loaded, initializing progress bars...');
+      setTimeout(() => {
+        animateProjectProgressBars();
+        animateBarangayProgressBars();
+      }, 500);
     });
 
     // Also run on window load
     window.addEventListener('load', function() {
-      console.log('🔄 Window loaded, re-initializing project progress bars...');
-      setTimeout(animateProjectProgressBars, 800);
+      console.log('🔄 Window loaded, re-initializing progress bars...');
+      setTimeout(() => {
+        animateProjectProgressBars();
+        animateBarangayProgressBars();
+      }, 800);
     });
 
     // Additional retry mechanism for dynamic content
     function retryAnimation() {
-      const progressBars = document.querySelectorAll('.project-progress-bar-fill');
-      if (progressBars.length > 0) {
+      const projectProgressBars = document.querySelectorAll('.project-progress-bar-fill');
+      const barangayProgressBars = document.querySelectorAll('.barangay-progress-bar-fill');
+      
+      if (projectProgressBars.length > 0 || barangayProgressBars.length > 0) {
         console.log('🔄 Retrying animation for existing progress bars...');
         animateProjectProgressBars();
+        animateBarangayProgressBars();
       } else {
         console.log('⏳ No progress bars found, retrying in 1 second...');
         setTimeout(retryAnimation, 1000);
@@ -4304,25 +4400,30 @@ try {
     setTimeout(() => {
       console.log('🔄 First retry attempt...');
       animateProjectProgressBars();
+      animateBarangayProgressBars();
     }, 1000);
     
     setTimeout(() => {
       console.log('🔄 Second retry attempt...');
       animateProjectProgressBars();
+      animateBarangayProgressBars();
     }, 2000);
     
     setTimeout(() => {
       console.log('🔄 Third retry attempt...');
       animateProjectProgressBars();
+      animateBarangayProgressBars();
     }, 3000);
 
     // Export function globally
     window.animateProjectProgressBars = animateProjectProgressBars;
+    window.animateBarangayProgressBars = animateBarangayProgressBars;
 
     // Manual trigger function for testing
-    window.testProjectProgressAnimation = function() {
-      console.log('🧪 Manual test trigger for project progress animation');
+    window.testProgressAnimation = function() {
+      console.log('🧪 Manual test trigger for progress animation');
       animateProjectProgressBars();
+      animateBarangayProgressBars();
     };
 
     // Force visibility test function
@@ -4829,7 +4930,90 @@ try {
         if (totalBudget) totalBudget.textContent = homeService.formatBudget(stats.totalBudget);
         if (completedCount) completedCount.textContent = stats.completedProjects;
         if (avgProgress) avgProgress.textContent = `${stats.averageProgress || 75}%`;
-        if (budgetUtilization) budgetUtilization.textContent = `${stats.budgetUtilization || 68}%`;
+        if (budgetUtilization) {
+          const budgetUtilizationValue = stats.budgetUtilization || 0;
+          budgetUtilization.textContent = `${budgetUtilizationValue}%`;
+          
+          // Update colors based on percentage (same logic as card)
+          let colorClass = 'text-red-600';
+          if (budgetUtilizationValue >= 0 && budgetUtilizationValue <= 25) {
+            colorClass = 'text-red-600';
+          } else if (budgetUtilizationValue >= 26 && budgetUtilizationValue <= 50) {
+            colorClass = 'text-yellow-600';
+          } else if (budgetUtilizationValue >= 51 && budgetUtilizationValue <= 75) {
+            colorClass = 'text-blue-600';
+          } else if (budgetUtilizationValue >= 76 && budgetUtilizationValue <= 100) {
+            colorClass = 'text-green-600';
+          }
+          
+          // Update the text color class
+          budgetUtilization.className = `text-3xl font-black ${colorClass} mb-1`;
+        }
+        
+        // Update Budget Utilization card colors dynamically
+        const budgetUtilizationCard = document.querySelector('.budget-utilization-card');
+        if (budgetUtilizationCard) {
+          const budgetUtilizationValue = stats.budgetUtilization || 0;
+          
+          // Determine color classes based on percentage
+          let cardBgClass = 'from-red-50/80 to-red-100/60';
+          let borderClass = 'border-red-100/50 hover:border-red-200';
+          let iconBgClass = 'from-red-500 to-red-600';
+          let iconGlowClass = 'from-red-500/5 to-red-600/10';
+          let textClass = 'text-red-600';
+          let titleClass = 'text-red-800';
+          let progressBarClass = 'from-red-400 to-red-600';
+          
+          if (budgetUtilizationValue >= 0 && budgetUtilizationValue <= 25) {
+            cardBgClass = 'from-red-50/80 to-red-100/60';
+            borderClass = 'border-red-100/50 hover:border-red-200';
+            iconBgClass = 'from-red-500 to-red-600';
+            iconGlowClass = 'from-red-500/5 to-red-600/10';
+            textClass = 'text-red-600';
+            titleClass = 'text-red-800';
+            progressBarClass = 'from-red-400 to-red-600';
+          } else if (budgetUtilizationValue >= 26 && budgetUtilizationValue <= 50) {
+            cardBgClass = 'from-yellow-50/80 to-yellow-100/60';
+            borderClass = 'border-yellow-100/50 hover:border-yellow-200';
+            iconBgClass = 'from-yellow-500 to-yellow-600';
+            iconGlowClass = 'from-yellow-500/5 to-yellow-600/10';
+            textClass = 'text-yellow-600';
+            titleClass = 'text-yellow-800';
+            progressBarClass = 'from-yellow-400 to-yellow-600';
+          } else if (budgetUtilizationValue >= 51 && budgetUtilizationValue <= 75) {
+            cardBgClass = 'from-blue-50/80 to-blue-100/60';
+            borderClass = 'border-blue-100/50 hover:border-blue-200';
+            iconBgClass = 'from-blue-500 to-blue-600';
+            iconGlowClass = 'from-blue-500/5 to-blue-600/10';
+            textClass = 'text-blue-600';
+            titleClass = 'text-blue-800';
+            progressBarClass = 'from-blue-400 to-blue-600';
+          } else if (budgetUtilizationValue >= 76 && budgetUtilizationValue <= 100) {
+            cardBgClass = 'from-green-50/80 to-green-100/60';
+            borderClass = 'border-green-100/50 hover:border-green-200';
+            iconBgClass = 'from-green-500 to-green-600';
+            iconGlowClass = 'from-green-500/5 to-green-600/10';
+            textClass = 'text-green-600';
+            titleClass = 'text-green-800';
+            progressBarClass = 'from-green-400 to-green-600';
+          }
+          
+          // Update card classes
+          budgetUtilizationCard.className = `group relative bg-gradient-to-br ${cardBgClass} backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border ${borderClass} transform hover:-translate-y-2 hover:scale-105 budget-utilization-card`;
+          
+          // Update nested elements
+          const iconBg = budgetUtilizationCard.querySelector('.w-14');
+          const iconGlow = budgetUtilizationCard.querySelector('.absolute.inset-0');
+          const textEl = budgetUtilizationCard.querySelector('.text-3xl');
+          const titleEl = budgetUtilizationCard.querySelector('.text-red-800');
+          const progressBar = budgetUtilizationCard.querySelector('.w-full.h-0\\.5');
+          
+          if (iconBg) iconBg.className = `w-14 h-14 bg-gradient-to-br ${iconBgClass} rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3`;
+          if (iconGlow) iconGlow.className = `absolute inset-0 bg-gradient-to-br ${iconGlowClass} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`;
+          if (textEl) textEl.className = `text-3xl font-black ${textClass} mb-1`;
+          if (titleEl) titleEl.className = `${titleClass} font-semibold text-sm`;
+          if (progressBar) progressBar.className = `w-full h-0.5 bg-gradient-to-r ${progressBarClass} rounded-full mt-2 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500`;
+        }
         
         // Update barangay carousel if data changed
         if (barangayStats && barangayStats.length > 0) {

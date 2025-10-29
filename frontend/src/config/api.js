@@ -1,26 +1,46 @@
 // API Configuration
-// For production, we need to use the correct protocol
-export const API_BASE_URL = typeof window !== 'undefined' && (window.location.hostname === 'build-watch.com' || window.location.hostname === 'www.build-watch.com')
-  ? 'http://build-watch.com:3000/api'  // Use HTTP since backend doesn't have SSL on port 3000
-  : 'http://localhost:3000/api';
-
-// Alternative configurations
-export const API_CONFIG = {
-  development: 'http://localhost:3000/api',
-  production: 'http://build-watch.com:3000/api',  // Use HTTP, not HTTPS
-  // Note: In the future, set up Nginx reverse proxy to handle HTTPS
-};
+// Automatically detects environment and uses appropriate API URL
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    // Client-side: check if we're in development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return API_CONFIG.development;
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    
+    // Check if we're in development (localhost)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
     }
-    // Production: use production URL
-    return API_CONFIG.production;
+    
+    // Check if we're in production (build-watch.com)
+    if (hostname.includes('build-watch.com') || hostname === 'www.build-watch.com') {
+      // Use same protocol as frontend to avoid mixed content warnings
+      // If frontend is HTTPS, try HTTPS for backend (may require reverse proxy)
+      // Otherwise, use HTTP on port 3000
+      if (protocol === 'https:') {
+        // Try HTTPS first, fallback to HTTP if needed
+        return 'https://' + hostname + ':3000/api';
+      } else {
+        return 'http://' + hostname + ':3000/api';
+      }
+    }
+    
+    // Fallback for other environments
+    return 'http://localhost:3000/api';
   }
+  
   // Server-side: use development URL for local development
-  return API_CONFIG.development;
-}; 
+  return 'http://localhost:3000/api';
+};
+
+// Alternative configurations
+export const API_CONFIG = {
+  development: 'http://localhost:3000/api',
+  // Production URL will be dynamically generated based on hostname
+  get production() {
+    return getApiUrl();
+  }
+};
+
+// Base URL for direct use
+export const API_BASE_URL = getApiUrl();
