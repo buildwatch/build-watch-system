@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getApiUrl } from "../config/api.js";
 
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -49,7 +50,8 @@ export default function ProjectMap() {
     const fetchProjects = async () => {
       try {
         const timestamp = new Date().getTime();
-        const response = await fetch(`http://localhost:3000/api/home/project-locations?_t=${timestamp}`);
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/home/project-locations?_t=${timestamp}`);
         if (response.ok) {
           const data = await response.json();
           setProjects(data.locations || []);
