@@ -850,11 +850,12 @@ try {
               else if (progressColor === 'bg-green-500') progressTextColor = 'text-green-600';
               
               return (
-                <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden flex flex-col w-full border-2 border-blue-100/50 hover:shadow-2xl hover:border-blue-300/50 transition-all duration-500 cursor-pointer transform hover:scale-[1.05] hover:-translate-y-3 group relative flex-shrink-0 min-w-[380px] max-w-[380px]"
-                     key={bgy.name} 
-                     data-barangay={bgy.name}
-                     data-index={index}
-                     style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%); animation-delay: {index * 0.1}s">
+                <a href={`/barangay/${encodeURIComponent(bgy.name)}`}
+                   class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden flex flex-col w-full border-2 border-blue-100/50 hover:shadow-2xl hover:border-blue-300/50 transition-all duration-500 cursor-pointer transform hover:scale-[1.05] hover:-translate-y-3 group relative flex-shrink-0 min-w-[380px] max-w-[380px]"
+                   key={bgy.name}
+                   data-barangay={bgy.name}
+                   data-index={index}
+                   style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%); animation-delay: {index * 0.1}s">
                   
                   {/* Enhanced Featured Image Section */}
                   <div class="h-52 relative overflow-hidden">
@@ -1037,7 +1038,7 @@ try {
                       </div>
                     </div>
                   </div>
-                </div>
+                </a>
               );
             }) : (
               // Loading state
@@ -4029,21 +4030,8 @@ try {
       updateBarangayButtons();
     }
 
-    // Add click handlers for barangay cards
-    const barangayCards = document.querySelectorAll('[data-barangay]');
-    barangayCards.forEach(card => {
-      card.addEventListener('click', function() {
-        const barangay = this.getAttribute('data-barangay');
-        if (barangay) {
-          // Add click animation
-          this.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            this.style.transform = '';
-            window.location.href = `/projects?location=${encodeURIComponent(barangay)}`;
-          }, 150);
-        }
-      });
-    });
+    // Barangay cards already have correct href links to /barangay/[name]
+    // No need for additional click handlers since the link will handle navigation
     
     // Enhanced Projects Carousel with Blue Circle Indicators
     const projectsIndicators = document.querySelectorAll('.projects-indicator');

@@ -363,6 +363,26 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
       </div>
     </div>
     
+    <!-- Deep link banner (shown when ?barangay= is present) -->
+    <div class="w-full flex justify-center mt-3">
+      <div id="deep-link-banner" class="hidden w-full max-w-7xl mx-auto">
+        <div class="flex items-center justify-between p-4 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm">
+          <div class="flex items-center gap-3 text-blue-800">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div class="text-sm font-semibold">
+              Filtering projects for <span id="deep-link-bgy" class="font-black"></span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a id="deep-link-back" class="px-3 py-2 rounded-lg bg-white border border-blue-200 text-blue-700 font-semibold hover:bg-blue-50 shadow-sm" href="#">Back to Barangay</a>
+            <button id="deep-link-clear" class="px-3 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow hover:shadow-md">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Main content area -->
     <div class="w-full max-w-7xl mx-auto mt-8">
       <ProjectsIsland client:only="react" />
@@ -372,11 +392,19 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
 </Layout>
 
 <script>
+  // Highlight animation style
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .deep-link-highlight { position: relative; box-shadow: 0 0 0 3px rgba(59,130,246,0.35) inset, 0 10px 20px rgba(59,130,246,0.15); transition: box-shadow .3s ease; }
+  `;
+  document.head.appendChild(style);
+
   // Enhanced search and filter functionality
   document.addEventListener('DOMContentLoaded', function() {
     initializeSearchAndFilters();
     initializeKeyboardShortcuts();
     initializeAnalytics();
+    applyDeepLinkFromURL();
     
     // Also initialize analytics after a short delay to ensure DOM is ready
     setTimeout(() => {
@@ -491,6 +519,81 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
 
     // Add focus effects
     addFocusEffects();
+  }
+
+  // Read ?barangay= query and pre-apply filter
+  function applyDeepLinkFromURL() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const bgy = params.get('barangay');
+      if (!bgy) return;
+      const barangayFilter = document.getElementById('barangay-filter');
+      if (barangayFilter) {
+        // Try exact match; if not found leave value and still dispatch
+        const options = Array.from(barangayFilter.options).map(o => o.value);
+        if (options.includes(bgy)) {
+          barangayFilter.value = bgy;
+        }
+        // Dispatch a filter event so ProjectsIsland can refresh
+        handleFilter();
+        // Re-dispatch after island mounts (React may not be ready yet)
+        setTimeout(handleFilter, 600);
+        setTimeout(handleFilter, 1300);
+        // Show banner
+        const banner = document.getElementById('deep-link-banner');
+        const label = document.getElementById('deep-link-bgy');
+        const back = document.getElementById('deep-link-back');
+        if (banner && label && back) {
+          label.textContent = bgy;
+          back.href = `/barangay/${encodeURIComponent(bgy)}`;
+          banner.classList.remove('hidden');
+        }
+        // Scroll to results area
+        const container = document.querySelector('.w-full.max-w-7xl.mx-auto.mt-8');
+        if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Add a little highlight
+        barangayFilter.classList.add('ring-2','ring-blue-500');
+        setTimeout(()=> barangayFilter.classList.remove('ring-2','ring-blue-500'), 1200);
+
+        // Clear deep link
+        const clearBtn = document.getElementById('deep-link-clear');
+        if (clearBtn) {
+          clearBtn.onclick = () => {
+            const banner = document.getElementById('deep-link-banner');
+            if (barangayFilter) barangayFilter.value = '';
+            handleFilter();
+            if (banner) banner.classList.add('hidden');
+            const url = new URL(window.location.href);
+            url.searchParams.delete('barangay');
+            window.history.replaceState({}, '', url);
+          };
+        }
+
+        // Highlight rows matching barangay
+        const tryHighlight = () => highlightBarangayRows(bgy);
+        setTimeout(tryHighlight, 700);
+        setTimeout(tryHighlight, 1500);
+      }
+    } catch (e) {
+      console.warn('Failed to apply deep link filter', e);
+    }
+  }
+
+  // Briefly highlight rows that match the barangay
+  function highlightBarangayRows(barangayName) {
+    const container = document.querySelector('.w-full.max-w-7xl.mx-auto.mt-8');
+    if (!container) return;
+    const text = (v) => (v || '').trim().toLowerCase();
+    const targets = Array.from(container.querySelectorAll('td, div, span, p'))
+      .filter(el => el.childElementCount === 0 && text(el.textContent) === text(barangayName));
+    if (targets.length === 0) return;
+    targets.forEach(el => {
+      const row = el.closest('tr') || el.closest('.project-row') || el.closest('.group') || el.closest('.bg-white');
+      if (row && !row.classList.contains('deep-link-highlight')) {
+        row.classList.add('deep-link-highlight');
+        setTimeout(() => row.classList.remove('deep-link-highlight'), 2000);
+      }
+    });
   }
 
   function initializeKeyboardShortcuts() {

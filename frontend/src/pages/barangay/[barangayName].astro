@@ -1,0 +1,650 @@
+---
+export const prerender = false;
+import Layout from "../../layouts/Layout.astro";
+import TopBar from "../../components/TopBar.astro";
+import LGUFooter from "../../components/LGUFooter.astro";
+import MiniMap from "../../islands/MiniMap.jsx";
+import BarangayMapModal from "../../islands/BarangayMapModal.jsx";
+import BarangayProjectsIsland from "../../islands/BarangayProjectsIsland.jsx";
+import BarangayProgressGraph from "../../islands/BarangayProgressGraph.jsx";
+
+const barangayName = decodeURIComponent(Astro.params.barangayName || 'Barangay');
+
+// Server-side fetch: initial projects for this barangay (for fast first paint)
+let initialProjects = [];
+try {
+  const apiBase = 'http://localhost:3000/api';
+  const res = await fetch(`${apiBase}/projects/public?page=1&limit=1000`);
+  const data = await res.json();
+  const all = (data?.projects || []).map(p => ({
+    ...p,
+    location: p.location || ''
+  }));
+  initialProjects = all.filter(p => (p.location||'').toLowerCase().includes(barangayName.toLowerCase()));
+} catch (e) {
+  initialProjects = [];
+}
+
+// Server-side mapping to the public/barangays-photo/
+function getBarangayImageServer(name) {
+  const imageMap = {
+    'Alipit': '/barangays-photo/Alipit.jpg',
+    'Bagumbayan': '/barangays-photo/Bagumbayan.jpg',
+    'Bubukal': '/barangays-photo/Bubukal.jpg',
+    'Calios': '/barangays-photo/Calios.jpg',
+    'Duhat': '/barangays-photo/Duhat.JPG',
+    'Gatid': '/barangays-photo/Gatid.jfif',
+    'Jasaan': '/barangays-photo/Jasaan.png',
+    'Labuin': '/barangays-photo/Labuin.jpg',
+    'Malinao': '/barangays-photo/Malinao.png',
+    'Oogong': '/barangays-photo/Oogong.png',
+    'Palasan': '/barangays-photo/Palasan.jpg',
+    'Patimbao': '/barangays-photo/Patimbao.png',
+    'Pagsawitan': '/barangays-photo/Pagsawitan.jpg',
+    'Poblacion 1': '/barangays-photo/Poblacion 1.png',
+    'Poblacion 2': '/barangays-photo/Poblacion 2.png',
+    'Poblacion 3': '/barangays-photo/Poblacion 3.png',
+    'Poblacion 4': '/barangays-photo/Poblacion 4.png',
+    'Poblacion 5': '/barangays-photo/Poblacion 5.png',
+    'Poblacion I': '/barangays-photo/Poblacion 1.png',
+    'Poblacion II': '/barangays-photo/Poblacion 2.png',
+    'Poblacion III': '/barangays-photo/Poblacion 3.png',
+    'Poblacion IV': '/barangays-photo/Poblacion 4.png',
+    'Poblacion V': '/barangays-photo/Poblacion 5.png',
+    'San Jose': '/barangays-photo/San Jose.jpg',
+    'San Juan': '/barangays-photo/San Juan.jpg',
+    'San Pablo Norte': '/barangays-photo/San Pablo Norte.jpg',
+    'San Pablo Sur': '/barangays-photo/San Pablo Sur.jpg',
+    'Santisima Cruz': '/barangays-photo/Santisima Cruz.jpg',
+    'Santo Angel Central': '/barangays-photo/Santo Angel Central.jpg',
+    'Santo Angel Norte': '/barangays-photo/Santo Angel Norte.jpg',
+    'Santo Angel Sur': '/barangays-photo/Santo Angel Sur.jpg'
+  };
+  return imageMap[name] || '/barangays-photo/Alipit.jpg';
+}
+---
+<Layout title={`${barangayName} | Build Watch LGU`} description={`Public projects in ${barangayName} - Santa Cruz, Laguna`}>
+  <TopBar />
+  <main id="barangay-root" data-barangay={encodeURIComponent(barangayName)} class="min-h-screen bg-white pt-20 md:pt-36 pb-24">
+    {/* Hero Section with action buttons */}
+    <section class="relative max-w-7xl mx-auto px-4 mb-12">
+      <div class="flex items-center justify-end mb-4 md:mb-6">
+        <div class="flex flex-wrap items-center gap-2 md:gap-3">
+          {/* Share Button - Light Blue Theme */}
+          <button id="btn-share" class="group relative px-4 py-2.5 md:px-5 md:py-3 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border-2 border-sky-200 text-sky-700 font-bold text-sm md:text-base shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-sky-400 to-sky-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 flex items-center gap-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              <span class="group-hover:text-white transition-colors">Share</span>
+            </span>
+          </button>
+
+          {/* Print Button - Blue Theme */}
+          <button id="btn-print" class="group relative px-4 py-2.5 md:px-5 md:py-3 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 text-blue-700 font-bold text-sm md:text-base shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 flex items-center gap-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+              </svg>
+              <span class="group-hover:text-white transition-colors">Print</span>
+            </span>
+          </button>
+
+          {/* Export CSV Button - Green Theme */}
+          <button id="btn-export" class="group relative px-4 py-2.5 md:px-5 md:py-3 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 text-green-700 font-bold text-sm md:text-base shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 flex items-center gap-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <span class="group-hover:text-white transition-colors">Export CSV</span>
+            </span>
+          </button>
+
+          {/* Open Projects Button - Yellow Theme */}
+          <a href={`/projects?barangay=${encodeURIComponent(barangayName)}`} class="group relative px-4 py-2.5 md:px-5 md:py-3 rounded-xl bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-200 text-yellow-700 font-bold text-sm md:text-base shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 flex items-center gap-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+              <span class="group-hover:text-white transition-colors">Open Projects</span>
+            </span>
+          </a>
+        </div>
+      </div>
+
+      <div class="relative overflow-hidden rounded-[32px] shadow-2xl" id="hero-wrap">
+        <img id="hero-img" src={getBarangayImageServer(barangayName)} alt={barangayName} class="w-full h-[260px] md:h-[420px] object-cover will-change-transform transition-transform duration-200" loading="lazy" />
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-900/85 via-blue-800/60 to-blue-700/40"></div>
+        <div class="absolute -top-10 -left-10 w-44 h-44 bg-blue-400/20 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-10 -right-10 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl"></div>
+        
+        {/* Hero Content */}
+        <div class="absolute inset-0 flex items-end">
+          <div class="p-6 md:p-10 lg:p-12 w-full">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6 relative z-10">
+              {/* Title Section */}
+              <div class="flex-1 space-y-3 md:space-y-4">
+                <div class="space-y-2 md:space-y-3">
+                  <h1 class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white drop-shadow-2xl tracking-tight leading-[1.1]">
+                    {barangayName}
+                  </h1>
+                  <div class="w-20 h-1.5 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full shadow-lg"></div>
+                </div>
+                <p class="text-base md:text-lg lg:text-xl xl:text-2xl text-white/95 font-semibold drop-shadow-lg max-w-2xl leading-relaxed">
+                  Empowering development in {barangayName}
+                </p>
+              </div>
+              
+              {/* Badge Section */}
+              <div class="flex-shrink-0 flex items-center gap-3 md:flex-col md:items-end">
+                <span id="last-update-badge" class="hidden px-4 py-2.5 rounded-full bg-white/95 backdrop-blur-sm border border-white/30 text-blue-800 text-xs md:text-sm font-bold shadow-lg hover:bg-white transition-colors">
+                  Updated on —
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Admin-only change cover button */}
+        <div class="absolute top-4 right-4 hidden" id="cover-controls">
+          <label class="px-4 py-2 rounded-xl bg-white/90 border border-blue-200 text-blue-700 font-semibold hover:bg-blue-50 shadow cursor-pointer">
+            Change Cover
+            <input type="file" id="cover-input" accept="image/*" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    {/* Stats + Mini Map */}
+    <section class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5 items-stretch mb-12">
+      {/* Total Projects */}
+      <div class="group relative bg-gradient-to-br from-white via-blue-50/50 to-blue-50/80 border-2 border-blue-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-blue-200/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-blue-300/40 transition-colors"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-blue-600 font-bold mb-2">Total Projects</div>
+          <div id="stat-total" class="text-3xl md:text-4xl font-black text-blue-700 leading-none">0</div>
+        </div>
+      </div>
+
+      {/* Ongoing */}
+      <div class="group relative bg-gradient-to-br from-white via-sky-50/50 to-sky-50/80 border-2 border-sky-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-sky-200/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-sky-300/40 transition-colors"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-sky-600 font-bold mb-2">Ongoing</div>
+          <div id="stat-ongoing" class="text-3xl md:text-4xl font-black text-sky-700 leading-none">0</div>
+        </div>
+      </div>
+
+      {/* Delayed */}
+      <div class="group relative bg-gradient-to-br from-white via-red-50/50 to-red-50/80 border-2 border-red-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-red-200/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-red-300/40 transition-colors"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-red-600 font-bold mb-2">Delayed</div>
+          <div id="stat-delayed" class="text-3xl md:text-4xl font-black text-red-700 leading-none">0</div>
+        </div>
+      </div>
+
+      {/* Completed */}
+      <div class="group relative bg-gradient-to-br from-white via-green-50/50 to-green-50/80 border-2 border-green-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-green-200/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-green-300/40 transition-colors"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-green-600 font-bold mb-2">Completed</div>
+          <div id="stat-completed" class="text-3xl md:text-4xl font-black text-green-700 leading-none">0</div>
+        </div>
+      </div>
+
+      {/* Avg. Progress */}
+      <div class="group relative bg-gradient-to-br from-white via-indigo-50/50 to-indigo-50/80 border-2 border-indigo-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-indigo-200/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-indigo-300/40 transition-colors"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-indigo-600 font-bold mb-2">Avg. Progress</div>
+          <div id="stat-avg" class="text-3xl md:text-4xl font-black text-indigo-700 leading-none mb-1">0%</div>
+          <div id="stat-lastupdate" class="text-xs text-indigo-500/70 font-medium leading-tight">—</div>
+        </div>
+      </div>
+
+      {/* Top Implementing Office */}
+      <div class="group relative bg-gradient-to-br from-white via-cyan-50/50 to-cyan-50/80 border-2 border-cyan-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
+        <div class="absolute top-0 right-0 w-20 h-20 bg-cyan-200/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-cyan-300/40 transition-colors"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-cyan-600 font-bold mb-2">Top Office</div>
+          <div id="stat-topoffice" class="text-base md:text-lg lg:text-xl font-black text-cyan-700 leading-tight line-clamp-2">—</div>
+        </div>
+      </div>
+
+    </section>
+
+    {/* Barangay Map Section - Full Width */}
+    <section class="max-w-7xl mx-auto px-4 mb-8">
+      <div class="bg-white/90 rounded-2xl border border-blue-100 shadow-lg p-4 md:p-5 relative z-10 overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-blue-700">Barangay Map</div>
+              <div class="text-xs text-gray-500">Location of {barangayName} with Projects</div>
+            </div>
+          </div>
+          <button id="open-map-modal" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+            </svg>
+            Full View
+          </button>
+        </div>
+        <div class="relative z-10 rounded-xl cursor-pointer group" id="map-container" style="overflow: visible;">
+          <div class="barangay-map-container" style="overflow: visible; position: relative;" id="map-wrapper">
+            <MiniMap client:idle barangayName={barangayName} onClick={() => {
+              const event = new CustomEvent('openMapModal');
+              window.dispatchEvent(event);
+            }} />
+          </div>
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors rounded-xl flex items-center justify-center pointer-events-none" style="pointer-events: none; z-index: 5;">
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-blue-200 pointer-events-none">
+              <span class="text-sm font-semibold text-blue-700">Click to view full map</span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex justify-between items-center">
+          <div class="flex items-center gap-4 text-xs">
+            <div class="flex items-center gap-1.5">
+              <div class="w-3 h-3 rounded-full border-2 border-blue-600 bg-blue-500"></div>
+              <span class="text-gray-600">Barangay</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span class="text-gray-600">Ongoing</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              <span class="text-gray-600">Completed</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <span class="text-gray-600">Delayed</span>
+            </div>
+          </div>
+          <a id="gmaps-link" target="_blank" rel="noopener" class="text-xs font-semibold text-blue-700 hover:underline">Open in Google Maps</a>
+        </div>
+      </div>
+
+      {/* Map Modal */}
+      <BarangayMapModal 
+        client:load
+        barangayName={barangayName}
+      />
+    </section>
+
+    {/* Progress Graph Section */}
+    <section class="max-w-7xl mx-auto px-4 mb-8">
+      <BarangayProgressGraph 
+        client:load
+        barangayName={barangayName}
+        projects={initialProjects}
+      />
+    </section>
+
+    {/* Search / Filters */}
+    <section class="max-w-7xl mx-auto px-4 mb-8">
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="flex items-center gap-3">
+          <input id="search" type="text" placeholder="Search projects..." class="w-72 max-w-full px-4 py-3 rounded-xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <select id="status" class="px-4 py-3 rounded-xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="all">All</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="delayed">Delayed</option>
+          </select>
+          <select id="sort" class="px-4 py-3 rounded-xl border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="recent">Sort: Recent</option>
+            <option value="name">Sort: Name</option>
+            <option value="budget_desc">Sort: Budget (High)</option>
+            <option value="budget_asc">Sort: Budget (Low)</option>
+            <option value="progress_desc">Sort: Progress (High)</option>
+            <option value="progress_asc">Sort: Progress (Low)</option>
+          </select>
+        </div>
+        <div class="text-sm text-blue-700">Showing <span id="count">0</span> projects</div>
+      </div>
+    </section>
+
+    {/* Projects Grid - React Island */}
+    <section class="max-w-7xl mx-auto px-4">
+      <BarangayProjectsIsland 
+        client:load
+        barangayName={barangayName} 
+        initialProjects={initialProjects}
+      />
+    </section>
+  </main>
+  <LGUFooter />
+
+  <script>
+    const rootEl = document.getElementById('barangay-root');
+    const barangayName = decodeURIComponent(rootEl?.dataset.barangay || '');
+    // Dynamic API URL (same logic as config)
+    const getApiUrl = () => {
+      const hostname = window.location.hostname;
+      const protocol = window.location.protocol;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:3000/api';
+      if (hostname.includes('build-watch.com')) return protocol === 'https:' ? `${protocol}//${hostname}/api` : `http://${hostname}:3000/api`;
+      return 'http://localhost:3000/api';
+    };
+
+    // Google maps quick link
+    const barangayCoordinates = {
+      'Alipit': [14.281, 121.419],
+      'Bagumbayan': [14.295, 121.420],
+      'Bubukal': [14.278, 121.423],
+      'Calios': [14.287, 121.430],
+      'Duhat': [14.282, 121.415],
+      'Gatid': [14.275, 121.418],
+      'Jasaan': [14.290, 121.425],
+      'Labuin': [14.285, 121.422],
+      'Malinao': [14.280, 121.421],
+      'Oogong': [14.288, 121.424],
+      'Pagsawitan': [14.283, 121.416],
+      'Palasan': [14.286, 121.419],
+      'Patimbao': [14.284, 121.417],
+      'Poblacion I': [14.281, 121.418],
+      'Poblacion II': [14.282, 121.419],
+      'Poblacion III': [14.283, 121.420],
+      'Poblacion IV': [14.284, 121.421],
+      'Poblacion V': [14.285, 121.422],
+      'San Jose': [14.276, 121.415],
+      'San Juan': [14.277, 121.416],
+      'San Pablo Norte': [14.278, 121.417],
+      'San Pablo Sur': [14.279, 121.418],
+      'Santisima Cruz': [14.280, 121.419],
+      'Santo Angel Central': [14.281, 121.420],
+      'Santo Angel Norte': [14.282, 121.421],
+      'Santo Angel Sur': [14.283, 121.422],
+    };
+    
+    const coords = barangayCoordinates[barangayName] || [14.281,121.419];
+    const g = document.getElementById('gmaps-link');
+    if (g) g.href = `https://www.google.com/maps?q=${coords[0]},${coords[1]}`;
+    document.addEventListener('DOMContentLoaded', () => {
+      // Parallax init
+      const heroImg = document.getElementById('hero-img');
+      window.addEventListener('scroll', () => {
+        if (!heroImg) return;
+        const rect = heroImg.getBoundingClientRect();
+        const dy = Math.min(30, Math.max(-30, (window.innerHeight - rect.top) * 0.04));
+        heroImg.style.transform = `translateY(${dy}px) scale(1.03)`;
+      }, { passive: true });
+
+      // Admin cover controls
+      try {
+        const token = localStorage.getItem('token');
+        const userRaw = localStorage.getItem('user');
+        if (token && userRaw) {
+          const user = JSON.parse(userRaw);
+          const rolesAllowed = ['sysadmin','secretariat','executive'];
+          if (rolesAllowed.includes((user.role||'').toLowerCase())) {
+            const controls = document.getElementById('cover-controls');
+            if (controls) controls.classList.remove('hidden');
+            const input = document.getElementById('cover-input');
+            input?.addEventListener('change', async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('category', 'barangay-cover');
+                const res = await fetch(`${getApiUrl()}/uploads/single`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${token}` },
+                  body: formData
+                });
+                const result = await res.json();
+                if (res.ok && result?.upload?.fileName) {
+                  const url = `${getApiUrl().replace('/api','')}/uploads/${result.upload.fileName}`;
+                  if (heroImg) heroImg.src = url;
+                  localStorage.setItem(`barangay_cover_${barangayName}`, url);
+                  alert('Cover updated');
+                } else {
+                  alert(result?.error || 'Upload failed');
+                }
+              } catch (err) {
+                console.error('Cover upload error', err);
+                alert('Upload error');
+              } finally {
+                e.target.value = '';
+              }
+            });
+          }
+        }
+        // Load saved custom cover if present
+        const saved = localStorage.getItem(`barangay_cover_${barangayName}`);
+        if (saved && heroImg) heroImg.src = saved;
+      } catch {}
+
+    });
+
+    // Map modal functionality
+    let mapModalComponent = null;
+    const mapModalContainer = document.querySelector('[data-barangay-map-modal]');
+    if (mapModalContainer) {
+      // Find the React root or component instance
+      setTimeout(() => {
+        const modalElements = document.querySelectorAll('.barangay-map-modal');
+        if (modalElements.length > 0) {
+          mapModalComponent = modalElements[0].__reactInternalInstance || null;
+        }
+      }, 500);
+    }
+
+    const openMapModal = (e) => {
+      if (e) e.stopPropagation();
+      // Trigger React state update via custom event (React component will handle overflow)
+      const event = new CustomEvent('openMapModal');
+      window.dispatchEvent(event);
+    };
+
+    const closeMapModal = () => {
+      // Trigger React state update via custom event (React component will handle overflow)
+      const event = new CustomEvent('closeMapModal');
+      window.dispatchEvent(event);
+    };
+    
+    // Also listen for ESC key to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.querySelector('.barangay-map-modal');
+        if (modal && modal.style.display === 'flex') {
+          closeMapModal();
+        }
+      }
+    });
+
+    // Add click handlers for map modal - wait for DOM to be ready
+    setTimeout(() => {
+      const openBtn = document.getElementById('open-map-modal');
+      const mapContainer = document.getElementById('map-container');
+      
+      if (openBtn) {
+        openBtn.addEventListener('click', openMapModal);
+      }
+      
+      if (mapContainer) {
+        // Only trigger on clicks that are not on markers/popups
+        mapContainer.addEventListener('click', (e) => {
+          // Don't open if clicking on a popup, marker, or any interactive Leaflet element
+          const target = e.target;
+          if (!target.closest('.leaflet-popup') && 
+              !target.closest('.leaflet-marker-icon') &&
+              !target.closest('.leaflet-marker-shadow') &&
+              !target.closest('.leaflet-control') &&
+              target.closest('#map-wrapper')) {
+            openMapModal(e);
+          }
+        }, true); // Use capture phase to catch events early
+      }
+    }, 100);
+
+    // Actions: share, print, export CSV
+    document.getElementById('btn-print')?.addEventListener('click', () => window.print());
+    document.getElementById('btn-share')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard');
+      } catch {
+        alert('Unable to copy link');
+      }
+    });
+    document.getElementById('btn-export')?.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${getApiUrl()}/projects/public?page=1&limit=1000&_t=${Date.now()}`);
+        const data = await res.json().catch(() => ({}));
+        const all = (data.projects || []).map(p => ({
+          ...p,
+          location: p.location || '',
+        }));
+        const byBarangay = all.filter(p => (p.location || '').toLowerCase().includes(barangayName.toLowerCase()));
+        
+        const rows = [
+          ['Name','Status','Budget','Progress','Location','Start','End'],
+          ...byBarangay.map(p => [
+            p.name,
+            p.status || '',
+            Number(p.totalBudget || 0),
+            Math.round(p.progress?.overall || p.overallProgress || 0),
+            p.location || '',
+            p.startDate || '',
+            p.endDate || ''
+          ])
+        ];
+        const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${barangayName.replace(/\s+/g,'_')}_projects.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Export error:', err);
+        alert('Failed to export CSV');
+      }
+    });
+  </script>
+
+  <style>
+    /* Prevent Leaflet popups from overlapping topbar and other elements */
+    .leaflet-container {
+      z-index: 1 !important;
+    }
+    
+    .leaflet-popup {
+      z-index: 40 !important; /* Lower than topbar (z-50) */
+      max-width: 200px !important;
+    }
+    
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Ensure map container doesn't overflow */
+    .barangay-map-container .leaflet-container {
+      overflow: hidden !important;
+      position: relative !important;
+    }
+    
+    /* Container overflow for map */
+    .barangay-map-container {
+      overflow: visible !important; /* Allow popups to extend beyond container */
+      position: relative;
+      isolation: isolate;
+      contain: layout style paint;
+    }
+    
+    /* Ensure popups are properly positioned */
+    .barangay-map-container .leaflet-popup {
+      position: absolute !important;
+      max-width: 280px !important;
+    }
+    
+    .barangay-map-container .leaflet-popup-content-wrapper {
+      border-radius: 8px !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+      padding: 12px !important;
+      max-height: 400px !important;
+      overflow-y: auto !important;
+    }
+    
+    .barangay-map-container .leaflet-popup-content {
+      margin: 0 !important;
+      line-height: 1.5 !important;
+    }
+    
+    /* Ensure popup tip is visible */
+    .barangay-map-container .leaflet-popup-tip {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Parent container should allow overflow for popups */
+    .barangay-map-container {
+      overflow: visible !important;
+    }
+    
+    /* Wrap the map in a container that clips but allows popups */
+    #map-container {
+      overflow: visible !important;
+    }
+    
+    /* Ensure graph modal is above everything */
+    .progress-graph-modal {
+      z-index: 100 !important;
+    }
+  </style>
+</Layout>
+
