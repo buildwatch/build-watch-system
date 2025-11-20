@@ -681,20 +681,33 @@ export default function ProjectFeedback({ projectId }) {
     console.log('🔌 Connecting to feedback Socket.IO namespace:', `${socketUrl}/feedback`);
 
     // Connect to feedback namespace (no auth required)
-    // For production, Socket.IO path should be /socket.io (default)
-    // For development, use default path
-    socketRef.current = io(`${socketUrl}/feedback`, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      // For production HTTPS, ensure we use the correct path
-      path: isProduction ? '/socket.io' : '/socket.io',
-      // Force upgrade to websocket
-      upgrade: true,
-      // Timeout for connection
-      timeout: 20000
-    });
+    // Socket.IO namespaces: connect to base URL with /socket.io path, then specify namespace
+    // For production, use relative URL which will use current origin
+    // For development, use full URL with port
+    if (isProduction) {
+      // Production: Use relative URL (will use current origin: https://www.build-watch.com)
+      // Connect to /feedback namespace via /socket.io path
+      socketRef.current = io('/feedback', {
+        path: '/socket.io',
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        upgrade: true,
+        timeout: 20000
+      });
+    } else {
+      // Development: Use full URL with port
+      socketRef.current = io(`${socketUrl}/feedback`, {
+        path: '/socket.io',
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        upgrade: true,
+        timeout: 20000
+      });
+    }
 
     socketRef.current.on('connect', () => {
       console.log('✅ Feedback Socket.IO connected');
