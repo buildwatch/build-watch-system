@@ -1,0 +1,71 @@
+# Updated Caddyfile for Build Watch LGU
+# This adds reverse proxy for API endpoints and Socket.IO WebSocket support
+
+build-watch.com {
+    # Socket.IO WebSocket proxy - MUST be before /api/ handle
+    handle /socket.io/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up Connection {>Connection}
+            header_up Upgrade {>Upgrade}
+        }
+    }
+    
+    # Backend API - Route /api/* requests to backend on port 3000
+    handle /api/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+    
+    # File uploads - Route /uploads/* requests to backend
+    handle /uploads/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+    
+    # Frontend - Everything else goes to frontend on port 4321
+    reverse_proxy localhost:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+    }
+}
+
+www.build-watch.com {
+    # Socket.IO WebSocket proxy - MUST be before /api/ handle
+    handle /socket.io/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up Connection {>Connection}
+            header_up Upgrade {>Upgrade}
+        }
+    }
+    
+    # Backend API - Route /api/* requests to backend on port 3000
+    handle /api/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+    
+    # File uploads - Route /uploads/* requests to backend
+    handle /uploads/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+    
+    # Frontend - Everything else goes to frontend on port 4321
+    reverse_proxy localhost:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+    }
+}
+
