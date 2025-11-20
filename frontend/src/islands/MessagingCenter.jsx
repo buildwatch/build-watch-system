@@ -851,11 +851,14 @@ export default function MessagingCenter({ theme = 'green' }) {
     }
 
     socketRef.current = io(SOCKET_URL, {
+      path: '/socket.io',
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      upgrade: true,
+      timeout: 20000
     });
 
     socketRef.current.on('connect', () => {

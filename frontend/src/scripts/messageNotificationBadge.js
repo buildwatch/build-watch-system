@@ -144,11 +144,14 @@ export function initMessageNotificationBadge(accountType) {
     // Import socket.io-client dynamically
     import('socket.io-client').then(({ io }) => {
       socket = io(SOCKET_URL, {
+        path: '/socket.io',
         auth: { token },
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: maxReconnectAttempts
+        reconnectionAttempts: maxReconnectAttempts,
+        upgrade: true,
+        timeout: 20000
       });
 
       socket.on('connect', () => {

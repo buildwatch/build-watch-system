@@ -634,11 +634,13 @@ export default function AnnouncementCenter({
 
         const { io } = await import('socket.io-client');
         const socket = io(SOCKET_URL, {
+          path: '/socket.io',
           auth: { token },
           transports: ['websocket', 'polling'],
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionAttempts: 5,
+          upgrade: true,
           timeout: 20000
         });
 
