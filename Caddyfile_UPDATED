@@ -12,9 +12,6 @@ build-watch.com {
             header_up Connection {>Connection}
             header_up Upgrade {>Upgrade}
         }
-        transport http {
-            versions h2c 1.1
-        }
     }
     
     # Backend API - Route /api/* requests to backend on port 3000
@@ -56,9 +53,6 @@ www.build-watch.com {
             header_up X-Forwarded-Proto {scheme}
             header_up Connection {>Connection}
             header_up Upgrade {>Upgrade}
-        }
-        transport http {
-            versions h2c 1.1
         }
     }
     
