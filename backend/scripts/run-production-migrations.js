@@ -248,7 +248,7 @@ async function runMigrations() {
           \`userId\` CHAR(36) NULL,
           \`content\` TEXT NOT NULL,
           \`isAnonymous\` BOOLEAN NOT NULL DEFAULT TRUE,
-          \`images\` JSON NULL,
+          \`images\` JSON NULL COMMENT 'Array of image URLs',
           \`likes\` INT NOT NULL DEFAULT 0,
           \`isApproved\` BOOLEAN NOT NULL DEFAULT TRUE,
           \`createdAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
