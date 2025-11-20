@@ -241,11 +241,11 @@ async function runMigrations() {
       console.log('   Creating project_comments table...');
       await connection.query(`
         CREATE TABLE \`project_comments\` (
-          \`id\` CHAR(36) NOT NULL,
-          \`projectId\` CHAR(36) NOT NULL,
+          \`id\` CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+          \`projectId\` CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
           \`authorName\` VARCHAR(255) NULL DEFAULT 'Anonymous',
           \`authorEmail\` VARCHAR(255) NULL,
-          \`userId\` CHAR(36) NULL,
+          \`userId\` CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL,
           \`content\` TEXT NOT NULL,
           \`isAnonymous\` BOOLEAN NOT NULL DEFAULT TRUE,
           \`images\` JSON NULL COMMENT 'Array of image URLs',
@@ -290,9 +290,9 @@ async function runMigrations() {
       console.log('   Creating project_comment_reactions table...');
       await connection.query(`
         CREATE TABLE \`project_comment_reactions\` (
-          \`id\` CHAR(36) NOT NULL,
-          \`commentId\` CHAR(36) NOT NULL,
-          \`userId\` CHAR(36) NULL,
+          \`id\` CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+          \`commentId\` CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+          \`userId\` CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL,
           \`sessionId\` VARCHAR(255) NULL,
           \`reactionType\` ENUM('like', 'heart') NOT NULL DEFAULT 'like',
           \`createdAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
