@@ -226,6 +226,98 @@ async function runMigrations() {
       console.log('   ⚠️  read_receipts table already exists\n');
     }
 
+    // ============================================
+    // 8. Create project_comments table
+    // ============================================
+    console.log('📝 Checking project_comments table...');
+    const [projectCommentsTables] = await connection.query(`
+      SELECT TABLE_NAME 
+      FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = ? 
+      AND TABLE_NAME = 'project_comments'
+    `, [DB_CONFIG.database]);
+
+    if (projectCommentsTables.length === 0) {
+      console.log('   Creating project_comments table...');
+      await connection.query(`
+        CREATE TABLE \`project_comments\` (
+          \`id\` CHAR(36) NOT NULL,
+          \`projectId\` CHAR(36) NOT NULL,
+          \`authorName\` VARCHAR(255) NULL DEFAULT 'Anonymous',
+          \`authorEmail\` VARCHAR(255) NULL,
+          \`userId\` CHAR(36) NULL,
+          \`content\` TEXT NOT NULL,
+          \`isAnonymous\` BOOLEAN NOT NULL DEFAULT TRUE,
+          \`images\` JSON NULL,
+          \`likes\` INT NOT NULL DEFAULT 0,
+          \`isApproved\` BOOLEAN NOT NULL DEFAULT TRUE,
+          \`createdAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`updatedAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (\`id\`),
+          INDEX \`idx_project_comments_project_id\` (\`projectId\`),
+          INDEX \`idx_project_comments_user_id\` (\`userId\`),
+          INDEX \`idx_project_comments_created_at\` (\`createdAt\`),
+          INDEX \`idx_project_comments_is_approved\` (\`isApproved\`),
+          CONSTRAINT \`project_comments_ibfk_1\` 
+            FOREIGN KEY (\`projectId\`) 
+            REFERENCES \`projects\` (\`id\`) 
+            ON DELETE CASCADE 
+            ON UPDATE CASCADE,
+          CONSTRAINT \`project_comments_ibfk_2\` 
+            FOREIGN KEY (\`userId\`) 
+            REFERENCES \`users\` (\`id\`) 
+            ON DELETE SET NULL 
+            ON UPDATE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+      console.log('   ✅ Created project_comments table\n');
+    } else {
+      console.log('   ⚠️  project_comments table already exists\n');
+    }
+
+    // ============================================
+    // 9. Create project_comment_reactions table
+    // ============================================
+    console.log('📝 Checking project_comment_reactions table...');
+    const [reactionsTables] = await connection.query(`
+      SELECT TABLE_NAME 
+      FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = ? 
+      AND TABLE_NAME = 'project_comment_reactions'
+    `, [DB_CONFIG.database]);
+
+    if (reactionsTables.length === 0) {
+      console.log('   Creating project_comment_reactions table...');
+      await connection.query(`
+        CREATE TABLE \`project_comment_reactions\` (
+          \`id\` CHAR(36) NOT NULL,
+          \`commentId\` CHAR(36) NOT NULL,
+          \`userId\` CHAR(36) NULL,
+          \`sessionId\` VARCHAR(255) NULL,
+          \`reactionType\` ENUM('like', 'heart') NOT NULL DEFAULT 'like',
+          \`createdAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          \`updatedAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (\`id\`),
+          INDEX \`idx_project_comment_reactions_comment_id\` (\`commentId\`),
+          INDEX \`idx_project_comment_reactions_user_id\` (\`userId\`),
+          INDEX \`idx_project_comment_reactions_session_id\` (\`sessionId\`),
+          CONSTRAINT \`project_comment_reactions_ibfk_1\` 
+            FOREIGN KEY (\`commentId\`) 
+            REFERENCES \`project_comments\` (\`id\`) 
+            ON DELETE CASCADE 
+            ON UPDATE CASCADE,
+          CONSTRAINT \`project_comment_reactions_ibfk_2\` 
+            FOREIGN KEY (\`userId\`) 
+            REFERENCES \`users\` (\`id\`) 
+            ON DELETE SET NULL 
+            ON UPDATE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+      console.log('   ✅ Created project_comment_reactions table\n');
+    } else {
+      console.log('   ⚠️  project_comment_reactions table already exists\n');
+    }
+
     console.log('🎉 All migrations completed successfully!');
     console.log('\n📋 Summary:');
     console.log('   ✅ projects.notes column');
@@ -235,6 +327,8 @@ async function runMigrations() {
     console.log('   ✅ announcements.acknowledgmentDeadline column');
     console.log('   ✅ announcement_attachments table');
     console.log('   ✅ read_receipts table');
+    console.log('   ✅ project_comments table');
+    console.log('   ✅ project_comment_reactions table');
 
   } catch (error) {
     console.error('❌ Migration error:', error);

@@ -9,9 +9,30 @@ const API_URL = getApiUrl();
 // Get Socket.IO URL for feedback namespace
 const getSocketUrl = () => {
   if (typeof window === 'undefined') return 'http://localhost:3000';
-  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000'
-    : `${window.location.protocol}//${window.location.hostname}:3000`;
+  
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // Check if we're in development (localhost)
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000';
+  }
+  
+  // For production, use the same protocol and domain WITHOUT port
+  // This assumes Nginx reverse proxy is configured to route Socket.IO to backend
+  // Socket.IO will automatically use /socket.io path
+  if (hostname.includes('build-watch.com')) {
+    if (protocol === 'https:') {
+      // HTTPS: Use same domain without port (Nginx reverse proxy expected)
+      return `${protocol}//${hostname}`;
+    } else {
+      // HTTP: Can use port 3000 directly
+      return `http://${hostname}:3000`;
+    }
+  }
+  
+  // Fallback
+  return 'http://localhost:3000';
 };
 
 // Get or create session ID for anonymous users (browser-only)
