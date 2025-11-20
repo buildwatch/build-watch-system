@@ -1031,13 +1031,34 @@ export default function ProjectsIsland() {
 
   return (
     <div className="w-full font-[Montserrat] px-2" data-projects-island>
-      {/* Enhanced View Switcher */}
-      <div className="flex flex-row justify-end gap-2 mb-8">
+      {/* Enhanced View Switcher with Analytics Button */}
+      <div className="flex flex-row justify-between items-center gap-4 mb-8">
+        {/* Project Analytics and Statistics Button (Left Side) */}
+        <button 
+          onClick={() => {
+            if (window.showProjectStatisticsModal) {
+              window.showProjectStatisticsModal();
+            }
+          }}
+          className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold text-base group"
+        >
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-colors">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <span>Project Analytics and Statistics</span>
+          <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+
+        {/* View Switcher Buttons (Right Side) - Enhanced Width */}
         <div className="inline-flex items-center bg-white/95 backdrop-blur-sm rounded-2xl p-2 shadow-xl border border-blue-100/50">
           {VIEW_OPTIONS.map((opt, index) => (
             <button
               key={opt.key}
-              className={`group relative flex items-center justify-center w-14 h-14 rounded-xl transition-all duration-300 ease-out transform ${
+              className={`group relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ease-out transform ${
                 view === opt.key 
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg scale-105' 
                   : 'text-blue-600 hover:bg-blue-50 hover:scale-105'
@@ -1070,6 +1091,9 @@ export default function ProjectsIsland() {
               <div className={`transition-all duration-300 ${view === opt.key ? 'drop-shadow-sm' : 'group-hover:scale-110'}`}>
                 {opt.icon}
               </div>
+              
+              {/* Label text */}
+              <span className="text-sm font-medium">{opt.label}</span>
               
               {/* Tooltip */}
               <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50">
@@ -1260,6 +1284,16 @@ export default function ProjectsIsland() {
                           Status
                         </div>
                       </th>
+                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                          </div>
+                          Feedback
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100/50 bg-white/80 backdrop-blur-sm">
@@ -1381,11 +1415,25 @@ export default function ProjectsIsland() {
                               {proj.status || 'Not Started'}
                             </span>
                           </td>
+                          <td className="px-6 py-6">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = `/project/${proj.id}?tab=feedback`;
+                              }}
+                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group"
+                            >
+                              <svg className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                              </svg>
+                              <span>Feedback</span>
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="px-6 py-12 text-center">
+                        <td colSpan="7" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center gap-4">
                             <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>

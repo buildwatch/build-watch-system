@@ -1,7 +1,7 @@
 const express = require('express');
-const { Project, ProjectUpdate, ProjectMilestone, User, ActivityLog, ProjectValidation, Policy, PolicyCompliance } = require('../models');
+const { Project, ProjectUpdate, ProjectMilestone, User, ActivityLog, ProjectValidation, Policy, PolicyCompliance, MilestoneSubmission } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const ProgressCalculationService = require('../services/progressCalculationService');
 const { createNotification, createNotificationForRole } = require('./notifications');
 
@@ -818,6 +818,7 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       contactNumber,
       specialRequirements,
       eiuPersonnelId,
+      initialPhoto, // Initial project photo
       milestones // New field for milestone data
     } = req.body;
 
@@ -1024,6 +1025,7 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       projectManager,
       contactNumber,
       specialRequirements,
+      initialPhoto: initialPhoto || '/projects-page-header-bg.png', // Use uploaded photo or default
       implementingOfficeId: req.user.id,
       approvedBySecretariat: false,
       approvedByMPMEC: false,
@@ -1080,6 +1082,9 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       project.id,
       `Created project: ${project.name} (${project.projectCode}) with ${milestones ? milestones.length : 0} milestones`
     );
+
+    // Auto-generate news article for project creation (only if approved)
+    // Note: Article will be generated when project is approved, not on creation
 
     // Create notifications for relevant users
     try {
@@ -1229,6 +1234,8 @@ router.get('/public', async (req, res) => {
       status: { [Op.ne]: 'pending' } // Exclude pending projects
     };
 
+    console.log('🔍 Fetching public projects with filters:', { page, limit, status, category, priority, search, barangay });
+
     // Add filters
     if (status) whereClause.status = status;
     if (category) whereClause.category = category;
@@ -1245,31 +1252,54 @@ router.get('/public', async (req, res) => {
       whereClause.location = { [Op.like]: `%${barangay}%` };
     }
 
+    // Don't query User table for public endpoints - use project fields directly
+    // Get all fields first, then filter in response
     const { count, rows: projects } = await Project.findAndCountAll({
       where: whereClause,
-      include: [
-        {
-          model: User,
-          as: 'implementingOffice',
-          attributes: ['id', 'name', 'username', 'role', 'subRole']
-        },
-        {
-          model: User,
-          as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'username', 'role', 'subRole']
-        }
-      ],
+      attributes: { exclude: ['budgetBreakdown'] }, // Exclude sensitive data only
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['createdAt', 'DESC']]
     });
 
-    // Calculate progress for each project using ProgressCalculationService
+    console.log(`✅ Found ${count} public projects, returning ${projects.length} on page ${page}`);
+
+    // Calculate progress for each project - use stored values or calculate if available
+    // For public endpoints, prefer stored progress values for performance
     const projectsWithProgress = await Promise.all(projects.map(async (project) => {
-      const progress = await calculateProjectProgress(project, 'public');
+      const projectData = project.toJSON();
+      
+      // Use stored progress values as primary source (faster and more reliable for public)
+      const storedProgress = {
+        timeline: parseFloat(projectData.timelineProgress) || 0,
+        budget: parseFloat(projectData.budgetProgress) || 0,
+        physical: parseFloat(projectData.physicalProgress) || 0,
+        overall: parseFloat(projectData.overallProgress) || 0
+      };
+      
+      // Try to enhance with calculated progress if available, but don't fail if it errors
+      let calculatedProgress = null;
+      try {
+        calculatedProgress = await calculateProjectProgress(project, 'public');
+      } catch (calcError) {
+        // Silently use stored values if calculation fails
+        console.warn(`Progress calculation skipped for project ${project.id}:`, calcError.message);
+      }
+      
+      // Use calculated progress if available and valid, otherwise use stored
+      // Map calculated progress format to match stored format
+      const finalProgress = calculatedProgress && (calculatedProgress.overall || calculatedProgress.overallProgress) 
+        ? {
+            timeline: calculatedProgress.timeline || calculatedProgress.timelineProgress || storedProgress.timeline,
+            budget: calculatedProgress.budget || calculatedProgress.budgetProgress || storedProgress.budget,
+            physical: calculatedProgress.physical || calculatedProgress.physicalProgress || storedProgress.physical,
+            overall: calculatedProgress.overall || calculatedProgress.overallProgress || storedProgress.overall
+          }
+        : storedProgress;
+      
       return {
-        ...project.toJSON(),
-        progress
+        ...projectData,
+        progress: finalProgress
       };
     }));
 
@@ -1289,12 +1319,12 @@ router.get('/public', async (req, res) => {
         endDate: projectData.endDate,
         completionDate: projectData.completionDate,
         totalBudget: projectData.totalBudget, // Show budget but not breakdown
-        overallProgress: projectData.progress?.overall || projectData.progress?.overallProgress || projectData.overallProgress,
-        timelineProgress: projectData.progress?.timeline || 0,
-        budgetProgress: projectData.progress?.budget || 0,
-        physicalProgress: projectData.progress?.physical || 0,
-        implementingOfficeName: projectData.implementingOffice?.name || 'N/A',
-        eiuPersonnelName: projectData.eiuPersonnel?.name || null,
+        overallProgress: projectData.progress?.overall || projectData.progress?.overallProgress || projectData.overallProgress || 0,
+        timelineProgress: projectData.progress?.timeline || projectData.progress?.timelineProgress || 0,
+        budgetProgress: projectData.progress?.budget || projectData.progress?.budgetProgress || 0,
+        physicalProgress: projectData.progress?.physical || projectData.progress?.physicalProgress || 0,
+        implementingOfficeName: projectData.implementingOfficeName || 'N/A',
+        eiuPersonnelName: projectData.eiuPersonnelName || null,
         hasExternalPartner: projectData.hasExternalPartner,
         initialPhoto: projectData.initialPhoto,
         latitude: projectData.latitude,
@@ -1327,9 +1357,446 @@ router.get('/public', async (req, res) => {
 
   } catch (error) {
     console.error('Get public projects error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch projects'
+      error: 'Failed to fetch projects',
+      message: error.message || 'Unknown error occurred'
+    });
+  }
+});
+
+// Get public statistics (no authentication required)
+router.get('/public/statistics', async (req, res) => {
+  try {
+    // Only get approved projects for public statistics
+    const whereClause = {
+      approvedBySecretariat: true,
+      status: { [Op.ne]: 'pending' }
+    };
+
+    const projects = await Project.findAll({
+      where: whereClause,
+      attributes: [
+        'id', 'category', 'status', 'location', 'totalBudget', 
+        'startDate', 'endDate', 'completionDate'
+      ]
+    });
+
+    // Calculate aggregated statistics
+    const totalProjects = projects.length;
+    
+    // Projects by category
+    const byCategory = {};
+    projects.forEach(project => {
+      const category = project.category || 'Uncategorized';
+      byCategory[category] = (byCategory[category] || 0) + 1;
+    });
+
+    // Projects by status
+    const byStatus = {};
+    projects.forEach(project => {
+      const status = project.status || 'unknown';
+      byStatus[status] = (byStatus[status] || 0) + 1;
+    });
+
+    // Calculate overall completion rate
+    let totalProgress = 0;
+    let projectsWithProgress = 0;
+    
+    for (const project of projects) {
+      try {
+        const progress = await calculateProjectProgress(project, 'public');
+        totalProgress += progress.overall || 0;
+        projectsWithProgress++;
+      } catch (error) {
+        console.error(`Error calculating progress for project ${project.id}:`, error);
+      }
+    }
+    
+    const overallCompletionRate = projectsWithProgress > 0 
+      ? Math.round((totalProgress / projectsWithProgress) * 100) / 100 
+      : 0;
+
+    // Total budget (sum only, no breakdowns)
+    const totalBudget = projects.reduce((sum, project) => {
+      return sum + (parseFloat(project.totalBudget) || 0);
+    }, 0);
+
+    // Projects by location (barangay counts)
+    const byLocation = {};
+    projects.forEach(project => {
+      if (project.location) {
+        const location = project.location;
+        byLocation[location] = (byLocation[location] || 0) + 1;
+      }
+    });
+
+    // Status counts
+    const statusCounts = {
+      ongoing: projects.filter(p => p.status === 'ongoing' || p.status === 'in-progress').length,
+      completed: projects.filter(p => p.status === 'completed' || p.status === 'complete').length,
+      delayed: projects.filter(p => p.status === 'delayed').length,
+      onHold: projects.filter(p => p.status === 'on-hold' || p.status === 'on hold').length
+    };
+
+    const statistics = {
+      totalProjects,
+      byCategory,
+      byStatus,
+      byLocation,
+      statusCounts,
+      overallCompletionRate,
+      totalBudget: Math.round(totalBudget * 100) / 100,
+      lastUpdated: new Date().toISOString()
+    };
+
+    // Add cache headers (allow caching for 1 hour for public data)
+    res.set({
+      'Cache-Control': 'public, max-age=3600',
+      'Last-Modified': new Date().toUTCString()
+    });
+
+    res.json({
+      success: true,
+      statistics
+    });
+
+  } catch (error) {
+    console.error('Get public statistics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch statistics'
+    });
+  }
+});
+
+// Get data insights and trends for public users
+router.get('/public/insights', async (req, res) => {
+  try {
+    const whereClause = {
+      approvedBySecretariat: true,
+      status: { [Op.ne]: 'pending' }
+    };
+
+    const projects = await Project.findAll({
+      where: whereClause,
+      attributes: [
+        'id', 'name', 'category', 'status', 'totalBudget', 
+        'startDate', 'endDate', 'completionDate', 'createdAt',
+        'timelineProgress', 'budgetProgress', 'physicalProgress', 'overallProgress'
+      ],
+      order: [['startDate', 'ASC']]
+    });
+
+    // Calculate trends over time (by month)
+    const trendsByMonth = {};
+    const completionTrends = {};
+    const budgetTrends = {};
+    
+    // Process projects with async progress calculation
+    await Promise.all(projects.map(async (project) => {
+      if (project.startDate) {
+        const startDate = new Date(project.startDate);
+        const monthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (!trendsByMonth[monthKey]) {
+          trendsByMonth[monthKey] = {
+            projectsStarted: 0,
+            projectsCompleted: 0,
+            totalBudget: 0,
+            averageProgress: 0,
+            progressSum: 0,
+            progressCount: 0
+          };
+        }
+        
+        trendsByMonth[monthKey].projectsStarted++;
+        trendsByMonth[monthKey].totalBudget += parseFloat(project.totalBudget) || 0;
+        
+        // Calculate progress
+        let progress = 0;
+        if (project.overallProgress !== null && project.overallProgress !== undefined) {
+          progress = parseFloat(project.overallProgress) || 0;
+        } else {
+          try {
+            const calculated = await calculateProjectProgress(project, 'public');
+            progress = calculated.overall || calculated.progress?.overall || 0;
+          } catch (e) {
+            progress = 0;
+          }
+        }
+        
+        trendsByMonth[monthKey].progressSum += progress;
+        trendsByMonth[monthKey].progressCount++;
+        
+        // Check if completed
+        if (project.completionDate) {
+          const completionDate = new Date(project.completionDate);
+          const completionMonthKey = `${completionDate.getFullYear()}-${String(completionDate.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (!completionTrends[completionMonthKey]) {
+            completionTrends[completionMonthKey] = 0;
+          }
+          completionTrends[completionMonthKey]++;
+        }
+      }
+    }));
+
+    // Calculate average progress per month
+    Object.keys(trendsByMonth).forEach(month => {
+      if (trendsByMonth[month].progressCount > 0) {
+        trendsByMonth[month].averageProgress = Math.round((trendsByMonth[month].progressSum / trendsByMonth[month].progressCount) * 100) / 100;
+      }
+    });
+
+    // Calculate performance metrics
+    const totalProjects = projects.length;
+    const completedProjects = projects.filter(p => p.status === 'completed' || p.status === 'complete').length;
+    const ongoingProjects = projects.filter(p => p.status === 'ongoing' || p.status === 'in-progress').length;
+    
+    // Calculate average project duration
+    let totalDuration = 0;
+    let durationCount = 0;
+    projects.forEach(project => {
+      if (project.startDate && project.completionDate) {
+        const start = new Date(project.startDate);
+        const end = new Date(project.completionDate);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        totalDuration += days;
+        durationCount++;
+      }
+    });
+    const averageDuration = durationCount > 0 ? Math.round(totalDuration / durationCount) : 0;
+
+    // Calculate efficiency metrics
+    let totalProgress = 0;
+    let totalBudget = 0;
+    let budgetUtilized = 0;
+    let progressCount = 0;
+    
+    await Promise.all(projects.map(async (project) => {
+      const budget = parseFloat(project.totalBudget) || 0;
+      totalBudget += budget;
+      
+      let progress = 0;
+      if (project.overallProgress !== null && project.overallProgress !== undefined) {
+        progress = parseFloat(project.overallProgress) || 0;
+      } else {
+        try {
+          const calculated = await calculateProjectProgress(project, 'public');
+          progress = calculated.overall || calculated.progress?.overall || 0;
+        } catch (e) {
+          progress = 0;
+        }
+      }
+      
+      if (progress > 0) {
+        totalProgress += progress;
+        progressCount++;
+        // Estimate budget utilized based on progress
+        budgetUtilized += (budget * progress / 100);
+      }
+    }));
+    
+    const averageProgress = progressCount > 0 ? Math.round((totalProgress / progressCount) * 100) / 100 : 0;
+    const budgetUtilizationRate = totalBudget > 0 ? Math.round((budgetUtilized / totalBudget) * 100 * 100) / 100 : 0;
+
+    const insights = {
+      trendsByMonth: Object.keys(trendsByMonth).sort().map(month => ({
+        month,
+        ...trendsByMonth[month]
+      })),
+      completionTrends: Object.keys(completionTrends).sort().map(month => ({
+        month,
+        completed: completionTrends[month]
+      })),
+      performanceMetrics: {
+        totalProjects,
+        completedProjects,
+        ongoingProjects,
+        completionRate: totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100 * 100) / 100 : 0,
+        averageDuration,
+        averageProgress
+      },
+      efficiencyMetrics: {
+        totalBudget: Math.round(totalBudget * 100) / 100,
+        budgetUtilized: Math.round(budgetUtilized * 100) / 100,
+        budgetUtilizationRate,
+        averageProgress
+      },
+      lastUpdated: new Date().toISOString()
+    };
+
+    res.set({
+      'Cache-Control': 'public, max-age=3600',
+      'Last-Modified': new Date().toUTCString()
+    });
+
+    res.json({
+      success: true,
+      insights
+    });
+
+  } catch (error) {
+    console.error('Get public insights error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch insights'
+    });
+  }
+});
+
+// Get budget and financial transparency data
+router.get('/public/budget', async (req, res) => {
+  try {
+    const whereClause = {
+      approvedBySecretariat: true,
+      status: { [Op.ne]: 'pending' }
+    };
+
+    const projects = await Project.findAll({
+      where: whereClause,
+      attributes: [
+        'id', 'name', 'category', 'status', 'totalBudget', 
+        'fundingSource', 'startDate', 'endDate',
+        'timelineProgress', 'budgetProgress', 'physicalProgress', 'overallProgress'
+      ]
+    });
+
+    // Budget breakdown by category
+    const budgetByCategory = {};
+    const budgetUtilizedByCategory = {};
+    
+    await Promise.all(projects.map(async (project) => {
+      const category = project.category || 'Uncategorized';
+      const budget = parseFloat(project.totalBudget) || 0;
+      
+      if (!budgetByCategory[category]) {
+        budgetByCategory[category] = 0;
+        budgetUtilizedByCategory[category] = 0;
+      }
+      
+      budgetByCategory[category] += budget;
+      
+      // Calculate utilized budget based on progress
+      let progress = 0;
+      if (project.budgetProgress !== null && project.budgetProgress !== undefined) {
+        progress = parseFloat(project.budgetProgress) || 0;
+      } else if (project.overallProgress !== null && project.overallProgress !== undefined) {
+        progress = parseFloat(project.overallProgress) || 0;
+      } else {
+        try {
+          const calculated = await calculateProjectProgress(project, 'public');
+          progress = calculated.budget || calculated.progress?.budget || calculated.overall || calculated.progress?.overall || 0;
+        } catch (e) {
+          progress = 0;
+        }
+      }
+      
+      budgetUtilizedByCategory[category] += (budget * progress / 100);
+    }));
+
+    // Budget by funding source
+    const budgetByFundingSource = {};
+    const budgetUtilizedByFundingSource = {};
+    
+    await Promise.all(projects.map(async (project) => {
+      const source = project.fundingSource || 'Unknown';
+      const budget = parseFloat(project.totalBudget) || 0;
+      
+      if (!budgetByFundingSource[source]) {
+        budgetByFundingSource[source] = 0;
+        budgetUtilizedByFundingSource[source] = 0;
+      }
+      
+      budgetByFundingSource[source] += budget;
+      
+      let progress = 0;
+      if (project.budgetProgress !== null && project.budgetProgress !== undefined) {
+        progress = parseFloat(project.budgetProgress) || 0;
+      } else if (project.overallProgress !== null && project.overallProgress !== undefined) {
+        progress = parseFloat(project.overallProgress) || 0;
+      } else {
+        try {
+          const calculated = await calculateProjectProgress(project, 'public');
+          progress = calculated.budget || calculated.progress?.budget || calculated.overall || calculated.progress?.overall || 0;
+        } catch (e) {
+          progress = 0;
+        }
+      }
+      
+      budgetUtilizedByFundingSource[source] += (budget * progress / 100);
+    }));
+
+    // Calculate total budget and utilized
+    const totalBudget = projects.reduce((sum, p) => sum + (parseFloat(p.totalBudget) || 0), 0);
+    
+    let totalUtilized = 0;
+    await Promise.all(projects.map(async (project) => {
+      const budget = parseFloat(project.totalBudget) || 0;
+      let progress = 0;
+      if (project.budgetProgress !== null && project.budgetProgress !== undefined) {
+        progress = parseFloat(project.budgetProgress) || 0;
+      } else if (project.overallProgress !== null && project.overallProgress !== undefined) {
+        progress = parseFloat(project.overallProgress) || 0;
+      } else {
+        try {
+          const calculated = await calculateProjectProgress(project, 'public');
+          progress = calculated.budget || calculated.progress?.budget || calculated.overall || calculated.progress?.overall || 0;
+        } catch (e) {
+          progress = 0;
+        }
+      }
+      totalUtilized += (budget * progress / 100);
+    }));
+
+    // Budget efficiency by category
+    const budgetEfficiency = {};
+    Object.keys(budgetByCategory).forEach(category => {
+      const allocated = budgetByCategory[category];
+      const utilized = budgetUtilizedByCategory[category];
+      const efficiency = allocated > 0 ? Math.round((utilized / allocated) * 100 * 100) / 100 : 0;
+      budgetEfficiency[category] = {
+        allocated: Math.round(allocated * 100) / 100,
+        utilized: Math.round(utilized * 100) / 100,
+        efficiency,
+        remaining: Math.round((allocated - utilized) * 100) / 100
+      };
+    });
+
+    const budgetData = {
+      totalBudget: Math.round(totalBudget * 100) / 100,
+      totalUtilized: Math.round(totalUtilized * 100) / 100,
+      totalRemaining: Math.round((totalBudget - totalUtilized) * 100) / 100,
+      utilizationRate: totalBudget > 0 ? Math.round((totalUtilized / totalBudget) * 100 * 100) / 100 : 0,
+      budgetByCategory: Object.keys(budgetByCategory).reduce((acc, cat) => {
+        acc[cat] = Math.round(budgetByCategory[cat] * 100) / 100;
+        return acc;
+      }, {}),
+      budgetByFundingSource: Object.keys(budgetByFundingSource).reduce((acc, source) => {
+        acc[source] = Math.round(budgetByFundingSource[source] * 100) / 100;
+        return acc;
+      }, {}),
+      budgetEfficiency,
+      lastUpdated: new Date().toISOString()
+    };
+
+    res.set({
+      'Cache-Control': 'public, max-age=3600',
+      'Last-Modified': new Date().toUTCString()
+    });
+
+    res.json({
+      success: true,
+      budget: budgetData
+    });
+
+  } catch (error) {
+    console.error('Get public budget error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch budget data'
     });
   }
 });
@@ -1441,6 +1908,322 @@ router.get('/public/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch project'
+    });
+  }
+});
+
+// Get projects for messaging (role-based access control)
+router.get('/messaging', authenticateToken, async (req, res) => {
+  try {
+    const { search } = req.query;
+    const whereClause = {};
+
+    // Role-based filtering for messaging
+    const userRole = (req.user.role || '').toUpperCase();
+    const userSubRole = (req.user.subRole || '').toLowerCase();
+
+    // System Admin should see NO projects
+    if (userRole === 'SYS.AD' || userRole === 'SYS_AD' || userRole === 'SYSAD') {
+      return res.json({
+        success: true,
+        projects: []
+      });
+    }
+
+    // Build role-based where clause
+    switch (userRole) {
+      case 'EIU':
+        // EIU sees only projects assigned to them as external partner
+        whereClause.hasExternalPartner = true;
+        whereClause.eiuPersonnelId = req.user.id;
+        break;
+
+      case 'LGU-IU':
+      case 'IU':
+        // LGU-IU sees only projects they created/manage
+        whereClause.implementingOfficeId = req.user.id;
+        break;
+
+      case 'LGU-PMT':
+        // MPMEC: Check subRole for Secretariat
+        if (userSubRole.includes('secretariat')) {
+          // Secretariat subrole: sees all submitted/approved/ongoing/completed projects
+          whereClause[Op.or] = [
+            { workflowStatus: 'submitted' },
+            { workflowStatus: 'secretariat_approved' },
+            { workflowStatus: 'ongoing' },
+            { workflowStatus: 'completed' },
+            { workflowStatus: 'compiled_for_secretariat' },
+            { workflowStatus: 'validated_by_secretariat' }
+          ];
+        } else {
+          // Regular MPMEC: sees approved projects and projects submitted to Secretariat
+          whereClause[Op.or] = [
+            { approvedBySecretariat: true },
+            { submittedToSecretariat: true }
+          ];
+        }
+        break;
+
+      case 'SECRETARIAT':
+        // Secretariat (if separate role): sees all projects (submitted, approved, ongoing, completed)
+        whereClause[Op.or] = [
+          { workflowStatus: 'submitted' },
+          { workflowStatus: 'secretariat_approved' },
+          { workflowStatus: 'ongoing' },
+          { workflowStatus: 'completed' },
+          { workflowStatus: 'compiled_for_secretariat' },
+          { workflowStatus: 'validated_by_secretariat' }
+        ];
+        break;
+
+      case 'EMS':
+        // Executive Admin: sees all projects (viewing role)
+        // No where clause restrictions - sees everything
+        break;
+
+      default:
+        // Default: no projects for unknown roles
+        console.log(`⚠️ Unknown role for messaging projects: ${userRole}`);
+        return res.json({
+          success: true,
+          projects: []
+        });
+    }
+
+    // Add search filter if provided
+    if (search) {
+      const searchCondition = {
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { projectCode: { [Op.like]: `%${search}%` } },
+          { location: { [Op.like]: `%${search}%` } }
+        ]
+      };
+      
+      if (whereClause[Op.or]) {
+        // If we already have an Op.or for workflowStatus, combine with search using Op.and
+        const existingOr = whereClause[Op.or];
+        whereClause[Op.and] = [
+          { [Op.or]: existingOr },
+          searchCondition
+        ];
+        delete whereClause[Op.or];
+      } else if (whereClause[Op.and]) {
+        // If we already have Op.and, add search to it
+        whereClause[Op.and].push(searchCondition);
+      } else {
+        // No existing Op.or, just add search
+        Object.assign(whereClause, searchCondition);
+      }
+    }
+
+    // Fetch projects
+    const projects = await Project.findAll({
+      where: whereClause,
+      attributes: ['id', 'projectCode', 'name', 'status', 'category', 'location', 'implementingOfficeId', 'eiuPersonnelId'],
+      order: [['createdDate', 'DESC']],
+      limit: 1000
+    });
+
+    res.json({
+      success: true,
+      projects: projects.map(p => p.toJSON())
+    });
+
+  } catch (error) {
+    console.error('Error fetching projects for messaging:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch projects for messaging'
+    });
+  }
+});
+
+// Get shared projects between current user and a recipient (for messaging)
+router.get('/messaging/shared/:recipientId', authenticateToken, async (req, res) => {
+  try {
+    const { recipientId } = req.params;
+    const { search } = req.query;
+    const currentUserId = req.user.id;
+
+    if (!recipientId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Recipient ID is required'
+      });
+    }
+
+    // Get recipient user
+    const { User } = require('../models');
+    const recipient = await User.findByPk(recipientId, {
+      attributes: ['id', 'role', 'subRole']
+    });
+
+    if (!recipient) {
+      return res.status(404).json({
+        success: false,
+        error: 'Recipient not found'
+      });
+    }
+
+    // Get current user's accessible projects
+    const currentUserRole = (req.user.role || '').toUpperCase();
+    const currentUserSubRole = (req.user.subRole || '').toLowerCase();
+    const currentUserWhere = {};
+
+    switch (currentUserRole) {
+      case 'EIU':
+        currentUserWhere.hasExternalPartner = true;
+        currentUserWhere.eiuPersonnelId = currentUserId;
+        break;
+      case 'LGU-IU':
+      case 'IU':
+        currentUserWhere.implementingOfficeId = currentUserId;
+        break;
+      case 'LGU-PMT':
+        if (currentUserSubRole.includes('secretariat')) {
+          currentUserWhere[Op.or] = [
+            { workflowStatus: 'submitted' },
+            { workflowStatus: 'secretariat_approved' },
+            { workflowStatus: 'ongoing' },
+            { workflowStatus: 'completed' },
+            { workflowStatus: 'compiled_for_secretariat' },
+            { workflowStatus: 'validated_by_secretariat' }
+          ];
+        } else {
+          currentUserWhere[Op.or] = [
+            { approvedBySecretariat: true },
+            { submittedToSecretariat: true }
+          ];
+        }
+        break;
+      case 'SECRETARIAT':
+        currentUserWhere[Op.or] = [
+          { workflowStatus: 'submitted' },
+          { workflowStatus: 'secretariat_approved' },
+          { workflowStatus: 'ongoing' },
+          { workflowStatus: 'completed' },
+          { workflowStatus: 'compiled_for_secretariat' },
+          { workflowStatus: 'validated_by_secretariat' }
+        ];
+        break;
+      case 'EMS':
+        // Executive Admin sees all
+        break;
+      default:
+        return res.json({ success: true, projects: [] });
+    }
+
+    // Get recipient's accessible projects
+    const recipientRole = (recipient.role || '').toUpperCase();
+    const recipientSubRole = (recipient.subRole || '').toLowerCase();
+    const recipientWhere = {};
+
+    switch (recipientRole) {
+      case 'EIU':
+        recipientWhere.hasExternalPartner = true;
+        recipientWhere.eiuPersonnelId = recipientId;
+        break;
+      case 'LGU-IU':
+      case 'IU':
+        recipientWhere.implementingOfficeId = recipientId;
+        break;
+      case 'LGU-PMT':
+        if (recipientSubRole.includes('secretariat')) {
+          recipientWhere[Op.or] = [
+            { workflowStatus: 'submitted' },
+            { workflowStatus: 'secretariat_approved' },
+            { workflowStatus: 'ongoing' },
+            { workflowStatus: 'completed' },
+            { workflowStatus: 'compiled_for_secretariat' },
+            { workflowStatus: 'validated_by_secretariat' }
+          ];
+        } else {
+          recipientWhere[Op.or] = [
+            { approvedBySecretariat: true },
+            { submittedToSecretariat: true }
+          ];
+        }
+        break;
+      case 'SECRETARIAT':
+        recipientWhere[Op.or] = [
+          { workflowStatus: 'submitted' },
+          { workflowStatus: 'secretariat_approved' },
+          { workflowStatus: 'ongoing' },
+          { workflowStatus: 'completed' },
+          { workflowStatus: 'compiled_for_secretariat' },
+          { workflowStatus: 'validated_by_secretariat' }
+        ];
+        break;
+      case 'EMS':
+        // Executive Admin sees all
+        break;
+      default:
+        return res.json({ success: true, projects: [] });
+    }
+
+    // Find intersection: projects that both users can access
+    const currentUserProjects = await Project.findAll({
+      where: currentUserWhere,
+      attributes: ['id']
+    });
+    const currentUserProjectIds = currentUserProjects.map(p => p.id);
+
+    const recipientProjects = await Project.findAll({
+      where: recipientWhere,
+      attributes: ['id']
+    });
+    const recipientProjectIds = recipientProjects.map(p => p.id);
+
+    // Find shared project IDs
+    const sharedProjectIds = currentUserProjectIds.filter(id => 
+      recipientProjectIds.includes(id)
+    );
+
+    if (sharedProjectIds.length === 0) {
+      return res.json({ success: true, projects: [] });
+    }
+
+    // Build final where clause for shared projects
+    const finalWhere = {
+      id: { [Op.in]: sharedProjectIds }
+    };
+
+    // Add search filter if provided
+    if (search) {
+      const searchCondition = {
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { projectCode: { [Op.like]: `%${search}%` } },
+          { location: { [Op.like]: `%${search}%` } }
+        ]
+      };
+      finalWhere[Op.and] = [
+        { id: { [Op.in]: sharedProjectIds } },
+        searchCondition
+      ];
+      delete finalWhere.id;
+    }
+
+    // Fetch shared projects
+    const projects = await Project.findAll({
+      where: finalWhere,
+      attributes: ['id', 'projectCode', 'name', 'status', 'category', 'location', 'implementingOfficeId', 'eiuPersonnelId'],
+      order: [['createdDate', 'DESC']],
+      limit: 1000
+    });
+
+    res.json({
+      success: true,
+      projects: projects.map(p => p.toJSON())
+    });
+
+  } catch (error) {
+    console.error('Error fetching shared projects:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch shared projects'
     });
   }
 });
@@ -1754,6 +2537,156 @@ router.get('/secretariat/submissions', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch submissions'
+    });
+  }
+});
+
+// Get all milestones for user's accessible projects
+// IMPORTANT: This route must come BEFORE /:id to avoid route conflicts
+router.get('/all-milestones', authenticateToken, async (req, res) => {
+  try {
+    console.log('📅 [all-milestones] Request received from user:', req.user.id, 'role:', req.user.role);
+    const whereClause = {};
+
+    // Role-based filtering for projects
+    switch (req.user.role) {
+      case 'eiu':
+      case 'EIU':
+        // EIU sees only projects assigned to them
+        whereClause.hasExternalPartner = true;
+        whereClause.eiuPersonnelId = req.user.id;
+        break;
+      case 'iu':
+      case 'LGU-IU':
+        // LGU-IU sees only projects they created/manage
+        whereClause.implementingOfficeId = req.user.id;
+        break;
+      case 'secretariat':
+        // Secretariat sees all projects
+        break;
+      case 'mpmec':
+      case 'LGU-PMT':
+        // Check if user has Secretariat subrole
+        if (req.user.subRole && req.user.subRole.toLowerCase().includes('secretariat')) {
+          // MPMEC Secretariat sees all projects
+          break;
+        } else {
+          // Regular MPMEC sees approved projects
+          whereClause.approvedBySecretariat = true;
+        }
+        break;
+      case 'executive':
+      case 'EMS':
+        // Executive Viewer sees all projects
+        break;
+      default:
+        // Default: no projects
+        whereClause.id = { [Op.eq]: null }; // This will return no projects
+        break;
+    }
+
+    console.log('📅 [all-milestones] Where clause:', JSON.stringify(whereClause));
+
+    // Get accessible projects
+    const projects = await Project.findAll({
+      where: whereClause,
+      attributes: ['id', 'name']
+    });
+
+    console.log('📅 [all-milestones] Found projects:', projects.length);
+
+    const projectIds = projects.map(p => p.id);
+
+    if (projectIds.length === 0) {
+      console.log('📅 [all-milestones] No projects found, returning empty milestones');
+      return res.json({
+        success: true,
+        milestones: []
+      });
+    }
+
+    console.log('📅 [all-milestones] Project IDs:', projectIds);
+    
+    // Try to fetch milestones without include first to see if that's the issue
+    let milestones;
+    try {
+      milestones = await ProjectMilestone.findAll({
+        where: { projectId: { [Op.in]: projectIds } },
+        order: [['order', 'ASC'], ['dueDate', 'ASC']],
+        attributes: [
+          'id', 'projectId', 'title', 'description', 'weight', 'plannedBudget', 'dueDate', 
+          'completedDate', 'status', 'progress', 'priority', 'order',
+          'timelineWeight', 'timelineStartDate', 'timelineEndDate', 'timelineDescription', 'timelineStatus',
+          'budgetWeight', 'budgetPlanned', 'budgetBreakdown', 'budgetStatus',
+          'physicalWeight', 'physicalProofType', 'physicalDescription', 'physicalStatus',
+          'validationDate', 'validationComments', 'completionNotes'
+        ]
+      });
+      
+      console.log('📅 [all-milestones] Found milestones:', milestones.length);
+      
+      // Get project names separately to avoid association issues
+      const projectMap = {};
+      projects.forEach(p => {
+        projectMap[p.id] = p.name;
+      });
+      
+      // Get milestone used budget from latest approved submissions
+      const milestoneIds = milestones.map(m => m.id);
+      
+      // Fetch latest approved submissions for each milestone to get used budget
+      // Note: Status values in MilestoneSubmission are: 'pending_review', 'under_review', 'approved', 'needs_revision', 'rejected'
+      const latestSubmissions = await MilestoneSubmission.findAll({
+        where: {
+          milestoneId: { [Op.in]: milestoneIds },
+          status: 'approved'
+        },
+        attributes: ['milestoneId', 'usedBudget'],
+        order: [['submittedAt', 'DESC']],
+        raw: true
+      });
+      
+      // Create a map of milestone ID to latest used budget
+      const milestoneBudgetMap = {};
+      latestSubmissions.forEach(submission => {
+        if (!milestoneBudgetMap[submission.milestoneId]) {
+          milestoneBudgetMap[submission.milestoneId] = parseFloat(submission.usedBudget || 0);
+        }
+      });
+      
+      // Add project name and used budget to each milestone
+      const milestonesWithProjectName = milestones.map(milestone => {
+        const milestoneData = milestone.toJSON();
+        const usedBudget = milestoneBudgetMap[milestoneData.id] || 0;
+        
+        return {
+          ...milestoneData,
+          projectName: projectMap[milestoneData.projectId] || 'Unknown Project',
+          usedBudget: usedBudget
+        };
+      });
+
+      console.log('📅 [all-milestones] Returning', milestonesWithProjectName.length, 'milestones');
+      
+      res.json({
+        success: true,
+        milestones: milestonesWithProjectName
+      });
+    } catch (milestoneError) {
+      console.error('📅 [all-milestones] Error fetching milestones:', milestoneError);
+      console.error('📅 [all-milestones] Error stack:', milestoneError.stack);
+      throw milestoneError;
+    }
+
+  } catch (error) {
+    console.error('📅 [all-milestones] Get milestones error:', error);
+    console.error('📅 [all-milestones] Error message:', error.message);
+    console.error('📅 [all-milestones] Error stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch milestones',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
@@ -2249,6 +3182,17 @@ router.post('/:id/approve', authenticateToken, async (req, res) => {
         `Approved project: ${project.name}`
       );
 
+      // Auto-generate news article for project approval
+      try {
+        const AutoNewsGenerator = require('../services/autoNewsGenerator');
+        await AutoNewsGenerator.generateArticle('PROJECT_APPROVED', project, {
+          userId: req.user.id
+        });
+      } catch (newsError) {
+        console.error('Error generating auto news for project approval:', newsError);
+        // Don't fail the approval if news generation fails
+      }
+
       // Send notifications to all relevant parties
       try {
         console.log(`🎉 Project approved! Sending notifications for project: ${project.name}`);
@@ -2547,6 +3491,17 @@ router.post('/:projectId/secretariat-approve', authenticateToken, requireRole(['
       project.id,
       `Secretariat approved project ${project.name} (${project.projectCode})`
     );
+
+    // Auto-generate news article for project approval
+    try {
+      const AutoNewsGenerator = require('../services/autoNewsGenerator');
+      await AutoNewsGenerator.generateArticle('PROJECT_APPROVED', project, {
+        userId: req.user.id
+      });
+    } catch (newsError) {
+      console.error('Error generating auto news for project approval:', newsError);
+      // Don't fail the approval if news generation fails
+    }
 
     res.json({
       success: true,
@@ -4636,6 +5591,25 @@ router.post('/:id/updates/:updateId/approve', authenticateToken, requireRole(['i
       approvalComments: comments
     });
 
+    // Reload project with full data for news generation
+    const project = await Project.findByPk(update.projectId);
+
+    // Auto-generate news article when project update is approved
+    if (approved && project) {
+      try {
+        const AutoNewsGenerator = require('../services/autoNewsGenerator');
+        await AutoNewsGenerator.generateArticle('PROJECT_UPDATED', project, {
+          userId: req.user.id,
+          additionalData: {
+            updateDetails: `Project update approved: ${update.updateType || 'Progress update'}`
+          }
+        });
+      } catch (newsError) {
+        console.error('Error generating auto news for project update approval:', newsError);
+        // Don't fail the approval if news generation fails
+      }
+    }
+
     // Log activity
     await logActivity(
       req.user.id,
@@ -4713,82 +5687,6 @@ router.post('/:id/milestones', authenticateToken, requireRole(['iu', 'LGU-IU']),
     res.status(500).json({
       success: false,
       error: 'Failed to create milestone'
-    });
-  }
-});
-
-// Get all milestones for user's accessible projects
-router.get('/all-milestones', authenticateToken, async (req, res) => {
-  try {
-    const whereClause = {};
-
-    // Role-based filtering for projects
-    switch (req.user.role) {
-      case 'eiu':
-      case 'EIU':
-        whereClause.hasExternalPartner = true;
-        break;
-      case 'iu':
-      case 'LGU-IU':
-        whereClause.implementingOfficeId = req.user.id;
-        break;
-      case 'secretariat':
-        // Secretariat sees all projects
-        break;
-      case 'mpmec':
-        whereClause.approvedBySecretariat = true;
-        break;
-    }
-
-    // Get accessible projects
-    const projects = await Project.findAll({
-      where: whereClause,
-      attributes: ['id', 'name']
-    });
-
-    const projectIds = projects.map(p => p.id);
-
-    if (projectIds.length === 0) {
-      return res.json({
-        success: true,
-        milestones: []
-      });
-    }
-
-    const milestones = await ProjectMilestone.findAll({
-      where: { projectId: projectIds },
-      order: [['order', 'ASC'], ['dueDate', 'ASC']],
-      attributes: [
-        'id', 'projectId', 'title', 'description', 'weight', 'plannedBudget', 'dueDate', 
-        'completedDate', 'status', 'progress', 'priority', 'order',
-        'timelineWeight', 'timelineStartDate', 'timelineEndDate', 'timelineDescription', 'timelineStatus',
-        'budgetWeight', 'budgetPlanned', 'budgetBreakdown', 'budgetStatus',
-        'physicalWeight', 'physicalProofType', 'physicalDescription', 'physicalStatus',
-        'validationDate', 'validationComments', 'completionNotes'
-      ],
-      include: [{
-        model: Project,
-        as: 'project',
-        attributes: ['name']
-      }]
-    });
-
-    // Add project name to each milestone
-    const milestonesWithProjectName = milestones.map(milestone => ({
-      ...milestone.toJSON(),
-      projectName: milestone.project?.name || 'Unknown Project'
-    }));
-
-    res.json({
-      success: true,
-      milestones: milestonesWithProjectName
-    });
-
-  } catch (error) {
-    console.error('Get milestones error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch milestones'
     });
   }
 });
@@ -7107,6 +8005,684 @@ router.post('/check-all-delayed', authenticateToken, requireRole(['admin']), asy
     res.status(500).json({
       success: false,
       error: 'Failed to check all projects for delays'
+    });
+  }
+});
+
+// ============================================
+// PROJECT NOTES ENDPOINTS
+// ============================================
+
+// Get all notes for a project
+router.get('/:projectId/notes', authenticateToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    
+    // Fetch project without notes field to avoid SQL error if column doesn't exist
+    const project = await Project.findByPk(projectId, {
+      attributes: { exclude: ['notes'] }
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Try to get notes using raw query to check if column exists
+    let notes = [];
+    try {
+      const sequelize = Project.sequelize;
+      const results = await sequelize.query(
+        `SELECT notes FROM projects WHERE id = :projectId`,
+        {
+          replacements: { projectId },
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      if (results && results.length > 0 && results[0] && results[0].notes !== null && results[0].notes !== undefined) {
+        try {
+          const notesData = results[0].notes;
+          notes = typeof notesData === 'string' ? JSON.parse(notesData) : notesData;
+          if (!Array.isArray(notes)) {
+            notes = [];
+          }
+        } catch (e) {
+          notes = [];
+        }
+      }
+    } catch (e) {
+      // Column doesn't exist yet, return empty array
+      // Check if error is about missing column
+      if (e.message && (e.message.includes('doesn\'t exist') || e.message.includes('Unknown column') || e.message.includes('column "notes" does not exist'))) {
+        console.log('Notes column does not exist yet, returning empty array');
+      } else {
+        console.error('Error fetching notes:', e);
+      }
+      notes = [];
+    }
+    
+    res.json({
+      success: true,
+      notes: notes
+    });
+  } catch (error) {
+    console.error('Error fetching project notes:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch project notes'
+    });
+  }
+});
+
+// Create a new note for a project
+router.post('/:projectId/notes', authenticateToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { title, content, priority, tags } = req.body;
+    
+    if (!title || !content) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title and content are required'
+      });
+    }
+
+    // Fetch project without notes field to avoid SQL error if column doesn't exist
+    const project = await Project.findByPk(projectId, {
+      attributes: { exclude: ['notes'] }
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    
+    // Try to get existing notes using raw query
+    let notes = [];
+    try {
+      const sequelize = Project.sequelize;
+      const results = await sequelize.query(
+        `SELECT notes FROM projects WHERE id = :projectId`,
+        {
+          replacements: { projectId },
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      if (results && results.length > 0 && results[0] && results[0].notes !== null && results[0].notes !== undefined) {
+        try {
+          const notesData = results[0].notes;
+          notes = typeof notesData === 'string' ? JSON.parse(notesData) : notesData;
+          if (!Array.isArray(notes)) {
+            notes = [];
+          }
+        } catch (e) {
+          notes = [];
+        }
+      }
+    } catch (e) {
+      // Column doesn't exist yet, start with empty array
+      console.log('Notes column does not exist yet, starting with empty array');
+      notes = [];
+    }
+    
+    const newNote = {
+      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      projectId: projectId,
+      title: title.trim(),
+      content: content.trim(),
+      priority: priority || 'normal',
+      tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()).filter(t => t) : []),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: req.user.id,
+      createdByName: user ? user.name : 'Unknown',
+      replies: [],
+      reactions: {
+        like: [],
+        acknowledge: [],
+        important: []
+      }
+    };
+
+    notes.push(newNote);
+    
+    // Update project with new notes array
+    // Use model update method which handles JSON columns properly
+    try {
+      await project.update({ 
+        notes: notes,
+        updatedAt: new Date()
+      }, {
+        fields: ['notes', 'updatedAt'] // Only update these fields
+      });
+    } catch (e) {
+      // Log the actual error for debugging
+      console.error('Error updating notes:', e.message);
+      console.error('Error details:', e);
+      
+      // Check if it's a column doesn't exist error
+      if (e.message && (e.message.includes('doesn\'t exist') || e.message.includes('Unknown column') || e.message.includes('column "notes" does not exist'))) {
+        return res.status(500).json({
+          success: false,
+          error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+        });
+      }
+      
+      // For other errors, return the actual error message
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create note: ' + e.message
+      });
+    }
+    
+    // Log activity
+    try {
+      await logActivity(
+        req.user.id,
+        'create',
+        'project_note',
+        newNote.id,
+        `Created note "${title}" for project: ${project.name}`
+      );
+    } catch (e) {
+      // Log activity failure shouldn't break the response
+      console.error('Error logging activity:', e);
+    }
+
+    res.json({
+      success: true,
+      note: newNote
+    });
+  } catch (error) {
+    console.error('Error creating project note:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create project note: ' + error.message
+    });
+  }
+});
+
+// Update a note
+router.put('/:projectId/notes/:noteId', authenticateToken, async (req, res) => {
+  try {
+    const { projectId, noteId } = req.params;
+    const { title, content, priority, tags } = req.body;
+    
+    // Fetch project without notes field
+    const project = await Project.findByPk(projectId, {
+      attributes: { exclude: ['notes'] }
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Get existing notes using raw query
+    let notes = [];
+    try {
+      const sequelize = Project.sequelize;
+      const results = await sequelize.query(
+        `SELECT notes FROM projects WHERE id = :projectId`,
+        {
+          replacements: { projectId },
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      if (results && results.length > 0 && results[0] && results[0].notes !== null && results[0].notes !== undefined) {
+        try {
+          const notesData = results[0].notes;
+          notes = typeof notesData === 'string' ? JSON.parse(notesData) : notesData;
+          if (!Array.isArray(notes)) {
+            notes = [];
+          }
+        } catch (e) {
+          notes = [];
+        }
+      }
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+      });
+    }
+    
+    const noteIndex = notes.findIndex(n => n.id === noteId);
+    
+    if (noteIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Note not found'
+      });
+    }
+
+    // Update note
+    notes[noteIndex] = {
+      ...notes[noteIndex],
+      title: title ? title.trim() : notes[noteIndex].title,
+      content: content ? content.trim() : notes[noteIndex].content,
+      priority: priority || notes[noteIndex].priority,
+      tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim()).filter(t => t)) : notes[noteIndex].tags,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Update using model update method which handles JSON columns properly
+    try {
+      await project.update({ 
+        notes: notes,
+        updatedAt: new Date()
+      }, {
+        where: { id: projectId },
+        fields: ['notes', 'updatedAt']
+      });
+    } catch (e) {
+      console.error('Error updating notes:', e.message);
+      if (e.message && (e.message.includes('doesn\'t exist') || e.message.includes('Unknown column'))) {
+        return res.status(500).json({
+          success: false,
+          error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update notes: ' + e.message
+      });
+    }
+    
+    // Log activity
+    try {
+      await logActivity(
+        req.user.id,
+        'update',
+        'project_note',
+        noteId,
+        `Updated note "${notes[noteIndex].title}" for project: ${project.name}`
+      );
+    } catch (e) {
+      console.error('Error logging activity:', e);
+    }
+
+    res.json({
+      success: true,
+      note: notes[noteIndex]
+    });
+  } catch (error) {
+    console.error('Error updating project note:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update project note: ' + error.message
+    });
+  }
+});
+
+// Delete a note
+router.delete('/:projectId/notes/:noteId', authenticateToken, async (req, res) => {
+  try {
+    const { projectId, noteId } = req.params;
+    
+    // Fetch project without notes field
+    const project = await Project.findByPk(projectId, {
+      attributes: { exclude: ['notes'] }
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Get existing notes using raw query
+    let notes = [];
+    try {
+      const sequelize = Project.sequelize;
+      const results = await sequelize.query(
+        `SELECT notes FROM projects WHERE id = :projectId`,
+        {
+          replacements: { projectId },
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      if (results && results.length > 0 && results[0] && results[0].notes !== null && results[0].notes !== undefined) {
+        try {
+          const notesData = results[0].notes;
+          notes = typeof notesData === 'string' ? JSON.parse(notesData) : notesData;
+          if (!Array.isArray(notes)) {
+            notes = [];
+          }
+        } catch (e) {
+          notes = [];
+        }
+      }
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+      });
+    }
+    
+    const noteIndex = notes.findIndex(n => n.id === noteId);
+    
+    if (noteIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Note not found'
+      });
+    }
+
+    const deletedNote = notes[noteIndex];
+    notes.splice(noteIndex, 1);
+
+    // Update using raw query
+    try {
+      const sequelize = Project.sequelize;
+      await sequelize.query(
+        `UPDATE projects SET notes = :notes, updatedAt = :updatedAt WHERE id = :projectId`,
+        {
+          replacements: {
+            notes: JSON.stringify(notes),
+            updatedAt: new Date(),
+            projectId
+          },
+          type: sequelize.QueryTypes.UPDATE
+        }
+      );
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to delete note. Please run database migration to add notes column.'
+      });
+    }
+    
+    // Log activity
+    try {
+      await logActivity(
+        req.user.id,
+        'delete',
+        'project_note',
+        noteId,
+        `Deleted note "${deletedNote.title}" for project: ${project.name}`
+      );
+    } catch (e) {
+      console.error('Error logging activity:', e);
+    }
+
+    res.json({
+      success: true,
+      message: 'Note deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting project note:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete project note: ' + error.message
+    });
+  }
+});
+
+// Add reply to a note
+router.post('/:projectId/notes/:noteId/replies', authenticateToken, async (req, res) => {
+  try {
+    const { projectId, noteId } = req.params;
+    const { content } = req.body;
+    
+    if (!content || !content.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Reply content is required'
+      });
+    }
+
+    // Fetch project without notes field
+    const project = await Project.findByPk(projectId, {
+      attributes: { exclude: ['notes'] }
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Get existing notes using raw query
+    let notes = [];
+    try {
+      const sequelize = Project.sequelize;
+      const results = await sequelize.query(
+        `SELECT notes FROM projects WHERE id = :projectId`,
+        {
+          replacements: { projectId },
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      if (results && results.length > 0 && results[0] && results[0].notes !== null && results[0].notes !== undefined) {
+        try {
+          const notesData = results[0].notes;
+          notes = typeof notesData === 'string' ? JSON.parse(notesData) : notesData;
+          if (!Array.isArray(notes)) {
+            notes = [];
+          }
+        } catch (e) {
+          notes = [];
+        }
+      }
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+      });
+    }
+    
+    const noteIndex = notes.findIndex(n => n.id === noteId);
+    
+    if (noteIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Note not found'
+      });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    const reply = {
+      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      noteId: noteId,
+      content: content.trim(),
+      createdAt: new Date().toISOString(),
+      createdBy: req.user.id,
+      createdByName: user ? user.name : 'Unknown'
+    };
+
+    if (!notes[noteIndex].replies) {
+      notes[noteIndex].replies = [];
+    }
+    notes[noteIndex].replies.push(reply);
+    notes[noteIndex].updatedAt = new Date().toISOString();
+
+    // Update using raw query
+    try {
+      const sequelize = Project.sequelize;
+      // For MySQL JSON columns, we need to properly escape the JSON string
+      // Using CAST to ensure MySQL treats it as JSON type
+      const notesJson = JSON.stringify(notes);
+      // Escape single quotes for SQL safety
+      const escapedJson = notesJson.replace(/'/g, "''");
+      await sequelize.query(
+        `UPDATE projects SET notes = CAST('${escapedJson}' AS JSON), updatedAt = :updatedAt WHERE id = :projectId`,
+        {
+          replacements: {
+            updatedAt: new Date(),
+            projectId
+          },
+          type: sequelize.QueryTypes.UPDATE
+        }
+      );
+    } catch (e) {
+      console.error('Error updating notes:', e.message);
+      if (e.message && (e.message.includes('doesn\'t exist') || e.message.includes('Unknown column'))) {
+        return res.status(500).json({
+          success: false,
+          error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to add reply: ' + e.message
+      });
+    }
+
+    res.json({
+      success: true,
+      reply: reply
+    });
+  } catch (error) {
+    console.error('Error adding reply to note:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add reply: ' + error.message
+    });
+  }
+});
+
+// Add reaction to a note
+router.post('/:projectId/notes/:noteId/reactions', authenticateToken, async (req, res) => {
+  try {
+    const { projectId, noteId } = req.params;
+    const { reactionType } = req.body; // 'like', 'acknowledge', 'important'
+    
+    if (!reactionType || !['like', 'acknowledge', 'important'].includes(reactionType)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid reaction type'
+      });
+    }
+
+    // Fetch project without notes field
+    const project = await Project.findByPk(projectId, {
+      attributes: { exclude: ['notes'] }
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Get existing notes using raw query
+    let notes = [];
+    try {
+      const sequelize = Project.sequelize;
+      const results = await sequelize.query(
+        `SELECT notes FROM projects WHERE id = :projectId`,
+        {
+          replacements: { projectId },
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+      
+      if (results && results.length > 0 && results[0] && results[0].notes !== null && results[0].notes !== undefined) {
+        try {
+          const notesData = results[0].notes;
+          notes = typeof notesData === 'string' ? JSON.parse(notesData) : notesData;
+          if (!Array.isArray(notes)) {
+            notes = [];
+          }
+        } catch (e) {
+          notes = [];
+        }
+      }
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+      });
+    }
+    
+    const noteIndex = notes.findIndex(n => n.id === noteId);
+    
+    if (noteIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Note not found'
+      });
+    }
+
+    if (!notes[noteIndex].reactions) {
+      notes[noteIndex].reactions = {
+        like: [],
+        acknowledge: [],
+        important: []
+      };
+    }
+
+    const reactionList = notes[noteIndex].reactions[reactionType] || [];
+    const hasReacted = reactionList.includes(req.user.id);
+    
+    if (hasReacted) {
+      // Remove reaction
+      notes[noteIndex].reactions[reactionType] = reactionList.filter(id => id !== req.user.id);
+    } else {
+      // Add reaction
+      notes[noteIndex].reactions[reactionType] = [...reactionList, req.user.id];
+    }
+    
+    notes[noteIndex].updatedAt = new Date().toISOString();
+
+    // Update using raw query
+    try {
+      const sequelize = Project.sequelize;
+      // For MySQL JSON columns, we need to properly escape the JSON string
+      // Using CAST to ensure MySQL treats it as JSON type
+      const notesJson = JSON.stringify(notes);
+      // Escape single quotes for SQL safety
+      const escapedJson = notesJson.replace(/'/g, "''");
+      await sequelize.query(
+        `UPDATE projects SET notes = CAST('${escapedJson}' AS JSON), updatedAt = :updatedAt WHERE id = :projectId`,
+        {
+          replacements: {
+            updatedAt: new Date(),
+            projectId
+          },
+          type: sequelize.QueryTypes.UPDATE
+        }
+      );
+    } catch (e) {
+      console.error('Error updating notes:', e.message);
+      if (e.message && (e.message.includes('doesn\'t exist') || e.message.includes('Unknown column'))) {
+        return res.status(500).json({
+          success: false,
+          error: 'Notes feature is not available yet. Please run database migration to add notes column.'
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to add reaction: ' + e.message
+      });
+    }
+
+    res.json({
+      success: true,
+      reactions: notes[noteIndex].reactions
+    });
+  } catch (error) {
+    console.error('Error adding reaction to note:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add reaction: ' + error.message
     });
   }
 });

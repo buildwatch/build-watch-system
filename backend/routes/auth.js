@@ -1,7 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, ActivityLog } = require('../models');
+const { User, ActivityLog, Project, ProjectValidation, sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -121,6 +122,8 @@ router.post('/login', async (req, res) => {
     await user.update({
       lastLoginAt: new Date()
     });
+    // Reload user to get updated lastLoginAt
+    await user.reload();
 
     // Log successful login activity
     await ActivityLog.create({
@@ -135,6 +138,19 @@ router.post('/login', async (req, res) => {
       status: 'Success',
       module: 'Authentication'
     });
+
+    // Emit Socket.IO event for login (for admin dashboard real-time updates)
+    // IMPORTANT: Emit AFTER lastLoginAt is updated and user is reloaded
+    if (req.io && user.role !== 'EMS') {
+      // Only emit for non-Gmail users (Gmail users use gmail_user_logged_in event)
+      const feedbackIO = req.io.of('/feedback');
+      feedbackIO.to('admin_dashboard').emit('user_logged_in', {
+        userId: user.id,
+        email: user.email,
+        lastLoginAt: user.lastLoginAt
+      });
+      console.log(`📤 Emitted user_logged_in to admin dashboard for user: ${user.email}, lastLoginAt: ${user.lastLoginAt}`);
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -166,7 +182,12 @@ router.post('/login', async (req, res) => {
       position: user.position,
       contactNumber: user.contactNumber,
       address: user.address,
-      lastLoginAt: user.lastLoginAt
+      lastLoginAt: user.lastLoginAt,
+      profilePictureUrl: user.profilePictureUrl,  // CRITICAL: Include profile picture URL
+      userId: user.userId,  // CRITICAL: Include userId (like LGU-IU-0001)
+      employeeId: user.employeeId,
+      fullName: user.fullName || user.name,
+      birthdate: user.birthdate
     };
 
     res.json({
@@ -185,15 +206,302 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Google OAuth login endpoint
+router.post('/google-login', async (req, res) => {
+  try {
+    const { credential, email, name, picture, googleId } = req.body;
+
+    // If credential is provided (from Google Identity Services), verify it
+    if (credential) {
+      // Verify the Google ID token
+      const { OAuth2Client } = require('google-auth-library');
+      const googleClientId = process.env.GOOGLE_CLIENT_ID;
+      
+      if (!googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
+        console.error('❌ Google Client ID not configured in backend environment');
+        return res.status(500).json({
+          success: false,
+          error: 'Google Sign-In is not configured on the server. Please contact administrator.'
+        });
+      }
+      
+      const client = new OAuth2Client(googleClientId);
+      
+      try {
+        console.log('🔍 Verifying Google credential with Client ID:', googleClientId.substring(0, 20) + '...');
+        const ticket = await client.verifyIdToken({
+          idToken: credential,
+          audience: googleClientId
+        });
+        
+        const payload = ticket.getPayload();
+        const googleEmail = payload.email;
+        const googleName = payload.name;
+        const googlePicture = payload.picture;
+        const googleUserId = payload.sub;
+
+        // Find or create user
+        let user = await User.findOne({
+          where: {
+            [require('sequelize').Op.or]: [
+              { email: googleEmail },
+              { username: googleEmail }
+            ]
+          }
+        });
+
+        if (!user) {
+          // Create new user from Google account
+          // Use 'EMS' role for public users (External Monitoring/Public users)
+          // If you need a dedicated PUBLIC role, add it to the User model ENUM first
+          user = await User.create({
+            username: googleEmail,
+            email: googleEmail,
+            name: googleName || 'Google User',
+            password: await bcrypt.hash(Math.random().toString(36) + Date.now().toString(36), 10), // Random password
+            role: 'EMS', // Using EMS role for public/Google-authenticated users
+            status: 'active',
+            profilePictureUrl: googlePicture || null,
+            lastLoginAt: new Date() // Set initial login time
+          });
+
+          // Log user creation
+          await ActivityLog.create({
+            userId: user.id,
+            action: 'USER_CREATED',
+            entityType: 'User',
+            entityId: user.id,
+            details: `User ${user.name} created via Google OAuth`,
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent'),
+            level: 'Info',
+            status: 'Success',
+            module: 'Authentication'
+          });
+        } else {
+          // Update last login and profile picture if needed
+          await user.update({
+            lastLoginAt: new Date(),
+            profilePictureUrl: googlePicture || user.profilePictureUrl
+          });
+          // Reload user to get updated lastLoginAt
+          await user.reload();
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+          {
+            userId: user.id,
+            username: user.username,
+            role: user.role,
+            subRole: user.subRole
+          },
+          process.env.JWT_SECRET || 'buildwatch_lgu_secret_key_2024',
+          {
+            expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+          }
+        );
+
+        // Log successful login
+        await ActivityLog.create({
+          userId: user.id,
+          action: 'LOGIN',
+          entityType: 'User',
+          entityId: user.id,
+          details: `User ${user.name || user.username} logged in via Google OAuth`,
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent'),
+          level: 'Info',
+          status: 'Success',
+          module: 'Authentication'
+        });
+
+        // Return user data (excluding password)
+        const userData = {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          subRole: user.subRole,
+          status: user.status,
+          profilePicture: user.profilePictureUrl
+        };
+
+        // Emit Socket.IO event for login (for admin dashboard real-time updates)
+        // IMPORTANT: Emit AFTER lastLoginAt is updated and user is reloaded
+        if (req.io && user.role === 'EMS') {
+          const feedbackIO = req.io.of('/feedback');
+          feedbackIO.to('admin_dashboard').emit('gmail_user_logged_in', {
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            lastLoginAt: user.lastLoginAt, // This should now have the updated timestamp
+            profilePictureUrl: user.profilePictureUrl
+          });
+          console.log(`📤 Emitted gmail_user_logged_in to admin dashboard for user: ${user.email}, lastLoginAt: ${user.lastLoginAt}`);
+        }
+
+        res.json({
+          success: true,
+          message: 'Login successful',
+          token: token,
+          user: userData
+        });
+      } catch (error) {
+        console.error('❌ Google token verification error:', error.message);
+        console.error('Error details:', {
+          name: error.name,
+          code: error.code,
+          message: error.message
+        });
+        return res.status(401).json({
+          success: false,
+          error: `Invalid Google credential: ${error.message}`
+        });
+      }
+    } else if (email && name) {
+      // Fallback: direct OAuth (if credential verification fails)
+      // Find or create user
+      let user = await User.findOne({
+        where: {
+          [require('sequelize').Op.or]: [
+            { email: email },
+            { username: email }
+          ]
+        }
+      });
+
+      if (!user) {
+        user = await User.create({
+          username: email,
+          email: email,
+          name: name,
+          password: await bcrypt.hash(Math.random().toString(36) + Date.now().toString(36), 10),
+          role: 'EMS', // Using EMS role for public/Google-authenticated users
+          status: 'active',
+          profilePictureUrl: picture || null,
+          lastLoginAt: new Date() // Set initial login time
+        });
+      } else {
+        await user.update({
+          lastLoginAt: new Date(),
+          profilePictureUrl: picture || user.profilePictureUrl
+        });
+        // Reload user to get updated lastLoginAt
+        await user.reload();
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          userId: user.id,
+          username: user.username,
+          role: user.role
+        },
+        process.env.JWT_SECRET || 'buildwatch_lgu_secret_key_2024',
+        {
+          expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+        }
+      );
+
+      const userData = {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        profilePicture: user.profilePictureUrl
+      };
+
+      // Emit Socket.IO event for login (for admin dashboard real-time updates)
+      // IMPORTANT: Emit AFTER lastLoginAt is updated and user is reloaded
+      if (req.io && user.role === 'EMS') {
+        const feedbackIO = req.io.of('/feedback');
+        feedbackIO.to('admin_dashboard').emit('gmail_user_logged_in', {
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          lastLoginAt: user.lastLoginAt, // This should now have the updated timestamp
+          profilePictureUrl: user.profilePictureUrl
+        });
+        console.log(`📤 Emitted gmail_user_logged_in to admin dashboard for user: ${user.email}, lastLoginAt: ${user.lastLoginAt}`);
+      }
+
+      res.json({
+        success: true,
+        message: 'Login successful',
+        token: token,
+        user: userData
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Google credential or user info required'
+      });
+    }
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 // Logout endpoint
 router.post('/logout', authenticateToken, async (req, res) => {
   try {
+    const { User } = require('../models');
+    
     // Import activity tracking functions
     const { updateUserActivity, userActivityTracker } = require('../middleware/auth');
     
     // Mark user as inactive immediately on logout
     const userId = req.user.id;
     userActivityTracker.delete(userId); // Remove from activity tracker
+    
+    // Update lastLogoutAt timestamp (if column exists)
+    const user = await User.findByPk(userId);
+    let lastLogoutAt = new Date();
+    if (user) {
+      try {
+        // Update lastLogoutAt
+        await user.update({
+          lastLogoutAt: lastLogoutAt
+        });
+        // Reload user to get updated lastLogoutAt
+        await user.reload();
+        console.log(`✅ Updated lastLogoutAt for user ${user.email}: ${user.lastLogoutAt}`);
+      } catch (updateError) {
+        // Column might not exist yet - that's okay, just log and continue
+        console.log('⚠️ Could not update lastLogoutAt (column may not exist yet):', updateError.message);
+      }
+      
+      // Emit Socket.IO event for logout (for admin dashboard real-time updates)
+      // IMPORTANT: Emit AFTER lastLogoutAt is updated and user is reloaded
+      if (req.io) {
+        const feedbackIO = req.io.of('/feedback');
+        if (user.role === 'EMS') {
+          // Gmail feedback users
+          feedbackIO.to('admin_dashboard').emit('gmail_user_logged_out', {
+            userId: user.id,
+            email: user.email,
+            lastLogoutAt: user.lastLogoutAt || lastLogoutAt
+          });
+          console.log(`📤 Emitted gmail_user_logged_out to admin dashboard for user: ${user.email}, lastLogoutAt: ${user.lastLogoutAt || lastLogoutAt}`);
+        } else {
+          // Regular users
+          feedbackIO.to('admin_dashboard').emit('user_logged_out', {
+            userId: user.id,
+            email: user.email,
+            lastLogoutAt: user.lastLogoutAt || lastLogoutAt
+          });
+          console.log(`📤 Emitted user_logged_out to admin dashboard for user: ${user.email}, lastLogoutAt: ${user.lastLogoutAt || lastLogoutAt}`);
+        }
+      }
+    }
     
     // Log logout activity
     await ActivityLog.create({
@@ -259,6 +567,57 @@ router.get('/profile', authenticateToken, async (req, res) => {
         success: false,
         error: 'User not found'
       });
+    }
+
+    // CRITICAL: Auto-fill missing address and position fields
+    // NOTE: User model only has 'address' field, not 'location' (location is just a frontend display alias)
+    let needsUpdate = false;
+    const updateData = {};
+    const defaultAddress = 'Municipal Hall, Santa Cruz, Laguna';
+
+    // Set address if missing
+    if (!user.address || user.address === '' || user.address === 'null' || user.address === 'undefined' || user.address === '-') {
+      updateData.address = defaultAddress;
+      needsUpdate = true;
+    }
+
+    // NOTE: User model only has 'address' field, not 'location' (location is just a frontend display alias)
+    // The frontend uses userData.location || userData.address, so we only need to set address
+
+    // Set position based on role/subRole if missing
+    if (!user.position || user.position === '' || user.position === 'null' || user.position === 'undefined') {
+      let defaultPosition = null;
+      
+      if (user.role === 'LGU-IU' || user.role === 'IU' || user.role === 'iu') {
+        defaultPosition = 'Implementing Office Officer';
+      } else if (user.role === 'EIU') {
+        defaultPosition = 'External Partner';
+      } else if (user.role === 'LGU-PMT' || user.role === 'MPMEC') {
+        // Check if Secretariat
+        if (user.subRole && (
+          user.subRole.toLowerCase().includes('mpmec secretariat') || 
+          user.subRole.toLowerCase().includes('secretariat')
+        )) {
+          defaultPosition = 'LGU - Project Monitoring Team';
+        } else {
+          // Regular MPMEC member
+          defaultPosition = 'LGU - Project Monitoring Team';
+        }
+      } else if (user.role === 'MPMEC Secretariat' || user.role === 'Secretariat') {
+        defaultPosition = 'LGU - Project Monitoring Team';
+      }
+      
+      if (defaultPosition) {
+        updateData.position = defaultPosition;
+        needsUpdate = true;
+      }
+    }
+
+    // Update user if needed
+    if (needsUpdate) {
+      await user.update(updateData);
+      await user.reload(); // Reload to get updated values
+      console.log('Auto-filled missing profile fields in /profile endpoint:', updateData);
     }
 
     res.json({
@@ -458,6 +817,278 @@ router.post('/test-logs', async (req, res) => {
   }
 });
 
+// Get profile completion percentage (MUST be before /profile/:userId)
+router.get('/profile/completion', authenticateToken, async (req, res) => {
+  try {
+    // Force reload user from database to get latest data (including profilePictureUrl)
+    // Use raw query to bypass any caching
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'name', 'fullName', 'email', 'contactNumber', 'birthdate', 'department', 'position', 'profilePictureUrl', 'address', 'role', 'subRole'],
+      raw: false // Get Sequelize instance to ensure fresh data
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Force reload from database to get latest profilePictureUrl
+    await user.reload();
+
+    // CRITICAL: Auto-fill missing address and position fields
+    // NOTE: User model only has 'address' field, not 'location' (location is just a frontend display alias)
+    let needsUpdate = false;
+    const updateData = {};
+    const defaultAddress = 'Municipal Hall, Santa Cruz, Laguna';
+
+    // Set address if missing
+    if (!user.address || user.address === '' || user.address === 'null' || user.address === 'undefined' || user.address === '-') {
+      updateData.address = defaultAddress;
+      needsUpdate = true;
+    }
+
+    // NOTE: User model only has 'address' field, not 'location' (location is just a frontend display alias)
+    // The frontend uses userData.location || userData.address, so we only need to set address
+
+    // Set position based on role/subRole if missing
+    if (!user.position || user.position === '' || user.position === 'null' || user.position === 'undefined') {
+      let defaultPosition = null;
+      
+      if (user.role === 'LGU-IU' || user.role === 'IU' || user.role === 'iu') {
+        defaultPosition = 'Implementing Office Officer';
+      } else if (user.role === 'EIU') {
+        defaultPosition = 'External Partner';
+      } else if (user.role === 'LGU-PMT' || user.role === 'MPMEC') {
+        // Check if Secretariat
+        if (user.subRole && (
+          user.subRole.toLowerCase().includes('mpmec secretariat') || 
+          user.subRole.toLowerCase().includes('secretariat')
+        )) {
+          defaultPosition = 'LGU - Project Monitoring Team';
+        } else {
+          // Regular MPMEC member
+          defaultPosition = 'LGU - Project Monitoring Team';
+        }
+      } else if (user.role === 'MPMEC Secretariat' || user.role === 'Secretariat') {
+        defaultPosition = 'LGU - Project Monitoring Team';
+      }
+      
+      if (defaultPosition) {
+        updateData.position = defaultPosition;
+        needsUpdate = true;
+      }
+    }
+
+    // Update user if needed
+    if (needsUpdate) {
+      await user.update(updateData);
+      await user.reload(); // Reload to get updated values
+      console.log('Auto-filled missing profile fields:', updateData);
+    }
+
+    // Calculate completion based on filled fields
+    // NOTE: User model only has 'address' field, not 'location' (location is just a frontend display alias)
+    const fields = {
+      name: user.name || user.fullName,
+      email: user.email,
+      contactNumber: user.contactNumber,
+      birthdate: user.birthdate,
+      department: user.department,
+      position: user.position,
+      profilePictureUrl: user.profilePictureUrl,
+      address: user.address
+    };
+
+    // Check if profilePictureUrl is valid (not null, not empty, and not just whitespace)
+    // Handle both string and null/undefined cases
+    const profilePicValue = fields.profilePictureUrl;
+    const hasProfilePicture = profilePicValue !== null && 
+                              profilePicValue !== undefined &&
+                              typeof profilePicValue === 'string' &&
+                              profilePicValue.trim() !== '' && 
+                              profilePicValue !== 'null' &&
+                              profilePicValue !== 'undefined' &&
+                              !profilePicValue.startsWith('data:image/svg+xml'); // Exclude default SVG placeholders
+
+    const totalFields = Object.keys(fields).length;
+    let filledFields = Object.entries(fields)
+      .filter(([key, value]) => {
+        if (key === 'profilePictureUrl') {
+          return hasProfilePicture;
+        }
+        return value && value !== '' && value !== 'null' && value !== 'undefined' && value !== '-';
+      }).length;
+
+    const completionPercentage = Math.round((filledFields / totalFields) * 100);
+
+    const missingFields = Object.entries(fields)
+      .filter(([key, value]) => {
+        if (key === 'profilePictureUrl') {
+          return !hasProfilePicture;
+        }
+        return !value || value === '' || value === 'null' || value === 'undefined' || value === '-';
+      })
+      .map(([key]) => key);
+
+    console.log('Profile completion calculation:', {
+      userId: user.id,
+      role: user.role,
+      subRole: user.subRole,
+      fields: fields,
+      profilePictureUrl: user.profilePictureUrl,
+      profilePictureUrlType: typeof user.profilePictureUrl,
+      profilePictureUrlLength: user.profilePictureUrl ? user.profilePictureUrl.length : 0,
+      hasProfilePicture,
+      filledFields,
+      totalFields,
+      completionPercentage,
+      missingFields
+    });
+
+    res.json({
+      success: true,
+      completion: {
+        percentage: completionPercentage,
+        filledFields,
+        totalFields,
+        missingFields
+      }
+    });
+  } catch (error) {
+    console.error('Get profile completion error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to calculate profile completion'
+    });
+  }
+});
+
+// Get user activity history (MUST be before /profile/:userId)
+router.get('/profile/activity', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const activities = await ActivityLog.findAll({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+      limit: limit
+    });
+
+    res.json({
+      success: true,
+      activities: activities.map(activity => ({
+        id: activity.id,
+        action: activity.action,
+        entityType: activity.entityType,
+        entityId: activity.entityId,
+        details: activity.details,
+        module: activity.module,
+        level: activity.level,
+        status: activity.status,
+        ipAddress: activity.ipAddress,
+        userAgent: activity.userAgent,
+        createdAt: activity.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get user activity error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch activity history'
+    });
+  }
+});
+
+// Get user statistics (MUST be before /profile/:userId)
+router.get('/profile/statistics', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Get activity counts
+    const totalActivities = await ActivityLog.count({ where: { userId } });
+    const recentActivities = await ActivityLog.count({
+      where: {
+        userId,
+        createdAt: {
+          [Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+        }
+      }
+    });
+
+    // Get last activity
+    const lastActivity = await ActivityLog.findOne({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+      attributes: ['createdAt', 'action', 'module'],
+      raw: true
+    });
+
+    // Role-specific statistics
+    const stats = {
+      account: {
+        accountCreated: user.createdAt,
+        lastLogin: user.lastLoginAt,
+        lastLogout: user.lastLogoutAt,
+        profileUpdated: user.updatedAt,
+        status: user.status
+      },
+      activity: {
+        totalActivities,
+        recentActivities,
+        lastActivity: lastActivity || null
+      }
+    };
+
+    // Add role-specific stats
+    if (user.role === 'LGU-IU') {
+      // Get project-related stats for LGU-IU
+      const projectsManaged = await Project.count({
+        where: { implementingOfficeId: userId }
+      });
+      stats.projects = { managed: projectsManaged };
+    } else if (user.role === 'LGU-PMT' || user.role === 'MPMEC Secretariat') {
+      // Get validation/review stats
+      const validationsCompleted = await ProjectValidation.count({
+        where: { validatorId: userId }
+      });
+      stats.validations = { completed: validationsCompleted };
+    } else if (user.role === 'EIU') {
+      // Get EIU project stats
+      const projectsAssigned = await Project.count({
+        where: { eiuPersonnelId: userId }
+      });
+      stats.projects = { assigned: projectsAssigned };
+    } else if (user.role === 'SYS.AD') {
+      // Get system admin stats
+      const totalUsers = await User.count();
+      const activeUsers = await User.count({ where: { status: 'active' } });
+      stats.system = { totalUsers, activeUsers };
+    }
+
+    res.json({
+      success: true,
+      statistics: stats
+    });
+  } catch (error) {
+    console.error('Get user statistics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch statistics'
+    });
+  }
+});
+
 // Validate EIU Personnel Account endpoint
 router.get('/profile/:userId', authenticateToken, async (req, res) => {
   try {
@@ -568,6 +1199,70 @@ router.post('/verify-password', authenticateToken, async (req, res) => {
       userId: adminUserId,
       action: 'UUID_REVEAL_SUCCESS',
       details: `Successful password verification for UUID reveal of user ${targetUserId}`,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent')
+    });
+
+    res.json({
+      success: true,
+      message: 'Password verified successfully'
+    });
+
+  } catch (error) {
+    console.error('Password verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Password verification endpoint for admin operations (delete, etc.) - verifies the logged-in admin's own password
+router.post('/verify-own-password', authenticateToken, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const adminUserId = req.user.id; // The admin performing the operation
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password is required'
+      });
+    }
+
+    // Get the logged-in admin user
+    const adminUser = await User.findByPk(adminUserId);
+    if (!adminUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Verify the admin's own password
+    const isPasswordValid = await bcrypt.compare(password, adminUser.password);
+    
+    if (!isPasswordValid) {
+      // Log failed password verification attempt
+      await ActivityLog.create({
+        userId: adminUserId,
+        action: 'PASSWORD_VERIFICATION_FAILED',
+        details: `Failed password verification for admin operation`,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent')
+      });
+
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid password'
+      });
+    }
+
+    // Log successful password verification
+    await ActivityLog.create({
+      userId: adminUserId,
+      action: 'PASSWORD_VERIFICATION_SUCCESS',
+      details: `Successful password verification for admin operation`,
       ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.get('User-Agent')
     });

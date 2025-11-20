@@ -10,13 +10,13 @@ const currentTime = new Date().toLocaleString('en-PH', {
   minute: '2-digit'
 });
 ---
-<header class="relative z-50 flex items-center justify-between px-8 py-4 bg-gradient-to-r from-black via-neutral-900 to-gray-900 text-gray-100 shadow-lg border-b border-white/10 backdrop-blur-sm">
+<header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-black via-neutral-900 to-gray-900 text-gray-100 shadow-lg border-b border-white/10 backdrop-blur-sm">
   <!-- Subtle overlay for depth -->
   <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 opacity-10"></div>
   <div class="pointer-events-none absolute -top-6 left-24 w-40 h-40 bg-white/10 rounded-full blur-3xl opacity-20"></div>
   <div class="pointer-events-none absolute -bottom-10 right-24 w-32 h-32 bg-white/10 rounded-full blur-2xl opacity-20"></div>
-  <!-- Left Section: Sidebar Toggle, Logo and Search -->
-  <div class="flex items-center space-x-6">
+  <!-- Left Section: Sidebar Toggle, Search, and Subtitle -->
+  <div class="flex items-center space-x-4">
     <!-- Sidebar Toggle Button -->
     <button id="sysadmin-sidebar-toggle" class="group p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-300 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl">
       <svg id="sidebar-toggle-icon" class="w-6 h-6 text-white transition-all duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,22 +24,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
       </svg>
     </button>
 
-    <!-- Logo -->
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
-        <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
-      </div>
-      <div>
-        <h1 class="text-lg font-bold text-gray-100">Build Watch</h1>
-        <p class="text-xs text-gray-400">System Administration</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Center Section: Search Bar, Date/Time and Status -->
-  <div class="hidden md:flex items-center gap-6">
-    <!-- Search Bar - Moved slightly left for better centering -->
-    <div class="relative -ml-8" id="sysadmin-search-wrapper">
+    <!-- Search Bar - Desktop -->
+    <div class="relative hidden md:block" id="sysadmin-search-wrapper">
       <input 
         id="sysadmin-global-search"
         type="text" 
@@ -54,18 +40,57 @@ const currentTime = new Date().toLocaleString('en-PH', {
       </div>
     </div>
     
-    <div class="text-center">
-      <p id="sysadmin-clock" class="text-sm text-white">Loading...</p>
-      <p class="text-xs text-blue-200/80">Philippine Standard Time</p>
-    </div>
-    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-300 ring-1 ring-green-400/20">
-      <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-      <span class="text-sm font-medium">System Operational</span>
+    <!-- Subtitle beside search bar on the right -->
+    <p class="text-xs text-gray-400 hidden md:block whitespace-nowrap">System Administration</p>
+    
+    <!-- Logo (Visible only when sidebar is expanded on mobile) -->
+    <div class="md:hidden flex items-center topbar-logo-expanded ml-4">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
+        <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+      </div>
     </div>
   </div>
 
+  <!-- Mobile Search Button (Visible only when sidebar is collapsed on mobile) -->
+  <button id="sysadmin-mobile-search-toggle" class="md:hidden absolute left-20 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm border border-white/20 mobile-search-btn" aria-label="Toggle search">
+    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+  </button>
+  
+  <!-- Mobile Search Bar (Expandable) -->
+  <div id="sysadmin-mobile-search-wrapper" class="md:hidden fixed top-[73px] left-0 right-0 mt-2 px-4 opacity-0 invisible transform translate-y-[-10px] transition-all duration-300 z-50">
+    <div class="relative">
+      <input 
+        id="sysadmin-mobile-search"
+        type="text" 
+        placeholder="Search modules, users, reports..." 
+        class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 shadow-lg" 
+        autocomplete="off"
+      />
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </div>
+        <button id="sysadmin-mobile-search-close" class="absolute inset-y-0 right-0 pr-3 flex items-center" aria-label="Close search">
+          <svg class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Center Section: Logo and Title (Desktop only, centered) -->
+  <div class="hidden md:flex md:absolute md:left-[48%] md:transform md:-translate-x-1/2 items-center topbar-logo">
+    <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
+      <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+    </div>
+    <h1 class="text-base md:text-lg font-bold text-gray-100 hidden sm:block ml-2 md:ml-3">Build Watch</h1>
+  </div>
+
   <!-- Right Section: Actions and User -->
-  <div class="flex items-center space-x-4">
+  <div class="flex items-center space-x-2 md:space-x-4">
     <!-- System Management Actions -->
     <div class="flex items-center space-x-2">
       <!-- System Announcement Button -->
@@ -75,6 +100,19 @@ const currentTime = new Date().toLocaleString('en-PH', {
         </svg>
         <!-- Enhanced hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+        <!-- Announcement Notification Badge -->
+        <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg hidden group-hover:scale-110 transition-transform duration-200 animate-pulse" id="sysadmin-announcement-badge" style="animation: pulse-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">0</span>
+      </a>
+      
+      <!-- Messaging Center Button -->
+      <a href="/dashboard/sysadmin/modules/messaging" title="Messaging Center" aria-label="Messaging Center" class="group relative p-2.5 text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-white/20 hover:to-gray-300/20 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-white/30 hover:scale-110 hover:shadow-lg hover:shadow-white/25 transform-gpu">
+        <svg class="w-5 h-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        </svg>
+        <!-- Enhanced hover glow effect -->
+        <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+        <!-- Message Notification Badge -->
+        <span id="sysadmin-message-badge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 hidden animate-pulse shadow-lg shadow-red-500/50">0</span>
       </a>
       
       <!-- System Health Button -->
@@ -96,7 +134,7 @@ const currentTime = new Date().toLocaleString('en-PH', {
         </svg>
         <!-- Enhanced hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-        <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg hidden group-hover:scale-110 transition-transform duration-200" id="sysadmin-notification-badge">0</span>
+        <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg hidden group-hover:scale-110 transition-transform duration-200 animate-pulse" id="sysadmin-notification-badge" style="animation: pulse-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">0</span>
       </button>
     </div>
 
@@ -572,8 +610,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
   }
 
   function startSysAdminClock() {
-    const clockEl = document.getElementById('sysadmin-clock');
-    if (!clockEl) return;
+    const sidebarClockEl = document.getElementById('sysadmin-sidebar-clock');
+    if (!sidebarClockEl) return;
     const update = () => {
       const now = new Date();
       const options = { 
@@ -586,12 +624,96 @@ const currentTime = new Date().toLocaleString('en-PH', {
         timeZone: 'Asia/Manila'
       };
       
-      if (clockEl) {
-        clockEl.textContent = now.toLocaleDateString('en-US', options).replace(' at ', ' at ');
+      if (sidebarClockEl) {
+        sidebarClockEl.textContent = now.toLocaleDateString('en-US', options).replace(' at ', ' at ');
       }
     };
     update();
     setInterval(update, 1000);
+  }
+
+  // Mobile Search Toggle Functionality
+  function initializeMobileSearch() {
+    const mobileSearchToggle = document.getElementById('sysadmin-mobile-search-toggle');
+    const mobileSearchWrapper = document.getElementById('sysadmin-mobile-search-wrapper');
+    const mobileSearchInput = document.getElementById('sysadmin-mobile-search');
+    const mobileSearchClose = document.getElementById('sysadmin-mobile-search-close');
+    
+    if (!mobileSearchToggle || !mobileSearchWrapper || !mobileSearchInput) {
+      return; // Elements not found, skip initialization
+    }
+    
+    // Toggle search bar visibility
+    mobileSearchToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isVisible = !mobileSearchWrapper.classList.contains('invisible');
+      
+      if (isVisible) {
+        // Hide search bar
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchInput.blur();
+      } else {
+        // Show search bar
+        mobileSearchWrapper.classList.remove('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.add('opacity-100', 'visible', 'translate-y-0');
+        setTimeout(() => mobileSearchInput.focus(), 100);
+      }
+    });
+    
+    // Close button
+    if (mobileSearchClose) {
+      mobileSearchClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        mobileSearchInput.blur();
+      });
+    }
+    
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!mobileSearchWrapper.contains(e.target) && !mobileSearchToggle.contains(e.target)) {
+        if (!mobileSearchWrapper.classList.contains('invisible')) {
+          mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+          mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        }
+      }
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileSearchWrapper.classList.contains('invisible')) {
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        mobileSearchInput.blur();
+      }
+    });
+    
+    // Sync mobile search with desktop search
+    const desktopSearch = document.getElementById('sysadmin-global-search');
+    if (desktopSearch) {
+      mobileSearchInput.addEventListener('input', (e) => {
+        desktopSearch.value = e.target.value;
+        // Trigger search if needed
+        if (desktopSearch.dispatchEvent) {
+          desktopSearch.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      
+      desktopSearch.addEventListener('input', (e) => {
+        mobileSearchInput.value = e.target.value;
+      });
+    }
+  }
+  
+  // Initialize mobile search on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeMobileSearch);
+  } else {
+    initializeMobileSearch();
   }
 
   // Simple search functionality for System Admin
@@ -888,6 +1010,21 @@ const currentTime = new Date().toLocaleString('en-PH', {
       updateIcon(true);
     }
     
+    // Function to update header class based on sidebar state
+    function updateHeaderClass(isCollapsed) {
+      const header = document.querySelector('header');
+      if (header) {
+        if (isCollapsed) {
+          header.classList.remove('sidebar-expanded');
+        } else {
+          header.classList.add('sidebar-expanded');
+        }
+      }
+    }
+    
+    // Initialize header class based on current sidebar state
+    updateHeaderClass(isCollapsed);
+    
     sidebarToggleBtn.addEventListener('click', () => {
       console.log('🔄 Toggling sidebar');
       
@@ -898,12 +1035,14 @@ const currentTime = new Date().toLocaleString('en-PH', {
         sidebar.classList.remove('collapsed');
         localStorage.setItem('sysadmin-sidebar-collapsed', 'false');
         updateIcon(false);
+        updateHeaderClass(false);
         console.log('📖 Sidebar expanded');
       } else {
         // Collapse sidebar
         sidebar.classList.add('collapsed');
         localStorage.setItem('sysadmin-sidebar-collapsed', 'true');
         updateIcon(true);
+        updateHeaderClass(true);
         console.log('📘 Sidebar collapsed');
       }
          });
@@ -957,7 +1096,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
      
   // Listen for profile picture updates
   window.addEventListener('sysadminProfilePictureUpdated', function(e) {
-    if (e.detail.profilePictureUrl) {
+    if (e.detail && e.detail.profilePictureUrl) {
+      console.log('🔄 Topbar received sysadminProfilePictureUpdated event:', e.detail.profilePictureUrl);
       // Preload the image to prevent blinking
       const img = new Image();
       img.onload = function() {
@@ -965,42 +1105,52 @@ const currentTime = new Date().toLocaleString('en-PH', {
         const topbarProfilePic = document.getElementById('topbar-profile-picture');
         if (topbarProfilePic) {
           topbarProfilePic.src = e.detail.profilePictureUrl;
+          topbarProfilePic.style.display = 'block';
           // Hide fallback div if it exists
           const fallbackDiv = topbarProfilePic.nextElementSibling;
-          if (fallbackDiv) {
+          if (fallbackDiv && fallbackDiv.tagName === 'DIV') {
             fallbackDiv.style.display = 'none';
           }
+          console.log('✅ Topbar profile picture updated');
         }
 
         // Update dropdown profile picture
         const dropdownProfilePic = document.getElementById('dropdown-profile-picture');
         if (dropdownProfilePic) {
           dropdownProfilePic.src = e.detail.profilePictureUrl;
+          dropdownProfilePic.style.display = 'block';
           // Hide fallback div if it exists
           const fallbackDiv = dropdownProfilePic.nextElementSibling;
-          if (fallbackDiv) {
+          if (fallbackDiv && fallbackDiv.tagName === 'DIV') {
             fallbackDiv.style.display = 'none';
           }
+          console.log('✅ Dropdown profile picture updated');
         }
+      };
+      img.onerror = function() {
+        console.log('❌ Failed to preload profile picture for topbar');
       };
       img.src = e.detail.profilePictureUrl;
       
       // Store in localStorage for future use
       localStorage.setItem('sysadmin_profile_picture', e.detail.profilePictureUrl);
+      localStorage.setItem('profilePictureUrl', e.detail.profilePictureUrl);
     }
   });
   
   window.addEventListener('storage', function(e) {
-    if (e.key === 'sysadmin_profile_picture' && e.newValue) {
+    if ((e.key === 'sysadmin_profile_picture' || e.key === 'profilePictureUrl') && e.newValue) {
+      console.log('🔄 Topbar received storage event for profile picture:', e.key, e.newValue);
       // Preload the image to prevent blinking
       const img = new Image();
       img.onload = function() {
         const topbarProfilePic = document.getElementById('topbar-profile-picture');
         if (topbarProfilePic) {
           topbarProfilePic.src = e.newValue;
+          topbarProfilePic.style.display = 'block';
           // Hide fallback div if it exists
           const fallbackDiv = topbarProfilePic.nextElementSibling;
-          if (fallbackDiv) {
+          if (fallbackDiv && fallbackDiv.tagName === 'DIV') {
             fallbackDiv.style.display = 'none';
           }
         }
@@ -1008,12 +1158,17 @@ const currentTime = new Date().toLocaleString('en-PH', {
         const dropdownProfilePic = document.getElementById('dropdown-profile-picture');
         if (dropdownProfilePic) {
           dropdownProfilePic.src = e.newValue;
+          dropdownProfilePic.style.display = 'block';
           // Hide fallback div if it exists
           const fallbackDiv = dropdownProfilePic.nextElementSibling;
-          if (fallbackDiv) {
+          if (fallbackDiv && fallbackDiv.tagName === 'DIV') {
             fallbackDiv.style.display = 'none';
           }
         }
+        console.log('✅ Topbar profile pictures updated from storage');
+      };
+      img.onerror = function() {
+        console.log('❌ Failed to preload profile picture from storage');
       };
       img.src = e.newValue;
     }
@@ -1108,6 +1263,7 @@ const currentTime = new Date().toLocaleString('en-PH', {
           
           // Store in localStorage for future use
           localStorage.setItem('sysadmin_profile_picture', result.profilePictureUrl);
+          localStorage.setItem('profilePictureUrl', result.profilePictureUrl);
           return;
         }
       }
@@ -1115,8 +1271,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
       console.log('System Admin Topbar: Server fetch failed, trying localStorage:', error);
     }
     
-    // Fallback to localStorage if server fails
-    const storedUrl = localStorage.getItem('sysadmin_profile_picture');
+    // Fallback to localStorage if server fails - check both keys
+    const storedUrl = localStorage.getItem('sysadmin_profile_picture') || localStorage.getItem('profilePictureUrl');
     if (storedUrl) {
       // Preload the image to prevent blinking
       const img = new Image();
@@ -1149,9 +1305,76 @@ const currentTime = new Date().toLocaleString('en-PH', {
    document.addEventListener('DOMContentLoaded', function() {
      loadTopbarProfilePictures();
    });
+
+  // Initialize message notification badge for System Admin
+  (async function() {
+    try {
+      const { initMessageNotificationBadge } = await import('/src/scripts/messageNotificationBadge.js');
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            initMessageNotificationBadge('sysadmin');
+          });
+        } else {
+          initMessageNotificationBadge('sysadmin');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load message notification badge:', error);
+    }
+  })();
+
+  // Initialize announcement notification badge for System Admin
+  (async function() {
+    try {
+      const { initAnnouncementNotificationBadge } = await import('/src/scripts/announcementNotificationBadge.js');
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            initAnnouncementNotificationBadge('sysadmin');
+          });
+        } else {
+          initAnnouncementNotificationBadge('sysadmin');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load announcement notification badge:', error);
+    }
+  })();
  </script>
 
 <style>
+  /* Mobile logo and search button visibility */
+  @media (max-width: 767px) {
+    /* Hide logo when sidebar is collapsed, show when expanded */
+    :global(header:not(.sidebar-expanded) .topbar-logo-expanded) {
+      display: none !important;
+    }
+    :global(header.sidebar-expanded .topbar-logo-expanded) {
+      display: flex !important;
+    }
+    
+    /* Hide search button when sidebar is expanded, show when collapsed */
+    :global(header.sidebar-expanded .mobile-search-btn) {
+      display: none !important;
+    }
+    :global(header:not(.sidebar-expanded) .mobile-search-btn) {
+      display: block !important;
+    }
+  }
+
+  /* Blinking pulse animation for notification badge */
+  @keyframes pulse-blink {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
   /* Enhanced Custom Scrollbar for System Admin Notifications */
   .custom-scrollbar {
     scrollbar-width: thin;

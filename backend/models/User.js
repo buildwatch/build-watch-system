@@ -151,6 +151,10 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true
     },
+    lastLogoutAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     passwordChangedAt: {
       type: DataTypes.DATE,
       allowNull: true
@@ -268,6 +272,41 @@ module.exports = (sequelize) => {
     User.hasMany(models.MilestoneSubmission, {
       foreignKey: 'reviewedBy',
       as: 'reviewedMilestoneSubmissions'
+    });
+
+    // User has many Announcements (as creator)
+    User.hasMany(models.Announcement, {
+      foreignKey: 'createdBy',
+      as: 'createdAnnouncements'
+    });
+
+    // User has many Read Receipts
+    User.hasMany(models.ReadReceipt, {
+      foreignKey: 'userId',
+      as: 'readReceipts'
+    });
+
+    // User has many Announcement Comments
+    User.hasMany(models.AnnouncementComment, {
+      foreignKey: 'userId',
+      as: 'announcementComments'
+    });
+
+    // User has many Announcement Reactions
+    User.hasMany(models.AnnouncementReaction, {
+      foreignKey: 'userId',
+      as: 'announcementReactions'
+    });
+
+    // User has many Announcement Favorites
+    User.hasMany(models.AnnouncementFavorite, {
+      foreignKey: 'userId',
+      as: 'announcementFavorites'
+    });
+
+    User.hasMany(models.UserPushSubscription, {
+      foreignKey: 'userId',
+      as: 'pushSubscriptions'
     });
   };
 

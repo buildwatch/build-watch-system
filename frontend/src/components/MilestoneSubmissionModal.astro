@@ -253,6 +253,22 @@ const { submissionId } = Astro.props;
                 <!-- Will be populated by JavaScript -->
               </div>
             </div>
+
+            <!-- Delay Reason Information (only for delayed milestones) -->
+            <div id="delayReasonSection" class="bg-red-50/80 backdrop-blur-sm rounded-xl p-6 border border-red-200 shadow-md hidden">
+              <h4 class="text-lg font-bold text-red-800 mb-4 flex items-center gap-2">
+                <div class="icon-container-small bg-gradient-to-br from-red-500 to-red-600">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                </div>
+                Reason of Delayed
+                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium ml-2">Late Submission</span>
+              </h4>
+              <div id="delayReasonInfo" class="text-sm text-red-700">
+                <!-- Will be populated by JavaScript -->
+              </div>
+            </div>
           </div>
         </div>
 

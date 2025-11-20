@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import EIULayout from '../../../../components/EIULayout.astro';
+import ProjectSummaryReportCenter from '../../../../islands/ProjectSummaryReportCenter.jsx';
+---
+
+<Layout title="Project Summary & Report | EIU Dashboard">
+  <EIULayout>
+    <section class="p-8 bg-gradient-to-br from-green-50 to-white min-h-screen">
+      <ProjectSummaryReportCenter client:load userRole="EIU" accessLevel="assigned" />
+    </section>
+  </EIULayout>
+</Layout>
+

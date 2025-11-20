@@ -2150,6 +2150,9 @@ loading = false;
 
   <!-- Include MilestoneSubmissionModal -->
   <MilestoneSubmissionModal />
+  
+  <!-- Include ProjectDetailsModal -->
+  <ProjectDetailsModal userTheme="iu-implementing-office" />
 </Layout>
 
 <script>
@@ -4842,13 +4845,30 @@ This compilation report has been generated automatically based on approved EIU m
       alert('Please select a project first.');
       return;
     }
-    // Open ProjectDetailsModal component
-    if (window.showProjectDetailsModal) {
-      window.showProjectDetailsModal(selectedProject.id);
-    } else {
-      console.error('ProjectDetailsModal not available');
-      alert('Unable to load project details. Please refresh the page.');
-    }
+    
+    // Open ProjectDetailsModal component with retry mechanism
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryShowModal = () => {
+      if (window.showProjectDetailsModal && typeof window.showProjectDetailsModal === 'function') {
+        console.log('✅ Opening ProjectDetailsModal for project:', selectedProject.id);
+        window.showProjectDetailsModal(selectedProject.id);
+        return;
+      }
+      
+      attempts++;
+      if (attempts < maxAttempts) {
+        console.log(`⏳ ProjectDetailsModal not ready, retrying... (attempt ${attempts}/${maxAttempts})`);
+        setTimeout(tryShowModal, 100);
+      } else {
+        console.error('❌ ProjectDetailsModal not available after all attempts');
+        alert('Unable to load project details. Please refresh the page.');
+      }
+    };
+    
+    // Start trying to show modal
+    tryShowModal();
   }
 
   function viewSubmission() {
@@ -6550,6 +6570,27 @@ This compilation report has been generated automatically based on approved EIU m
           </div>
         </div>
       `;
+
+      // Populate Delay Reason Information (only for delayed milestones)
+      const delayReasonSection = document.getElementById('delayReasonSection');
+      const delayReasonInfo = document.getElementById('delayReasonInfo');
+      if (delayReasonSection && delayReasonInfo) {
+        // Check if submission has delay reason or is marked as delayed
+        const submissionData = submission.submissionData || {};
+        const isDelayed = submission.isDelayed || submissionData.isDelayed || submission.status === 'delayed';
+        const delayReason = submission.delayReason || submissionData.delayReason;
+        
+        if (isDelayed && delayReason) {
+          delayReasonSection.classList.remove('hidden');
+          delayReasonInfo.innerHTML = `
+            <div class="bg-white/60 p-4 rounded-xl border border-red-200">
+              <p class="text-sm text-red-800 leading-relaxed">${delayReason}</p>
+            </div>
+          `;
+        } else {
+          delayReasonSection.classList.add('hidden');
+        }
+      }
 
       // Enhanced Profile Picture Loading (same approach as ProjectDetailsModal)
       if (submitterData.profilePictureUrl) {
@@ -10458,6 +10499,83 @@ This compilation report has been generated automatically based on approved EIU m
 <!-- Pass server-side data to client-side via global variable -->
 <script define:vars={{ serverProjects: projects }}>
   // Make server-side projects available globally
-      window.initialProjectsData = serverProjects;
-    console.log('Server-side projects loaded:', serverProjects ? serverProjects.length : 0);
-  </script> 
+  window.initialProjectsData = serverProjects;
+  console.log('Server-side projects loaded:', serverProjects ? serverProjects.length : 0);
+  
+  // Calculate and update Total Budget Monitored (Utilized Budget) from /api/home/stats endpoint
+  async function updateTotalBudgetMonitored() {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) {
+        console.warn('No token found for fetching utilized budget');
+        return;
+      }
+      
+      const API_URL = 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/home/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.utilizedBudget !== undefined) {
+          const utilizedBudget = parseFloat(data.utilizedBudget) || 0;
+          const formattedBudget = utilizedBudget.toLocaleString('en-PH', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          });
+          
+          // Update the UI element
+          const totalBudgetMonitoredEl = document.getElementById('totalBudgetMonitored');
+          if (totalBudgetMonitoredEl) {
+            totalBudgetMonitoredEl.textContent = formattedBudget;
+            console.log('💰 Total Budget Monitored (Utilized) updated:', formattedBudget);
+          }
+        }
+      } else {
+        console.warn('Failed to fetch utilized budget from /api/home/stats:', response.status);
+        // Fallback: Calculate from project data if available
+        const projectsData = window.initialProjectsData || [];
+        let totalUtilized = 0;
+        
+        projectsData.forEach(project => {
+          if (project.milestones && Array.isArray(project.milestones)) {
+            project.milestones.forEach(milestone => {
+              const usedBudget = parseFloat(milestone.usedBudget || 0);
+              if (usedBudget > 0) {
+                totalUtilized += usedBudget;
+              }
+            });
+          }
+        });
+        
+        if (totalUtilized === 0) {
+          totalUtilized = projectsData.reduce((sum, p) => sum + parseFloat(p.usedBudget || 0), 0);
+        }
+        
+        const totalBudgetMonitoredEl = document.getElementById('totalBudgetMonitored');
+        if (totalBudgetMonitoredEl && totalUtilized > 0) {
+          totalBudgetMonitoredEl.textContent = totalUtilized.toLocaleString('en-PH', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching utilized budget:', error);
+    }
+  }
+  
+  // Update when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateTotalBudgetMonitored);
+  } else {
+    updateTotalBudgetMonitored();
+  }
+  
+  // Also update when projects are loaded dynamically
+  window.updateTotalBudgetMonitored = updateTotalBudgetMonitored;
+</script> 

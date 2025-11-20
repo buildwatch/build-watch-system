@@ -1,0 +1,143 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
+import MessagingCenter from '../../../../islands/MessagingCenter.jsx';
+
+// Determine API URL based on environment (server-side)
+const isProduction = import.meta.env.PROD;
+const isLocalhost = Astro.url.hostname === 'localhost' || Astro.url.hostname === '127.0.0.1' || !isProduction;
+const API_URL = isLocalhost 
+  ? 'http://localhost:3000/api' 
+  : (Astro.url.protocol === 'https:' 
+      ? `${Astro.url.protocol}//${Astro.url.hostname}/api`
+      : `http://${Astro.url.hostname}:3000/api`);
+let userData = null;
+let loading = true;
+let error = '';
+
+// Try to fetch user data from API
+try {
+  const token = Astro.cookies.get('token')?.value || '';
+  if (token) {
+    const userRes = await fetch(`${API_URL}/auth/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (userRes.ok) {
+      const userDataResponse = await userRes.json();
+      if (userDataResponse.success && userDataResponse.user) {
+        userData = userDataResponse.user;
+      }
+    }
+  }
+} catch (err) {
+  console.error('Error fetching user data:', err);
+  error = 'Failed to fetch user data.';
+}
+
+loading = false;
+---
+
+<Layout title="Messaging Center - System Administrator Dashboard">
+  <SysAdminLayout>
+    <style>
+      .icon-container {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .icon-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+      
+      .icon-container > * {
+        position: relative;
+        z-index: 2;
+      }
+      
+      .icon-container:hover::before {
+        left: 100%;
+      }
+      
+      .icon-container:hover {
+        transform: scale(1.1) rotate(3deg);
+      }
+    </style>
+    
+    <!-- Page Header - System Admin Theme -->
+    <div class="bg-white border-b border-gray-200 px-8 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <div class="icon-container bg-gradient-to-br from-black to-gray-800 shadow-xl">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">Messaging Center</h1>
+              <p class="text-sm text-gray-600">System Administrator - Communication Center</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Active Conversations</p>
+            <p class="text-xs text-black font-semibold" id="sysadmin-conversation-count">Loading...</p>
+          </div>
+          <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="p-8 bg-gradient-to-br from-gray-50 via-gray-50 to-white min-h-screen">
+      <!-- Messaging Center Component -->
+      <MessagingCenter client:load theme="black" />
+    </section>
+
+    <script>
+      // Update conversation count when component loads
+      document.addEventListener('DOMContentLoaded', () => {
+        const updateCount = () => {
+          // Listen for custom events from MessagingCenter
+          window.addEventListener('messagingConversationsUpdated', (e) => {
+            const count = e.detail?.total || 0;
+            const active = e.detail?.active || 0;
+            const countEl = document.getElementById('sysadmin-conversation-count');
+            if (countEl) {
+              if (active > 0) {
+                countEl.textContent = `${active} Active ${count === 1 ? 'Conversation' : 'Conversations'}`;
+              } else {
+                countEl.textContent = `${count} Total ${count === 1 ? 'Conversation' : 'Conversations'}`;
+              }
+            }
+          });
+        };
+        updateCount();
+        // Fallback: update after a delay
+        setTimeout(() => {
+          const countEl = document.getElementById('sysadmin-conversation-count');
+          if (countEl && countEl.textContent === 'Loading...') {
+            countEl.textContent = '0 Conversations';
+          }
+        }, 2000);
+      });
+    </script>
+  </SysAdminLayout>
+</Layout>
+

@@ -190,6 +190,12 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Special requirements or notes'
     },
+    notes: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null,
+      comment: 'Project notes and annotations array'
+    },
     
     // Relationships
     implementingOfficeId: {

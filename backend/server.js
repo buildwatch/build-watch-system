@@ -1,9 +1,12 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // Import database models
@@ -19,6 +22,7 @@ const reportRoutes = require('./routes/reports');
 const uploadRoutes = require('./routes/uploads');
 const adminRoutes = require('./routes/admin');
 const eiuRoutes = require('./routes/eiu');
+const webhookRoutes = require('./routes/webhooks');
 const iuProjectRoutes = require('./routes/iu/projects');
 const { router: activityLogRoutes } = require('./routes/activity-logs');
 const { router: notificationRoutes } = require('./routes/notifications');
@@ -32,20 +36,171 @@ const coordinationRoutes = require('./routes/coordination');
 const eiuActivityRoutes = require('./routes/eiu-activities');
 const policyRoutes = require('./routes/policies');
 const profileRoutes = require('./routes/profile');
+const messageRoutes = require('./routes/messages');
+const projectCommentRoutes = require('./routes/project-comments');
+const { checkAndPublishScheduledAnnouncements, checkAndExpireAnnouncements } = require('./services/scheduledAnnouncements');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: [
+      'http://localhost:4321',
+      'http://localhost:4322',
+      'https://build-watch.com',
+      'http://build-watch.com',
+      'https://www.build-watch.com',
+      'http://www.build-watch.com',
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  console.log('🔐 Socket authentication attempt');
+  console.log('🔐 Token present:', !!token);
+  
+  if (!token) {
+    console.error('❌ No token provided in socket handshake');
+    return next(new Error('Authentication error: No token'));
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    console.log('🔐 Token decoded successfully');
+    console.log('🔐 Decoded payload:', decoded);
+    
+    // Try different possible ID fields - check userId first (as JWT uses userId)
+    const userId = decoded.userId || decoded.id || decoded.sub || decoded.user_id;
+    
+    if (!userId) {
+      console.error('❌ No user ID found in token payload');
+      console.error('   Available fields:', Object.keys(decoded));
+      console.error('   Decoded token:', decoded);
+      return next(new Error('Authentication error: No user ID in token'));
+    }
+    
+    socket.userId = String(userId); // Ensure it's a string
+    console.log('✅ Socket userId set to:', socket.userId);
+    socket.user = decoded;
+    
+    console.log('✅ Socket authenticated for user:', socket.userId);
+    next();
+  } catch (err) {
+    console.error('❌ Token verification failed:', err.message);
+    return next(new Error('Authentication error: ' + err.message));
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log(`✅ User ${socket.userId} connected`);
+  console.log(`✅ Socket ID: ${socket.id}`);
+  
+  // Join user's personal room (room name is the user's ID as string)
+  const userIdString = String(socket.userId);
+  socket.join(userIdString);
+  console.log(`✅ User ${socket.userId} joined room: ${userIdString}`);
+  
+  // Verify room join
+  const rooms = Array.from(socket.rooms);
+  console.log(`✅ Socket ${socket.id} is in rooms:`, rooms);
+  
+  // Verify the user's room is in the list
+  if (rooms.includes(userIdString)) {
+    console.log(`✅ Room join verified: ${userIdString} is in socket rooms`);
+  } else {
+    console.error(`❌ Room join failed! ${userIdString} is NOT in socket rooms`);
+    console.error(`   Expected room: ${userIdString}`);
+    console.error(`   Actual rooms:`, rooms);
+  }
+  
+  // Handle disconnect
+  socket.on('disconnect', (reason) => {
+    console.log(`⚠️ User ${socket.userId} disconnected. Reason: ${reason}`);
+  });
+  
+  // Handle typing indicators
+  socket.on('typing', (data) => {
+    socket.to(data.recipientId).emit('user_typing', {
+      userId: socket.userId,
+      isTyping: data.isTyping
+    });
+  });
+  
+  // Handle message read receipts
+  socket.on('message_read', (data) => {
+    socket.to(data.senderId).emit('message_read_receipt', {
+      messageId: data.messageId,
+      readBy: socket.userId,
+      readAt: new Date()
+    });
+  });
+});
+
+// Public feedback namespace (no authentication required)
+const feedbackIO = io.of('/feedback');
+
+feedbackIO.on('connection', (socket) => {
+  console.log(`✅ Feedback client connected: ${socket.id}`);
+  
+  // Handle joining project room
+  socket.on('join_project', (data) => {
+    const { projectId } = data;
+    if (projectId) {
+      const roomName = `project:${projectId}`;
+      socket.join(roomName);
+      console.log(`✅ Feedback client ${socket.id} joined project room: ${roomName}`);
+    }
+  });
+  
+  // Handle leaving project room
+  socket.on('leave_project', (data) => {
+    const { projectId } = data;
+    if (projectId) {
+      const roomName = `project:${projectId}`;
+      socket.leave(roomName);
+      console.log(`✅ Feedback client ${socket.id} left project room: ${roomName}`);
+    }
+  });
+  
+  // Handle joining admin room (for System Admins)
+  socket.on('join_admin', () => {
+    socket.join('admin_dashboard');
+    console.log(`✅ Feedback client ${socket.id} joined admin room`);
+  });
+  
+  // Handle disconnect
+  socket.on('disconnect', (reason) => {
+    console.log(`⚠️ Feedback client ${socket.id} disconnected. Reason: ${reason}`);
+  });
+});
+
+// Make io available to routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Security middleware - More permissive for development
+const isDevelopment = process.env.NODE_ENV !== 'production';
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: isDevelopment ? false : {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", "http:", "http://localhost:3000", "http://localhost:4321", "*"],
     },
   },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
 }));
 
 // CORS configuration
@@ -59,13 +214,15 @@ app.use(cors({
     'http://www.build-watch.com', // Production frontend with www (HTTP)
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
-  exposedHeaders: ['Content-Length', 'Content-Type']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Accept', 'Origin', 'X-Requested-With', 'X-Session-ID', 'x-session-id'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Rate limiting - Development-friendly configuration
-const isDevelopment = process.env.NODE_ENV !== 'production';
+// isDevelopment is already defined above
 
 // General rate limiter - very lenient in development
 const generalLimiter = rateLimit({
@@ -132,6 +289,90 @@ app.options('/uploads/:filename', (req, res) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.header('Access-Control-Max-Age', '86400');
   res.status(200).end();
+});
+
+// Handle preflight OPTIONS requests for message files (must be before generic route)
+app.options('/uploads/messages/:filename', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
+
+// Specific route for message files with explicit CORS (must be before generic /uploads/:filename)
+app.get('/uploads/messages/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', 'messages', filename);
+  
+  console.log(`📸 Requesting message file: ${filename}`);
+  console.log(`📸 File path: ${filePath}`);
+  
+  // Set explicit CORS headers BEFORE any other operations
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  
+  // Check if file exists
+  const fs = require('fs');
+  if (!fs.existsSync(filePath)) {
+    console.error(`❌ Message file not found: ${filePath}`);
+    return res.status(404).json({ error: 'File not found' });
+  }
+  
+  // Determine content type based on file extension
+  const ext = path.extname(filename).toLowerCase();
+  let contentType = 'application/octet-stream';
+  
+  if (ext === '.jpg' || ext === '.jpeg' || ext === '.jfif') {
+    contentType = 'image/jpeg';
+  } else if (ext === '.png') {
+    contentType = 'image/png';
+  } else if (ext === '.gif') {
+    contentType = 'image/gif';
+  } else if (ext === '.webp') {
+    contentType = 'image/webp';
+  } else if (ext === '.bmp') {
+    contentType = 'image/bmp';
+  } else if (ext === '.svg') {
+    contentType = 'image/svg+xml';
+  } else if (ext === '.mp4') {
+    contentType = 'video/mp4';
+  } else if (ext === '.webm') {
+    contentType = 'video/webm';
+  } else if (ext === '.mov') {
+    contentType = 'video/quicktime';
+  } else if (ext === '.avi') {
+    contentType = 'video/x-msvideo';
+  } else if (ext === '.xlsx') {
+    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  } else if (ext === '.xls') {
+    contentType = 'application/vnd.ms-excel';
+  } else if (ext === '.pdf') {
+    contentType = 'application/pdf';
+  } else if (ext === '.doc') {
+    contentType = 'application/msword';
+  } else if (ext === '.docx') {
+    contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+  
+  res.setHeader('Content-Type', contentType);
+  
+  console.log(`✅ Sending message file with Content-Type: ${contentType}`);
+  
+  // Send the file
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('❌ Error sending message file:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error sending file' });
+      }
+    } else {
+      console.log(`✅ Successfully sent message file: ${filename}`);
+    }
+  });
 });
 
 // Specific route for uploaded files with explicit CORS
@@ -324,6 +565,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/eiu', eiuRoutes);
+app.use('/api/webhooks', webhookRoutes);
 app.use('/api/iu/projects', iuProjectRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -337,6 +579,8 @@ app.use('/api/coordination', coordinationRoutes);
 app.use('/api/eiu-activities', eiuActivityRoutes);
 app.use('/api/policies', policyRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/project-comments', projectCommentRoutes);
 
 // OPTIONS handler for profile pictures
 app.options('/uploads/profile-pictures/:filename', (req, res) => {
@@ -450,13 +694,26 @@ async function startServer() {
     // }
     console.log('⚠️  Database sync disabled to avoid MySQL key limit issues.');
 
-    // Start server
-    app.listen(PORT, () => {
+    // Start server with Socket.IO
+    server.listen(PORT, () => {
       console.log(`🚀 Build Watch LGU Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
       console.log(`📁 Uploads: http://localhost:${PORT}/uploads`);
       console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`🔌 Socket.IO ready for real-time messaging`);
+      
+      // Start scheduled announcements checker (runs every minute)
+      setInterval(async () => {
+        try {
+          await checkAndPublishScheduledAnnouncements();
+          await checkAndExpireAnnouncements();
+        } catch (error) {
+          console.error('Error in scheduled announcements job:', error);
+        }
+      }, 60000); // Run every 60 seconds (1 minute)
+      
+      console.log(`📅 Scheduled announcements checker started (runs every minute)`);
     });
 
   } catch (error) {

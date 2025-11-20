@@ -77,24 +77,47 @@
         <span class="nav-text font-medium text-white/90 group-hover:text-white">Submit Update</span>
       </a>
 
-      <!-- Create Activity -->
-      <a href="/dashboard/eiu/modules/create-activity" 
+      <!-- Evidence Files & Documents -->
+      <a href="/dashboard/eiu/modules/templates" 
          class="nav-item nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm"
-         data-tooltip="Create Activity">
+         data-tooltip="Evidence Files & Documents">
         <div class="nav-icon flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
         </div>
-        <span class="nav-text font-medium text-white/90 group-hover:text-white">Create Activity</span>
+        <span class="nav-text font-medium text-white/90 group-hover:text-white">Evidence Files & Documents</span>
       </a>
 
-
+      <!-- Project Summary & Report -->
+      <a href="/dashboard/eiu/modules/project-summary-report" 
+         class="nav-item nav-link group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 hover:bg-white/15 hover:shadow-xl hover:scale-[1.02] backdrop-blur-sm"
+         data-tooltip="Project Summary & Report">
+        <div class="nav-icon flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <span class="nav-text font-medium text-white/90 group-hover:text-white">Project Summary & Report</span>
+      </a>
 
     </nav>
   </div>
 
 
+
+  <!-- Date/Time Section -->
+  <div class="relative px-6 pt-4 pb-2 border-t border-white/20 backdrop-blur-sm sidebar-datetime-section">
+    <div class="bg-white/5 rounded-xl p-4 border border-white/10 backdrop-blur-sm">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-xs font-medium text-white/70 uppercase tracking-wider">Philippine Standard Time</span>
+      </div>
+      <p id="eiu-sidebar-clock" class="text-sm font-semibold text-white leading-tight">Loading...</p>
+    </div>
+  </div>
 
   <!-- Logout Section -->
   <div class="relative p-6 border-t border-white/20 backdrop-blur-sm">
@@ -189,6 +212,11 @@
 
   .nav-link.active .nav-icon {
     transform: scale(1.1);
+  }
+
+  /* Hide date/time section when sidebar is collapsed */
+  :global(aside.collapsed .sidebar-datetime-section) {
+    display: none !important;
   }
 
   /* Custom scrollbar */
@@ -398,41 +426,84 @@
     // Load profile picture from server or localStorage for sidebar
     async function loadSidebarProfilePicture() {
       try {
-        // Get actual user ID from localStorage
+        // Get actual user ID from localStorage - CRITICAL: Use userId first (like EIU-0001)
         const userData = localStorage.getItem('user');
-        let userId = 'EIU-0001'; // Default fallback
+        let userId = null;
+        let user = null;
+        
         if (userData) {
           try {
-            const user = JSON.parse(userData);
-            userId = user.employeeId || user.username || user.id || user.userId || 'EIU-0001';
+            user = JSON.parse(userData);
+            // CRITICAL: Priority order - userId (EIU-0001) > id > employeeId > username
+            userId = user.userId || user.id || user.employeeId || user.username;
+            
+            // If user data has profilePictureUrl, use it directly (from database) - like office-groups.astro
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('EIU Sidebar: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              const sidebarProfilePic = document.getElementById('eiu-sidebar-profile-picture');
+              if (sidebarProfilePic) {
+                const img = new Image();
+                img.onload = function() {
+                  sidebarProfilePic.src = user.profilePictureUrl;
+                  sidebarProfilePic.style.display = 'block';
+                  const fallbackDiv = sidebarProfilePic.nextElementSibling;
+                  if (fallbackDiv) {
+                    fallbackDiv.style.display = 'none';
+                  }
+                };
+                img.src = user.profilePictureUrl;
+                
+                // Store in localStorage
+                localStorage.setItem('eiu_profile_picture', user.profilePictureUrl);
+                return;
+              }
+            }
           } catch (error) {
-            console.warn('⚠️ Error parsing user data in sidebar, using default userId');
+            console.warn('⚠️ Error parsing user data in EIU sidebar, using default userId');
           }
         }
         
-        // First try to get from server
+        if (!userId) {
+          userId = 'EIU-0001'; // Default fallback
+        }
+        
+        // First try to get from server (server is source of truth)
         console.log('EIU Sidebar: Fetching profile picture from server for userId:', userId);
-        const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+        const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
         
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.profilePictureUrl) {
             console.log('EIU Sidebar: Profile picture loaded from server:', result.profilePictureUrl);
             
-            // Update the sidebar profile picture
-            const sidebarProfilePic = document.getElementById('eiu-sidebar-profile-picture');
-            if (sidebarProfilePic) {
-              sidebarProfilePic.src = result.profilePictureUrl;
-              // Hide fallback div if it exists
-              const fallbackDiv = sidebarProfilePic.nextElementSibling;
-              if (fallbackDiv) {
-                fallbackDiv.style.display = 'none';
+            // Preload the image to prevent blinking
+            const img = new Image();
+            img.onload = function() {
+              // Update the sidebar profile picture
+              const sidebarProfilePic = document.getElementById('eiu-sidebar-profile-picture');
+              if (sidebarProfilePic) {
+                sidebarProfilePic.src = result.profilePictureUrl;
                 sidebarProfilePic.style.display = 'block';
+                // Hide fallback div if it exists
+                const fallbackDiv = sidebarProfilePic.nextElementSibling;
+                if (fallbackDiv) {
+                  fallbackDiv.style.display = 'none';
+                }
               }
-            }
+            };
+            img.onerror = function() {
+              console.log('⚠️ EIU Sidebar: Failed to load profile picture from server');
+            };
+            img.src = result.profilePictureUrl;
             
             // Store in localStorage for future use
             localStorage.setItem('eiu_profile_picture', result.profilePictureUrl);
+            
+            // Also update user data if available
+            if (user) {
+              user.profilePictureUrl = result.profilePictureUrl;
+              localStorage.setItem('user', JSON.stringify(user));
+            }
             return;
           }
         }
@@ -445,27 +516,27 @@
       if (storedUrl) {
         const sidebarProfilePic = document.getElementById('eiu-sidebar-profile-picture');
         if (sidebarProfilePic) {
-          sidebarProfilePic.src = storedUrl;
-          // Hide fallback div if it exists
-          const fallbackDiv = sidebarProfilePic.nextElementSibling;
-          if (fallbackDiv) {
-            fallbackDiv.style.display = 'none';
+          const img = new Image();
+          img.onload = function() {
+            sidebarProfilePic.src = storedUrl;
             sidebarProfilePic.style.display = 'block';
-          }
+            const fallbackDiv = sidebarProfilePic.nextElementSibling;
+            if (fallbackDiv) {
+              fallbackDiv.style.display = 'none';
+            }
+          };
+          img.src = storedUrl;
         }
+      } else {
+        console.log('⚠️ EIU Sidebar: No profile picture found in localStorage or server');
       }
     }
     
     // Load profile picture on page load
     loadSidebarProfilePicture();
 
-    // Listen for storage changes to update profile picture in real-time
-    window.addEventListener('storage', function(e) {
-      if (e.key === 'eiu_profile_picture') {
-        console.log('EIU Sidebar received storage event for profile picture');
-        loadSidebarProfilePicture();
-      }
-    });
+    // REMOVED: Storage event listener - it was causing fallback to old profile picture
+    // The custom event listener below handles updates immediately without reloading
 
     // Also listen for custom event from EIU Profile module
     window.addEventListener('eiuProfilePictureUpdated', function(e) {
@@ -476,42 +547,58 @@
       const sidebarProfilePic = document.getElementById('eiu-sidebar-profile-picture');
       if (sidebarProfilePic && e.detail.profilePictureUrl) {
         console.log('🎯 EIU Sidebar: Setting profile picture src to:', e.detail.profilePictureUrl);
-        sidebarProfilePic.src = e.detail.profilePictureUrl;
         
-        // Hide fallback div if it exists
+        // CRITICAL: Hide fallback BEFORE updating to prevent blinking
         const fallbackDiv = sidebarProfilePic.nextElementSibling;
         if (fallbackDiv) {
           fallbackDiv.style.display = 'none';
-          sidebarProfilePic.style.display = 'block';
         }
+        
+        // Preload the image to prevent blinking
+        const img = new Image();
+        img.onload = function() {
+          sidebarProfilePic.src = e.detail.profilePictureUrl;
+          sidebarProfilePic.style.display = 'block';
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+          console.log('✅ EIU Sidebar: Profile picture updated successfully');
+        };
+        img.onerror = function() {
+          console.log('❌ EIU Sidebar: Failed to load profile picture');
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'flex';
+          }
+          sidebarProfilePic.style.display = 'none';
+        };
+        img.src = e.detail.profilePictureUrl;
         
         // Store in localStorage for future use
         localStorage.setItem('eiu_profile_picture', e.detail.profilePictureUrl);
-        console.log('🎯 EIU Sidebar: Profile picture updated and stored in localStorage');
         
-        // Visual feedback
-        sidebarProfilePic.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          sidebarProfilePic.style.transform = 'scale(1)';
-        }, 200);
+        // Also update user data if available
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            user.profilePictureUrl = e.detail.profilePictureUrl;
+            localStorage.setItem('user', JSON.stringify(user));
+          } catch (error) {
+            console.warn('⚠️ Error updating user data in EIU sidebar');
+          }
+        }
+        
+        console.log('🎯 EIU Sidebar: Profile picture updated and stored in localStorage');
       }
     });
 
     // Register with global manager if available
+    // Note: EIUProfilePictureManager uses event listeners, not addListener method
+    // The manager already updates all profile pictures automatically via updateAllProfilePictures()
     if (window.eiuProfilePictureManager) {
-      console.log('🎯 EIU Sidebar registering with global manager');
-      window.eiuProfilePictureManager.addListener((url) => {
-        console.log('🎯 EIU Sidebar received update from global manager:', url);
-        const sidebarProfilePic = document.getElementById('eiu-sidebar-profile-picture');
-        if (sidebarProfilePic && url) {
-          sidebarProfilePic.src = url;
-          const fallbackDiv = sidebarProfilePic.nextElementSibling;
-          if (fallbackDiv) {
-            fallbackDiv.style.display = 'none';
-            sidebarProfilePic.style.display = 'block';
-          }
-        }
-      });
+      console.log('🎯 EIU Sidebar: Global manager found, profile pictures will be updated automatically');
+      // The manager will call updateAllProfilePictures() which updates the sidebar automatically
+      // No need to register a listener - the manager handles it via DOM queries
     }
   });
 </script>
@@ -644,4 +731,5 @@
       roleElement.textContent = 'EIU';
     }
   }
+</script> 
 </script> 

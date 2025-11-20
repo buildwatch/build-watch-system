@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
+import AnnouncementCenter from '../../../../islands/AnnouncementCenter.jsx';
+---
+
+<Layout title="Announcements | MPMEC Dashboard">
+  <LGUPMTLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <AnnouncementCenter client:load theme="blue" mode="public" />
+    </section>
+  </LGUPMTLayout>
+</Layout>
+

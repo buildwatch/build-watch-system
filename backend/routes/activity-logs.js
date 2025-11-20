@@ -238,29 +238,51 @@ router.get('/summary', authenticateToken, requireSystemAdmin, async (req, res) =
       }
     });
 
-    // Get failed logins count
+    // Get failed activities count (all activities with status='Failed', not just today)
     const failedLogins = await ActivityLog.count({
       where: {
-        action: 'FAILED_LOGIN',
-        createdAt: {
-          [require('sequelize').Op.gte]: today,
-          [require('sequelize').Op.lt]: tomorrow
-        }
+        status: 'Failed'
       }
     });
 
-    // Get active users (users who logged in today)
-    const activeUsers = await ActivityLog.count({
+    // Get active users (users who logged in today) - properly get distinct users
+    const activeUsersLogs = await ActivityLog.findAll({
+      attributes: [
+        'userId',
+        [require('sequelize').fn('MAX', require('sequelize').col('createdAt')), 'lastLogin']
+      ],
       where: {
         action: 'LOGIN',
+        status: 'Success',
         createdAt: {
           [require('sequelize').Op.gte]: today,
           [require('sequelize').Op.lt]: tomorrow
+        },
+        userId: {
+          [require('sequelize').Op.ne]: null
         }
       },
-      distinct: true,
-      col: 'userId'
+      group: ['userId'],
+      order: [[require('sequelize').fn('MAX', require('sequelize').col('createdAt')), 'DESC']]
     });
+
+    const activeUsers = activeUsersLogs.length;
+    
+    // Get user details for active users
+    const activeUserIds = activeUsersLogs.map(log => log.userId).filter(Boolean);
+    const { User } = require('../models');
+    let activeUsersList = [];
+    if (activeUserIds.length > 0) {
+      activeUsersList = await User.findAll({
+        where: {
+          id: {
+            [require('sequelize').Op.in]: activeUserIds
+          }
+        },
+        attributes: ['id', 'name', 'email', 'username', 'role', 'profilePictureUrl'],
+        order: [['lastLoginAt', 'DESC']]
+      });
+    }
 
     // Get total activities
     const totalActivities = await ActivityLog.count();
@@ -302,6 +324,14 @@ router.get('/summary', authenticateToken, requireSystemAdmin, async (req, res) =
         todayActivities,
         failedLogins,
         activeUsers,
+        activeUsersList: activeUsersList.map(user => ({
+          id: user.id,
+          name: user.name || user.username,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+          profilePictureUrl: user.profilePictureUrl
+        })),
         activitiesByLevel: activitiesByLevel.reduce((acc, item) => {
           acc[item.level] = parseInt(item.dataValues.count);
           return acc;

@@ -526,8 +526,8 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-600">Budget Utilized</p>
-                  <p class="text-2xl font-bold text-black">₱0</p>
-                  <p class="text-xs text-green-600 mt-1">0% utilized</p>
+                  <p class="text-2xl font-bold text-black" id="compilationBudgetUtilizedAmount">₱0</p>
+                  <p class="text-xs text-green-600 mt-1" id="compilationBudgetUtilizedPercent">0% utilized</p>
                 </div>
                 <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -577,7 +577,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-600">Compiled</p>
-                  <p class="text-2xl font-bold text-black">0</p>
+                  <p class="text-2xl font-bold text-black" id="compiledCount">0</p>
                   <p class="text-xs text-blue-600 mt-1">Successfully compiled</p>
                 </div>
                 <div class="icon-container bg-gradient-to-br from-blue-500 to-blue-600">
@@ -609,9 +609,9 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-600">Delayed</p>
-                  <p class="text-2xl font-bold text-black">0</p>
+                  <p class="text-2xl font-bold text-black" id="delayedCount">0</p>
                   <p class="text-xs text-red-600 mt-1">Behind schedule</p>
-                  <p class="text-xs text-red-500 mt-1">Delayed Milestones: 0</p>
+                  <p class="text-xs text-red-500 mt-1">Delayed Milestones: <span id="delayedMilestonesCount">0</span></p>
                 </div>
                 <div class="icon-container bg-gradient-to-br from-red-500 to-red-600">
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -626,7 +626,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-600">Total Budget</p>
-                  <p class="text-2xl font-bold text-black">₱0</p>
+                  <p class="text-2xl font-bold text-black" id="totalBudget">₱0</p>
                   <p class="text-xs text-green-600 mt-1">Allocated budget</p>
                 </div>
                 <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
@@ -1422,7 +1422,68 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   let currentProjectData = null;
   let currentMilestoneData = null;
 
+  // Fetch and update budget utilized from /api/home/stats endpoint
+  async function updateCompilationBudgetUtilized() {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return;
+      
+      const API_URL = 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/home/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          const totalBudget = parseFloat(data.totalBudget) || 0;
+          const utilizedBudget = parseFloat(data.utilizedBudget) || 0;
+          const budgetUtilization = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
+          
+          // Update amount
+          const amountEl = document.getElementById('compilationBudgetUtilizedAmount');
+          if (amountEl) {
+            amountEl.textContent = `₱${utilizedBudget.toLocaleString('en-PH', { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+            })}`;
+          }
+          
+          // Update percentage
+          const percentEl = document.getElementById('compilationBudgetUtilizedPercent');
+          if (percentEl) {
+            percentEl.textContent = `${budgetUtilization.toFixed(1)}% utilized`;
+          }
+          
+          // Also update via stats object if it exists (for compatibility)
+          if (window.updateStatsCards && typeof window.updateStatsCards === 'function') {
+            const stats = {
+              budgetUtilized: utilizedBudget,
+              budgetUtilizedPercent: budgetUtilization.toFixed(1)
+            };
+            window.updateStatsCards(stats);
+          }
+          
+          console.log('💰 Compilation Budget Utilized updated:', {
+            utilizedBudget,
+            utilizationPercent: budgetUtilization.toFixed(1) + '%'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching compilation budget utilized:', error);
+    }
+  }
+  
   document.addEventListener('DOMContentLoaded', function() {
+    // Update budget utilized on page load
+    updateCompilationBudgetUtilized();
+    
+    // Make function available globally
+    window.updateCompilationBudgetUtilized = updateCompilationBudgetUtilized;
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
@@ -1478,7 +1539,107 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       if (data.success) {
         console.log('✅ API call successful, updating stats and loading departments');
         console.log('📊 API Response data:', data);
-        updateOverallStats(data.overallStats);
+        
+        // Calculate stats from officeSummary if overallStats is missing or incomplete
+        let overallStats = data.overallStats || {};
+        
+        if (data.officeSummary && Array.isArray(data.officeSummary) && data.officeSummary.length > 0) {
+          // Calculate total departments from officeSummary
+          if (!overallStats.totalDepartments || overallStats.totalDepartments === 0) {
+            overallStats.totalDepartments = data.officeSummary.length;
+          }
+          
+          // Calculate total budget from officeSummary (sum of all project budgets)
+          // The backend doesn't provide totalBudget in overallStats, so we always calculate it
+          overallStats.totalBudget = data.officeSummary.reduce((sum, office) => {
+            // Sum budgets from all projects in this office
+            const officeBudget = office.projects?.reduce((officeSum, project) => {
+              const projectBudget = parseFloat(project.totalBudget || 0);
+              console.log(`  - Project ${project.name || project.projectCode}: ₱${projectBudget.toLocaleString()}`);
+              return officeSum + projectBudget;
+            }, 0) || 0;
+            console.log(`  - Office ${office.office || office.name}: ₱${officeBudget.toLocaleString()}`);
+            return sum + officeBudget;
+          }, 0);
+          
+          console.log('💰 Calculated total budget from officeSummary:', overallStats.totalBudget);
+          
+          // Calculate compiled reports from officeSummary
+          if (overallStats.compiledReports === undefined || overallStats.compiledReports === null) {
+            overallStats.compiledReports = data.officeSummary.reduce((sum, office) => {
+              return sum + (office.projects?.filter(p => p.hasCompiledReport || p.status === 'compiled_for_secretariat').length || 0);
+            }, 0);
+          }
+          
+          // Calculate delayed projects from officeSummary
+          if (overallStats.delayedProjects === undefined || overallStats.delayedProjects === null) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let delayedCount = 0;
+            let delayedMilestonesCount = 0;
+            
+            data.officeSummary.forEach(office => {
+              if (office.projects && Array.isArray(office.projects)) {
+                office.projects.forEach(project => {
+                  let projectHasDelayedMilestones = false;
+                  
+                  // Check project-level delays
+                  if (project.endDate && new Date(project.endDate) < today) {
+                    projectHasDelayedMilestones = true;
+                  }
+                  
+                  // Check milestone-level delays
+                  if (project.milestones && Array.isArray(project.milestones)) {
+                    project.milestones.forEach(milestone => {
+                      const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
+                      const status = milestone.status || 'pending';
+                      
+                      if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+                        const milestoneDate = new Date(dueDate);
+                        milestoneDate.setHours(0, 0, 0, 0);
+                        if (milestoneDate < today && status === 'pending') {
+                          delayedMilestonesCount++;
+                          projectHasDelayedMilestones = true;
+                        }
+                      }
+                    });
+                  }
+                  
+                  if (projectHasDelayedMilestones) {
+                    delayedCount++;
+                  }
+                });
+              }
+            });
+            
+            overallStats.delayedProjects = delayedCount;
+            overallStats.delayedMilestones = (overallStats.delayedMilestones || 0) + delayedMilestonesCount;
+          }
+          
+          console.log('📊 Calculated stats from officeSummary:', {
+            totalDepartments: overallStats.totalDepartments,
+            totalBudget: overallStats.totalBudget,
+            compiledReports: overallStats.compiledReports,
+            delayedProjects: overallStats.delayedProjects,
+            delayedMilestones: overallStats.delayedMilestones,
+            officeSummaryLength: data.officeSummary.length,
+            totalProjectsInOffices: data.officeSummary.reduce((sum, office) => sum + (office.projects?.length || 0), 0)
+          });
+        }
+        
+        // Always calculate totalBudget from officeSummary if not already calculated
+        // The backend doesn't provide totalBudget in overallStats, so we calculate it from officeSummary
+        if ((!overallStats.totalBudget || overallStats.totalBudget === 0) && data.officeSummary && Array.isArray(data.officeSummary) && data.officeSummary.length > 0) {
+          overallStats.totalBudget = data.officeSummary.reduce((sum, office) => {
+            const officeBudget = office.projects?.reduce((officeSum, project) => {
+              return officeSum + (parseFloat(project.totalBudget || 0));
+            }, 0) || 0;
+            return sum + officeBudget;
+          }, 0);
+          console.log('💰 Calculated total budget (fallback):', overallStats.totalBudget);
+        }
+        
+        updateOverallStats(overallStats);
         
         // Check if officeSummary has data, if not use fallback
         if (data.officeSummary && data.officeSummary.length > 0) {
@@ -1507,7 +1668,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   function updateOverallStats(stats) {
     console.log('📊 updateOverallStats called with:', stats);
     
-    // Update individual card values instead of replacing the entire structure
+    // Update individual card values using IDs (more reliable)
     const totalProjectsEl = document.getElementById('totalProjects');
     if (totalProjectsEl) {
       totalProjectsEl.textContent = stats.totalProjects || 0;
@@ -1518,13 +1679,45 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       totalDepartmentsEl.textContent = stats.totalDepartments || 0;
     }
     
+    const compiledCountEl = document.getElementById('compiledCount');
+    if (compiledCountEl) {
+      compiledCountEl.textContent = stats.compiledReports || stats.compiled || 0;
+    }
+    
+    const delayedCountEl = document.getElementById('delayedCount');
+    if (delayedCountEl) {
+      delayedCountEl.textContent = stats.delayedProjects || stats.delayed || 0;
+    }
+    
+    const delayedMilestonesCountEl = document.getElementById('delayedMilestonesCount');
+    if (delayedMilestonesCountEl) {
+      delayedMilestonesCountEl.textContent = stats.delayedMilestones || 0;
+    }
+    
+    const totalBudgetEl = document.getElementById('totalBudget');
+    if (totalBudgetEl) {
+      const budget = parseFloat(stats.totalBudget || 0);
+      if (budget > 0) {
+        totalBudgetEl.textContent = `₱${budget.toLocaleString('en-PH', { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}`;
+        console.log('💰 Total Budget updated:', budget);
+      } else {
+        totalBudgetEl.textContent = '₱0.00';
+        console.warn('⚠️ Total Budget is 0, checking if calculation is needed');
+      }
+    } else {
+      console.error('❌ totalBudget element not found');
+    }
+    
     // Update header compilation count
     const headerCountEl = document.getElementById('headerCompilationCount');
     if (headerCountEl) {
       headerCountEl.textContent = `${stats.totalProjects || 0} Active Compilations`;
     }
     
-    // Update other stats by finding elements with specific text content
+    // Update other stats by finding elements with specific text content (fallback)
     const cards = document.querySelectorAll('.profile-card');
     cards.forEach(card => {
       const titleEl = card.querySelector('p.text-sm.text-gray-600');
@@ -1534,7 +1727,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         switch (title) {
           case 'Budget Utilized':
             const budgetUtilizedEl = card.querySelector('p.text-2xl.font-bold');
-            if (budgetUtilizedEl) {
+            if (budgetUtilizedEl && !budgetUtilizedEl.id) {
               budgetUtilizedEl.textContent = `₱${(stats.budgetUtilized || 0).toLocaleString()}`;
             }
             const budgetPercentEl = card.querySelector('p.text-xs.text-green-600');
@@ -1544,40 +1737,26 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
             break;
           case 'Avg Progress':
             const progressEl = card.querySelector('p.text-2xl.font-bold');
-            if (progressEl) {
+            if (progressEl && !progressEl.id) {
               progressEl.textContent = `${stats.averageCompletion || 0}%`;
-            }
-            break;
-          case 'Compiled':
-            const compiledEl = card.querySelector('p.text-2xl.font-bold');
-            if (compiledEl) {
-              compiledEl.textContent = stats.compiledReports || 0;
             }
             break;
           case 'P.Review':
             const pendingEl = card.querySelector('p.text-2xl.font-bold');
-            if (pendingEl) {
+            if (pendingEl && !pendingEl.id) {
               pendingEl.textContent = stats.pendingReview || 0;
-            }
-            break;
-          case 'Delayed':
-            const delayedEl = card.querySelector('p.text-2xl.font-bold');
-            const delayedMilestonesEl = card.querySelector('p.text-xs.text-red-500');
-            if (delayedEl) {
-              delayedEl.textContent = stats.delayedProjects || 0;
-            }
-            if (delayedMilestonesEl) {
-              delayedMilestonesEl.textContent = `Delayed Milestones: ${stats.delayedMilestones || 0}`;
-            }
-            break;
-          case 'Total Budget':
-            const totalBudgetEl = card.querySelector('p.text-2xl.font-bold');
-            if (totalBudgetEl) {
-              totalBudgetEl.textContent = `₱${(stats.totalBudget || 0).toLocaleString()}`;
             }
             break;
         }
       }
+    });
+    
+    console.log('✅ Summary cards updated:', {
+      totalProjects: stats.totalProjects || 0,
+      totalDepartments: stats.totalDepartments || 0,
+      compiled: stats.compiledReports || stats.compiled || 0,
+      delayed: stats.delayedProjects || stats.delayed || 0,
+      totalBudget: stats.totalBudget || 0
     });
   }
 
@@ -1847,18 +2026,29 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           ${departmentsData.map((dept, index) => {
             const compiledProjects = dept.projects.filter(p => p.hasCompiledReport || p.status === 'compiled_for_secretariat').length;
             const pendingProjects = dept.projects.length - compiledProjects;
-            const overallProgress = dept.projects.length > 0 ? 
-              Math.round(dept.projects.reduce((sum, p) => sum + (p.overallProgress || 0), 0) / dept.projects.length) : 0;
+            // Calculate overall progress with proper NaN handling
+            let overallProgress = 0;
+            if (dept.projects && dept.projects.length > 0) {
+              const progressSum = dept.projects.reduce((sum, p) => {
+                // Try multiple field names for progress
+                const progress = parseFloat(p.overallProgress || p.progress?.overallProgress || p.progress?.overall || 0);
+                return sum + (isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress))); // Clamp between 0-100
+              }, 0);
+              const avgProgress = progressSum / dept.projects.length;
+              overallProgress = isNaN(avgProgress) ? 0 : Math.round(avgProgress);
+            }
+            // Ensure overallProgress is always a valid number for template usage
+            const safeOverallProgress = isNaN(overallProgress) ? 0 : overallProgress;
             
             // Dynamic color scheme based on progress
-            const progressColor = overallProgress >= 80 ? 'from-emerald-500 to-green-600' : 
-                                 overallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
-                                 overallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-rose-600';
+            const progressColor = safeOverallProgress >= 80 ? 'from-emerald-500 to-green-600' : 
+                                 safeOverallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
+                                 safeOverallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-rose-600';
             
             // Status color based on overall progress percentage
-            const statusColor = overallProgress >= 75 ? 'from-emerald-500 to-green-600' : 
-                               overallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
-                               overallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-red-600';
+            const statusColor = safeOverallProgress >= 75 ? 'from-emerald-500 to-green-600' : 
+                               safeOverallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
+                               safeOverallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-red-600';
             
             return `
             <div class="group relative compilation-department-card-enhanced" 
@@ -2008,7 +2198,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                       <span class="text-sm font-semibold text-gray-700">Overall Progress</span>
                     </div>
                 <div class="flex items-center gap-2">
-                      <span class="text-2xl font-bold text-gray-900">${overallProgress}%</span>
+                      <span class="text-2xl font-bold text-gray-900">${safeOverallProgress}%</span>
                       <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
                 </div>
                   </div>
@@ -2019,8 +2209,8 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                       <div 
                         class="h-full rounded-full transition-all duration-2000 ease-out progress-bar-fill relative overflow-hidden"
                         style="width: 0%"
-                        data-progress="${overallProgress}"
-                        data-progress-color="${overallProgress >= 0 && overallProgress <= 25 ? 'bg-red-500' : overallProgress >= 26 && overallProgress <= 50 ? 'bg-yellow-500' : overallProgress >= 51 && overallProgress <= 75 ? 'bg-blue-500' : overallProgress >= 76 && overallProgress <= 100 ? 'bg-green-500' : 'bg-gray-500'}"
+                        data-progress="${safeOverallProgress}"
+                        data-progress-color="${safeOverallProgress >= 0 && safeOverallProgress <= 25 ? 'bg-red-500' : safeOverallProgress >= 26 && safeOverallProgress <= 50 ? 'bg-yellow-500' : safeOverallProgress >= 51 && safeOverallProgress <= 75 ? 'bg-blue-500' : safeOverallProgress >= 76 && safeOverallProgress <= 100 ? 'bg-green-500' : 'bg-gray-500'}"
                       >
                         <!-- Animated shimmer effect -->
                         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -2311,18 +2501,29 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         ${departmentsData.map((dept, index) => {
             const compiledProjects = dept.projects.filter(p => p.hasCompiledReport || p.status === 'compiled_for_secretariat').length;
             const pendingProjects = dept.projects.length - compiledProjects;
-            const overallProgress = dept.projects.length > 0 ? 
-              Math.round(dept.projects.reduce((sum, p) => sum + (p.overallProgress || 0), 0) / dept.projects.length) : 0;
+            // Calculate overall progress with proper NaN handling
+            let overallProgress = 0;
+            if (dept.projects && dept.projects.length > 0) {
+              const progressSum = dept.projects.reduce((sum, p) => {
+                // Try multiple field names for progress
+                const progress = parseFloat(p.overallProgress || p.progress?.overallProgress || p.progress?.overall || 0);
+                return sum + (isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress))); // Clamp between 0-100
+              }, 0);
+              const avgProgress = progressSum / dept.projects.length;
+              overallProgress = isNaN(avgProgress) ? 0 : Math.round(avgProgress);
+            }
+            // Ensure overallProgress is always a valid number for template usage
+            const safeOverallProgress = isNaN(overallProgress) ? 0 : overallProgress;
             
             // Dynamic color scheme based on progress
-            const progressColor = overallProgress >= 80 ? 'from-emerald-500 to-green-600' : 
-                                 overallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
-                                 overallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-rose-600';
+            const progressColor = safeOverallProgress >= 80 ? 'from-emerald-500 to-green-600' : 
+                                 safeOverallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
+                                 safeOverallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-rose-600';
             
             // Status color based on overall progress percentage
-            const statusColor = overallProgress >= 75 ? 'from-emerald-500 to-green-600' : 
-                               overallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
-                               overallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-red-600';
+            const statusColor = safeOverallProgress >= 75 ? 'from-emerald-500 to-green-600' : 
+                               safeOverallProgress >= 50 ? 'from-blue-500 to-sky-600' : 
+                               safeOverallProgress >= 25 ? 'from-amber-500 to-orange-600' : 'from-red-500 to-red-600';
             
             return `
             <div class="group relative compilation-department-card-enhanced" 
@@ -2428,7 +2629,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                 <div class="relative">
                   <div class="flex items-center justify-between mb-4">
                     <h4 class="text-lg font-semibold text-gray-800">Overall Progress</h4>
-                    <span class="text-2xl font-bold ${overallProgress >= 75 ? 'text-emerald-600' : overallProgress >= 50 ? 'text-blue-600' : overallProgress >= 25 ? 'text-amber-600' : 'text-red-600'}">${overallProgress}%</span>
+                    <span class="text-2xl font-bold ${safeOverallProgress >= 75 ? 'text-emerald-600' : safeOverallProgress >= 50 ? 'text-blue-600' : safeOverallProgress >= 25 ? 'text-amber-600' : 'text-red-600'}">${safeOverallProgress}%</span>
                   </div>
                   
                   <!-- Enhanced Progress Bar -->

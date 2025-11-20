@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+import AnnouncementCenter from '../../../../islands/AnnouncementCenter.jsx';
+---
+
+<Layout title="Announcements | MPMEC Secretariat Dashboard">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <AnnouncementCenter client:load theme="lightBlue" mode="public" />
+    </section>
+  </SecretariatLayout>
+</Layout>
+

@@ -788,6 +788,273 @@ router.get('/secretariat/evidence-files', authenticateToken, async (req, res) =>
   }
 });
 
+// Get evidence files for EIU users (from their submitted updates)
+router.get('/eiu/evidence-files', authenticateToken, async (req, res) => {
+  try {
+    // Only EIU users can access this endpoint
+    if (req.user.role !== 'EIU') {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. EIU role required.'
+      });
+    }
+
+    console.log('📁 Fetching evidence files for EIU user:', req.user.id);
+    
+    const submissions = await MilestoneSubmission.findAll({
+      where: {
+        submittedBy: req.user.id
+      },
+      include: [
+        {
+          model: Project,
+          as: 'project',
+          attributes: ['id', 'name', 'projectCode', 'implementingOfficeName']
+        },
+        {
+          model: ProjectMilestone,
+          as: 'milestone',
+          attributes: ['id', 'title', 'description']
+        }
+      ],
+      order: [['submittedAt', 'DESC']]
+    });
+
+    // Extract evidence files from submissions
+    const evidenceFiles = [];
+    submissions.forEach(submission => {
+      const submissionData = submission.toJSON();
+      
+      // Process photo evidence
+      if (submissionData.photoEvidence && Array.isArray(submissionData.photoEvidence)) {
+        submissionData.photoEvidence.forEach(photo => {
+          evidenceFiles.push({
+            id: `photo-${submission.id}-${photo.name || Math.random()}`,
+            projectId: submissionData.projectId,
+            milestoneId: submissionData.milestoneId,
+            projectName: submissionData.project?.name,
+            milestoneTitle: submissionData.milestone?.title,
+            name: photo.name || 'Photo Evidence',
+            type: 'photos',
+            url: photo.url || photo.src || photo,
+            status: submissionData.status || 'pending',
+            uploadDate: submissionData.submittedAt,
+            submissionId: submission.id,
+            fileSize: photo.size || 0
+          });
+        });
+      }
+      
+      // Process video evidence
+      if (submissionData.videoEvidence && Array.isArray(submissionData.videoEvidence)) {
+        submissionData.videoEvidence.forEach(video => {
+          evidenceFiles.push({
+            id: `video-${submission.id}-${video.name || Math.random()}`,
+            projectId: submissionData.projectId,
+            milestoneId: submissionData.milestoneId,
+            projectName: submissionData.project?.name,
+            milestoneTitle: submissionData.milestone?.title,
+            name: video.name || 'Video Evidence',
+            type: 'videos',
+            url: video.url || video.src || video,
+            status: submissionData.status || 'pending',
+            uploadDate: submissionData.submittedAt,
+            submissionId: submission.id,
+            fileSize: video.size || 0
+          });
+        });
+      }
+      
+      // Process document files
+      if (submissionData.documentFiles && Array.isArray(submissionData.documentFiles)) {
+        submissionData.documentFiles.forEach(doc => {
+          evidenceFiles.push({
+            id: `doc-${submission.id}-${doc.name || Math.random()}`,
+            projectId: submissionData.projectId,
+            milestoneId: submissionData.milestoneId,
+            projectName: submissionData.project?.name,
+            milestoneTitle: submissionData.milestone?.title,
+            name: doc.name || 'Document Evidence',
+            type: 'documents',
+            url: doc.url || doc.src || doc,
+            status: submissionData.status || 'pending',
+            uploadDate: submissionData.submittedAt,
+            submissionId: submission.id,
+            fileSize: doc.size || 0
+          });
+        });
+      }
+    });
+
+    console.log(`📊 Found ${evidenceFiles.length} evidence files for EIU user`);
+
+    res.json({
+      success: true,
+      files: evidenceFiles,
+      count: evidenceFiles.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching evidence files for EIU:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch evidence files',
+      details: error.message
+    });
+  }
+});
+
+// Get evidence files for LGU-IU users (from approved milestones in their projects)
+router.get('/lgu-iu/evidence-files', authenticateToken, async (req, res) => {
+  try {
+    // Only LGU-IU users can access this endpoint
+    const userRole = (req.user.role || '').toUpperCase();
+    if (userRole !== 'LGU-IU' && userRole !== 'IU') {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. LGU-IU role required.',
+        debug: {
+          userRole: req.user.role,
+          userSubRole: req.user.subRole
+        }
+      });
+    }
+
+    console.log('📁 Fetching evidence files for LGU-IU user:', req.user.id);
+    
+    // Get projects where this user is the implementing office
+    // Try multiple fields to match the implementing office
+    const implementingOfficeName = req.user.department || 
+                                   req.user.officeName || 
+                                   req.user.fullName || 
+                                   req.user.name ||
+                                   req.user.implementingOfficeName;
+    
+    console.log(`🔍 Looking for projects with implementingOfficeName: ${implementingOfficeName}`);
+    
+    const userProjects = await Project.findAll({
+      where: {
+        implementingOfficeName: implementingOfficeName
+      },
+      attributes: ['id']
+    });
+    
+    console.log(`📊 Found ${userProjects.length} projects for implementing office: ${implementingOfficeName}`);
+
+    const projectIds = userProjects.map(p => p.id);
+
+    if (projectIds.length === 0) {
+      return res.json({
+        success: true,
+        files: [],
+        count: 0
+      });
+    }
+
+    const submissions = await MilestoneSubmission.findAll({
+      where: {
+        projectId: projectIds,
+        status: 'approved'
+      },
+      include: [
+        {
+          model: Project,
+          as: 'project',
+          attributes: ['id', 'name', 'projectCode', 'implementingOfficeName']
+        },
+        {
+          model: ProjectMilestone,
+          as: 'milestone',
+          attributes: ['id', 'title', 'description']
+        }
+      ],
+      order: [['reviewedAt', 'DESC']]
+    });
+
+    // Extract evidence files from submissions
+    const evidenceFiles = [];
+    submissions.forEach(submission => {
+      const submissionData = submission.toJSON();
+      
+      // Process photo evidence
+      if (submissionData.photoEvidence && Array.isArray(submissionData.photoEvidence)) {
+        submissionData.photoEvidence.forEach(photo => {
+          evidenceFiles.push({
+            id: `photo-${submission.id}-${photo.name || Math.random()}`,
+            projectId: submissionData.projectId,
+            milestoneId: submissionData.milestoneId,
+            projectName: submissionData.project?.name,
+            milestoneTitle: submissionData.milestone?.title,
+            name: photo.name || 'Photo Evidence',
+            type: 'photos',
+            url: photo.url || photo.src || photo,
+            status: 'approved',
+            uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
+            submissionId: submission.id,
+            fileSize: photo.size || 0
+          });
+        });
+      }
+      
+      // Process video evidence
+      if (submissionData.videoEvidence && Array.isArray(submissionData.videoEvidence)) {
+        submissionData.videoEvidence.forEach(video => {
+          evidenceFiles.push({
+            id: `video-${submission.id}-${video.name || Math.random()}`,
+            projectId: submissionData.projectId,
+            milestoneId: submissionData.milestoneId,
+            projectName: submissionData.project?.name,
+            milestoneTitle: submissionData.milestone?.title,
+            name: video.name || 'Video Evidence',
+            type: 'videos',
+            url: video.url || video.src || video,
+            status: 'approved',
+            uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
+            submissionId: submission.id,
+            fileSize: video.size || 0
+          });
+        });
+      }
+      
+      // Process document files
+      if (submissionData.documentFiles && Array.isArray(submissionData.documentFiles)) {
+        submissionData.documentFiles.forEach(doc => {
+          evidenceFiles.push({
+            id: `doc-${submission.id}-${doc.name || Math.random()}`,
+            projectId: submissionData.projectId,
+            milestoneId: submissionData.milestoneId,
+            projectName: submissionData.project?.name,
+            milestoneTitle: submissionData.milestone?.title,
+            name: doc.name || 'Document Evidence',
+            type: 'documents',
+            url: doc.url || doc.src || doc,
+            status: 'approved',
+            uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
+            submissionId: submission.id,
+            fileSize: doc.size || 0
+          });
+        });
+      }
+    });
+
+    console.log(`📊 Found ${evidenceFiles.length} evidence files for LGU-IU user`);
+
+    res.json({
+      success: true,
+      files: evidenceFiles,
+      count: evidenceFiles.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching evidence files for LGU-IU:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch evidence files',
+      details: error.message
+    });
+  }
+});
+
 // Get approved milestone submissions for Secretariat review
 router.get('/secretariat/approved-submissions', authenticateToken, async (req, res) => {
   try {
@@ -941,6 +1208,125 @@ router.get('/milestone-submissions', authenticateToken, async (req, res) => {
   }
 });
 
+// Get photos and videos for a public project (grouped by milestone)
+router.get('/project/:projectId/public/media', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    
+    // First check if the project exists and is approved for public viewing
+    const project = await Project.findByPk(projectId, {
+      attributes: ['id', 'name', 'approvedBySecretariat', 'submittedToSecretariat', 'status']
+    });
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+    
+    // Only show media for approved projects
+    if (!project.approvedBySecretariat && !project.submittedToSecretariat) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+    
+    // Get all approved milestone submissions for this project
+    const submissions = await MilestoneSubmission.findAll({
+      where: {
+        projectId: projectId,
+        status: 'approved'
+      },
+      include: [
+        {
+          model: ProjectMilestone,
+          as: 'milestone',
+          attributes: ['id', 'title', 'description', 'order']
+        }
+      ],
+      order: [
+        [{ model: ProjectMilestone, as: 'milestone' }, 'order', 'ASC'],
+        ['reviewedAt', 'DESC']
+      ]
+    });
+    
+    // Group photos and videos by milestone
+    const mediaByMilestone = {};
+    
+    submissions.forEach(submission => {
+      const submissionData = submission.toJSON();
+      const milestone = submissionData.milestone;
+      
+      if (!milestone) return;
+      
+      const milestoneId = milestone.id;
+      const milestoneTitle = milestone.title;
+      
+      if (!mediaByMilestone[milestoneId]) {
+        mediaByMilestone[milestoneId] = {
+          milestoneId,
+          milestoneTitle,
+          photos: [],
+          videos: []
+        };
+      }
+      
+      // Process photo evidence
+      if (submissionData.photoEvidence && Array.isArray(submissionData.photoEvidence)) {
+        submissionData.photoEvidence.forEach(photo => {
+          const photoUrl = photo.url || photo.src || photo;
+          mediaByMilestone[milestoneId].photos.push({
+            id: `photo-${submission.id}-${photo.name || Math.random()}`,
+            name: photo.name || 'Photo Evidence',
+            url: photoUrl.startsWith('http') ? photoUrl : `http://localhost:3000${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`,
+            uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
+            fileSize: photo.size || 0
+          });
+        });
+      }
+      
+      // Process video evidence
+      if (submissionData.videoEvidence && Array.isArray(submissionData.videoEvidence)) {
+        submissionData.videoEvidence.forEach(video => {
+          const videoUrl = video.url || video.src || video;
+          mediaByMilestone[milestoneId].videos.push({
+            id: `video-${submission.id}-${video.name || Math.random()}`,
+            name: video.name || 'Video Evidence',
+            url: videoUrl.startsWith('http') ? videoUrl : `http://localhost:3000${videoUrl.startsWith('/') ? videoUrl : '/' + videoUrl}`,
+            uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
+            fileSize: video.size || 0,
+            thumbnail: video.thumbnail || null
+          });
+        });
+      }
+    });
+    
+    // Convert to array and sort by milestone order
+    const mediaArray = Object.values(mediaByMilestone).sort((a, b) => {
+      const milestoneA = submissions.find(s => s.milestoneId === a.milestoneId)?.milestone;
+      const milestoneB = submissions.find(s => s.milestoneId === b.milestoneId)?.milestone;
+      const orderA = milestoneA?.order || 0;
+      const orderB = milestoneB?.order || 0;
+      return orderA - orderB;
+    });
+    
+    res.json({
+      success: true,
+      media: mediaArray
+    });
+    
+  } catch (error) {
+    console.error('Error fetching public project media:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch project media',
+      error: error.message
+    });
+  }
+});
+
 // Get single milestone submission for modal display
 router.get('/milestone-submissions/:id', authenticateToken, async (req, res) => {
   try {
@@ -1058,12 +1444,12 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
         {
           model: Project,
           as: 'project',
-          attributes: ['id', 'name', 'projectCode']
+          attributes: ['id', 'name', 'projectCode', 'description', 'location', 'implementingOfficeName', 'implementingOffice', 'totalBudget', 'status', 'category', 'overallProgress', 'progress', 'initialPhoto']
         },
         {
           model: ProjectMilestone,
           as: 'milestone',
-          attributes: ['id', 'title']
+          attributes: ['id', 'title', 'description']
         },
         {
           model: User,
@@ -1072,6 +1458,21 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
         }
       ]
     });
+
+    // Auto-generate news article when milestone is approved
+    if (status === 'approved' && updatedSubmission.project && updatedSubmission.milestone) {
+      try {
+        const AutoNewsGenerator = require('../services/autoNewsGenerator');
+        await AutoNewsGenerator.generateArticle('MILESTONE_APPROVED', updatedSubmission.project, {
+          milestone: updatedSubmission.milestone,
+          milestoneSubmission: updatedSubmission,
+          userId: req.user.id
+        });
+      } catch (newsError) {
+        console.error('Error generating auto news for milestone approval:', newsError);
+        // Don't fail the approval if news generation fails
+      }
+    }
 
     res.json({
       success: true,

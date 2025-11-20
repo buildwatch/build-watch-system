@@ -27,6 +27,8 @@ const { title, description = "Build Watch - Santa Cruz Project Monitoring and Ev
     
     <!-- Global Profile Picture Manager -->
     <script src="/src/scripts/profile-picture-manager.js"></script>
+    <!-- Global Profile Picture Updater (for real-time updates) -->
+    <script src="/src/scripts/global-profile-picture-updater.js"></script>
   </body>
 </html>
 
@@ -43,5 +45,64 @@ const { title, description = "Build Watch - Santa Cruz Project Monitoring and Ev
   /* Ensure consistent styling across all pages */
   * {
     box-sizing: border-box;
+  }
+  
+  /* Full-screen blur effect when modals are open */
+  body.modal-open {
+    overflow: hidden;
+  }
+  
+  /* Blur all content - we'll exclude modals with more specific selectors */
+  body.modal-open > *:not(script):not(style) {
+    filter: blur(4px);
+    transition: filter 0.2s ease-out;
+    pointer-events: none;
+    user-select: none;
+  }
+  
+  /* CRITICAL: Exclude modals from blur - target by z-index and fixed positioning */
+  body.modal-open [style*="position: fixed"],
+  body.modal-open [class*="fixed"][class*="z-"],
+  body.modal-open [class*="fixed"].inset-0,
+  body.modal-open div[class*="fixed"][class*="z-"] {
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    pointer-events: auto !important;
+    user-select: auto !important;
+  }
+  
+  /* Ensure all children of modal containers are also not blurred */
+  body.modal-open [class*="fixed"][class*="z-"] *,
+  body.modal-open [class*="fixed"].inset-0 * {
+    filter: none !important;
+    -webkit-filter: none !important;
+    pointer-events: auto !important;
+    user-select: auto !important;
+  }
+
+  /* Animated checkmark for success modal */
+  @keyframes drawCheckmark {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Fade in animation for logout icon */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Animated X for error modal */
+  @keyframes drawX {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
 </style> 

@@ -141,24 +141,59 @@ class AuthService {
     // Get current user role before clearing auth
     const currentRole = this.getUserRole();
     const currentSubRole = this.getUserSubRole();
+    const token = this.getToken();
     
-    // Clear local data immediately (don't wait for API)
+    // IMPORTANT: Call logout endpoint BEFORE clearing token
+    // This ensures the backend can authenticate and update lastLogoutAt
+    if (token) {
+      try {
+        // Determine API URL
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const API_URL = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+        
+        const logoutUrl = `${API_URL}/auth/logout`;
+        console.log('🔓 Calling logout endpoint:', logoutUrl);
+        
+        // Call logout endpoint - use fetch with a timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        try {
+          await fetch(logoutUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          console.log('✅ Logout endpoint called successfully');
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            console.log('⚠️ Logout endpoint call timed out, continuing with logout');
+          } else {
+            console.error('❌ Error calling logout endpoint:', fetchError);
+          }
+          // Continue with logout even if API call fails
+        }
+      } catch (error) {
+        console.error('❌ Error during logout API call:', error);
+        // Continue with logout even if API call fails
+      }
+    }
+    
+    // Clear local data after API call
     this.clearAuth();
     
     // Clear session data
     sessionService.clearSession();
     
-    // Redirect to login page immediately
+    // Redirect to login page
     window.location.href = '/login/lgu-pmt';
-    
-    // Call logout API in background (non-blocking)
-    try {
-      authAPI.logout().catch(error => {
-        console.error('Logout API error (non-blocking):', error);
-      });
-    } catch (error) {
-      console.error('Logout API error (non-blocking):', error);
-    }
   }
 
   // Verify token validity (non-blocking)
@@ -211,6 +246,11 @@ class AuthService {
   // Get user's sub-role
   getUserSubRole() {
     return this.currentUser ? this.currentUser.subRole : null;
+  }
+
+  // Get authentication token
+  getToken() {
+    return localStorage.getItem('token');
   }
 
   // Clear authentication data

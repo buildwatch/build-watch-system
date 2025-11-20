@@ -2,8 +2,44 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const router = express.Router();
+
+// Middleware to verify JWT token
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: 'Access token required'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'buildwatch_lgu_secret_key_2024');
+    const user = await User.findByPk(decoded.userId, {
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or inactive user'
+      });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      error: 'Invalid token'
+    });
+  }
+};
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -21,7 +57,9 @@ const storage = multer.diskStorage({
     // Generate unique filename with timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, `profile-${req.body.userId || 'user'}-${uniqueSuffix}${ext}`);
+    // Use authenticated user's ID if available, otherwise fallback to userId from body
+    const userId = req.user ? req.user.id : (req.body.userId || 'user');
+    cb(null, `profile-${userId}-${uniqueSuffix}${ext}`);
   }
 });
 
@@ -38,12 +76,12 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit
   }
 });
 
 // Upload profile picture
-router.post('/upload-picture', upload.single('profilePicture'), async (req, res) => {
+router.post('/upload-picture', authenticateToken, upload.single('profilePicture'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -52,7 +90,8 @@ router.post('/upload-picture', upload.single('profilePicture'), async (req, res)
       });
     }
 
-    const userId = req.body.userId || 'SA-001';
+    // Use authenticated user's ID
+    const authenticatedUser = req.user;
     const filePath = req.file.path;
     const fileName = req.file.filename;
     
@@ -60,32 +99,50 @@ router.post('/upload-picture', upload.single('profilePicture'), async (req, res)
     const profilePictureUrl = `http://localhost:3000/uploads/profile-pictures/${fileName}`;
     
     console.log('✅ File uploaded successfully:', {
-      userId,
+      userId: authenticatedUser.id,
       fileName,
       filePath,
       profilePictureUrl
     });
     
-    // Try to store in database, but don't fail if it doesn't work
+    // Update the authenticated user's profile picture URL
     try {
-      // First try to find user by userId field
-      let user = await User.findOne({ where: { userId: userId } });
+      // Use save() method to ensure the update is persisted immediately
+      authenticatedUser.profilePictureUrl = profilePictureUrl;
+      await authenticatedUser.save();
       
-      // If not found by userId, try by email
-      if (!user) {
-        user = await User.findOne({ where: { email: userId } });
+      // Reload user to ensure the update is persisted
+      await authenticatedUser.reload();
+      
+      // Verify the update was successful by querying fresh from database
+      const updatedUser = await User.findByPk(authenticatedUser.id, {
+        attributes: ['id', 'profilePictureUrl'],
+        raw: false
+      });
+      
+      // Force reload to get latest data
+      if (updatedUser) {
+        await updatedUser.reload();
       }
       
-      // If user found, update profile picture URL
-      if (user) {
-        await user.update({ profilePictureUrl: profilePictureUrl });
-        console.log('✅ Profile picture URL stored in database for user:', userId);
+      console.log('✅ Profile picture URL stored in database for user:', authenticatedUser.id);
+      console.log('✅ Verified profilePictureUrl in database:', updatedUser ? updatedUser.profilePictureUrl : 'N/A');
+      console.log('✅ Profile picture URL:', profilePictureUrl);
+      
+      if (!updatedUser || !updatedUser.profilePictureUrl || updatedUser.profilePictureUrl !== profilePictureUrl) {
+        console.error('⚠️ Profile picture URL mismatch after update!');
+        console.error('   Expected:', profilePictureUrl);
+        console.error('   Got:', updatedUser ? updatedUser.profilePictureUrl : 'User not found');
+        // Don't fail the request, but log the issue
       } else {
-        console.log('⚠️ User not found in database for userId:', userId);
+        console.log('✅ Profile picture URL verified successfully in database');
       }
     } catch (dbError) {
       console.error('⚠️ Database update failed, but file was uploaded:', dbError);
-      // Continue with the response even if database update fails
+      return res.status(500).json({
+        success: false,
+        message: 'File uploaded but failed to update database'
+      });
     }
     
     // Store the profile picture URL in a local JSON file as backup
@@ -97,15 +154,27 @@ router.post('/upload-picture', upload.single('profilePicture'), async (req, res)
         profileData = JSON.parse(fs.readFileSync(profileDataPath, 'utf8'));
       }
       
-      profileData[userId] = {
+      // Store with both user ID and email for lookup flexibility
+      const storageKey = authenticatedUser.id.toString();
+      profileData[storageKey] = {
         profilePictureUrl,
         fileName,
         uploadedAt: new Date().toISOString(),
-        fileSize: req.file.size
+        fileSize: req.file.size,
+        userId: authenticatedUser.userId,
+        email: authenticatedUser.email
       };
       
+      // Also store with email and userId for backward compatibility
+      if (authenticatedUser.email) {
+        profileData[authenticatedUser.email] = profileData[storageKey];
+      }
+      if (authenticatedUser.userId) {
+        profileData[authenticatedUser.userId] = profileData[storageKey];
+      }
+      
       fs.writeFileSync(profileDataPath, JSON.stringify(profileData, null, 2));
-      console.log('✅ Profile data stored in local file for user:', userId);
+      console.log('✅ Profile data stored in local file for user:', authenticatedUser.id);
     } catch (fileError) {
       console.error('⚠️ Local file storage failed:', fileError);
     }
@@ -115,7 +184,7 @@ router.post('/upload-picture', upload.single('profilePicture'), async (req, res)
       message: 'Profile picture uploaded successfully',
       profilePictureUrl: profilePictureUrl,
       fileName: fileName,
-      userId: userId
+      userId: authenticatedUser.id
     });
     
   } catch (error) {
@@ -130,9 +199,24 @@ router.post('/upload-picture', upload.single('profilePicture'), async (req, res)
 
 // OPTIONS handler for profile picture requests
 router.options('/picture/:userId', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '*';
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
   res.header('Access-Control-Max-Age', '86400');
   res.status(200).end();
 });
@@ -141,9 +225,25 @@ router.options('/picture/:userId', (req, res) => {
 router.get('/picture/:userId', async (req, res) => {
   try {
     // Set CORS headers for profile picture requests
-    res.header('Access-Control-Allow-Origin', '*');
+    // Use specific origin instead of wildcard to allow credentials if needed
+    const origin = req.headers.origin || '*';
+    const allowedOrigins = [
+      'http://localhost:4321',
+      'http://localhost:4322',
+      'https://build-watch.com',
+      'http://build-watch.com',
+      'https://www.build-watch.com',
+      'http://www.build-watch.com'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else {
+      res.header('Access-Control-Allow-Origin', '*');
+    }
+    
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
     res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
     res.header('Cache-Control', 'public, max-age=3600'); // 1 hour cache
     
@@ -298,10 +398,14 @@ router.get('/picture/:userId', async (req, res) => {
       }
     }
     
-    // If still no URL, return default
+    // If still no URL, return null instead of default to prevent CORS issues
     if (!profilePictureUrl) {
-      profilePictureUrl = 'http://localhost:3000/uploads/profile-pictures/default-profile.svg';
-      console.log('ℹ️ Using default profile picture');
+      console.log('ℹ️ No profile picture found, returning null');
+      return res.json({
+        success: true,
+        profilePictureUrl: null,
+        hasProfilePicture: false
+      });
     }
     
     res.json({

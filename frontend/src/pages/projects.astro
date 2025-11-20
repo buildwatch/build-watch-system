@@ -12,151 +12,12 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
       <img src="/projects-page-header-bg.png" alt="Santa Cruz Aerial" class="absolute inset-0 w-full h-full object-cover object-top select-none" draggable="false" />
     </div>
     
-    <!-- Combined Analytics and Search/Filter Section -->
+    <!-- Search/Filter Section -->
     <div class="w-full flex justify-center relative z-30 -mt-16">
-      <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-6">
-        <!-- Enhanced Project Analytics Card (Left Side) -->
-        <div class="lg:w-1/3">
-          <div class="bg-gradient-to-br from-white/95 to-blue-50/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-blue-100/50 h-full relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
-            <!-- Decorative background elements -->
-            <div class="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-10 blur-xl"></div>
-            <div class="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-green-400 to-teal-500 rounded-full opacity-15 blur-lg"></div>
-            
-            <!-- Header Section -->
-            <div class="relative z-10 mb-5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700">
-                      Project Analytics
-                    </h3>
-                  </div>
-                </div>
-                <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              </div>
-            </div>
+      <div class="w-full max-w-7xl flex flex-col gap-6">
 
-            <!-- Enhanced Statistics Grid -->
-            <div class="relative z-10 grid grid-cols-2 gap-3 mb-4">
-              <!-- Total Projects -->
-              <div class="group bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-3 border border-blue-200/50 hover:shadow-md transition-all duration-300">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl font-black text-blue-600 mb-1" id="total-projects">-</div>
-                <div class="text-xs font-semibold text-blue-700">Total Projects</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-              </div>
-
-              <!-- Total Departments -->
-              <div class="group bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-3 border border-blue-200/50 hover:shadow-md transition-all duration-300">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl font-black text-blue-600 mb-1" id="total-departments">-</div>
-                <div class="text-xs font-semibold text-blue-700">Total Departments</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-              </div>
-
-              <!-- Ongoing Projects -->
-              <div class="group bg-gradient-to-br from-sky-50 to-blue-100/50 rounded-lg p-3 border border-sky-200/50 hover:shadow-md transition-all duration-300">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="w-6 h-6 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl font-black text-sky-600 mb-1" id="ongoing-projects">-</div>
-                <div class="text-xs font-semibold text-sky-700">Ongoing</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-sky-400 to-blue-600 rounded-full mt-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-              </div>
-
-              <!-- Delayed Projects -->
-              <div class="group bg-gradient-to-br from-red-50 to-red-100/50 rounded-lg p-3 border border-red-200/50 hover:shadow-md transition-all duration-300">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl font-black text-red-600 mb-1" id="delayed-projects">-</div>
-                <div class="text-xs font-semibold text-red-700">Delayed</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-red-400 to-red-600 rounded-full mt-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-              </div>
-
-              <!-- Completed Projects -->
-              <div class="group bg-gradient-to-br from-green-50 to-emerald-100/50 rounded-lg p-3 border border-green-200/50 hover:shadow-md transition-all duration-300">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl font-black text-green-600 mb-1" id="completed-projects">-</div>
-                <div class="text-xs font-semibold text-green-700">Completed</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-green-400 to-emerald-600 rounded-full mt-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-              </div>
-
-              <!-- Average Progress -->
-              <div class="group bg-gradient-to-br from-amber-50 to-yellow-100/50 rounded-lg p-3 border border-amber-200/50 hover:shadow-md transition-all duration-300">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="w-6 h-6 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl font-black text-amber-600 mb-1" id="avg-progress">-</div>
-                <div class="text-xs font-semibold text-amber-700">Avg Progress</div>
-                <div class="w-full h-0.5 bg-gradient-to-r from-amber-400 to-yellow-600 rounded-full mt-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-              </div>
-            </div>
-
-            <!-- Enhanced Budget Section -->
-            <div class="relative z-10 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-200/50 shadow-inner">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="text-xs font-bold text-green-700">Total Budget</div>
-                    <div class="text-lg font-black text-green-800" id="total-budget">₱0</div>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="flex items-center gap-1 text-green-600 text-xs font-semibold">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                    <span>Active</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Enhanced Search and Filter Bar (Right Side) -->
-        <div class="lg:w-2/3">
+        <!-- Enhanced Search and Filter Bar -->
+        <div class="w-full">
           <div class="bg-gradient-to-br from-white/95 to-blue-50/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-blue-100/50 relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
             <!-- Decorative background elements -->
             <div class="absolute -top-8 -right-8 w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full opacity-10 blur-xl"></div>
@@ -387,6 +248,143 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
     <div class="w-full max-w-7xl mx-auto mt-8">
       <ProjectsIsland client:only="react" />
     </div>
+
+    <!-- Project Statistics Dashboard Modal -->
+    <div id="projectStatisticsModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-[70] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 my-8">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Project Analytics and Statistics Dashboard</h3>
+                <p class="text-sm text-gray-600 mt-0.5">Comprehensive project insights and analytics</p>
+              </div>
+            </div>
+            <button onclick="closeProjectStatisticsModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="p-6 overflow-y-auto flex-1">
+          <!-- Summary Statistics Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+              <div class="text-sm font-semibold text-blue-700 mb-1">Total Projects</div>
+              <div class="text-2xl font-bold text-blue-900" id="stat-total-projects">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+              <div class="text-sm font-semibold text-purple-700 mb-1">Total Departments</div>
+              <div class="text-2xl font-bold text-purple-900" id="stat-total-departments">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl p-4 border border-sky-200">
+              <div class="text-sm font-semibold text-sky-700 mb-1">Ongoing</div>
+              <div class="text-2xl font-bold text-sky-900" id="stat-ongoing-projects">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+              <div class="text-sm font-semibold text-green-700 mb-1">Completed</div>
+              <div class="text-2xl font-bold text-green-900" id="stat-completed-projects">0</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+              <div class="text-sm font-semibold text-gray-700 mb-1">Not Started</div>
+              <div class="text-2xl font-bold text-gray-900" id="stat-not-started-projects">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
+              <div class="text-sm font-semibold text-red-700 mb-1">Delayed</div>
+              <div class="text-2xl font-bold text-red-900" id="stat-delayed-projects">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+              <div class="text-sm font-semibold text-amber-700 mb-1">Avg Progress</div>
+              <div class="text-2xl font-bold text-amber-900" id="stat-avg-progress">0%</div>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
+              <div class="text-sm font-semibold text-emerald-700 mb-1">Total Budget</div>
+              <div class="text-lg font-bold text-emerald-900" id="stat-total-budget">₱0</div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="projectStatisticsLoading" class="hidden flex items-center justify-center py-12">
+            <div class="relative w-16 h-16">
+              <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+              <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+          </div>
+
+          <!-- Charts Container -->
+          <div id="projectStatisticsContent" class="space-y-6">
+            <!-- Row 1: Status Distribution and Category -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Project Status Distribution -->
+              <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Project Status Distribution</h4>
+                <div class="h-64">
+                  <canvas id="projectStatusChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Projects by Category -->
+              <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Projects by Category</h4>
+                <div class="h-64">
+                  <canvas id="projectCategoryChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: Priority and Department -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Projects by Priority -->
+              <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Projects by Priority</h4>
+                <div class="h-64">
+                  <canvas id="projectPriorityChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Projects by Department -->
+              <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Projects by Department</h4>
+                <div class="h-64">
+                  <canvas id="projectDepartmentChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: Progress and Budget -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Progress Distribution -->
+              <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Progress Distribution</h4>
+                <div class="h-64">
+                  <canvas id="projectProgressChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Budget Overview -->
+              <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Budget Distribution</h4>
+                <div class="h-64">
+                  <canvas id="projectBudgetChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
   <LGUFooter />
 </Layout>
@@ -403,81 +401,7 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
   document.addEventListener('DOMContentLoaded', function() {
     initializeSearchAndFilters();
     initializeKeyboardShortcuts();
-    initializeAnalytics();
     applyDeepLinkFromURL();
-    
-    // Also initialize analytics after a short delay to ensure DOM is ready
-    setTimeout(() => {
-      console.log('Checking if analytics elements exist...');
-      const totalProjectsEl = document.getElementById('total-projects');
-      const ongoingProjectsEl = document.getElementById('ongoing-projects');
-      const completedProjectsEl = document.getElementById('completed-projects');
-      const avgProgressEl = document.getElementById('avg-progress');
-      const totalBudgetEl = document.getElementById('total-budget');
-      
-      console.log('Analytics elements found:', {
-        totalProjectsEl: !!totalProjectsEl,
-        ongoingProjectsEl: !!ongoingProjectsEl,
-        completedProjectsEl: !!completedProjectsEl,
-        avgProgressEl: !!avgProgressEl,
-        totalBudgetEl: !!totalBudgetEl
-      });
-      
-      // Try to fetch projects directly if analytics are still empty
-      if (totalProjectsEl && totalProjectsEl.textContent === '-') {
-        console.log('Analytics are empty, attempting to fetch projects directly...');
-        // Get API URL dynamically based on environment (using same logic as config/api.js)
-        const getApiUrl = () => {
-          const hostname = window.location.hostname;
-          const protocol = window.location.protocol;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3000/api';
-          }
-          if (hostname.includes('build-watch.com')) {
-            // For HTTPS, use same domain without port (Nginx reverse proxy expected)
-            if (protocol === 'https:') {
-              return protocol + '//' + hostname + '/api';
-            } else {
-              return 'http://' + hostname + ':3000/api';
-            }
-          }
-          return 'http://localhost:3000/api';
-        };
-        const apiUrl = getApiUrl();
-        console.log('Using API URL:', apiUrl);
-        fetch(`${apiUrl}/projects/public?page=1&limit=10`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.success && data.projects) {
-              console.log('Fetched projects directly:', data.projects);
-              const mappedProjects = data.projects.map(project => ({
-                id: project.id,
-                name: project.name,
-                code: project.projectCode,
-                location: project.location,
-                implementingUnitName: project.implementingOfficeName,
-                budget: project.totalBudget,
-                status: project.status,
-                progress: project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0,
-                startDate: project.startDate,
-                endDate: project.endDate,
-                category: project.category,
-                priority: project.priority,
-                fundingSource: project.fundingSource,
-                description: project.description,
-                hasExternalPartner: project.hasExternalPartner,
-                eiuPersonnelName: project.eiuPersonnelName,
-                createdAt: project.createdAt,
-                updatedAt: project.updatedAt
-              }));
-              updateAnalyticsDisplay(mappedProjects);
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching projects directly:', error);
-          });
-      }
-    }, 1000);
   });
 
   function initializeSearchAndFilters() {
@@ -727,108 +651,539 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
   // Initialize animations when page loads
   window.addEventListener('load', addSmoothAnimations);
 
-  // Analytics functionality
-  function updateAnalyticsDisplay(projects) {
-    console.log('Updating analytics with projects:', projects);
-    
-    const totalProjects = projects.length;
-    const ongoingProjects = projects.filter(p => p.status?.toLowerCase() === 'ongoing').length;
-    const completedProjects = projects.filter(p => p.status?.toLowerCase() === 'completed').length;
-    const delayedProjects = projects.filter(p => p.status?.toLowerCase() === 'delayed').length;
-    
-    // Calculate unique departments
-    const uniqueDepartments = new Set(projects.map(p => p.implementingUnitName || p.implementingOfficeName).filter(Boolean));
-    const totalDepartments = uniqueDepartments.size;
-    
-    // Calculate average progress
-    const validProjects = projects.filter(p => !isNaN(Number(p.progress)) && p.progress !== undefined && p.progress !== null);
-    const averageProgress = validProjects.length > 0 
-      ? Math.round(validProjects.reduce((sum, p) => sum + Number(p.progress || 0), 0) / validProjects.length)
-      : 0;
-    
-    // Calculate total budget
-    const totalBudget = projects.reduce((total, project) => {
-      const budget = Number(project.budget || project.totalBudget);
-      return total + (isNaN(budget) ? 0 : budget);
-    }, 0);
-    
-    console.log('Analytics calculations:', {
-      totalProjects,
-      totalDepartments,
-      ongoingProjects,
-      delayedProjects,
-      completedProjects,
-      averageProgress,
-      totalBudget
+  // Store projects data globally for statistics
+  window.projectsData = [];
+
+  // Listen for project data updates from ProjectsIsland
+  // Set up event listeners immediately (not waiting for DOMContentLoaded)
+  window.addEventListener('projectsUpdated', function(event) {
+    console.log('Received projectsUpdated event:', event.detail);
+    if (event.detail && event.detail.projects) {
+      window.projectsData = event.detail.projects;
+      console.log('Updated window.projectsData with', window.projectsData.length, 'projects');
+    }
+  });
+
+  window.addEventListener('projectsLoaded', function(event) {
+    console.log('Received projectsLoaded event:', event.detail);
+    if (event.detail && event.detail.projects) {
+      window.projectsData = event.detail.projects;
+      console.log('Updated window.projectsData with', window.projectsData.length, 'projects');
+    }
+  });
+
+  // Project Statistics Modal Functions
+  window.showProjectStatisticsModal = function() {
+    const modal = document.getElementById('projectStatisticsModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      loadProjectStatistics();
+    }
+  };
+
+  window.closeProjectStatisticsModal = function() {
+    const modal = document.getElementById('projectStatisticsModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      // Destroy charts to free memory
+      if (window.projectStatisticsCharts) {
+        Object.values(window.projectStatisticsCharts).forEach(chart => {
+          if (chart && typeof chart.destroy === 'function') {
+            chart.destroy();
+          }
+        });
+        window.projectStatisticsCharts = {};
+      }
+    }
+  };
+
+  // Close modal when clicking outside
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('projectStatisticsModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeProjectStatisticsModal();
+        }
+      });
+    }
+
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('projectStatisticsModal');
+        if (modal && !modal.classList.contains('hidden')) {
+          closeProjectStatisticsModal();
+        }
+      }
     });
+  });
+
+  // Load Chart.js library
+  function loadChartJS() {
+    return new Promise((resolve, reject) => {
+      if (window.Chart) {
+        resolve(window.Chart);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      script.onload = () => resolve(window.Chart);
+      script.onerror = () => reject(new Error('Failed to load Chart.js'));
+      document.head.appendChild(script);
+    });
+  }
+
+  // Calculate project statistics
+  function calculateProjectStatistics(projects) {
+    const stats = {
+      total: projects.length,
+      notStarted: 0,
+      ongoing: 0,
+      delayed: 0,
+      completed: 0,
+      totalDepartments: 0,
+      totalBudget: 0,
+      averageProgress: 0,
+      byCategory: {},
+      byPriority: {},
+      byDepartment: {},
+      byLocation: {},
+      progressDistribution: { zero: 0, low: 0, medium: 0, high: 0, complete: 0 }
+    };
+
+    const departments = new Set();
+    let totalProgress = 0;
+    let projectsWithProgress = 0;
+
+    projects.forEach(project => {
+      const status = (project.status || '').toLowerCase();
+      
+      // Count statuses (Delayed is also counted as Ongoing)
+      if (status === 'not started' || status === 'not_started' || status === 'pending') {
+        stats.notStarted++;
+      } else if (status === 'completed' || status === 'done' || status === 'finished') {
+        stats.completed++;
+      } else if (status === 'delayed') {
+        stats.delayed++;
+        stats.ongoing++; // Delayed projects are also ongoing
+      } else if (status === 'ongoing' || status === 'in_progress' || status === 'active' || !status) {
+        stats.ongoing++;
+      }
+
+      // Count departments
+      const dept = project.implementingUnitName || project.implementingOfficeName || project.department;
+      if (dept) {
+        departments.add(dept);
+        stats.byDepartment[dept] = (stats.byDepartment[dept] || 0) + 1;
+      }
+
+      // Count categories
+      const category = project.category || 'Uncategorized';
+      stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+
+      // Count priorities
+      const priority = project.priority || 'Not Specified';
+      stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
+
+      // Count locations
+      const location = project.location || project.barangay || 'Not Specified';
+      stats.byLocation[location] = (stats.byLocation[location] || 0) + 1;
+
+      // Calculate budget
+      const budget = Number(project.budget || project.totalBudget || 0);
+      if (!isNaN(budget)) {
+        stats.totalBudget += budget;
+      }
+
+      // Calculate progress
+      const progress = Number(project.progress || 0);
+      if (!isNaN(progress) && progress !== null && progress !== undefined) {
+        totalProgress += progress;
+        projectsWithProgress++;
+        
+        if (progress === 0) {
+          stats.progressDistribution.zero++;
+        } else if (progress > 0 && progress < 50) {
+          stats.progressDistribution.low++;
+        } else if (progress >= 50 && progress < 75) {
+          stats.progressDistribution.medium++;
+        } else if (progress >= 75 && progress < 100) {
+          stats.progressDistribution.high++;
+        } else if (progress >= 100) {
+          stats.progressDistribution.complete++;
+        }
+      }
+    });
+
+    stats.totalDepartments = departments.size;
+    stats.averageProgress = projectsWithProgress > 0 
+      ? Math.round(totalProgress / projectsWithProgress) 
+      : 0;
+
+    return stats;
+  }
+
+  // Load and render project statistics
+  async function loadProjectStatistics() {
+    const loadingEl = document.getElementById('projectStatisticsLoading');
+    const contentEl = document.getElementById('projectStatisticsContent');
     
-    // Update DOM elements
-    const totalProjectsEl = document.getElementById('total-projects');
-    const totalDepartmentsEl = document.getElementById('total-departments');
-    const ongoingProjectsEl = document.getElementById('ongoing-projects');
-    const delayedProjectsEl = document.getElementById('delayed-projects');
-    const completedProjectsEl = document.getElementById('completed-projects');
-    const avgProgressEl = document.getElementById('avg-progress');
-    const totalBudgetEl = document.getElementById('total-budget');
-    
-    if (totalProjectsEl) {
-      totalProjectsEl.textContent = totalProjects;
-      console.log('Updated total projects:', totalProjects);
-    }
-    if (totalDepartmentsEl) {
-      totalDepartmentsEl.textContent = totalDepartments;
-      console.log('Updated total departments:', totalDepartments);
-    }
-    if (ongoingProjectsEl) {
-      ongoingProjectsEl.textContent = ongoingProjects;
-      console.log('Updated ongoing projects:', ongoingProjects);
-    }
-    if (delayedProjectsEl) {
-      delayedProjectsEl.textContent = delayedProjects;
-      console.log('Updated delayed projects:', delayedProjects);
-    }
-    if (completedProjectsEl) {
-      completedProjectsEl.textContent = completedProjects;
-      console.log('Updated completed projects:', completedProjects);
-    }
-    if (avgProgressEl) {
-      avgProgressEl.textContent = averageProgress + '%';
-      console.log('Updated average progress:', averageProgress);
-    }
-    if (totalBudgetEl) {
-      const formattedBudget = new Intl.NumberFormat('en-PH', {
-        style: 'currency',
-        currency: 'PHP',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(totalBudget);
-      totalBudgetEl.textContent = formattedBudget;
-      console.log('Updated total budget:', formattedBudget);
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (contentEl) contentEl.classList.add('hidden');
+
+    try {
+      // Load Chart.js
+      const Chart = await loadChartJS();
+
+      // Get projects data
+      let projects = window.projectsData || [];
+      
+      console.log('Loading statistics with', projects.length, 'projects');
+      
+      // If no projects data, try to fetch directly from API
+      if (projects.length === 0) {
+        console.log('No projects in window.projectsData, attempting to fetch from API...');
+        try {
+          const getApiUrl = () => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              if (protocol === 'https:') {
+                return protocol + '//' + hostname + '/api';
+              } else {
+                return 'http://' + hostname + ':3000/api';
+              }
+            }
+            return 'http://localhost:3000/api';
+          };
+          
+          const apiUrl = getApiUrl();
+          const response = await fetch(`${apiUrl}/projects/public?page=1&limit=1000`);
+          const data = await response.json();
+          
+          if (data.success && data.projects) {
+            projects = data.projects.map(project => ({
+              id: project.id,
+              name: project.name,
+              code: project.projectCode,
+              location: project.location,
+              implementingUnitName: project.implementingOfficeName,
+              implementingOfficeName: project.implementingOfficeName,
+              department: project.implementingOfficeName,
+              budget: project.totalBudget,
+              totalBudget: project.totalBudget,
+              status: project.status,
+              progress: project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0,
+              startDate: project.startDate,
+              endDate: project.endDate,
+              category: project.category,
+              priority: project.priority,
+              fundingSource: project.fundingSource,
+              description: project.description,
+              barangay: project.barangay,
+              hasExternalPartner: project.hasExternalPartner,
+              eiuPersonnelName: project.eiuPersonnelName,
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt
+            }));
+            window.projectsData = projects;
+            console.log('Fetched', projects.length, 'projects from API');
+          }
+        } catch (fetchError) {
+          console.error('Error fetching projects from API:', fetchError);
+        }
+      }
+
+      if (projects.length === 0) {
+        throw new Error('No projects data available');
+      }
+
+      // Calculate statistics
+      const stats = calculateProjectStatistics(projects);
+      console.log('Calculated statistics:', stats);
+
+      // Render charts
+      await renderProjectStatisticsCharts(Chart, stats);
+
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (contentEl) contentEl.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading project statistics:', error);
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (contentEl) {
+        contentEl.innerHTML = `
+          <div class="text-center py-12">
+            <p class="text-red-600 font-semibold">Failed to load statistics: ${error.message}</p>
+            <p class="text-gray-600 mt-2 text-sm">Please refresh the page and try again.</p>
+          </div>
+        `;
+        contentEl.classList.remove('hidden');
+      }
     }
   }
 
-  function initializeAnalytics() {
-    console.log('Initializing analytics event listeners...');
-    
-    // Listen for project data updates from ProjectsIsland
-    document.addEventListener('projectsUpdated', function(event) {
-      console.log('Received projectsUpdated event:', event.detail);
-      updateAnalyticsDisplay(event.detail.projects);
-    });
-    
-    // Also listen for the existing projectSearch event to update analytics
-    document.addEventListener('projectSearch', function(event) {
-      console.log('Received projectSearch event:', event.detail);
-      // Analytics will be updated when projects are fetched
-    });
-    
-    // Listen for initial load
-    document.addEventListener('projectsLoaded', function(event) {
-      console.log('Received projectsLoaded event:', event.detail);
-      updateAnalyticsDisplay(event.detail.projects);
-    });
-    
-    console.log('Analytics event listeners initialized');
+  // Render all project statistics charts
+  async function renderProjectStatisticsCharts(Chart, stats) {
+    // Destroy existing charts
+    if (window.projectStatisticsCharts) {
+      Object.values(window.projectStatisticsCharts).forEach(chart => {
+        if (chart && typeof chart.destroy === 'function') {
+          chart.destroy();
+        }
+      });
+    }
+    window.projectStatisticsCharts = {};
+
+    // Chart colors
+    const colors = {
+      notStarted: '#9CA3AF',
+      ongoing: '#3B82F6',
+      delayed: '#EF4444',
+      completed: '#10B981',
+      primary: '#3B82F6',
+      secondary: '#8B5CF6',
+      success: '#10B981',
+      warning: '#F59E0B',
+      danger: '#EF4444'
+    };
+
+    // 1. Project Status Distribution (Pie Chart)
+    const statusCtx = document.getElementById('projectStatusChart');
+    if (statusCtx) {
+      window.projectStatisticsCharts.status = new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Not Started', 'Ongoing', 'Delayed', 'Completed'],
+          datasets: [{
+            data: [stats.notStarted, stats.ongoing, stats.delayed, stats.completed],
+            backgroundColor: [colors.notStarted, colors.ongoing, colors.delayed, colors.completed],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. Projects by Category (Bar Chart)
+    const categoryCtx = document.getElementById('projectCategoryChart');
+    if (categoryCtx) {
+      const categoryData = Object.entries(stats.byCategory)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      
+      window.projectStatisticsCharts.category = new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+          labels: categoryData.map(([name]) => name),
+          datasets: [{
+            label: 'Projects',
+            data: categoryData.map(([, count]) => count),
+            backgroundColor: colors.primary,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // 3. Projects by Priority (Doughnut Chart)
+    const priorityCtx = document.getElementById('projectPriorityChart');
+    if (priorityCtx) {
+      const priorityData = Object.entries(stats.byPriority);
+      const priorityColors = {
+        'High': colors.danger,
+        'Medium': colors.warning,
+        'Low': colors.success,
+        'Not Specified': colors.notStarted
+      };
+      
+      window.projectStatisticsCharts.priority = new Chart(priorityCtx, {
+        type: 'doughnut',
+        data: {
+          labels: priorityData.map(([name]) => name),
+          datasets: [{
+            data: priorityData.map(([, count]) => count),
+            backgroundColor: priorityData.map(([name]) => 
+              priorityColors[name] || colors.primary
+            ),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    // 4. Projects by Department (Horizontal Bar Chart)
+    const deptCtx = document.getElementById('projectDepartmentChart');
+    if (deptCtx) {
+      const deptData = Object.entries(stats.byDepartment)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      
+      window.projectStatisticsCharts.department = new Chart(deptCtx, {
+        type: 'bar',
+        data: {
+          labels: deptData.map(([name]) => name),
+          datasets: [{
+            label: 'Projects',
+            data: deptData.map(([, count]) => count),
+            backgroundColor: colors.secondary,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // 5. Progress Distribution (Bar Chart)
+    const progressCtx = document.getElementById('projectProgressChart');
+    if (progressCtx) {
+      window.projectStatisticsCharts.progress = new Chart(progressCtx, {
+        type: 'bar',
+        data: {
+          labels: ['0%', '1-49%', '50-74%', '75-99%', '100%'],
+          datasets: [{
+            label: 'Projects',
+            data: [
+              stats.progressDistribution.zero,
+              stats.progressDistribution.low,
+              stats.progressDistribution.medium,
+              stats.progressDistribution.high,
+              stats.progressDistribution.complete
+            ],
+            backgroundColor: [
+              colors.notStarted,
+              colors.warning,
+              colors.primary,
+              colors.success,
+              colors.completed
+            ],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // 6. Budget Overview (Line Chart)
+    const budgetCtx = document.getElementById('projectBudgetChart');
+    if (budgetCtx) {
+      const budgetRanges = [
+        { label: '0-100K', min: 0, max: 100000 },
+        { label: '100K-500K', min: 100000, max: 500000 },
+        { label: '500K-1M', min: 500000, max: 1000000 },
+        { label: '1M-5M', min: 1000000, max: 5000000 },
+        { label: '5M+', min: 5000000, max: Infinity }
+      ];
+      
+      const budgetCounts = budgetRanges.map(range => {
+        return window.projectsData.filter(p => {
+          const budget = Number(p.budget || p.totalBudget || 0);
+          return budget >= range.min && budget < range.max;
+        }).length;
+      });
+
+      window.projectStatisticsCharts.budget = new Chart(budgetCtx, {
+        type: 'line',
+        data: {
+          labels: budgetRanges.map(r => r.label),
+          datasets: [{
+            label: 'Projects',
+            data: budgetCounts,
+            borderColor: colors.primary,
+            backgroundColor: colors.primary + '20',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 6,
+            pointBackgroundColor: colors.primary
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // Update summary statistics
+    document.getElementById('stat-total-projects').textContent = stats.total;
+    document.getElementById('stat-total-departments').textContent = stats.totalDepartments;
+    document.getElementById('stat-ongoing-projects').textContent = stats.ongoing;
+    document.getElementById('stat-delayed-projects').textContent = stats.delayed;
+    document.getElementById('stat-completed-projects').textContent = stats.completed;
+    document.getElementById('stat-not-started-projects').textContent = stats.notStarted;
+    document.getElementById('stat-avg-progress').textContent = stats.averageProgress + '%';
+    document.getElementById('stat-total-budget').textContent = new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(stats.totalBudget);
   }
 </script>
 
@@ -845,6 +1200,19 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
     to { 
       opacity: 1; 
       transform: none; 
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
 </style> 

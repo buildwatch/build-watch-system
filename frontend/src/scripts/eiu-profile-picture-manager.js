@@ -29,19 +29,43 @@ class EIUProfilePictureManager {
 
   async loadProfilePicture() {
     try {
-      // Try to fetch from server first
+      // CRITICAL: Check user.profilePictureUrl from database first (like office-groups.astro)
       const userData = localStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        const employeeId = user.employeeId || user.username || user.id || user.userId || 'EIU-0001';
         
-        console.log('🔍 Fetching EIU profile picture from server for:', employeeId);
-        const response = await fetch(`http://localhost:3000/api/profile/picture/${employeeId}`);
+        // Priority: user.profilePictureUrl (from database) > localStorage > server
+        if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+          this.profilePictureUrl = user.profilePictureUrl;
+          console.log('✅ EIU Profile picture loaded from user data (database):', this.profilePictureUrl.substring(0, 50) + '...');
+          // Store in localStorage for consistency
+          localStorage.setItem('eiu_profile_picture', this.profilePictureUrl);
+          return;
+        }
+        
+        // If no user.profilePictureUrl, try localStorage
+        const storedUrl = localStorage.getItem('eiu_profile_picture');
+        if (storedUrl) {
+          this.profilePictureUrl = storedUrl;
+          console.log('✅ EIU Profile picture loaded from localStorage:', this.profilePictureUrl.substring(0, 50) + '...');
+          return;
+        }
+        
+        // Last resort: fetch from server with actual userId
+        const userId = user.userId || user.id || user.employeeId || user.username || 'EIU-0001';
+        console.log('🔍 Fetching EIU profile picture from server for userId:', userId);
+        const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.profilePictureUrl) {
             this.profilePictureUrl = data.profilePictureUrl;
-            console.log('✅ EIU Profile picture loaded from server:', this.profilePictureUrl);
+            console.log('✅ EIU Profile picture loaded from server:', this.profilePictureUrl.substring(0, 50) + '...');
+            // Store in localStorage and update user data
+            localStorage.setItem('eiu_profile_picture', this.profilePictureUrl);
+            if (user) {
+              user.profilePictureUrl = this.profilePictureUrl;
+              localStorage.setItem('user', JSON.stringify(user));
+            }
             return;
           }
         }
@@ -50,13 +74,13 @@ class EIUProfilePictureManager {
       console.log('⚠️ Failed to load from server, trying localStorage:', error);
     }
 
-    // Fallback to localStorage
+    // Final fallback to localStorage
     const storedUrl = localStorage.getItem('eiu_profile_picture');
     if (storedUrl) {
       this.profilePictureUrl = storedUrl;
-      console.log('✅ EIU Profile picture loaded from localStorage:', this.profilePictureUrl);
+      console.log('✅ EIU Profile picture loaded from localStorage (fallback):', this.profilePictureUrl.substring(0, 50) + '...');
     } else {
-      console.log('⚠️ No EIU profile picture found in localStorage');
+      console.log('⚠️ No EIU profile picture found');
     }
   }
 
@@ -65,22 +89,71 @@ class EIUProfilePictureManager {
     window.addEventListener('eiuProfilePictureUpdated', (e) => {
       console.log('🌍 EIU Global Manager received eiuProfilePictureUpdated event:', e.detail);
       if (e.detail.profilePictureUrl) {
+        // CRITICAL: Use the URL from the event (HTTP URL, not base64)
         this.profilePictureUrl = e.detail.profilePictureUrl;
         localStorage.setItem('eiu_profile_picture', this.profilePictureUrl);
+        
+        // CRITICAL: Also update user data for persistence (like office-groups.astro)
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            user.profilePictureUrl = this.profilePictureUrl;
+            localStorage.setItem('user', JSON.stringify(user));
+            console.log('✅ EIU Global Manager: User data updated with profile picture URL');
+          } catch (error) {
+            console.warn('⚠️ Error updating user data in EIU Global Manager');
+          }
+        }
+        
         this.updateAllProfilePictures();
       }
     });
 
     // Listen for page visibility changes to refresh profile pictures
+    // CRITICAL: Only reload from database if user.profilePictureUrl changed, don't overwrite recent updates
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
-        console.log('🔄 Page became visible, refreshing EIU profile pictures...');
-        this.updateAllProfilePictures();
+        // CRITICAL FIX: Skip updates if we're on a messaging page
+        if (this.isOnMessagingPage()) {
+          console.log('⏭️ Skipping EIU profile picture update - on messaging page');
+          return;
+        }
+        
+        // CRITICAL: Check if user.profilePictureUrl has changed before reloading
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              // Only reload if the URL is different (database was updated)
+              if (this.profilePictureUrl !== user.profilePictureUrl) {
+                console.log('🔄 Page became visible, user.profilePictureUrl changed, updating EIU profile pictures...');
+                this.profilePictureUrl = user.profilePictureUrl;
+                localStorage.setItem('eiu_profile_picture', this.profilePictureUrl);
+                this.updateAllProfilePictures();
+              } else {
+                console.log('⏭️ Page became visible, but profile picture unchanged, skipping reload');
+              }
+            } else {
+              // No user.profilePictureUrl, just update existing pictures without reloading
+              console.log('🔄 Page became visible, updating existing EIU profile pictures...');
+              this.updateAllProfilePictures();
+            }
+          } catch (error) {
+            console.warn('⚠️ Error checking user data on visibility change');
+          }
+        }
       }
     });
 
     // Listen for navigation events
     window.addEventListener('popstate', () => {
+      // CRITICAL FIX: Skip updates if we're on a messaging page
+      if (this.isOnMessagingPage()) {
+        console.log('⏭️ Skipping EIU profile picture update - on messaging page');
+        return;
+      }
       console.log('🔄 Navigation detected, updating EIU profile pictures...');
       setTimeout(() => this.updateAllProfilePictures(), 100);
     });
@@ -89,6 +162,12 @@ class EIUProfilePictureManager {
     setInterval(() => {
       this.checkAndUpdateLogoutModal();
     }, 1000); // Check every second
+  }
+
+  // Check if we're on a messaging page
+  isOnMessagingPage() {
+    const path = window.location.pathname;
+    return path.includes('/messaging') || path.includes('/message-center') || path.includes('/communication');
   }
   
   checkAndUpdateLogoutModal() {
@@ -206,10 +285,41 @@ class EIUProfilePictureManager {
     // Update logout modal profile picture immediately
     this.updateLogoutModalProfilePicture();
     
-    // Update any other profile pictures
+    // CRITICAL: Skip ALL updates if we're on a messaging page
+    if (this.isOnMessagingPage()) {
+      console.log('⏭️ Skipping updateAllProfilePictures - on messaging page');
+      return;
+    }
+
+    // Update any other profile pictures - EXCLUDE messaging center images
+    // Find messaging center container (check for common messaging center class/id patterns)
+    const messagingCenter = document.querySelector('[class*="messaging"], [id*="messaging"], [class*="message"], [id*="message"]');
+    
     const allProfilePics = document.querySelectorAll('img[src*="FE"], img[src*="unsplash"], img[src*="default"], img[alt*="EIU"], img[alt*="EIU Personnel"]');
     allProfilePics.forEach((img, index) => {
+      // CRITICAL: Skip images inside messaging center to prevent overwriting conversation profile pictures
+      if (messagingCenter && messagingCenter.contains(img)) {
+        console.log(`⏭️ Skipping messaging center image ${index + 1}`);
+        return;
+      }
+      
+      // Skip blob URLs and data URLs (used by messaging center ProfilePictureImage component)
+      const src = img.src || '';
+      if (src.startsWith('blob:') || src.startsWith('data:')) {
+        // Skip ALL blob/data URLs - they're likely from messaging center
+        console.log(`⏭️ Skipping blob/data URL image ${index + 1} (likely from messaging)`);
+        return;
+      }
+      
+      // Skip known profile picture IDs
       if (img.id !== 'eiuMainProfilePicture' && img.id !== 'currentProfilePic') {
+        // Additional check: Skip if image is inside a conversation/chat container
+        const isInConversation = img.closest('[class*="conversation"], [class*="message"], [class*="chat"], [class*="messaging"]');
+        if (isInConversation) {
+          console.log(`⏭️ Skipping conversation image ${index + 1}`);
+          return;
+        }
+        
         this.updateProfilePictureElement(img, `additional EIU profile picture ${index + 1}`);
       }
     });
@@ -260,6 +370,20 @@ class EIUProfilePictureManager {
     console.log('🔄 Setting new EIU profile picture globally:', url);
     this.profilePictureUrl = url;
     localStorage.setItem('eiu_profile_picture', url);
+    
+    // CRITICAL: Also update user data for persistence (like office-groups.astro)
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        user.profilePictureUrl = url;
+        localStorage.setItem('user', JSON.stringify(user));
+        console.log('✅ EIU Global Manager: User data updated with profile picture URL');
+      } catch (error) {
+        console.warn('⚠️ Error updating user data in EIU Global Manager');
+      }
+    }
+    
     this.updateAllProfilePictures();
     
     // Dispatch event for other components

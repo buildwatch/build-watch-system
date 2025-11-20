@@ -43,7 +43,10 @@ router.get('/', authenticateToken, requireSystemAdmin, async (req, res) => {
           { username: { [require('sequelize').Op.ne]: 'sysadmin' } },
           { email: { [require('sequelize').Op.ne]: 'sysadmin@gmail.com' } }
         ]}
-      ]
+      ],
+      // Exclude Gmail feedback users (EMS role) from main user management table
+      // They will be shown in a separate table below
+      role: { [require('sequelize').Op.ne]: 'EMS' }
     };
 
     // Add filters
@@ -138,6 +141,32 @@ router.get('/role/:role', authenticateToken, requireSystemAdmin, async (req, res
     res.status(500).json({
       success: false,
       error: 'Failed to fetch users by role'
+    });
+  }
+});
+
+// Get list of active EIU users (accessible to authenticated users, especially LGU-IU)
+router.get('/eiu/list', authenticateToken, async (req, res) => {
+  try {
+    const eiuUsers = await User.findAll({
+      where: {
+        role: 'EIU',
+        status: 'active'
+      },
+      attributes: ['id', 'userId', 'name', 'username', 'email', 'role', 'subRole', 'status', 'createdAt'],
+      order: [['name', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      users: eiuUsers
+    });
+
+  } catch (error) {
+    console.error('Get EIU users list error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch EIU users'
     });
   }
 });
@@ -1977,6 +2006,128 @@ router.get('/activity/status/:userId', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch activity status'
+    });
+  }
+});
+
+// Get Gmail feedback users (EMS role users who logged in for feedback)
+router.get('/feedback-users', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    const { ProjectComment } = require('../models');
+    
+    // Get all EMS role users (Gmail feedback users)
+    const feedbackUsers = await User.findAll({
+      where: {
+        role: 'EMS',
+        status: 'active'
+      },
+      attributes: ['id', 'name', 'username', 'email', 'lastLoginAt', 'lastLogoutAt', 'createdAt', 'profilePictureUrl'],
+      order: [['lastLoginAt', 'DESC']]
+    });
+
+    // Get comment counts and latest comment for each user (including deleted comments)
+    const { DeletedProjectComment } = require('../models');
+    const usersWithActivity = await Promise.all(
+      feedbackUsers.map(async (user) => {
+        // Get active comment count for this user
+        const activeCommentCount = await ProjectComment.count({
+          where: { userId: user.id }
+        });
+
+        // Get deleted comment count for this user
+        const deletedCommentCount = await DeletedProjectComment.count({
+          where: { userId: user.id }
+        });
+
+        // Total comment count (including deleted)
+        const totalCommentCount = activeCommentCount + deletedCommentCount;
+
+        // Get latest comment (check both active and deleted)
+        const latestActiveComment = await ProjectComment.findOne({
+          where: { userId: user.id },
+          order: [['createdAt', 'DESC']],
+          attributes: ['createdAt', 'content', 'projectId', 'id']
+        });
+
+        const latestDeletedComment = await DeletedProjectComment.findOne({
+          where: { userId: user.id },
+          order: [['commentCreatedAt', 'DESC']],
+          attributes: ['commentCreatedAt', 'content', 'projectId', 'id']
+        });
+
+        // Determine which is more recent
+        let latestActivity = null;
+        if (latestActiveComment && latestDeletedComment) {
+          const activeDate = new Date(latestActiveComment.createdAt);
+          const deletedDate = new Date(latestDeletedComment.commentCreatedAt);
+          if (activeDate > deletedDate) {
+            latestActivity = {
+              date: latestActiveComment.createdAt,
+              preview: latestActiveComment.content.substring(0, 100) + (latestActiveComment.content.length > 100 ? '...' : ''),
+              projectId: latestActiveComment.projectId,
+              isDeleted: false
+            };
+          } else {
+            latestActivity = {
+              date: latestDeletedComment.commentCreatedAt,
+              preview: latestDeletedComment.content.substring(0, 100) + (latestDeletedComment.content.length > 100 ? '...' : ''),
+              projectId: latestDeletedComment.projectId,
+              isDeleted: true
+            };
+          }
+        } else if (latestActiveComment) {
+          latestActivity = {
+            date: latestActiveComment.createdAt,
+            preview: latestActiveComment.content.substring(0, 100) + (latestActiveComment.content.length > 100 ? '...' : ''),
+            projectId: latestActiveComment.projectId,
+            isDeleted: false
+          };
+        } else if (latestDeletedComment) {
+          latestActivity = {
+            date: latestDeletedComment.commentCreatedAt,
+            preview: latestDeletedComment.content.substring(0, 100) + (latestDeletedComment.content.length > 100 ? '...' : ''),
+            projectId: latestDeletedComment.projectId,
+            isDeleted: true
+          };
+        }
+
+        // Calculate if user is currently active (logged in within last 24 hours and no logout or logout after last login)
+        const now = new Date();
+        const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+        // Check if lastLogoutAt exists in the model (column may not exist yet)
+        const lastLogout = user.dataValues?.lastLogoutAt || user.lastLogoutAt ? new Date(user.lastLogoutAt || user.dataValues?.lastLogoutAt) : null;
+        const isActive = lastLogin && (!lastLogout || lastLogout < lastLogin) && 
+                        (now.getTime() - lastLogin.getTime()) < (24 * 60 * 60 * 1000); // Active if logged in within 24 hours
+
+        return {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          lastLoginAt: user.lastLoginAt,
+          lastLogoutAt: user.lastLogoutAt || null, // Will be null if column doesn't exist
+          createdAt: user.createdAt,
+          profilePictureUrl: user.profilePictureUrl,
+          commentCount: totalCommentCount, // Total count including deleted
+          activeCommentCount: activeCommentCount,
+          deletedCommentCount: deletedCommentCount,
+          latestActivity: latestActivity,
+          isActive: isActive || false
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      users: usersWithActivity,
+      total: usersWithActivity.length
+    });
+
+  } catch (error) {
+    console.error('Get feedback users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch feedback users'
     });
   }
 });

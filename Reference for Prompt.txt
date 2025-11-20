@@ -1,0 +1,636 @@
+Development and Testing
+       The investigators initiate their probe by forming a team consisting of scrum masters, developers, a writer, and individuals with expertise in customer collaboration. They have optimized the team's performance and efficiency by promoting order, productivity, and collaboration while also eliminating any obstacles that may impede development. In addition, they have overseen the daily scrum sessions to track the team's progress. Researchers collaborate with their clients to discuss the functionality of the online system, determining which aspects to include in the suggested project. The scrum team and scrum master work closely together to effectively accomplish daily development activities and project documentation. Ensuring the timely delivery of suitable resources in a methodical and gradual manner guarantees a smooth workflow and swiftly addresses any issues that may occur.
+       The researchers have identified and extensively examined the web app catering management system to formulate a proactive strategy and objective. The online solution implemented the concepts of the Scrum Model, whereas the researchers utilized a descriptive methodology. The system includes features that allow users to classify, rank, and graphically depict sales and items, thereby mitigating issues such as stacks of paperwork and manual ordering. The web system utilizes interactive visual representations, such as dynamic graphs, tables, and charts, to provide comprehensive sales patterns and market insights. The researchers purposefully designed the system to be straightforward and easy to navigate, using user-friendly interfaces and well-structured layouts to ensure smooth operation. The researchers carefully choose visual characteristics, such as color coding and graphing styles, in order to highlight important findings. The system focuses primarily on data analysis and visualization capabilities, which enable users to discover and comprehend trends and patterns within the order process. The researchers do test and evaluation to verify the reliability, effectiveness, and user-friendliness of the data visualization, showcasing its precision and interoperability across different browsers and devices. Before starting the creation of the project system, the researchers consulted their capstone adviser and clients to determine the most favorable components that meet the needs of the system's users.
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+
+Sprint Planning and Backlog Creation
+Figure 4
+Sprint planning and backlog creation
+Sprint Planning and Backlog CreationTO-DO LISTIN PROGRESS
+
+DONE
+* Chapter 1 to 3 Documentation
+* Website’s layout placements
+* Website’s database
+* Websites user’s interface
+* Password verification (all users)
+* Reservation form (Customer’s end)
+* Graph for revenues (admin and client’s end)
+* Application form for caterers
+* Orders verification (via email)
+* Booking status (Client’s end)
+* Completed booking and print receipt (Customer’s end)
+* Research survey
+* Statistical Computation
+* Ratings (customer’s end)
+* UI design (customer’s end)
+* Chapter 4 to 5 (Documentation)
+* Web based system’s responsiveness
+* Performance rating of catering services
+* Actual sales per month
+       Figure 4 presents the outcomes of the current sprint planning, highlighting the tasks necessary for the next stage of the development process and the completed actions. Consequently, the researchers successfully attained the required characteristics for the suggested internet-based solution. The sprint planning and backlog generation process reveals the issues in the development process that need to be resolved in order to ensure ongoing progress. Through the utilization of sprint planning and backlog generation, the researchers have identified certain areas that require enhancement in order to fulfill the established requirements through sprint planning and backlog generation.
+Sprint Review
+       The researchers present the schedules they have created for the current sprints 1-4, utilizing the Scrum Framework of Agile Development. These calendars encompass activities such as data collection, development, testing, and other related tasks.
+
+Table 4
+Sprint 1
+WeeksDescriptionWeek 1Sprint Planning, Data Gathering, and Title CreationWeek 2Daily Scrum Meetings, Documentation, Data Gathering, and Course Adviser Conference
+       Table 4 shows how the researchers made Sprint 1 using the Scrum Framework of Agile Development. The researchers took four weeks to complete the Sprint 1 process.
+ 
+Table 5
+Sprint 2
+WeeksDescriptionWeek 3Project Work, Data Gathering and DocumentationWeek 4Data Gathering, Documentation and Title defenseWeek 5 to 6Project Work, Data Gathering, Documentation, Daily Scrum Meetings, and Web-based testing 
+        	Table 5 shows how they have accomplished Sprint 2, which takes place over a total of 4 weeks.
+
+
+
+Table 6
+Sprint 3
+WeeksDescriptionWeek 7 to 8Project Work, Data Gathering, Documentation, Sprint Review Meeting, and Web-based testing 
+        	Table 6 shows how the researchers accomplished the Sprint 3 process within four weeks.
+ 
+Table 7
+Sprint 4
+WeeksDescriptionWeek 9 to 10Project Work, Data Gathering, Documentation, Sprint Review Meeting, and Web-based testing
+        	Table 7 depicts that, within three weeks of the process, the researchers have completed the 4th sprint of the Scrum Framework.
+
+Table 8
+Sprint 5
+WeeksDescriptionWeek 11Project Work, Data Gathering, Documentation, and Web-based testingWeek 12Project Work, Data Gathering, Documentation, Daily Scrum Meetings, Web-based testing, and Chapter 1 to 3 proposal defense
+       Table 8 depicts that, within three weeks of the process, the researchers have completed the 5th sprint of the Scrum Framework.
+       
+       
+       
+Table 9
+Sprint 6
+WeeksDescriptionWeek 13 to 16Project Work, Documentation, Sprint Review Meeting, and Web-based testing
+       Table 9 depicts that, within three weeks of the process, the researchers have completed the 6th sprint of the Scrum Framework.
+
+Table 10
+Sprint 7
+WeeksDescriptionWeek 17 to 20Project Work, Documentation, Sprint Review Meeting, and Web-based testing
+       Table 10 depicts that, within three weeks of the process, the researchers have completed the 7th sprint of the Scrum Framework.
+
+Table 11
+Sprint 8
+WeeksDescriptionWeek 21 to 24Project Work, Documentation, Sprint Review Meeting, Web-based testing System Deployment and Survey 
+       Table 11 depicts that, within three weeks of the process, the researchers have completed the 8th sprint of the Scrum Framework.
+
+
+
+
+
+Table 12
+Sprint 9
+WeeksDescriptionWeek 25 to 28Project Work, Documentation, Sprint Review Meeting, System deployment, Client Survey, and Web-based testing
+       Table 12 depicts that, within three weeks of the process, the researchers have completed the 9th sprint of the Scrum Framework.
+
+Table 13
+Sprint 10
+WeeksDescriptionWeek 29 to 32Project Work, Documentation, Sprint Review Meeting, IT Experts Survey and Web-based testing 
+       Table 13 depicts that, within three weeks of the process, the researchers have completed the 10th sprint of the Scrum Framework.
+
+Table 14
+Sprint 11
+WeeksDescriptionWeek 33 to 36Project Work, Documentation, Sprint Review Meeting, Web-based testing and Defense
+       Table 14 depicts that, within three weeks of the process, the researchers have completed the 11th sprint of the Scrum Framework.
+       
+       
+       
+       
+       
+ Table 15
+Sprint 12
+WeeksDescriptionWeek 37 to 38Project Work, Documentation, Sprint Review Meeting, Web-based testing and Final Defense
+       Table 15 depicts that, within three weeks of the process, the researchers have completed the 12th sprint of the Scrum Framework
+
+Increment 	
+       The investigators must be able to finish the most recent sprint review in addition to incorporating everything from their earlier development. During this phase, everything was tested, integrated, and prepared for deployment.
+       
+Testing Phase
+       The researchers conduct stress testing as part of this activity to assess the website's operation and performance under various scenarios, including network traffic and process loading. Multiple test scenarios were carried out by researchers to confirm the circumstances and activities meant for the website. The testing step may guarantee that the website satisfies and functions appropriately in accordance with the standards and requirements that the users require. 
+
+Test Case
+       The Web App Catering Management System allows the client and administrator to track inventory, sales, customer feedback, and growth through the use of visual graphs that facilitate demand and customer preference analysis. In order to provide correct and appropriate functionality, the test case includes actions related to a certain website feature.
+
+
+
+
+
+Table 16
+System Features Test Case
+Case No.Test PlanDescription1.0Log InThis process allows the system to authenticate the user, ensuring that only authorized individuals can access certain information or services. Once logged in, the user is often granted access to personalized features, such as saved settings, preferences, or data unique to their account. Maintaining the security and privacy of user information, as it restricts access to sensitive data to only those who are verified. 
+2.0Account RegistrationAccount verification is the process of confirming that a user’s identity or the ownership of an account is legitimate, ensuring that the person attempting to access the account is authorized. 3.0Email VerificationEmail verification is essential for enhancing the security and authenticity of user accounts, as it helps prevent spam, fraud, and unauthorized access. By verifying email addresses, they ensure reliable communication with users, enabling the delivery of important information such as account updates, password resets, or notifications.
+       Table 16 shows the Log in process, account registration and email verification. It allows a user to access their account by verifying their credentials, creating an account by providing personal details and verifying the user's identity with their provided email address.
+       
+Test Case 1.0: Log In
+Procedure:
+* To begin, load the website.
+* Navigate to the screen where the user can log in.
+* Users must provide valid credentials such as a username and password, then click the button “Log in.”
+
+Expected Output:
+* After successfully logging in, the user will proceed to their specific user interface and dashboards. According to their user category, it could be the caterspot admin, client or customer.
+* Clients of the caterspot can change their temporary password to their account that was created by the admin for the security of their account.
+* Users can use their email once when creating an account.
+
+Actual Result:
+Figure 5
+Log in Portal
+	
+       Figure 5 depicts the log-in interface of the users. Users have options in the log-in interface, client users can change their temporary password in their profile settings and customer users can retrieve their password by providing their email address.
+
+
+
+
+
+
+Figure 6
+Not registered input credentials for logging in
+
+       Figure 6 shows that the email they provide is not registered to the system.
+
+Test Case 2.0: Account Registration
+Procedure:
+* Load the website.
+* Proceed to create a new account where customers can register.
+* Fill out the necessary information with accurate user details.
+* After filling out, click the submit button to submit.
+Expected Output:
+* The system will notice if the email address is already taken.
+* The system will notice if the password they input does not match.
+* Verification code will be sent to the provided email address during the registration.
+
+
+
+
+
+
+Actual Result:
+Figure 7
+Email verification Code
+
+       Figure 7 depicts the interface that prompts users to input the verification code they provided upon registration, which is sent to their email. Once users entered the code, the system verified it, enabling them to log in successfully.
+
+Figure 8
+Registering the existing email and confirming the password
+       
+       Figure 8 users can only register once per email address. If the password matches, the system will use it; if not, the account creation process will fail.
+       
+Figure 9
+Successful Registration or logging the account
+
+       Figure 9 depicts the successful login of the users. Customer user interface where they can book or have a reservation and the client user interface where they can manage their account and all the reservations of the customers. The user interface of the admin is similar to the interface of the client; they manage their client accounts and their sales status.
+
+Test Case 3.0: Email Verification
+Procedure:
+* The users take an action, such as verifying their email accounts, modifying their password or resetting their password.
+Expected Output:
+* The users will receive an email that includes a generated code that will be used as a one-time pin.
+
+
+
+
+
+Actual Result:
+Figure 10
+Email verifications
+
+       Figure 10 users will receive an email verification code to verify their emails and retrieve their passwords.
+
+Table 17
+System Features Test Log
+Test Case No.Test PlanResult1.0Log InSuccess2.0Account RegistrationSuccess3.0Email VerificationsSuccess
+       Table 17 shows the system feature test cases that were successfully completed. The table illustrates the successful and efficient operation of each function.
+
+
+
+
+
+
+
+
+
+Table 18
+System Features Test Case
+Case No.Test PlanDescription4.0Forgot PasswordThis test plan allows users to recover access to their accounts if they cannot remember their password. It is part of the authentication and security framework of a system and is designed to help users reset their password securely without compromising the safety of their account.5.0
+
+
+6.0Update Product
+
+
+Reservation ProcessThis test plan is to modify the content of a menu displayed on a website or system. Clients of the CaterSpot or the caterers are allowed to change and update their product to display on the landing page.
+This test plan allows customers to book based on the package they chose to avail.  They can monitor what the status of their booking is.
+       Table 18 shows the test plan to secure password resets, allows for landing page menu updates, and provides package booking with status monitoring.
+       
+Test Case 4.0: Forgot Password
+Procedure:
+* To begin, load the website.
+* The user should put in their email password.
+* The user will create their new password.
+Expected Output:
+* The user will receive an email for forgetting the password with a generated code.
+* An alert will be shown if the provided email address does not match with the username.
+
+
+
+Actual Result:
+Figure 11
+Forget password portal
+
+       Figure 11 displays the forget password recovery page, where users can recover and access their account. The users must provide a valid email account.
+
+Figure 12
+Forget password email verification
+       Figure 12 shows the password reset request that was sent to their provided email.
+
+
+
+
+
+
+Figure 13
+Setting new password
+       Figure 13 displays the reset password, where users can change their password. An alert will show if the password they input does not match. After that, they can successfully use it to access their account.
+       
+Test Case 5.0: Update Products
+Procedure:
+* Select the service panel.
+* The user will choose a category.
+* The user will add a product.
+* The user will remove products.
+* The user can edit the product name and description.
+* The user can indicate if the product is unavailable.
+Expected Output:
+* Products will be either added or removed.
+* Products will be updated to unavailable.
+* Product will be updated and will be displayed to the customer user’s end.
+
+
+
+
+Actual Result:
+Figure 14
+Updating product (packages)
+
+       Figure 14 shows the process of updating the packaged product. In addition to having the ability to add, remove, and alter their product, caterers must also provide images of it. Customers will be able to view the user's end of the updated product.
+
+Figure 15
+Updating product (menus)
+       
+       Figure 15 shows the process of updating the menus, which are the individual products. In addition to having the ability to add, remove, and alter their product, as well as identify whether it is unavailable. Caterers must also provide images of it. Customers will be able to view the user's end of the updated product.
+
+Figure 16
+Removing products
+
+       Figure 16 shows that if the caterer removes a product, it will display an alert asking the user to confirm that they are sure they are removing the product. The product list will update after confirmation.
+       
+Test Case 6.0: Reservation Process
+Procedure:
+* Load the website. (caterspot.online)
+* Customers will choose which caterer they want to book.
+* Customers will proceed to the reservation.
+* Customers can monitor their reservations.
+Expected Output:
+* Customers' users’ bookings will proceed to pending.
+* Customer will receive an email to
+* An alert will show if the date they entered is not one month in advance. Dates in the past and within one month from today are not allowed.
+* Also, an alert will show if the customer’s desired order is minimum to the client’s expected order.
+
+Actual Result:
+Figure 17
+Customer date is not valid
+
+       Figure 17 shows that the date they select is not one month in advance; customers should not select the dates in the past and within one month from today.
+
+Figure 18
+Customers does not attain the minimum order
+
+       Figure 18 illustrates that the catering services require a minimum order of ten items or menus, with a maximum capacity of 600.
+Figure 19
+Customer guests exceed to the specified value
+
+       Figure 19 shows an alert message when the customer enters one thousand guests which is not acceptable. Caterers can only hold up to six hundred people at a time. An alert will appear if they surpass the specified value.
+       
+Figure 20
+Customer order
+
+       Figure 20 shows the customers information and reservation details. Within the summary of the customer’s reservation, it shows the breakdown of the customer's order and displays the details such as transaction number, cater name, package, total, status remarks and reservation dates. Customers will wait for the email to update the status of their reservation.
+       
+       
+Figure 21
+Email confirmation of customers reservation
+       
+       Figure 21 displays the email confirmation of customers' reservations. Once the customer has been booked, a reservation copy will be sent to the customer's provided email.
+       
+Table 19
+System Features Test Log
+Test Case No.Test PlanResult4.0Forgot PasswordSuccess5.0Update ProductSuccess6.0Reservation ProcessSuccess
+       Table 19 shows the system feature test cases that were successfully completed. The table illustrates the successful and efficient operation of each function.
+       
+       
+       
+       
+       
+       
+       
+       
+       
+Table 20
+System Client Features Test Case
+Case No.Test PlanDescription7.0Reservation UpdateThis test case is to modify if the pending reservation of the customer will be tagged as booked or rejected. the caterer will decide about the status of the reservation.
+8.0
+Reservation Email
+
+This test case is an auto email once the user’s reservation was booked that will be sent by the email that customers provided. It is a reservation status email if the customer's reservation is tagged as booked or has been rejected. 
+       Table 20 shows the caterer's ability to update a reservation status and sends an automatic email to the customer confirming whether the reservation is booked or rejected.
+       
+Test Case 7.0: Reservation Update
+Procedure:
+* Load the website.
+* Client caterers can monitor the pending reservation
+* Client caterers can comment when they reject the reservation.
+* Client caterers can approve the reservation.
+Expected Output:
+* Customer reservation has been booked.
+* Customer reservation has been rejected.
+* Caterer and customer transaction completed.
+
+
+
+
+
+Actual Result:
+Figure 22
+Approving the reservation
+
+       Figure 22 illustrates the approved customers reservations. The reservation will be marked as booked as soon as it is confirmed. After that, the customer will receive an email that their reservation was made.
+       
+Figure 23
+Reservation Status
+       
+       Figure 23 shows the ability for customers to keep track of the status of their reservations. The customer's reservation list will be updated right away by the caterer after they determine whether to accept or reject the reservation.
+       
+Figure 24
+Confirming the transaction
+
+       Figure 24 displays the entire booking transaction. Clients may choose to pay in full or in part. The transaction will be marked as completed in the system once the event is successfully done.
+       
+Figure 25
+Printing the receipt
+
+       Figure 25 displays the printed receipt. The customer or client has the option to print a comprehensive description of their reservation, along with the successful payment or transaction, which includes the catering services' company name and logo.
+
+Test Case 8.0: Reservation Email
+Procedure:
+* Log-in email account to the website.
+Expected Output:
+* Cater reservation email has been booked.
+* If a customer's reservation is denied, the caterer will email the consumer along with a statement.
+* The successful transaction will be emailed by the caterer.
+
+Actual Result:
+Figure 26
+Cater reservation email has been booked
+
+       Figure 26 displays the email for the reserved catered reservation. The caterer will notify the client via email that their reservation has been confirmed.
+
+
+
+
+
+
+Figure 27
+Rejecting the reservation
+
+       Figure 27 shows that once the customer rejects the request, it requires a valid reason. Customers will provide a comment explaining why their reservation was denied, and it will be forwarded through their email.
+       
+Figure 28
+Cater reservation email has been rejected
+
+       Figure 28 shows the rejected reservation along with a comment. Customers receive an email that their reservation was rejected. Customers will receive updates regarding the status of their reservation. 
+
+Figure 29
+Catering reservation transaction completed email
+
+       Figure 29 Show the completed catering reservation transaction email. Clients will receive updates, and a completed summary of transactions will be sent by email.
+       
+Table 21
+System Features Test Log
+Test Case No.Test PlanResult7.0Reservation UpdateSuccess8.0Reservation EmailSuccess
+	Table 21 shows the system feature test cases that were successfully completed. The table illustrates the successful and efficient operation of each function.
+
+
+
+
+
+
+
+
+
+Table 22
+System Features Test Case
+Case No.Test PlanDescription9.0Analytics Graphs and ChartsThis test plan is a visual display of key information or data points that are presented in an easily understandable and accessible format. The admin and client interface has the dashboard to monitor performance, track progress, and make data-driven decisions. They typically aggregate data from multiple sources and present it in the form of charts, graphs, tables, and other visual elements.10.0
+Account Profile
+
+
+The purpose of this test case is to verify that the clients have the ability to modify their passwords and update their information. Users can edit their names, addresses, phone numbers, company names, and even logos using the scenarios included in the system.
+       Table 22 shows the dashboard that displays key data enabling performance tracking and allows clients to update their passwords and personal details.
+       
+Test Case 9.0: Analytical Graphs and Charts
+Procedure:
+* To begin, load the website.
+Expected Output:
+* Admin and client interface will display.
+* Admin and client dashboards are similar but have different purposes.
+* Clients can monitor their sales by using a filter button and the admin can monitor their monthly income, total clients and applicants.
+
+Actual Result:
+Figure 30
+Revenue Performance Graph and chart of admin 
+       
+       Figure 30 shows the admin interface dashboard, which allows the admin to monitor the applications, clients, and monthly income. The website will instantly display the monthly income for the date that the user enters in the filter. 
+
+Figure 31
+Sales and Performance Graph and chart of clients
+       
+       Figure 31 shows the client interface or dashboard. where the monthly sales, bookings, pending, and rejects may be tracked on the customer dashboard. Clients can use the filter to select the time range for which they would like to view sales and performance data. The graph will update with the date entered and display the income for the selected time frame. 
+       
+Test Case 10.0: Account Profile
+Procedure:
+* Users select the Account section.
+Expected Output:
+* Display user’s information.
+* User’s can update their information.
+* Users can upload their Logo.
+Actual Result:
+
+Figure 32
+Password alert
+
+       Figure 32 password changes will trigger an alert. In order to prevent it, they need to change their password right away when the system detects that the one they used was discovered in a data breach.
+       
+Table 23
+System Features Test Log
+Test Case No.Test PlanResult9.0Analytical Graphs and ChartsSuccess10.0Account ProfileSuccess
+       Table 23 shows the system feature test cases that were successfully completed. The table illustrates the successful and efficient operation of each function
+       
+Table 24
+System Features Test Case
+Case No.Test PlanDescription11.0Clients ApplicationThis test plan is intended to verify that the application form is accurate and operational. This contains their business name, owner's name, phone number, email address, business permit, menu, and any relevant photos pertaining to their catering services business. It will require two to three business days for the client's information to be verified before being forwarded to the email address they supplied. The administrator will create an account and receive an email with a temporary password once the application is approved.12.0
+       Application Update
+
+
+The purpose of this test plan is to validate the applicant's application, which contains customer data, the name of the catering service, the business permit, and other business-related information. when the administrator examined the application and determined if the applicant met the requirements. To inform applicants of their status, the administrator will send an email.
+       Table 24 shows the process of client application requiring the client to provide their business name, owner's information, and relevant documents. It also allows the client to update their information once the account was verified.
+
+Test Case 11.0: Clients Application
+Procedure:
+* Load the website.
+* Select ‘Become a vendor’.
+* Select ‘Get started’ and ‘Apply now’.
+* Fill-out the application form.
+Expected Output:
+* Admin will receive the email application of the clients to verify.
+* Admin can approve and reject the application.
+Actual Result:
+
+Figure 33
+Client application
+
+       Figure 33 displays the application of catering services. Together with menus, business permits, and other pertinent business images, they will complete all the required information. When they are finished, the application will be forwarded to the system administrator's email address. They must wait two to three business days to see the status of their applications.
+Figure 34
+Email of Client application
+
+       Figure 34 displays the client application's email. An email informing the administrator that a catering service wants to join the firm so they can simply post and promote their business will be sent. 
+
+Figure 35
+List of applicants
+
+       Figure 35 displays the list of applicants. This is the admin account, where they can monitor the client's application as well as those pending applications. They will determine whether to accept it or reject the application.
+       
+Figure 36
+Approving the application
+
+       Figure 36 displays the permission confirmation. The customer will automatically receive an email informing them that their application has been authorized by the administrator as soon as it is approved.
+       
+Figure 37
+Rejecting the application
+       
+       Figure 37 demonstrates the application's denial. Similar to an approval, if an application is rejected, the administrator will give a good reason and the client's email will be notified automatically.
+
+Test Case 12.0:  Application Email Update
+Procedure:
+* Log in to your Gmail account in the browser.
+* Log in to the website.
+Expected Output:
+* Applicants will receive an email if their application is approved or rejected.
+* Admin can add clients and delete clients' accounts.
+* Also, the admin can create their temporary account.
+Actual Result:
+
+Figure 38
+Approved email application
+       
+       Figure 38 displays the email application that has been authorized. Clients that get their applications approved by the admin will receive an email confirming this.
+
+Figure 39
+Rejected email application
+       
+       Figure 39 displays the email application that was declined. Customers will get an email informing them that the admin has denied their application. along with a note explaining why their application was rejected.
+
+Figure 40
+Adding new applicants
+       Figure 40 demonstrates the process of adding the recently authorized client. The admin account will receive a new client. The caterer’s name, email address, and temporary password can be created by the admin and emailed to the client's email. After that, customers may visit the caterspot client page by logging into their account. For further security, customers can even modify their temporary password.
+
+
+
+
+
+
+
+
+
+
+Figure 41
+Customer landing page
+
+       Figure 41 presents the customer's landing page. This page will display all of Caterspot's catering services. 
+       
+Description of Prototype
+Flowchart
+       The researchers employed a flowchart to illustrate the sequence of steps involved in designing a web-based catering management system with analytics, aiming to replace the current manual ordering and reservation management systems.
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+Figure 42
+Flowchart of Admin Account
+       
+       The researchers illustrated the flow of the web system by depicting the connections among their respective functions, as depicted in figure 42. It shows the system overview of the admin and how the system performs its functions.
+
+
+
+
+
+Figure 43
+Flowchart of Clients Accounts
+
+       
+       Figure 43 shows the point of view of the client that includes monthly status and ratings of the catering services owners. The researchers depicted how the system's operations facilitate easy navigation and identification of its key components.
+Figure 44
+Flowchart of Customers Account
+
+       
+       The researchers depicted how the system works from the customer's point of view. As depicted in figure 44, the customers are able to make their reservation with the desired catering services and it helps to easily identify and analyze some functions of the web system.
+
+
+Implementation Plan
+Pre - Implementation Plan
+       The researchers performed an initial investigation and interview for their three Caterspot clients. All of Sta. Cruz Laguna’s catering services benefit from this business to increase consumer traffic and business marketing. The three clients that the researchers were investigating all had issues with manually maintaining their records, performance, and sales tracking. The researchers came up with a creative idea to build a website that would be simple for people to access, browse, and include the capabilities they would require for their business.
+
+During Implementation
+       The researchers presented the web-based catering management system with analytics to customers and clients. They demonstrated how the system could assist in managing sales and reservations. The researchers also asked if the system required further enhancements. Additionally, they noted that the client’s feedback would help improve the system.
+ 
+Post Implementation
+       Alongside the data entry during implementation, the database stored information collected during the system setup phase. After deployment, the researchers take charge of maintaining the system to ensure it operates smoothly. Ongoing efforts are essential to preserve its reliability and usability. They monitor performance, promptly address any issues, and apply necessary updates or improvements to ensure the system remains efficient and dependable over time.
+       
+Software Project Scheduling
+       The web-based project schedule functions as a mechanism for monitoring the researchers' adherence to the designated timeframe for task completion, and it provides an accurate representation of said tasks. The project schedule provides a summary of the actions taken before, during, and after the study. For project management, the researchers use a Gantt chart as their visual tool. By utilizing a Gantt chart as a project schedule, they are able to monitor the advancement of their system throughout the course of the study.
+Figure 45
+ Gantt Chart Web App Catering Management System with Analytics
+       
+       The timeline displays the tasks scheduled for completion within a specified timeframe. The researchers began creating titles in the third week of January. After that, the researchers initiated the process of creating titles. Following this, data gathering and documentation activities kicked off in the first week of February and will continue until the second week of May. Consultations with the capstone adviser began in early February and will extend until the end of May. Additionally, during the first week of February, the researchers will be attending the CA conference. System development will commence in the fourth week of February and run through the second week of May. Throughout the development phase, the researchers will conduct regular testing, starting from the third week of March until the second week of May. 
+       In early August, the research team focused on further developing their system and addressing all suggested revisions for the documentation of Chapters 1 to 3. They also began data collection, system development, and conducting various tests as part of their ongoing Capstone Project. System testing continued until late September, though discussions with their capstone advisor resumed in early September to present updates on the system's progress and accompanying documentation. The team implemented the system from late September through the third week of October, and they started gathering data from respondents during the third and fourth weeks of October. In the third week of October, they met with their subject advisor to discuss the status of deployment, system progress, and project documentation. The final defense is scheduled for the second week of November.
+       
+       
+       
+       
+       
+       
+

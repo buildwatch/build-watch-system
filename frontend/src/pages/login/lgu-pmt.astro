@@ -197,6 +197,25 @@ import Layout from "../../layouts/Layout.astro";
             // Store token and user data
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            
+            // CRITICAL: Store profile picture in appropriate localStorage keys based on role
+            if (data.user.profilePictureUrl) {
+              const role = data.user.role;
+              if (role === 'LGU-IU' || role === 'IU') {
+                localStorage.setItem('iu_profile_picture', data.user.profilePictureUrl);
+                localStorage.setItem('lgu_iu_profile_picture', data.user.profilePictureUrl);
+              } else if (role === 'EIU') {
+                localStorage.setItem('eiu_profile_picture', data.user.profilePictureUrl);
+              } else if (role === 'LGU-PMT' || role === 'MPMEC Secretariat') {
+                localStorage.setItem('lgu_pmt_profile_picture', data.user.profilePictureUrl);
+              } else if (role === 'SYS.AD' || role === 'System Administrator') {
+                localStorage.setItem('sysadmin_profile_picture', data.user.profilePictureUrl);
+                localStorage.setItem('profilePictureUrl', data.user.profilePictureUrl);
+              } else if (role === 'Executive Viewer' || role === 'EXEC') {
+                localStorage.setItem('executive_profile_picture', data.user.profilePictureUrl);
+              }
+            }
+            
             // Set token as cookie for SSR (expires in 1 day, secure if https)
             document.cookie = `token=${data.token}; Path=/; SameSite=Lax; Max-Age=86400`;
             // Show success toast (login page path)

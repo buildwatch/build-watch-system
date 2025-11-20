@@ -4,6 +4,7 @@ import TopBar from "../components/TopBar.astro";
 import ProjectMap from "../components/ProjectMap.jsx";
 import LGUFooter from "../components/LGUFooter.astro";
 import FacebookPostsIsland from "../islands/FacebookPostsIsland.jsx";
+import ProjectCard from "../components/ProjectCard.astro";
 import homeService from "../services/home.js";
 
 // Server-side function to get barangay images
@@ -137,19 +138,34 @@ function getProjectImageServer(project) {
 let stats, featuredProjects, articles, barangayStats;
 
 try {
-  stats = await homeService.getHomeStats();
+  // Force refresh to get latest approved projects count
+  stats = await homeService.getHomeStats(true);
   console.log('Fetched stats:', stats);
+  // Ensure stats object has all required fields with defaults
+  if (!stats) {
+    stats = {
+      ongoingProjects: 0,
+      totalBudget: 0,
+      completedProjects: 0,
+      totalProjects: 0,
+      budgetUtilization: 0,
+      utilizedBudget: 0,
+      averageProgress: 0,
+      activeDepartments: 0
+    };
+  }
 } catch (error) {
   console.error('Error fetching stats:', error);
+  // Use zero values instead of hardcoded data to ensure real-time accuracy
   stats = {
-    ongoingProjects: 4,
-    totalBudget: 11224543,
+    ongoingProjects: 0,
+    totalBudget: 0,
     completedProjects: 0,
-    totalProjects: 4,
-    budgetUtilization: 68,
-    utilizedBudget: 7632689,
-    averageProgress: 75,
-    activeDepartments: 3
+    totalProjects: 0,
+    budgetUtilization: 0,
+    utilizedBudget: 0,
+    averageProgress: 0,
+    activeDepartments: 0
   };
 }
 
@@ -161,10 +177,45 @@ try {
 }
 
 try {
-  articles = await homeService.getArticles(4);
+  articles = await homeService.getArticles(4, true); // Force refresh to get latest articles
+  console.log('[Home.astro] Fetched articles:', articles.length);
 } catch (error) {
-  console.error('Error fetching articles:', error);
+  console.error('[Home.astro] Error fetching articles:', error);
   articles = [];
+}
+
+// Format date helper
+function formatDate(dateString) {
+  if (!dateString) return 'Unknown date';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch (error) {
+    return 'Unknown date';
+  }
+}
+
+// Get image URL helper
+function getImageUrl(imageUrl) {
+  if (!imageUrl || imageUrl === 'None' || imageUrl === 'null' || imageUrl === '') {
+    return 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  }
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+  return `http://localhost:3000${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+}
+
+// Get category color helper
+function getCategoryColor(category) {
+  const colors = {
+    'News': { bg: 'blue', text: 'blue', border: 'blue' },
+    'Announcement': { bg: 'purple', text: 'purple', border: 'purple' },
+    'Update': { bg: 'indigo', text: 'indigo', border: 'indigo' },
+    'Publication': { bg: 'teal', text: 'teal', border: 'teal' },
+    'Event': { bg: 'rose', text: 'rose', border: 'rose' }
+  };
+  return colors[category] || { bg: 'blue', text: 'blue', border: 'blue' };
 }
 
 try {
@@ -2145,191 +2196,27 @@ try {
           <div class="overflow-hidden rounded-3xl" id="projects-carousel-wrapper">
             <!-- Enhanced Projects Carousel -->
             <div class="flex transition-transform duration-700 ease-in-out gap-8 px-6" id="projects-carousel" style="transform: translateX(0px)">
-            {featuredProjects && featuredProjects.length > 0 ? featuredProjects.map((project, index) => (
-              <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden flex flex-col w-full border border-blue-100/50 hover:shadow-2xl hover:border-blue-300/50 transition-all duration-500 cursor-pointer transform hover:scale-[1.02] hover:-translate-y-2 group relative flex-shrink-0 min-w-[400px] max-w-[400px]"
-                   key={project.id} 
-                   data-project-id={project.id}
-                   style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%); animation-delay: {index * 0.1}s"
-                   onclick={`window.location.href='/project/${project.id}'`}>
-                
-                {/* Enhanced Featured Image Section */}
-                <div class="h-52 relative overflow-hidden">
-                  <img 
-                    src={project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None' 
-                      ? (project.initialPhoto.startsWith('http') ? project.initialPhoto : `http://localhost:3000${project.initialPhoto}`)
-                      : '/projects-page-header-bg.png'}
-                    alt={project.name}
-                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    loading="lazy"
-                    onerror="this.src='/projects-page-header-bg.png'"
+            {featuredProjects && featuredProjects.length > 0 ? featuredProjects.map((project, index) => {
+              // Map project data to match ProjectCard.astro expected format
+              const projectData = {
+                ...project,
+                progress: project.progress?.overall || project.progress || project.overallProgress || 0,
+                timelineProgress: project.progress?.timeline || project.timelineProgress || 0,
+                budgetProgress: project.progress?.budget || project.budgetProgress || 0,
+                physicalProgress: project.progress?.physical || project.physicalProgress || 0,
+                overallProgress: project.progress?.overall || project.progress || project.overallProgress || 0
+              };
+              return (
+                <div key={project.id} class="flex-shrink-0 min-w-[400px] max-w-[400px]" style="animation-delay: {index * 0.1}s">
+                  <ProjectCard 
+                    project={projectData} 
+                    userTheme="public" 
+                    showModal={false}
+                    showClickForDetails={true}
                   />
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                  
-                  {/* Floating Elements */}
-                  <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
-                    {/* Category Badge */}
-                    <div class="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30">
-                      <span class="text-white text-xs font-semibold">
-                        {project.category || 'Infrastructure'}
-                      </span>
-                    </div>
-                  
-                  {/* Status Badge */}
-                    <div class="relative">
-                      <span class={`px-3 py-1.5 ${homeService.getStatusColor(project.status)} text-xs font-bold rounded-full border border-white/30 shadow-lg backdrop-blur-sm`}>
-                        {project.status || 'Not Started'}
-                    </span>
-                      {/* Status glow effect */}
-                      <div class={`absolute inset-0 ${homeService.getStatusColor(project.status)} rounded-full blur-md opacity-40 -z-10`}></div>
-                    </div>
-                  </div>
-                  
-                  {/* Enhanced Progress Overlay */}
-                  <div class="absolute bottom-3 left-3 right-3">
-                    <div class="bg-white/20 backdrop-blur-md rounded-2xl p-3 border border-white/30">
-                      <div class="flex items-center justify-between text-white text-xs mb-2 font-semibold">
-                        <span>Overall Progress</span>
-                        <span>{(parseFloat(project.progress) || 0).toFixed(1)}%</span>
-                      </div>
-                      <div class="w-full bg-white/30 rounded-full h-2.5 overflow-hidden">
-                        <div 
-                          class="h-2.5 rounded-full project-progress-bar-fill relative" 
-                          style="width: 0%"
-                          data-progress={parseFloat(project.progress) || 0}
-                          data-progress-color={
-                            (parseFloat(project.progress) || 0) >= 0 && (parseFloat(project.progress) || 0) <= 25 ? 'bg-red-500' :
-                            (parseFloat(project.progress) || 0) >= 26 && (parseFloat(project.progress) || 0) <= 50 ? 'bg-yellow-500' :
-                            (parseFloat(project.progress) || 0) >= 51 && (parseFloat(project.progress) || 0) <= 75 ? 'bg-blue-500' :
-                            (parseFloat(project.progress) || 0) >= 76 && (parseFloat(project.progress) || 0) <= 100 ? 'bg-green-500' :
-                            'bg-gray-500'
-                          }
-                        >
-                          <div class="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-                
-                {/* Enhanced Content Section */}
-                <div class="p-6 flex flex-col flex-1 relative">
-                  {/* Subtle background pattern */}
-                  <div class="absolute inset-0 opacity-5">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl"></div>
-                  </div>
-                  
-                  {/* Project Title */}
-                  <div class="relative z-10">
-                    <h3 class="font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-2 group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300 line-clamp-2 leading-tight">
-                      {project.name || 'Project Name'}
-                    </h3>
-                    
-                    {/* Project Code */}
-                    <div class="text-sm text-gray-500 mb-3">
-                      <span class="font-medium">Code:</span> {project.projectCode || 'N/A'}
-                    </div>
-                    
-                    {/* Project Description */}
-                    {project.description && (
-                      <div class="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {project.description}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Enhanced Project Details */}
-                  <div class="relative z-10 space-y-2 mb-4">
-                    <div class="flex justify-between items-center text-sm">
-                      <span class="text-gray-600 font-medium">Location:</span>
-                      <span class="text-gray-800">{project.location || 'N/A'}</span>
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                      <span class="text-gray-600 font-medium">Implementing Office:</span>
-                      <span class="text-gray-800 text-right">{project.implementingOfficeName || project.implementingOffice || 'N/A'}</span>
-                    </div>
-
-                    <div class="flex justify-between items-center text-sm">
-                      <span class="text-gray-600 font-medium">Budget:</span>
-                      <span class="text-gray-800 font-semibold">{homeService.formatBudget(project.totalBudget || project.budget)}</span>
-                    </div>
-
-                    <div class="flex justify-between items-center text-sm">
-                      <span class="text-gray-600 font-medium">Funding Source:</span>
-                      <span class="text-gray-800">{project.fundingSource === 'donor_fund' ? 'Municipal Development Fund' : project.fundingSource?.replace('_', ' ').toUpperCase() || 'N/A'}</span>
-                    </div>
-
-                    <div class="flex justify-between items-center text-sm">
-                      <span class="text-gray-600 font-medium">Category:</span>
-                      <span class="text-gray-800">{project.category || 'Infrastructure'}</span>
-                    </div>
-                  </div>
-
-                  {/* Progress Breakdown */}
-                  <div class="relative z-10 space-y-2 mb-4">
-                    <div class="flex justify-between items-center text-xs">
-                      <span class="text-gray-600">Timeline:</span>
-                      <span class="font-semibold text-blue-600">{(parseFloat(project.timelineProgress || project.progress?.timeline) || 0).toFixed(1)}%</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs">
-                      <span class="text-gray-600">Budget:</span>
-                      <span class="font-semibold text-blue-600">{(parseFloat(project.budgetProgress || project.progress?.budget) || 0).toFixed(1)}%</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs">
-                      <span class="text-gray-600">Physical:</span>
-                      <span class="font-semibold text-blue-600">{(parseFloat(project.physicalProgress || project.progress?.physical) || 0).toFixed(1)}%</span>
-                    </div>
-                  </div>
-
-                  {/* Dates */}
-                  <div class="relative z-10 space-y-2 mb-4">
-                    <div class="flex justify-between items-center text-xs text-gray-500">
-                      <span>Start: {homeService.formatDate(project.startDate) || 'N/A'}</span>
-                      <span>Target: {homeService.formatDate(project.targetCompletionDate || project.targetDateOfCompletion || project.endDate) || 'N/A'}</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs text-gray-500">
-                      <span>Actual: {homeService.formatDate(project.completionDate || project.actualCompletionDate) || '–'}</span>
-                      <span>Days: {project.expectedDaysOfCompletion || '–'}</span>
-                    </div>
-                  </div>
-
-                  {/* Additional Information */}
-                  <div class="relative z-10 space-y-1 mb-4">
-                    {/* Coordinates (if available) */}
-                    {(project.longitude && project.latitude) && (
-                      <div class="text-xs text-gray-500">
-                        <span class="font-medium">📍 Coordinates:</span> {project.latitude}, {project.longitude}
-                      </div>
-                    )}
-                    
-                    {/* Priority */}
-                    <div class="text-xs text-gray-500">
-                      <span class="font-medium">⚡ Priority:</span> 
-                      <span class={`font-semibold ${
-                        project.priority === 'high' ? 'text-red-600' : 
-                        project.priority === 'medium' ? 'text-yellow-600' : 
-                        'text-green-600'
-                      }`}>
-                        {project.priority?.toUpperCase() || 'MEDIUM'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Enhanced Action Section */}
-                  <div class="relative z-10 flex items-center justify-between pt-3 border-t border-gray-100/50">
-                    <div class="flex items-center gap-2">
-                      <div class="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
-                      <span class="text-gray-600 text-xs font-medium">Click for details</span>
-                    </div>
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all duration-300 border border-blue-200/30">
-                      <svg class="w-5 h-5 text-blue-600 group-hover:text-purple-600 transition-colors duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )) : (
+              );
+            }) : (
               <div class="min-w-[380px] max-w-[380px] bg-white/20 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden flex flex-col items-center justify-center p-8">
                 <div class="text-blue-600 text-center">
                   <div class="text-6xl mb-4">🏗️</div>
@@ -2467,341 +2354,72 @@ try {
           <div class="overflow-hidden rounded-3xl" id="carousel-wrapper">
             <!-- Enhanced Articles Carousel -->
             <div class="flex transition-transform duration-700 ease-in-out gap-6 px-6" id="articles-carousel" style="transform: translateX(0px)">
-            <!-- Article 1: System Launch - Enhanced -->
-            <article class="group bg-gradient-to-br from-white/95 to-blue-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-blue-100/50 overflow-hidden hover:shadow-2xl hover:border-blue-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80" style="animation-delay: 0.6s;">
+            {articles.length > 0 ? articles.map((article, index) => {
+              const color = getCategoryColor(article.category || 'News');
+              const delay = 0.6 + (index * 0.1);
+              return (
+            <article class={`group bg-gradient-to-br from-white/95 to-${color.bg}-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-${color.border}-100/50 overflow-hidden hover:shadow-2xl hover:border-${color.border}-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80`} style={`animation-delay: ${delay}s;`}>
               <!-- Decorative Elements -->
-              <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
+              <div class={`absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-${color.bg}-400/20 to-${color.bg}-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500`}></div>
               
               <div class="h-56 relative overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                  alt="Build Watch System Launch"
+                  src={getImageUrl(article.imageUrl)}
+                  alt={article.title || 'Article'}
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                 <div class="absolute top-4 left-4">
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
-                    </svg>
-                    System Launch
-                  </span>
-                </div>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                  <span class="text-blue-800 text-sm font-semibold">December 15, 2024</span>
-                </div>
-                
-                <h3 class="text-xl font-black text-blue-800 mb-3 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
-                  Build Watch System Launches in Santa Cruz, Laguna
-                </h3>
-                
-                <p class="text-blue-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
-                  The Municipality of Santa Cruz, Laguna officially launches the Build Watch system, a comprehensive project monitoring and evaluation platform designed to enhance transparency and accountability in local governance.
-                </p>
-                
-                <div class="flex items-center justify-between">
-                  <a href="/news/1" class="group/link inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:text-blue-700 transition-colors duration-300">
-                    <span>Read More</span>
-                    <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                    </svg>
-                  </a>
-                  <div class="flex items-center gap-1 text-xs text-blue-600/70">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span>485 views</span>
-              </div>
-            </div>
-              </div>
-            </article>
-
-            <!-- Article 2: Infrastructure - Enhanced -->
-            <article class="group bg-gradient-to-br from-white/95 to-emerald-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-emerald-100/50 overflow-hidden hover:shadow-2xl hover:border-emerald-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80" style="animation-delay: 0.7s;">
-              <!-- Decorative Elements -->
-              <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
-              
-              <div class="h-56 relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                  alt="Health Center Construction"
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div class="absolute top-4 left-4">
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                    </svg>
-                    Healthcare
-                  </span>
-                </div>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                  <span class="text-emerald-800 text-sm font-semibold">December 10, 2024</span>
-                </div>
-                
-                <h3 class="text-xl font-black text-emerald-800 mb-3 group-hover:text-emerald-600 transition-colors duration-300 leading-tight">
-                  New Health Center Project Begins Construction
-                </h3>
-                
-                <p class="text-emerald-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
-                  Construction of the Santa Cruz Barangay Health Center officially begins, marking a significant milestone in local healthcare infrastructure development.
-                </p>
-                
-                <div class="flex items-center justify-between">
-                  <a href="/news/2" class="group/link inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:text-emerald-700 transition-colors duration-300">
-                    <span>Read More</span>
-                    <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                    </svg>
-                  </a>
-                  <div class="flex items-center gap-1 text-xs text-emerald-600/70">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span>342 views</span>
-              </div>
-            </div>
-              </div>
-            </article>
-
-            <!-- Article 3: Social Programs - Enhanced -->
-            <article class="group bg-gradient-to-br from-white/95 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-purple-100/50 overflow-hidden hover:shadow-2xl hover:border-purple-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80" style="animation-delay: 0.8s;">
-              <!-- Decorative Elements -->
-              <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
-              
-              <div class="h-56 relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                  alt="4Ps Program Updates"
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div class="absolute top-4 left-4">
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+                  <span class={`px-3 py-1.5 bg-gradient-to-r from-${color.bg}-500 to-${color.bg}-600 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg`}>
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Social Programs
+                    {article.category || 'News'}
                   </span>
                 </div>
               </div>
               <div class="p-6">
                 <div class="flex items-center gap-2 mb-4">
-                  <div class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                  <span class="text-purple-800 text-sm font-semibold">December 5, 2024</span>
-                </div>
-                
-                <h3 class="text-xl font-black text-purple-800 mb-3 group-hover:text-purple-600 transition-colors duration-300 leading-tight">
-                  4Ps Program Updates Available Online
-                </h3>
-                
-                <p class="text-purple-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
-                  The Pantawid Pamilyang Pilipino Program (4Ps) updates are now accessible through the Build Watch platform for enhanced monitoring and transparency.
-                </p>
-                
-                <div class="flex items-center justify-between">
-                  <a href="/news/3" class="group/link inline-flex items-center gap-2 text-purple-600 font-bold text-sm hover:text-purple-700 transition-colors duration-300">
-                    <span>Read More</span>
-                    <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                    </svg>
-                  </a>
-                  <div class="flex items-center gap-1 text-xs text-purple-600/70">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span>278 views</span>
-              </div>
-            </div>
-              </div>
-            </article>
-
-            <!-- Article 4: Training - Enhanced -->
-            <article class="group bg-gradient-to-br from-white/95 to-orange-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden hover:shadow-2xl hover:border-orange-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80" style="animation-delay: 0.9s;">
-              <!-- Decorative Elements -->
-              <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-orange-400/20 to-red-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
-              
-              <div class="h-56 relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                  alt="Training Session"
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div class="absolute top-4 left-4">
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                    </svg>
-                    Training
-                  </span>
-                </div>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                  <span class="text-orange-800 text-sm font-semibold">November 30, 2024</span>
-                </div>
-                
-                <h3 class="text-xl font-black text-orange-800 mb-3 group-hover:text-orange-600 transition-colors duration-300 leading-tight">
-                  Training Session for Project Monitors
-                </h3>
-                
-                <p class="text-orange-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
-                  Comprehensive training sessions conducted for project monitoring teams to ensure effective utilization of the Build Watch system.
-                </p>
-                
-                <div class="flex items-center justify-between">
-                  <a href="/news/4" class="group/link inline-flex items-center gap-2 text-orange-600 font-bold text-sm hover:text-orange-700 transition-colors duration-300">
-                    <span>Read More</span>
-                    <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                    </svg>
-                  </a>
-                  <div class="flex items-center gap-1 text-xs text-orange-600/70">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span>195 views</span>
-              </div>
-            </div>
-              </div>
-            </article>
-
-            <!-- Article 5: Education - Enhanced -->
-            <article class="group bg-gradient-to-br from-white/95 to-indigo-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-indigo-100/50 overflow-hidden hover:shadow-2xl hover:border-indigo-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80" style="animation-delay: 1.0s;">
-              <!-- Decorative Elements -->
-              <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
-              
-              <div class="h-56 relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                  alt="School Building Project"
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div class="absolute top-4 left-4">
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                    </svg>
-                    Education
-                  </span>
-                </div>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                  <span class="text-indigo-800 text-sm font-semibold">November 25, 2024</span>
-                </div>
-                
-                <h3 class="text-xl font-black text-indigo-800 mb-3 group-hover:text-indigo-600 transition-colors duration-300 leading-tight">
-                  New School Building to Serve 500 Students
-                </h3>
-                
-                <p class="text-indigo-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
-                  Construction of a new school building in Barangay Gatid is underway, which will accommodate 500 students when completed.
-                </p>
-                
-                <div class="flex items-center justify-between">
-                  <a href="/news/5" class="group/link inline-flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-700 transition-colors duration-300">
-                    <span>Read More</span>
-                    <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                    </svg>
-                  </a>
-                  <div class="flex items-center gap-1 text-xs text-indigo-600/70">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span>156 views</span>
-              </div>
-            </div>
-          </div>
-            </article>
-
-            <!-- Article 6: Road Project - Enhanced -->
-            <article class="group bg-gradient-to-br from-white/95 to-amber-50/90 backdrop-blur-sm rounded-3xl shadow-xl border border-amber-100/50 overflow-hidden hover:shadow-2xl hover:border-amber-200/60 transition-all duration-500 relative animate-fade-in-up flex-shrink-0 w-80" style="animation-delay: 1.1s;">
-              <!-- Decorative Elements -->
-              <div class="absolute -top-2 -right-2 w-12 h-12 bg-gradient-to-br from-amber-400/20 to-yellow-400/20 rounded-full blur-lg group-hover:scale-110 transition-transform duration-500"></div>
-              
-              <div class="h-56 relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1545454675-3531b543be5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
-                  alt="Road Rehabilitation Project" 
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div class="absolute top-4 left-4">
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                    </svg>
-                    Infrastructure
-                  </span>
-                </div>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="w-6 h-6 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class={`w-6 h-6 bg-${color.bg}-100 rounded-lg flex items-center justify-center`}>
+                    <svg class={`w-3 h-3 text-${color.bg}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                   </div>
-                  <span class="text-amber-800 text-sm font-semibold">November 20, 2024</span>
-        </div>
-
-                <h3 class="text-xl font-black text-amber-800 mb-3 group-hover:text-amber-600 transition-colors duration-300 leading-tight">
-                  Road Rehabilitation Project Completed
+                  <span class={`text-${color.text}-800 text-sm font-semibold`}>{formatDate(article.publishDate)}</span>
+                </div>
+                
+                <h3 class={`text-xl font-black text-${color.text}-800 mb-3 group-hover:text-${color.text}-600 transition-colors duration-300 leading-tight`}>
+                  {article.title || 'Untitled Article'}
                 </h3>
                 
-                <p class="text-amber-700/80 text-sm mb-5 leading-relaxed line-clamp-3">
-                  The major road rehabilitation project in Barangay Pagsawitan has been successfully completed, improving local transportation infrastructure.
+                <p class={`text-${color.text}-700/80 text-sm mb-5 leading-relaxed line-clamp-3`}>
+                  {article.summary || ''}
                 </p>
                 
                 <div class="flex items-center justify-between">
-                  <a href="/news/6" class="group/link inline-flex items-center gap-2 text-amber-600 font-bold text-sm hover:text-amber-700 transition-colors duration-300">
+                  <a href={`/news/${article.id}`} class={`group/link inline-flex items-center gap-2 text-${color.text}-600 font-bold text-sm hover:text-${color.text}-700 transition-colors duration-300`}>
                     <span>Read More</span>
                     <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
                   </a>
-                  <div class="flex items-center gap-1 text-xs text-amber-600/70">
+                  <div class={`flex items-center gap-1 text-xs text-${color.text}-600/70`}>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span>267 views</span>
-        </div>
-      </div>
+                    <span>{article.viewCount || 0} views</span>
+                  </div>
+                </div>
               </div>
             </article>
+              );
+            }) : (
+              <div class="col-span-full text-center py-12 flex-shrink-0 w-full">
+                <div class="text-6xl text-gray-300 mb-4">📰</div>
+                <h3 class="text-xl font-bold text-blue-800 mb-2">No articles available</h3>
+                <p class="text-blue-600">Check back later for news and updates.</p>
+              </div>
+            )}
             </div>
           </div>
           

@@ -11,14 +11,14 @@ const currentTime = new Date().toLocaleString('en-PH', {
 });
 ---
 
-<header class="relative z-50 flex items-center justify-between px-8 py-4 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
+<header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
   <!-- Subtle overlay for depth -->
   <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 opacity-10"></div>
   <div class="pointer-events-none absolute -top-6 left-24 w-40 h-40 bg-white/10 rounded-full blur-3xl opacity-20"></div>
   <div class="pointer-events-none absolute -bottom-10 right-24 w-32 h-32 bg-white/10 rounded-full blur-2xl opacity-20"></div>
   
-  <!-- Left Section: Sidebar Toggle and Logo -->
-  <div class="flex items-center space-x-6">
+  <!-- Left Section: Sidebar Toggle, Search, and Subtitle -->
+  <div class="flex items-center space-x-4">
     <!-- Sidebar Toggle Button -->
     <button id="eiu-sidebar-toggle" class="group p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-300 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl">
       <svg id="eiu-sidebar-toggle-icon" class="w-6 h-6 text-white transition-all duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,22 +26,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
       </svg>
     </button>
 
-    <!-- Logo -->
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
-        <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
-      </div>
-      <div>
-        <h1 class="text-lg font-bold text-white">Build Watch</h1>
-        <p class="text-xs text-white/70">External Implementing Unit</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Center Section: Search Bar, Date/Time and Status -->
-  <div class="hidden md:flex items-center gap-6">
-    <!-- Search Bar - Moved slightly left for better centering -->
-    <div class="relative -ml-8" id="eiu-search-wrapper">
+    <!-- Search Bar - Desktop -->
+    <div class="relative hidden md:block" id="eiu-search-wrapper">
       <input 
         id="eiu-global-search"
         type="text" 
@@ -56,18 +42,57 @@ const currentTime = new Date().toLocaleString('en-PH', {
       </div>
     </div>
     
-    <div class="text-center">
-      <p id="eiu-clock" class="text-sm text-white">Loading...</p>
-      <p class="text-xs text-white/60">Philippine Standard Time</p>
-    </div>
-    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-300 ring-1 ring-green-400/20">
-      <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-      <span class="text-sm font-medium">System Operational</span>
+    <!-- Subtitle beside search bar on the right -->
+    <p class="text-xs text-white/70 hidden md:block whitespace-nowrap">External Implementing Unit</p>
+    
+    <!-- Logo (Visible only when sidebar is expanded on mobile) -->
+    <div class="md:hidden flex items-center topbar-logo-expanded ml-4">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
+        <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+      </div>
     </div>
   </div>
 
+  <!-- Mobile Search Button (Visible only when sidebar is collapsed on mobile) -->
+  <button id="eiu-mobile-search-toggle" class="md:hidden absolute left-20 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm border border-white/20 mobile-search-btn" aria-label="Toggle search">
+    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+  </button>
+  
+  <!-- Mobile Search Bar (Expandable) -->
+  <div id="eiu-mobile-search-wrapper" class="md:hidden fixed top-[73px] left-0 right-0 mt-2 px-4 opacity-0 invisible transform translate-y-[-10px] transition-all duration-300 z-50">
+    <div class="relative">
+      <input 
+        id="eiu-mobile-search"
+        type="text" 
+        placeholder="Search projects, reports, submissions..." 
+        class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-green-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-400 shadow-lg" 
+        autocomplete="off"
+      />
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </div>
+        <button id="eiu-mobile-search-close" class="absolute inset-y-0 right-0 pr-3 flex items-center" aria-label="Close search">
+          <svg class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Center Section: Logo and Title (Desktop only, centered) -->
+  <div class="hidden md:flex md:absolute md:left-[48%] md:transform md:-translate-x-1/2 items-center topbar-logo">
+    <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
+      <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+    </div>
+    <h1 class="text-base md:text-lg font-bold text-white hidden sm:block ml-2 md:ml-3">Build Watch</h1>
+  </div>
+
   <!-- Right Section: Actions and User -->
-  <div class="flex items-center space-x-4">
+  <div class="flex items-center space-x-2 md:space-x-4">
     <!-- System Management Actions -->
     <div class="flex items-center space-x-2">
       <!-- System Announcement Button -->
@@ -77,6 +102,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
         </svg>
         <!-- Enhanced hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+        <!-- Announcement Notification Badge -->
+        <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 hidden animate-pulse shadow-lg shadow-red-500/50 group-hover:scale-110 transition-transform duration-200" id="eiu-announcement-badge" style="animation: pulse-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">0</span>
       </a>
       
       <!-- Messaging Center Button -->
@@ -86,6 +113,8 @@ const currentTime = new Date().toLocaleString('en-PH', {
         </svg>
         <!-- Enhanced hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+        <!-- Message Notification Badge -->
+        <span id="eiu-message-badge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 hidden animate-pulse shadow-lg shadow-red-500/50">0</span>
       </a>
       
       <!-- System Health Button -->
@@ -106,7 +135,7 @@ const currentTime = new Date().toLocaleString('en-PH', {
         </svg>
         <!-- Enhanced hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center font-medium hidden text-white group-hover:scale-110 transition-transform duration-200" id="eiu-notification-badge">0</span>
+        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center font-medium hidden text-white group-hover:scale-110 transition-transform duration-200 animate-pulse" id="eiu-notification-badge" style="animation: pulse-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">0</span>
       </button>
     </div>
 
@@ -211,21 +240,6 @@ const currentTime = new Date().toLocaleString('en-PH', {
               <div>
                 <span class="font-medium">Submit Update</span>
                 <p class="text-xs text-white/70 group-hover:text-amber-300">Report project progress</p>
-              </div>
-            </a>
-          </div>
-
-          <!-- Activity Management Section -->
-          <div class="px-3 py-2">
-            <a href="/dashboard/eiu/modules/create-activity" class="group flex items-center px-3 py-3 text-sm text-white hover:bg-indigo-500/10 hover:text-indigo-300 rounded-xl transition-all duration-200 hover:scale-[1.02]">
-              <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-3 group-hover:bg-indigo-500/30 transition-colors">
-                <svg class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-              </div>
-              <div>
-                <span class="font-medium">Create Activity</span>
-                <p class="text-xs text-white/70 group-hover:text-indigo-300">Log new activities</p>
               </div>
             </a>
           </div>
@@ -402,53 +416,111 @@ const currentTime = new Date().toLocaleString('en-PH', {
   // Load profile pictures from server or localStorage for topbar
   async function loadTopbarProfilePictures() {
     try {
-      // Get actual user ID from localStorage
+      // Get actual user ID from localStorage - CRITICAL: Use userId first (like EIU-0001)
       const userData = localStorage.getItem('user');
-      let userId = 'EIU-0001'; // Default fallback
+      let userId = null;
+      let user = null;
+      
       if (userData) {
         try {
-          const user = JSON.parse(userData);
-          userId = user.employeeId || user.username || user.id || user.userId || 'EIU-0001';
+          user = JSON.parse(userData);
+          // CRITICAL: Priority order - userId (EIU-0001) > id > employeeId > username
+          userId = user.userId || user.id || user.employeeId || user.username;
+          
+          // If user data has profilePictureUrl, use it directly (from database) - like office-groups.astro
+          if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+            console.log('EIU Topbar: Using profilePictureUrl from user data:', user.profilePictureUrl);
+            
+            // Update main topbar profile picture
+            const topbarProfilePic = document.getElementById('eiu-profile-picture');
+            if (topbarProfilePic) {
+              const img = new Image();
+              img.onload = function() {
+                topbarProfilePic.src = user.profilePictureUrl;
+                topbarProfilePic.style.display = 'block';
+                const fallbackDiv = topbarProfilePic.nextElementSibling;
+                if (fallbackDiv) {
+                  fallbackDiv.style.display = 'none';
+                }
+              };
+              img.src = user.profilePictureUrl;
+            }
+            
+            // Update dropdown profile picture
+            const dropdownProfilePic = document.getElementById('eiu-dropdown-photo');
+            if (dropdownProfilePic) {
+              const img = new Image();
+              img.onload = function() {
+                dropdownProfilePic.src = user.profilePictureUrl;
+                dropdownProfilePic.style.display = 'block';
+                const fallbackDiv = dropdownProfilePic.nextElementSibling;
+                if (fallbackDiv) {
+                  fallbackDiv.style.display = 'none';
+                }
+              };
+              img.src = user.profilePictureUrl;
+            }
+            
+            // Store in localStorage
+            localStorage.setItem('eiu_profile_picture', user.profilePictureUrl);
+            return;
+          }
         } catch (error) {
-          console.warn('⚠️ Error parsing user data in topbar, using default userId');
+          console.warn('⚠️ Error parsing user data in EIU topbar, using default userId');
         }
       }
       
-      // First try to get from server
+      if (!userId) {
+        userId = 'EIU-0001'; // Default fallback
+      }
+      
+      // First try to get from server (server is source of truth)
       console.log('EIU Topbar: Fetching profile picture from server for userId:', userId);
-      const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+      const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
       
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.profilePictureUrl) {
           console.log('EIU Topbar: Profile picture loaded from server:', result.profilePictureUrl);
           
-          // Update main topbar profile picture
-          const topbarProfilePic = document.getElementById('eiu-profile-picture');
-          if (topbarProfilePic) {
-            topbarProfilePic.src = result.profilePictureUrl;
-            // Hide fallback div if it exists
-            const fallbackDiv = topbarProfilePic.nextElementSibling;
-            if (fallbackDiv) {
-              fallbackDiv.style.display = 'none';
+          // Preload the image to prevent blinking
+          const img = new Image();
+          img.onload = function() {
+            // Update main topbar profile picture
+            const topbarProfilePic = document.getElementById('eiu-profile-picture');
+            if (topbarProfilePic) {
+              topbarProfilePic.src = result.profilePictureUrl;
               topbarProfilePic.style.display = 'block';
+              const fallbackDiv = topbarProfilePic.nextElementSibling;
+              if (fallbackDiv) {
+                fallbackDiv.style.display = 'none';
+              }
             }
-          }
-          
-          // Update dropdown profile picture
-          const dropdownProfilePic = document.getElementById('eiu-dropdown-photo');
-          if (dropdownProfilePic) {
-            dropdownProfilePic.src = result.profilePictureUrl;
-            // Hide fallback div if it exists
-            const fallbackDiv = dropdownProfilePic.nextElementSibling;
-            if (fallbackDiv) {
-              fallbackDiv.style.display = 'none';
+            
+            // Update dropdown profile picture
+            const dropdownProfilePic = document.getElementById('eiu-dropdown-photo');
+            if (dropdownProfilePic) {
+              dropdownProfilePic.src = result.profilePictureUrl;
               dropdownProfilePic.style.display = 'block';
+              const fallbackDiv = dropdownProfilePic.nextElementSibling;
+              if (fallbackDiv) {
+                fallbackDiv.style.display = 'none';
+              }
             }
-          }
+          };
+          img.onerror = function() {
+            console.log('⚠️ EIU Topbar: Failed to load profile picture from server');
+          };
+          img.src = result.profilePictureUrl;
           
           // Store in localStorage for future use
           localStorage.setItem('eiu_profile_picture', result.profilePictureUrl);
+          
+          // Also update user data if available
+          if (user) {
+            user.profilePictureUrl = result.profilePictureUrl;
+            localStorage.setItem('user', JSON.stringify(user));
+          }
           return;
         }
       }
@@ -461,51 +533,70 @@ const currentTime = new Date().toLocaleString('en-PH', {
     if (storedUrl) {
       const topbarProfilePic = document.getElementById('eiu-profile-picture');
       if (topbarProfilePic) {
-        topbarProfilePic.src = storedUrl;
-        // Hide fallback div if it exists
-        const fallbackDiv = topbarProfilePic.nextElementSibling;
-        if (fallbackDiv) {
-          fallbackDiv.style.display = 'none';
+        const img = new Image();
+        img.onload = function() {
+          topbarProfilePic.src = storedUrl;
           topbarProfilePic.style.display = 'block';
-        }
+          const fallbackDiv = topbarProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        };
+        img.src = storedUrl;
       }
       
       const dropdownProfilePic = document.getElementById('eiu-dropdown-photo');
       if (dropdownProfilePic) {
-        dropdownProfilePic.src = storedUrl;
-        // Hide fallback div if it exists
-        const fallbackDiv = dropdownProfilePic.nextElementSibling;
-        if (fallbackDiv) {
-          fallbackDiv.style.display = 'none';
+        const img = new Image();
+        img.onload = function() {
+          dropdownProfilePic.src = storedUrl;
           dropdownProfilePic.style.display = 'block';
-        }
+          const fallbackDiv = dropdownProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        };
+        img.src = storedUrl;
       }
+    } else {
+      console.log('⚠️ EIU Topbar: No profile picture found in localStorage or server');
     }
   }
 
   // Listen for profile picture updates
   window.addEventListener('eiuProfilePictureUpdated', function(e) {
-    console.log('EIU Topbar received eiuProfilePictureUpdated event:', e.detail);
-    console.log('EIU Topbar: Updating profile pictures immediately with:', e.detail.profilePictureUrl);
+    console.log('🔄 EIU Topbar received eiuProfilePictureUpdated event:', e.detail);
+    console.log('🔄 EIU Topbar: Updating profile pictures immediately with:', e.detail.profilePictureUrl);
     
     // Update immediately without calling loadTopbarProfilePictures
     if (e.detail.profilePictureUrl) {
       // Update main topbar profile picture
       const topbarProfilePic = document.getElementById('eiu-profile-picture');
       if (topbarProfilePic) {
-        console.log('EIU Topbar: Setting main profile picture src to:', e.detail.profilePictureUrl);
+        console.log('🔄 EIU Topbar: Setting main profile picture src to:', e.detail.profilePictureUrl);
+        
+        // CRITICAL: Hide fallback BEFORE updating to prevent blinking
+        const fallbackDiv = topbarProfilePic.nextElementSibling;
+        if (fallbackDiv) {
+          fallbackDiv.style.display = 'none';
+        }
         
         // Preload the image to prevent blinking
         const img = new Image();
         img.onload = function() {
           topbarProfilePic.src = e.detail.profilePictureUrl;
           topbarProfilePic.style.display = 'block';
-          
-          // Hide fallback div if it exists
-          const fallbackDiv = topbarProfilePic.nextElementSibling;
           if (fallbackDiv) {
             fallbackDiv.style.display = 'none';
           }
+          console.log('✅ EIU Topbar: Main profile picture updated successfully');
+        };
+        img.onerror = function() {
+          console.log('❌ EIU Topbar: Failed to load main profile picture');
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'flex';
+          }
+          topbarProfilePic.style.display = 'none';
         };
         img.src = e.detail.profilePictureUrl;
       }
@@ -513,56 +604,60 @@ const currentTime = new Date().toLocaleString('en-PH', {
       // Update dropdown profile picture
       const dropdownProfilePic = document.getElementById('eiu-dropdown-photo');
       if (dropdownProfilePic) {
-        console.log('EIU Topbar: Setting dropdown profile picture src to:', e.detail.profilePictureUrl);
+        console.log('🔄 EIU Topbar: Setting dropdown profile picture src to:', e.detail.profilePictureUrl);
+        
+        // CRITICAL: Hide fallback BEFORE updating to prevent blinking
+        const dropdownFallbackDiv = dropdownProfilePic.nextElementSibling;
+        if (dropdownFallbackDiv) {
+          dropdownFallbackDiv.style.display = 'none';
+        }
         
         // Preload the image to prevent blinking
         const img = new Image();
         img.onload = function() {
           dropdownProfilePic.src = e.detail.profilePictureUrl;
           dropdownProfilePic.style.display = 'block';
-          
-          // Hide fallback div if it exists
-          const fallbackDiv = dropdownProfilePic.nextElementSibling;
-          if (fallbackDiv) {
-            fallbackDiv.style.display = 'none';
+          if (dropdownFallbackDiv) {
+            dropdownFallbackDiv.style.display = 'none';
           }
+          console.log('✅ EIU Topbar: Dropdown profile picture updated successfully');
+        };
+        img.onerror = function() {
+          console.log('❌ EIU Topbar: Failed to load dropdown profile picture');
+          if (dropdownFallbackDiv) {
+            dropdownFallbackDiv.style.display = 'flex';
+          }
+          dropdownProfilePic.style.display = 'none';
         };
         img.src = e.detail.profilePictureUrl;
       }
       
       // Store in localStorage for future use
       localStorage.setItem('eiu_profile_picture', e.detail.profilePictureUrl);
-      console.log('🎯 EIU Topbar: Profile pictures updated and stored in localStorage');
       
-      // Visual feedback for both profile pictures
-      if (topbarProfilePic) {
-        topbarProfilePic.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          topbarProfilePic.style.transform = 'scale(1)';
-        }, 200);
+      // CRITICAL: Also update user data for persistence (like office-groups.astro)
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          user.profilePictureUrl = e.detail.profilePictureUrl;
+          localStorage.setItem('user', JSON.stringify(user));
+          console.log('✅ EIU Topbar: User data updated with profile picture URL');
+        } catch (error) {
+          console.warn('⚠️ Error updating user data in EIU topbar');
+        }
       }
-      
-      if (dropdownProfilePic) {
-        dropdownProfilePic.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          dropdownProfilePic.style.transform = 'scale(1)';
-        }, 200);
-      }
+      console.log('✅ EIU Topbar: Profile pictures updated and stored in localStorage');
     }
   });
 
-  // Listen for storage changes
-  window.addEventListener('storage', function(e) {
-    if (e.key === 'eiu_profile_picture') {
-      console.log('EIU Topbar received storage event for profile picture');
-      loadTopbarProfilePictures();
-    }
-  });
+  // REMOVED: Storage event listener - it was causing fallback to old profile picture
+  // The custom event listener above handles updates immediately without reloading
 
   // Live clock functionality
   function initializeLiveClock() {
-    const clockElement = document.getElementById('eiu-clock');
-    if (!clockElement) return;
+    const sidebarClockEl = document.getElementById('eiu-sidebar-clock');
+    if (!sidebarClockEl) return;
     
     function updateClock() {
       const now = new Date();
@@ -576,12 +671,12 @@ const currentTime = new Date().toLocaleString('en-PH', {
         timeZone: 'Asia/Manila'
       };
       const timeString = now.toLocaleString('en-US', options);
-      clockElement.textContent = timeString;
+      sidebarClockEl.textContent = timeString;
     }
     
-    // Update immediately and then every minute
+    // Update immediately and then every second
     updateClock();
-    setInterval(updateClock, 60000);
+    setInterval(updateClock, 1000);
   }
 
   // Notification functionality
@@ -1072,6 +1167,21 @@ const currentTime = new Date().toLocaleString('en-PH', {
       updateEIUIcon(true);
     }
     
+    // Function to update header class based on sidebar state
+    function updateHeaderClass(isCollapsed) {
+      const header = document.querySelector('header');
+      if (header) {
+        if (isCollapsed) {
+          header.classList.remove('sidebar-expanded');
+        } else {
+          header.classList.add('sidebar-expanded');
+        }
+      }
+    }
+    
+    // Initialize header class based on current sidebar state
+    updateHeaderClass(isCollapsed);
+    
     eiuSidebarToggleBtn.addEventListener('click', () => {
       console.log('🔄 Toggling EIU sidebar');
       
@@ -1082,17 +1192,91 @@ const currentTime = new Date().toLocaleString('en-PH', {
         eiuSidebar.classList.remove('collapsed');
         localStorage.setItem('eiu-sidebar-collapsed', 'false');
         updateEIUIcon(false);
+        updateHeaderClass(false);
         console.log('📖 EIU Sidebar expanded');
       } else {
         // Collapse sidebar
         eiuSidebar.classList.add('collapsed');
         localStorage.setItem('eiu-sidebar-collapsed', 'true');
         updateEIUIcon(true);
+        updateHeaderClass(true);
         console.log('📕 EIU Sidebar collapsed');
       }
     });
   } else {
     console.warn('❌ EIU sidebar toggle elements not found');
+  }
+
+  // Mobile Search Toggle Functionality
+  function initializeEIUMobileSearch() {
+    const mobileSearchToggle = document.getElementById('eiu-mobile-search-toggle');
+    const mobileSearchWrapper = document.getElementById('eiu-mobile-search-wrapper');
+    const mobileSearchInput = document.getElementById('eiu-mobile-search');
+    const mobileSearchClose = document.getElementById('eiu-mobile-search-close');
+    
+    if (!mobileSearchToggle || !mobileSearchWrapper || !mobileSearchInput) {
+      return;
+    }
+    
+    mobileSearchToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isVisible = !mobileSearchWrapper.classList.contains('invisible');
+      if (isVisible) {
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchInput.blur();
+      } else {
+        mobileSearchWrapper.classList.remove('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.add('opacity-100', 'visible', 'translate-y-0');
+        setTimeout(() => mobileSearchInput.focus(), 100);
+      }
+    });
+    
+    if (mobileSearchClose) {
+      mobileSearchClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        mobileSearchInput.blur();
+      });
+    }
+    
+    document.addEventListener('click', (e) => {
+      if (!mobileSearchWrapper.contains(e.target) && !mobileSearchToggle.contains(e.target)) {
+        if (!mobileSearchWrapper.classList.contains('invisible')) {
+          mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+          mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        }
+      }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileSearchWrapper.classList.contains('invisible')) {
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        mobileSearchInput.blur();
+      }
+    });
+    
+    const desktopSearch = document.getElementById('eiu-global-search');
+    if (desktopSearch) {
+      mobileSearchInput.addEventListener('input', (e) => {
+        desktopSearch.value = e.target.value;
+        if (desktopSearch.dispatchEvent) {
+          desktopSearch.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      desktopSearch.addEventListener('input', (e) => {
+        mobileSearchInput.value = e.target.value;
+      });
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEIUMobileSearch);
+  } else {
+    initializeEIUMobileSearch();
   }
 
   // Search functionality
@@ -1164,6 +1348,37 @@ const currentTime = new Date().toLocaleString('en-PH', {
 </script>
 
 <style>
+  /* Mobile logo and search button visibility */
+  @media (max-width: 767px) {
+    /* Hide logo when sidebar is collapsed, show when expanded */
+    :global(header:not(.sidebar-expanded) .topbar-logo-expanded) {
+      display: none !important;
+    }
+    :global(header.sidebar-expanded .topbar-logo-expanded) {
+      display: flex !important;
+    }
+    
+    /* Hide search button when sidebar is expanded, show when collapsed */
+    :global(header.sidebar-expanded .mobile-search-btn) {
+      display: none !important;
+    }
+    :global(header:not(.sidebar-expanded) .mobile-search-btn) {
+      display: block !important;
+    }
+  }
+
+  /* Blinking pulse animation for notification badge */
+  @keyframes pulse-blink {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
   /* Custom scrollbar for notification sidebar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -1446,4 +1661,43 @@ const currentTime = new Date().toLocaleString('en-PH', {
       visibility: hidden;
     }
   }
-</style> 
+</style>
+
+<script>
+  // Initialize message notification badge for EIU
+  (async function() {
+    try {
+      const { initMessageNotificationBadge } = await import('/src/scripts/messageNotificationBadge.js');
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            initMessageNotificationBadge('eiu');
+          });
+        } else {
+          initMessageNotificationBadge('eiu');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load message notification badge:', error);
+    }
+  })();
+
+  // Initialize announcement notification badge for EIU
+  (async function() {
+    try {
+      const { initAnnouncementNotificationBadge } = await import('/src/scripts/announcementNotificationBadge.js');
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            initAnnouncementNotificationBadge('eiu');
+          });
+        } else {
+          initAnnouncementNotificationBadge('eiu');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load announcement notification badge:', error);
+    }
+  })();
+</script>
+</script>

@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+import ProjectSummaryReportCenter from '../../../../islands/ProjectSummaryReportCenter.jsx';
+---
+
+<Layout title="Project Summary & Report | MPMEC Secretariat Dashboard">
+  <SecretariatLayout>
+    <section class="p-8 bg-gradient-to-br from-sky-50 to-white min-h-screen">
+      <ProjectSummaryReportCenter client:load userRole="MPMEC-SEC" accessLevel="all" />
+    </section>
+  </SecretariatLayout>
+</Layout>
+

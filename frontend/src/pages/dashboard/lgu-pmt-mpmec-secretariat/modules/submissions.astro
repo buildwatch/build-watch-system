@@ -4,6 +4,8 @@ import Layout from '../../../../layouts/Layout.astro';
 import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 import ProjectCard from '../../../../components/ProjectCard.astro';
 import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
+import ProjectFilterCenter from '../../../../islands/ProjectFilterCenter.jsx';
+import ProjectExportCenter from '../../../../islands/ProjectExportCenter.jsx';
 
 const API_URL = 'http://localhost:3000/api';
 let userData = null;
@@ -12,7 +14,9 @@ let stats = {
   totalSubmissions: 0,
   pendingReview: 0,
   approved: 0,
-  overdue: 0
+  overdue: 0,
+  completed: 0,
+  totalDepartments: 0
 };
 let loading = true;
 let error = '';
@@ -43,7 +47,28 @@ try {
         
         // Use statistics from API response
         if (data.stats) {
-          stats = data.stats;
+          stats = { ...stats, ...data.stats };
+          
+          // Ensure completed and totalDepartments are calculated if not provided by API
+          if (stats.completed === undefined) {
+            stats.completed = submissions.filter(p => 
+              p.status === 'complete' || 
+              p.status === 'completed' || 
+              p.workflowStatus === 'completed' ||
+              p.workflowStatus === 'complete'
+            ).length;
+          }
+          
+          if (stats.totalDepartments === undefined || stats.totalDepartments === 0) {
+            const departments = new Set();
+            submissions.forEach(p => {
+              const dept = p.department || p.office || p.organization || p.implementingOffice || 'Unknown';
+              if (dept && dept !== 'Unknown') {
+                departments.add(dept);
+              }
+            });
+            stats.totalDepartments = departments.size;
+          }
         } else {
           // Fallback calculation if stats not provided
           stats.totalSubmissions = submissions.length;
@@ -87,6 +112,34 @@ try {
           
           // Store delayed milestones count for use in the UI
           stats.delayedMilestones = delayedMilestonesCount;
+          
+          // Calculate completed projects
+          stats.completed = submissions.filter(p => 
+            p.status === 'complete' || 
+            p.status === 'completed' || 
+            p.workflowStatus === 'completed' ||
+            p.workflowStatus === 'complete'
+          ).length;
+          
+          // Calculate total departments (unique department names from submissions)
+          const departments = new Set();
+          submissions.forEach(p => {
+            const dept = p.department || p.office || p.organization || p.implementingOffice || 'Unknown';
+            if (dept && dept !== 'Unknown') {
+              departments.add(dept);
+            }
+          });
+          stats.totalDepartments = departments.size;
+          
+          console.log('📊 Calculated stats:', {
+            totalSubmissions: stats.totalSubmissions,
+            pendingReview: stats.pendingReview,
+            approved: stats.approved,
+            overdue: stats.overdue,
+            completed: stats.completed,
+            totalDepartments: stats.totalDepartments,
+            departments: Array.from(departments)
+          });
         }
       }
     }
@@ -958,7 +1011,7 @@ loading = false;
     <main class="bg-gradient-to-br from-gray-50 to-white min-h-screen px-8 py-8">
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 mb-8">
-        <button onclick="exportData()" class="btn-success btn-sm inline-flex items-center gap-2">
+        <button onclick="window.projectExportCenter?.export()" class="btn-primary btn-sm inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -997,8 +1050,8 @@ loading = false;
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm text-gray-600">Budget Utilized</p>
-                <p class="text-2xl font-bold text-black">₱0</p>
-                <p class="text-xs text-green-600 mt-1">0% utilized</p>
+                <p class="text-2xl font-bold text-black" id="budgetUtilizedAmount">₱0</p>
+                <p class="text-xs text-green-600 mt-1" id="budgetUtilizedPercent">0% utilized</p>
               </div>
               <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1029,7 +1082,7 @@ loading = false;
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm text-gray-600">Total Departments</p>
-                <p class="text-2xl font-bold text-black">1</p>
+                <p class="text-2xl font-bold text-black" id="totalDepartments">{stats.totalDepartments}</p>
                 <p class="text-xs text-blue-600 mt-1">Active departments</p>
               </div>
               <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700">
@@ -1097,7 +1150,7 @@ loading = false;
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm text-gray-600">Completed</p>
-                <p class="text-2xl font-bold text-black" id="overdue">{stats.overdue}</p>
+                <p class="text-2xl font-bold text-black" id="completedCount">{stats.completed}</p>
                 <p class="text-xs text-green-600 mt-1">Successfully finished</p>
               </div>
               <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
@@ -1110,97 +1163,343 @@ loading = false;
         </div>
       </div>
 
-      <!-- Enhanced Filters Section -->
-      <div class="profile-card p-8 mb-8">
-        <div class="mb-8">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="icon-container-small bg-gradient-to-br from-sky-500 to-sky-600">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-black">Search & Filters</h3>
-          </div>
+      <!-- Initialize data and functions BEFORE React component loads -->
+      <script define:vars={{ submissions }}>
+        // Initialize data immediately when page loads
+        if (typeof window !== 'undefined') {
+          window.allSubmissions = submissions || [];
+          console.log('✅ [SECRETARIAT] window.allSubmissions initialized with', window.allSubmissions.length, 'submissions');
           
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Search Submissions</label>
-                <div class="relative">
-                  <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search by project name..." 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
-                  >
-                  <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                  </svg>
-                </div>
-              </div>
+          // Fetch and update budget utilized from /api/home/stats endpoint
+          async function updateBudgetUtilized() {
+            try {
+              const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+              if (!token) return;
               
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Status</label>
-                <select 
-                  id="statusFilter" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="complete">Complete</option>
-                </select>
-              </div>
+              const API_URL = 'http://localhost:3000/api';
+              const response = await fetch(`${API_URL}/home/stats`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
               
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Office</label>
-                <select 
-                  id="officeFilter" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
-                >
-                  <option value="">All Offices</option>
-                  <option value="Municipal Engineer Office">Municipal Engineer Office</option>
-                  <option value="Health Department">Health Department</option>
-                  <option value="Finance Department">Finance Department</option>
-                  <option value="Planning Office">Planning Office</option>
-                </select>
-              </div>
-              
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Category</label>
-                <select 
-                  id="categoryFilter" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
-                >
-                  <option value="">All Categories</option>
-                  <option value="infrastructure">Infrastructure</option>
-                  <option value="health">Health</option>
-                  <option value="education">Education</option>
-                  <option value="agriculture">Agriculture</option>
-                  <option value="social">Social Services</option>
-                  <option value="environment">Environment</option>
-                  <option value="transportation">Transportation</option>
-                </select>
-              </div>
-            </div>
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                  const totalBudget = parseFloat(data.totalBudget) || 0;
+                  const utilizedBudget = parseFloat(data.utilizedBudget) || 0;
+                  const budgetUtilization = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
+                  
+                  // Update amount
+                  const amountEl = document.getElementById('budgetUtilizedAmount');
+                  if (amountEl) {
+                    amountEl.textContent = `₱${utilizedBudget.toLocaleString('en-PH', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })}`;
+                  }
+                  
+                  // Update percentage
+                  const percentEl = document.getElementById('budgetUtilizedPercent');
+                  if (percentEl) {
+                    percentEl.textContent = `${budgetUtilization.toFixed(1)}% utilized`;
+                  }
+                  
+                  console.log('💰 Budget Utilized updated:', {
+                    utilizedBudget,
+                    utilizationPercent: budgetUtilization.toFixed(1) + '%'
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching budget utilized:', error);
+            }
+          }
+          
+          // Update when DOM is ready
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateBudgetUtilized);
+          } else {
+            updateBudgetUtilized();
+          }
+          
+          // Make function available globally
+          window.updateBudgetUtilized = updateBudgetUtilized;
+          
+          // Function to update summary cards (Completed and Total Departments)
+          function updateSummaryCards() {
+            const submissionsData = window.allSubmissions || submissions || [];
             
-            <div class="flex flex-wrap items-center gap-3 mt-6">
-              <button onclick="applyFilters()" class="btn-primary inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                </svg>
-                Apply Filters
-              </button>
-              <button onclick="clearFilters()" class="btn-secondary inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            // Calculate completed projects
+            const completed = submissionsData.filter(p => 
+              p.status === 'complete' || 
+              p.status === 'completed' || 
+              p.workflowStatus === 'completed' ||
+              p.workflowStatus === 'complete'
+            ).length;
+            
+            // Calculate total departments (unique department names)
+            const departments = new Set();
+            submissionsData.forEach(p => {
+              const dept = p.department || p.office || p.organization || p.implementingOffice || 'Unknown';
+              if (dept && dept !== 'Unknown') {
+                departments.add(dept);
+              }
+            });
+            const totalDepartments = departments.size;
+            
+            // Update DOM elements
+            const completedEl = document.getElementById('completedCount');
+            if (completedEl) {
+              completedEl.textContent = completed;
+            }
+            
+            const totalDepartmentsEl = document.getElementById('totalDepartments');
+            if (totalDepartmentsEl) {
+              totalDepartmentsEl.textContent = totalDepartments;
+            }
+            
+            console.log('📊 Summary cards updated:', {
+              completed,
+              totalDepartments,
+              departments: Array.from(departments),
+              totalSubmissions: submissionsData.length
+            });
+          }
+          
+          // Update summary cards on page load
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateSummaryCards);
+          } else {
+            updateSummaryCards();
+          }
+          
+          // Make function available globally
+          window.updateSummaryCards = updateSummaryCards;
+          
+          // Initialize display function immediately - uses show/hide instead of replacing HTML
+          window.updateSubmissionsDisplay = function(submissionsToShow) {
+            console.log('📊 [SECRETARIAT] Updating submissions display with', submissionsToShow.length, 'submissions');
+            
+            // Get all submission IDs to show
+            const submissionIdsToShow = new Set(submissionsToShow.map(s => s.id));
+            
+            // Update table view - show/hide existing table rows
+            const tableRows = document.querySelectorAll('#submissionsTable tr[data-submission-id]');
+            tableRows.forEach(row => {
+              const submissionId = row.getAttribute('data-submission-id');
+              if (submissionIdsToShow.has(submissionId)) {
+                row.style.display = '';
+                row.classList.remove('hidden');
+              } else {
+                row.style.display = 'none';
+                row.classList.add('hidden');
+              }
+            });
+            
+            // Update card view - show/hide existing ProjectCard components
+            const cardWrappers = document.querySelectorAll('#submissionsCardGrid .submission-card-wrapper');
+            cardWrappers.forEach(wrapper => {
+              const submissionId = wrapper.getAttribute('data-submission-id');
+              if (submissionIdsToShow.has(submissionId)) {
+                wrapper.style.display = '';
+                wrapper.classList.remove('hidden');
+              } else {
+                wrapper.style.display = 'none';
+                wrapper.classList.add('hidden');
+              }
+            });
+            
+            // Show empty state if no submissions match
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const hasVisibleSubmissions = submissionsToShow.length > 0;
+            
+            // Check if we need to show empty state
+            let emptyStateTable = document.getElementById('secretariatFilteredEmptyStateTable');
+            let emptyStateCard = document.getElementById('secretariatFilteredEmptyStateCard');
+            
+            if (!hasVisibleSubmissions) {
+              // Show enhanced empty state in table view
+              if (tableView && !emptyStateTable) {
+                emptyStateTable = document.createElement('tr');
+                emptyStateTable.id = 'secretariatFilteredEmptyStateTable';
+                emptyStateTable.innerHTML = `
+                  <td colspan="8" class="px-6 py-16 text-center">
+                    <div class="flex flex-col items-center justify-center">
+                      <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-sky-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                        <div class="relative w-32 h-32 bg-gradient-to-br from-sky-100 to-blue-100 rounded-full flex items-center justify-center shadow-lg">
+                          <svg class="w-20 h-20 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                          </svg>
+                        </div>
+                      </div>
+                      <h3 class="text-2xl font-bold text-gray-900 mb-3">No Submissions Found</h3>
+                      <p class="text-gray-600 text-lg mb-2 max-w-md">We couldn't find any submissions matching your current filter criteria.</p>
+                      <p class="text-gray-500 text-sm mb-6">Try adjusting your search terms, status, category, or office filters to see more results.</p>
+                      <button onclick="if(window.projectFilterCenter) window.projectFilterCenter.clearFilters()" class="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear All Filters
+                      </button>
+                    </div>
+                  </td>
+                `;
+                const tableBody = document.getElementById('submissionsTable');
+                if (tableBody) {
+                  tableBody.appendChild(emptyStateTable);
+                }
+              }
+              
+              // Show enhanced empty state in card view
+              if (cardView && !emptyStateCard) {
+                emptyStateCard = document.createElement('div');
+                emptyStateCard.id = 'secretariatFilteredEmptyStateCard';
+                emptyStateCard.className = 'col-span-full text-center py-16';
+                emptyStateCard.innerHTML = `
+                  <div class="flex flex-col items-center justify-center">
+                    <div class="relative mb-6">
+                      <div class="absolute inset-0 bg-sky-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                      <div class="relative w-32 h-32 bg-gradient-to-br from-sky-100 to-blue-100 rounded-full flex items-center justify-center shadow-lg">
+                        <svg class="w-20 h-20 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">No Submissions Found</h3>
+                    <p class="text-gray-600 text-lg mb-2 max-w-md">We couldn't find any submissions matching your current filter criteria.</p>
+                    <p class="text-gray-500 text-sm mb-6">Try adjusting your search terms, status, category, or office filters to see more results.</p>
+                    <button onclick="if(window.projectFilterCenter) window.projectFilterCenter.clearFilters()" class="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      Clear All Filters
+                    </button>
+                  </div>
+                `;
+                const cardGrid = document.getElementById('submissionsCardGrid');
+                if (cardGrid) {
+                  cardGrid.appendChild(emptyStateCard);
+                }
+              }
+            } else {
+              // Hide empty states if submissions are visible
+              if (emptyStateTable) {
+                emptyStateTable.remove();
+              }
+              if (emptyStateCard) {
+                emptyStateCard.remove();
+              }
+            }
+          };
+          
+          // Initialize filter function
+          window.applyProjectFiltersFromCenter = function(filters) {
+            console.log('🔍 [SECRETARIAT] Applying filters from center:', filters);
+            console.log('🔍 [SECRETARIAT] Available submissions:', window.allSubmissions?.length || 0);
+            
+            let filteredSubmissions = window.allSubmissions || [];
+            
+            if (!filteredSubmissions || filteredSubmissions.length === 0) {
+              console.warn('⚠️ [SECRETARIAT] No submissions available to filter! window.allSubmissions is empty or undefined.');
+              return;
+            }
+            
+            // Apply search filter
+            if (filters.search) {
+              const searchTerm = filters.search.toLowerCase();
+              filteredSubmissions = filteredSubmissions.filter(project => 
+                project.name?.toLowerCase().includes(searchTerm) ||
+                project.description?.toLowerCase().includes(searchTerm) ||
+                project.projectCode?.toLowerCase().includes(searchTerm) ||
+                project.implementingOfficeName?.toLowerCase().includes(searchTerm)
+              );
+            }
+            
+            // Apply status filter
+            if (filters.status) {
+              filteredSubmissions = filteredSubmissions.filter(project => {
+                const status = project.workflowStatus || project.status;
+                return status === filters.status;
+              });
+            }
+            
+            // Apply category filter
+            if (filters.category) {
+              filteredSubmissions = filteredSubmissions.filter(project => project.category === filters.category);
+            }
+            
+            // Apply office filter
+            if (filters.office) {
+              filteredSubmissions = filteredSubmissions.filter(project => 
+                project.implementingOfficeName === filters.office
+              );
+            }
+            
+            // Apply sorting
+            switch(filters.sortBy) {
+              case 'name':
+                filteredSubmissions.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                break;
+              case 'date':
+                filteredSubmissions.sort((a, b) => {
+                  const dateA = new Date(a.submittedToSecretariatDate || a.createdAt || 0);
+                  const dateB = new Date(b.submittedToSecretariatDate || b.createdAt || 0);
+                  return dateB - dateA;
+                });
+                break;
+              case 'status':
+                filteredSubmissions.sort((a, b) => {
+                  const statusA = a.workflowStatus || a.status || '';
+                  const statusB = b.workflowStatus || b.status || '';
+                  return statusA.localeCompare(statusB);
+                });
+                break;
+              case 'department':
+                filteredSubmissions.sort((a, b) => {
+                  const deptA = a.implementingOfficeName || '';
+                  const deptB = b.implementingOfficeName || '';
+                  return deptA.localeCompare(deptB);
+                });
+                break;
+            }
+            
+            // Update display
+            window.updateSubmissionsDisplay(filteredSubmissions);
+          };
+          
+          // Store the callback function on window so React component can access it
+          window.projectFilterCallback = function(filters) {
+            console.log('🔍 [SECRETARIAT] onFilterChange callback triggered with filters:', filters);
+            if (typeof window !== 'undefined' && window.applyProjectFiltersFromCenter) {
+              window.applyProjectFiltersFromCenter(filters);
+            } else {
+              console.warn('⚠️ [SECRETARIAT] applyProjectFiltersFromCenter not available yet');
+            }
+          };
+          
+          console.log('✅ [SECRETARIAT] All filter functions initialized');
+        }
+      </script>
+
+      <!-- Centralized Filter Component -->
+      <ProjectFilterCenter 
+        client:load
+        theme="sky"
+        moduleType="secretariat"
+      />
+
+      <!-- Centralized Export Component -->
+      <ProjectExportCenter 
+        client:load
+        theme="sky"
+        data={submissions}
+        exportType="submissions"
+        fileNamePrefix="secretariat-submissions"
+      />
 
       {loading ? (
         <!-- Enhanced Loading State -->
@@ -1339,7 +1638,7 @@ loading = false;
                   const isOverdue = submission.status === 'pending' && submission.endDate && new Date(submission.endDate) < new Date();
                   
                   return (
-                    <tr class="group hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 transform hover:scale-[1.01] cursor-pointer">
+                    <tr data-submission-id={submission.id} class="group hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 transform hover:scale-[1.01] cursor-pointer">
                       <td class="px-6 py-4 whitespace-nowrap">
                         <input type="checkbox" class="submission-checkbox h-4 w-4 text-[#FE5353] focus:ring-[#FE5353] border-gray-300 rounded" value={submission.id}>
                       </td>
@@ -1575,10 +1874,15 @@ loading = false;
         });
         if (submissionsRes.ok) {
           const data = await submissionsRes.json();
-          if (data.success) {
-            submissions = data.projects;
-            updateSubmissionsUI();
+        if (data.success) {
+          submissions = data.projects;
+          // Update window.allSubmissions immediately
+          if (typeof window !== 'undefined') {
+            window.allSubmissions = submissions || [];
+            console.log('✅ [SECRETARIAT] window.allSubmissions updated in initializePage with', window.allSubmissions.length, 'submissions');
           }
+          updateSubmissionsUI();
+        }
         }
       }
     } catch (error) {
@@ -1613,6 +1917,11 @@ loading = false;
         const data = await response.json();
         if (data.success) {
           submissions = data.projects;
+          // Update window.allSubmissions immediately
+          if (typeof window !== 'undefined') {
+            window.allSubmissions = submissions || [];
+            console.log('✅ [SECRETARIAT] window.allSubmissions updated in loadSubmissions with', window.allSubmissions.length, 'submissions');
+          }
           updateSubmissionsUI();
           location.reload(); // Refresh the page to update statistics
         }
@@ -1633,6 +1942,13 @@ loading = false;
         status: sub.status
       }))
     });
+    
+    // Update window.allSubmissions for filtering
+    if (typeof window !== 'undefined') {
+      window.allSubmissions = submissions || [];
+      console.log('✅ [SECRETARIAT] window.allSubmissions updated with', window.allSubmissions.length, 'submissions');
+    }
+    
     renderDepartmentTimelines();
     
     // Load timelines after UI update
@@ -2292,11 +2608,16 @@ loading = false;
     await loadSubmissions();
   }
 
-  // Export data
+  // Export data - now uses centralized component
   function exportData() {
-    // TODO: Implement export functionality
     console.log('Exporting submissions data...');
+    if (window.projectExportCenter) {
+      window.projectExportCenter.export();
+    }
   }
+
+  // OLD applyProjectFiltersFromCenter function removed - now using the version defined earlier in initialization script
+  // This ensures proper data initialization and show/hide functionality
 
   // Mark all reviewed
   function markAllReviewed() {
@@ -2585,6 +2906,13 @@ loading = false;
   window.exportData = exportData;
   window.loadSubmissions = loadSubmissions;
   window.markAllReviewed = markAllReviewed;
+  
+  // Store all submissions globally for filtering (already set in initialization script and updateSubmissionsUI)
+  // This is a fallback in case the initialization script hasn't run yet
+  if (typeof window !== 'undefined' && (!window.allSubmissions || window.allSubmissions.length === 0)) {
+    window.allSubmissions = submissions || [];
+    console.log('✅ [SECRETARIAT] window.allSubmissions set as fallback with', window.allSubmissions.length, 'submissions');
+  }
   window.bulkAction = bulkAction;
   window.approveSubmission = approveSubmission;
   window.rejectSubmission = rejectSubmission;

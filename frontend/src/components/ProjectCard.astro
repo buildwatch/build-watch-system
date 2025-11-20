@@ -4,9 +4,10 @@ interface Props {
   userTheme?: 'eiu' | 'iu-implementing-office' | 'secretariat' | 'mpmec' | 'executive' | 'public';
   onClick?: string; // JavaScript function name to call when clicked
   showModal?: boolean; // Whether to show modal or redirect to project page
+  showClickForDetails?: boolean; // Whether to show "Click for details" with arrow instead of "View Details" button
 }
 
-const { project, userTheme = 'public', onClick, showModal = true } = Astro.props;
+const { project, userTheme = 'public', onClick, showModal = true, showClickForDetails = false } = Astro.props;
 
 // Theme-based hover colors
 const themeColors = {
@@ -292,8 +293,18 @@ const handleClick = () => {
       </div>
     </div>
 
-    <!-- View Details Button (only show if showModal is not explicitly false) -->
-    {showModal !== false && (
+    <!-- View Details Button or Click for Details -->
+    {showClickForDetails ? (
+      <div 
+        class={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 cursor-pointer group/click ${theme.button} hover:scale-105`}
+        onclick={handleClick()}
+      >
+        <span>Click for details</span>
+        <svg class="w-5 h-5 transition-transform group-hover/click:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+        </svg>
+      </div>
+    ) : showModal !== false && (
       <button 
         class={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 ${theme.button}`}
         onclick={handleClick()}

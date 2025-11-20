@@ -3,11 +3,11 @@
 // Theme Color: #FE5353
 ---
 
-<header class="relative z-50 flex items-center justify-between px-8 py-4 bg-gradient-to-r from-[#3B82F6] via-[#2563EB] to-[#1D4ED8] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
+<header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-[#3B82F6] via-[#2563EB] to-[#1D4ED8] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
   <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 opacity-10"></div>
   <div class="flex items-center justify-between relative w-full">
-    <!-- Left Section -->
-    <div class="flex items-center space-x-6">
+    <!-- Left Section: Sidebar Toggle, Search, and Subtitle -->
+    <div class="flex items-center space-x-4">
       <!-- Sidebar Toggle Button -->
       <button id="lgu-pmt-sidebar-toggle" class="group p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-300 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl">
         <svg id="lgu-pmt-sidebar-toggle-icon" class="w-6 h-6 text-white transition-all duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,22 +15,8 @@
         </svg>
       </button>
 
-      <!-- Logo and Title Section -->
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20 flex items-center justify-center">
-          <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
-        </div>
-        <div>
-          <h1 class="text-xl font-bold text-white drop-shadow-sm">Build Watch</h1>
-          <p class="text-xs text-gray-400">MPMEC</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Middle Section -->
-    <div class="flex items-center gap-6">
-      <!-- Search Bar -->
-      <div class="relative">
+      <!-- Search Bar - Desktop -->
+      <div class="relative hidden md:block" id="lgu-pmt-search-wrapper">
         <input 
           type="text" 
           id="lgu-pmt-global-search"
@@ -41,22 +27,58 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
       </div>
-
-      <!-- Date and Time -->
-      <div class="text-center">
-        <p id="lgu-pmt-current-date" class="text-sm font-medium text-white">Loading...</p>
-        <p class="text-xs text-blue-200/80">Philippine Standard Time</p>
-      </div>
-
-      <!-- System Status -->
-      <div class="flex items-center gap-2 px-3 py-2 bg-green-500/20 rounded-lg border border-green-400/30">
-        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-        <span class="text-sm font-medium text-green-300">System Operational</span>
+      
+      <!-- Subtitle beside search bar on the right -->
+      <p class="text-xs text-gray-400 hidden md:block whitespace-nowrap">MPMEC</p>
+      
+      <!-- Logo (Visible only when sidebar is expanded on mobile) -->
+      <div class="md:hidden flex items-center topbar-logo-expanded ml-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden ring-1 ring-white/10">
+          <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+        </div>
       </div>
     </div>
 
+    <!-- Mobile Search Button (Visible only when sidebar is collapsed on mobile) -->
+    <button id="lgu-pmt-mobile-search-toggle" class="md:hidden absolute left-16 p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm border border-white/20 mobile-search-btn" aria-label="Toggle search">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+    </button>
+    
+    <!-- Mobile Search Bar (Expandable) -->
+    <div id="lgu-pmt-mobile-search-wrapper" class="md:hidden fixed top-[73px] left-0 right-0 mt-2 px-4 opacity-0 invisible transform translate-y-[-10px] transition-all duration-300 z-50">
+      <div class="relative">
+        <input 
+          id="lgu-pmt-mobile-search"
+          type="text" 
+          placeholder="Search projects, reports, notices..." 
+          class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 shadow-lg" 
+          autocomplete="off"
+        />
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+          <button id="lgu-pmt-mobile-search-close" class="absolute inset-y-0 right-0 pr-3 flex items-center" aria-label="Close search">
+            <svg class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Section: Logo and Title (Desktop only, centered) -->
+    <div class="hidden md:flex md:absolute md:left-[48%] md:transform md:-translate-x-1/2 items-center topbar-logo">
+      <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm shadow-lg border border-white/20 flex items-center justify-center">
+        <img src="/build-watch-logo.png" alt="Build Watch Logo" class="w-full h-full object-contain" />
+      </div>
+      <h1 class="text-base md:text-xl font-bold text-white drop-shadow-sm hidden sm:block ml-2 md:ml-3">Build Watch</h1>
+    </div>
+
     <!-- Right Section -->
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2 md:gap-4">
       <!-- System Management Actions -->
       <div class="flex items-center gap-2">
         <!-- System Announcement Button -->
@@ -66,6 +88,8 @@
           </svg>
           <!-- Enhanced hover glow effect -->
           <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+          <!-- Announcement Notification Badge -->
+          <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden animate-pulse group-hover:scale-110 transition-transform duration-200" id="lgu-pmt-announcement-badge" style="animation: pulse-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">0</span>
         </a>
         
         <!-- Send Feedback to Secretariat Button -->
@@ -75,6 +99,8 @@
           </svg>
           <!-- Enhanced hover glow effect -->
           <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+          <!-- Message Notification Badge -->
+          <span id="lgu-pmt-message-badge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 hidden animate-pulse shadow-lg shadow-red-500/50">0</span>
         </a>
         
         <!-- System Health Button -->
@@ -95,7 +121,7 @@
         </svg>
         <!-- Enhanced hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-gray-300/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden animate-pulse group-hover:scale-110 transition-transform duration-200" id="lgu-pmt-notification-badge">0</span>
+        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden animate-pulse group-hover:scale-110 transition-transform duration-200" id="lgu-pmt-notification-badge" style="animation: pulse-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">0</span>
       </button>
 
             <!-- User Profile with Enhanced Dropdown -->
@@ -381,84 +407,90 @@
       window.notificationService = createFallbackNotificationService();
     }
 
-    // ✅ FIXED: Prevent race condition with sidebar user data loading
-    // Use global lock to prevent conflicts with sidebar
-    if (!window.lgupmtUserDataLock) window.lgupmtUserDataLock = false;
-    let isTopbarLoadingUserData = false;
+    // ✅ FIXED: Load cached user data immediately first, then fetch fresh data
+    // This ensures the UI is never stuck in "Loading..." state
+    console.log('🔄 LGU-PMT Topbar: Loading user data...');
     
-    try {
-      // Prevent multiple simultaneous loads (use global lock)
-      if (isTopbarLoadingUserData || window.lgupmtUserDataLock) {
-        console.log('⏳ LGU-PMT Topbar: User data loading already in progress, skipping...');
-        return;
+    // First, try to load from localStorage immediately (no waiting)
+    const cachedUserData = localStorage.getItem('user');
+    if (cachedUserData) {
+      try {
+        const user = JSON.parse(cachedUserData);
+        console.log('⚡ LGU-PMT Topbar: Loading cached user data immediately:', user.fullName || user.name);
+        updateLGUPMTUserData(user);
+      } catch (error) {
+        console.warn('⚠️ LGU-PMT Topbar: Failed to parse cached user data:', error);
       }
-      
-      isTopbarLoadingUserData = true;
-      window.lgupmtUserDataLock = true;
-      console.log('🔄 LGU-PMT Topbar: Starting user data load...');
-      
-      // ✅ FIXED: Always fetch fresh data from API first
-      console.log('🌐 LGU-PMT Topbar: Fetching fresh user data from API...');
-      
-      await new Promise(resolve => setTimeout(resolve, 200)); // Small delay to let sidebar finish first
+    } else {
+      // Try authService as fallback
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        console.log('⚡ LGU-PMT Topbar: Loading user data from authService:', currentUser.fullName || currentUser.name);
+        updateLGUPMTUserData(currentUser);
+      }
+    }
+    
+    // Then fetch fresh data from API in the background (async, non-blocking)
+    (async () => {
+      // ✅ FIXED: Prevent race condition with sidebar user data loading
+      // Use global lock to prevent conflicts with sidebar
+      if (!window.lgupmtUserDataLock) window.lgupmtUserDataLock = false;
+      let isTopbarLoadingUserData = false;
       
       try {
-        const response = await fetch('http://localhost:3000/api/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
+        // Prevent multiple simultaneous loads (use global lock)
+        if (isTopbarLoadingUserData || window.lgupmtUserDataLock) {
+          console.log('⏳ LGU-PMT Topbar: User data loading already in progress, skipping...');
+          return;
+        }
         
-        if (response.ok) {
-          const responseData = await response.json();
-          if (responseData.success && responseData.user) {
-            console.log('✅ LGU-PMT Topbar: Fresh API user data loaded:', responseData.user.fullName || responseData.user.name);
-            updateLGUPMTUserData(responseData.user);
-            
-            // Update localStorage with fresh data (if not already updated by sidebar)
-            localStorage.setItem('user', JSON.stringify(responseData.user));
-            
-            // Also update the auth service's current user
-            if (window.authService && typeof window.authService.currentUser !== 'undefined') {
-              window.authService.currentUser = responseData.user;
+        isTopbarLoadingUserData = true;
+        window.lgupmtUserDataLock = true;
+        console.log('🔄 LGU-PMT Topbar: Fetching fresh user data from API...');
+        
+        // Small delay to let sidebar finish first (if it's loading)
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        try {
+          const response = await fetch('http://localhost:3000/api/auth/profile', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          if (response.ok) {
+            const responseData = await response.json();
+            if (responseData.success && responseData.user) {
+              console.log('✅ LGU-PMT Topbar: Fresh API user data loaded:', responseData.user.fullName || responseData.user.name);
+              updateLGUPMTUserData(responseData.user);
+              
+              // Update localStorage with fresh data
+              localStorage.setItem('user', JSON.stringify(responseData.user));
+              
+              // Also update the auth service's current user
+              if (window.authService && typeof window.authService.currentUser !== 'undefined') {
+                window.authService.currentUser = responseData.user;
+              }
+            } else {
+              console.error('❌ LGU-PMT Topbar: API returned invalid response');
             }
           } else {
-            console.error('❌ LGU-PMT Topbar: API returned invalid response');
-            // Fallback to cached data if API fails
-            const currentUser = authService.getCurrentUser();
-            if (currentUser) {
-              console.log('⚠️ LGU-PMT Topbar: Using cached user data as fallback:', currentUser.fullName || currentUser.name);
-              updateLGUPMTUserData(currentUser);
-            }
+            console.error('❌ LGU-PMT Topbar: API request failed:', response.status);
           }
-        } else {
-          console.error('❌ LGU-PMT Topbar: API request failed:', response.status);
-          // Fallback to cached data if API fails
-          const currentUser = authService.getCurrentUser();
-          if (currentUser) {
-            console.log('⚠️ LGU-PMT Topbar: Using cached user data as fallback:', currentUser.fullName || currentUser.name);
-            updateLGUPMTUserData(currentUser);
-          }
+        } catch (error) {
+          console.error('❌ LGU-PMT Topbar: Failed to fetch user profile:', error);
         }
+        
+        isTopbarLoadingUserData = false;
+        window.lgupmtUserDataLock = false;
       } catch (error) {
-        console.error('❌ LGU-PMT Topbar: Failed to fetch user profile:', error);
-        // Fallback to cached data if API fails
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-          console.log('⚠️ LGU-PMT Topbar: Using cached user data as fallback:', currentUser.fullName || currentUser.name);
-          updateLGUPMTUserData(currentUser);
-        }
+        console.error('❌ LGU-PMT Topbar: Error loading user data:', error);
+        isTopbarLoadingUserData = false;
+        window.lgupmtUserDataLock = false;
       }
-      
-      isTopbarLoadingUserData = false;
-      window.lgupmtUserDataLock = false;
-    } catch (error) {
-      console.error('❌ LGU-PMT Topbar: Error loading user data:', error);
-      isTopbarLoadingUserData = false;
-      window.lgupmtUserDataLock = false;
-    }
+    })();
 
     // Initialize components
     initializeNotifications(notificationService);
@@ -479,6 +511,11 @@
   
   // ✅ FIXED: Function to update LGU-PMT user data - simplified and reliable
   function updateLGUPMTUserData(userData) {
+    if (!userData) {
+      console.warn('⚠️ LGU-PMT Topbar: No user data provided to update');
+      return;
+    }
+    
     console.log('🎯 LGU-PMT Topbar: Updating user data:', {
       fullName: userData.fullName || userData.name,
       role: userData.role,
@@ -487,40 +524,58 @@
     
     // Update user name with smart abbreviation for long names
     const userNameElement = document.getElementById('lgu-pmt-user-name');
-    if (userNameElement && userData && (userData.fullName || userData.name)) {
-      const fullName = userData.fullName || userData.name;
-      
-      // Create smart abbreviation for long names
-      let displayName = fullName;
-      if (fullName.length > 25) {
-        if (fullName.includes('Viewer Admin')) {
-          displayName = fullName.replace('Viewer Admin', 'Viewer');
-        } else if (fullName.includes('Management Office')) {
-          displayName = fullName.replace('Management Office', 'Mgmt. Office');
-        } else {
-          displayName = fullName.substring(0, 22) + '...';
+    if (userNameElement) {
+      if (userData && (userData.fullName || userData.name)) {
+        const fullName = userData.fullName || userData.name;
+        
+        // Create smart abbreviation for long names
+        let displayName = fullName;
+        if (fullName.length > 25) {
+          if (fullName.includes('Viewer Admin')) {
+            displayName = fullName.replace('Viewer Admin', 'Viewer');
+          } else if (fullName.includes('Management Office')) {
+            displayName = fullName.replace('Management Office', 'Mgmt. Office');
+          } else {
+            displayName = fullName.substring(0, 22) + '...';
+          }
         }
+        
+        console.log('📝 LGU-PMT Topbar: Setting name from', fullName, 'to', displayName);
+        userNameElement.textContent = displayName;
+        userNameElement.title = fullName; // Show full name on hover
+      } else {
+        console.warn('⚠️ LGU-PMT Topbar: User data missing name, keeping Loading...');
       }
-      
-      console.log('📝 LGU-PMT Topbar: Setting name from', fullName, 'to', displayName);
-      userNameElement.textContent = displayName;
-      userNameElement.title = fullName; // Show full name on hover
+    } else {
+      console.warn('⚠️ LGU-PMT Topbar: User name element not found');
     }
     
     // Update dropdown name
     const dropdownNameElement = document.getElementById('lgu-pmt-dropdown-name');
-    if (dropdownNameElement && userData && (userData.fullName || userData.name)) {
-      const fullName = userData.fullName || userData.name;
-      console.log('📝 LGU-PMT Topbar: Setting dropdown name to', fullName);
-      dropdownNameElement.textContent = fullName;
+    if (dropdownNameElement) {
+      if (userData && (userData.fullName || userData.name)) {
+        const fullName = userData.fullName || userData.name;
+        console.log('📝 LGU-PMT Topbar: Setting dropdown name to', fullName);
+        dropdownNameElement.textContent = fullName;
+      } else {
+        console.warn('⚠️ LGU-PMT Topbar: User data missing name for dropdown');
+      }
+    } else {
+      console.warn('⚠️ LGU-PMT Topbar: Dropdown name element not found');
     }
     
     // Update user role - show actual role from database
     const userRoleElement = document.getElementById('lgu-pmt-user-role');
-    if (userRoleElement && userData && userData.role) {
-      const roleDisplay = userData.role;
-      console.log('🎭 LGU-PMT Topbar: Setting role to', roleDisplay);
-      userRoleElement.textContent = roleDisplay;
+    if (userRoleElement) {
+      if (userData && userData.role) {
+        const roleDisplay = userData.role;
+        console.log('🎭 LGU-PMT Topbar: Setting role to', roleDisplay);
+        userRoleElement.textContent = roleDisplay;
+      } else {
+        console.warn('⚠️ LGU-PMT Topbar: User data missing role');
+      }
+    } else {
+      console.warn('⚠️ LGU-PMT Topbar: User role element not found');
     }
     
     // ✅ FIXED: Load actual profile pictures for topbar and dropdown
@@ -535,7 +590,7 @@
         .join('')
         .toUpperCase()
         .slice(0, 2);
-      userInitialsElement.textContent = initials || 'MV';
+      userInitialsElement.textContent = initials || 'MP';
     }
     
     // Update dropdown initials (for fallback)
@@ -547,30 +602,77 @@
         .join('')
         .toUpperCase()
         .slice(0, 2);
-      dropdownInitialsElement.textContent = initials || 'MV';
+      dropdownInitialsElement.textContent = initials || 'MP';
     }
     
     console.log('✅ LGU-PMT Topbar: User data update completed');
   }
   
-  // Load profile picture from server or localStorage for topbar and dropdown (MPMEC-style)
+  // Load profile picture from server or localStorage for topbar and dropdown (LGU-PMT-style)
   async function loadLGUPMTTopbarProfilePictures() {
     try {
-      // Get actual user ID from localStorage
+      // Get actual user ID from localStorage - CRITICAL: Use userId first (like LGU-PMT-0001)
       const userData = localStorage.getItem('user');
-      let userId = 'MP-0001'; // Default fallback
+      let userId = null;
+      let user = null;
+      
       if (userData) {
         try {
-          const user = JSON.parse(userData);
-          userId = user.employeeId || user.username || user.id || user.userId || 'MP-0001';
+          user = JSON.parse(userData);
+          // CRITICAL: Priority order - userId (LGU-PMT-0001) > id > employeeId > username
+          userId = user.userId || user.id || user.employeeId || user.username;
+          
+          // If user data has profilePictureUrl, use it directly (from database) - like office-groups.astro
+          if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+            console.log('LGU-PMT Topbar: Using profilePictureUrl from user data:', user.profilePictureUrl);
+            
+            // Update main topbar profile picture
+            const topbarProfilePic = document.getElementById('lgu-pmt-topbar-profile-picture');
+            if (topbarProfilePic) {
+              const img = new Image();
+              img.onload = function() {
+                topbarProfilePic.src = user.profilePictureUrl;
+                topbarProfilePic.style.display = 'block';
+                const fallbackDiv = topbarProfilePic.nextElementSibling;
+                if (fallbackDiv) {
+                  fallbackDiv.style.display = 'none';
+                }
+              };
+              img.src = user.profilePictureUrl;
+            }
+            
+            // Update dropdown profile picture
+            const dropdownProfilePic = document.getElementById('lgu-pmt-dropdown-photo');
+            if (dropdownProfilePic) {
+              const img = new Image();
+              img.onload = function() {
+                dropdownProfilePic.src = user.profilePictureUrl;
+                dropdownProfilePic.style.display = 'block';
+                const fallbackDiv = dropdownProfilePic.nextElementSibling;
+                if (fallbackDiv) {
+                  fallbackDiv.style.display = 'none';
+                }
+              };
+              img.src = user.profilePictureUrl;
+            }
+            
+            // Store in localStorage
+            localStorage.setItem('mpmec_profile_picture', user.profilePictureUrl);
+            localStorage.setItem('lgu_pmt_profile_picture', user.profilePictureUrl);
+            return;
+          }
         } catch (error) {
           console.warn('⚠️ Error parsing user data in LGU-PMT topbar, using default userId');
         }
       }
       
-      // First try to get from server
+      if (!userId) {
+        userId = 'LGU-PMT-0001'; // Default fallback
+      }
+      
+      // First try to get from server (server is source of truth)
       console.log('LGU-PMT Topbar: Fetching profile picture from server for userId:', userId);
-      const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+      const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
       
       if (response.ok) {
         const result = await response.json();
@@ -584,6 +686,7 @@
             const topbarProfilePic = document.getElementById('lgu-pmt-topbar-profile-picture');
             if (topbarProfilePic) {
               topbarProfilePic.src = result.profilePictureUrl;
+              topbarProfilePic.style.display = 'block';
               // Hide fallback div if it exists
               const fallbackDiv = topbarProfilePic.nextElementSibling;
               if (fallbackDiv) {
@@ -595,6 +698,7 @@
             const dropdownProfilePic = document.getElementById('lgu-pmt-dropdown-photo');
             if (dropdownProfilePic) {
               dropdownProfilePic.src = result.profilePictureUrl;
+              dropdownProfilePic.style.display = 'block';
               // Hide fallback div if it exists
               const fallbackDiv = dropdownProfilePic.nextElementSibling;
               if (fallbackDiv) {
@@ -602,10 +706,20 @@
               }
             }
           };
+          img.onerror = function() {
+            console.log('⚠️ LGU-PMT Topbar: Failed to load profile picture from server');
+          };
           img.src = result.profilePictureUrl;
           
           // Store in localStorage for future use
           localStorage.setItem('mpmec_profile_picture', result.profilePictureUrl);
+          localStorage.setItem('lgu_pmt_profile_picture', result.profilePictureUrl);
+          
+          // Also update user data if available
+          if (user) {
+            user.profilePictureUrl = result.profilePictureUrl;
+            localStorage.setItem('user', JSON.stringify(user));
+          }
           return;
         }
       }
@@ -614,7 +728,7 @@
     }
     
     // Fallback to localStorage if server fails
-    const storedUrl = localStorage.getItem('mpmec_profile_picture');
+    const storedUrl = localStorage.getItem('mpmec_profile_picture') || localStorage.getItem('lgu_pmt_profile_picture');
     if (storedUrl) {
       // Preload the image to prevent blinking
       const img = new Image();
@@ -622,7 +736,7 @@
         const topbarProfilePic = document.getElementById('lgu-pmt-topbar-profile-picture');
         if (topbarProfilePic) {
           topbarProfilePic.src = storedUrl;
-          // Hide fallback div if it exists
+          topbarProfilePic.style.display = 'block';
           const fallbackDiv = topbarProfilePic.nextElementSibling;
           if (fallbackDiv) {
             fallbackDiv.style.display = 'none';
@@ -632,7 +746,7 @@
         const dropdownProfilePic = document.getElementById('lgu-pmt-dropdown-photo');
         if (dropdownProfilePic) {
           dropdownProfilePic.src = storedUrl;
-          // Hide fallback div if it exists
+          dropdownProfilePic.style.display = 'block';
           const fallbackDiv = dropdownProfilePic.nextElementSibling;
           if (fallbackDiv) {
             fallbackDiv.style.display = 'none';
@@ -640,6 +754,8 @@
         }
       };
       img.src = storedUrl;
+    } else {
+      console.log('⚠️ LGU-PMT Topbar: No profile picture found in localStorage or server');
     }
   }
   // Listen for profile picture updates
@@ -651,6 +767,7 @@
         const topbarProfilePic = document.getElementById('lgu-pmt-topbar-profile-picture');
         if (topbarProfilePic) {
           topbarProfilePic.src = e.detail.profilePictureUrl;
+          topbarProfilePic.style.display = 'block';
           // Hide fallback div if it exists
           const fallbackDiv = topbarProfilePic.nextElementSibling;
           if (fallbackDiv) {
@@ -661,6 +778,7 @@
         const dropdownProfilePic = document.getElementById('lgu-pmt-dropdown-photo');
         if (dropdownProfilePic) {
           dropdownProfilePic.src = e.detail.profilePictureUrl;
+          dropdownProfilePic.style.display = 'block';
           // Hide fallback div if it exists
           const fallbackDiv = dropdownProfilePic.nextElementSibling;
           if (fallbackDiv) {
@@ -672,6 +790,67 @@
       
       // Store in localStorage for future use
       localStorage.setItem('mpmec_profile_picture', e.detail.profilePictureUrl);
+      localStorage.setItem('lgu_pmt_profile_picture', e.detail.profilePictureUrl);
+      
+      // Also update user data if available
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          user.profilePictureUrl = e.detail.profilePictureUrl;
+          localStorage.setItem('user', JSON.stringify(user));
+        } catch (error) {
+          console.warn('⚠️ Error updating user data in LGU-PMT topbar');
+        }
+      }
+    }
+  });
+  
+  // Listen for Secretariat profile picture updates
+  window.addEventListener('secretariatProfilePictureUpdated', function(e) {
+    if (e.detail.profilePictureUrl) {
+      // Preload the image to prevent blinking
+      const img = new Image();
+      img.onload = function() {
+        const topbarProfilePic = document.getElementById('lgu-pmt-topbar-profile-picture');
+        if (topbarProfilePic) {
+          topbarProfilePic.src = e.detail.profilePictureUrl;
+          topbarProfilePic.style.display = 'block';
+          // Hide fallback div if it exists
+          const fallbackDiv = topbarProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        }
+        
+        const dropdownProfilePic = document.getElementById('lgu-pmt-dropdown-photo');
+        if (dropdownProfilePic) {
+          dropdownProfilePic.src = e.detail.profilePictureUrl;
+          dropdownProfilePic.style.display = 'block';
+          // Hide fallback div if it exists
+          const fallbackDiv = dropdownProfilePic.nextElementSibling;
+          if (fallbackDiv) {
+            fallbackDiv.style.display = 'none';
+          }
+        }
+      };
+      img.src = e.detail.profilePictureUrl;
+      
+      // Store in localStorage for future use
+      localStorage.setItem('mpmec_profile_picture', e.detail.profilePictureUrl);
+      localStorage.setItem('lgu_pmt_profile_picture', e.detail.profilePictureUrl);
+      
+      // Also update user data if available
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          user.profilePictureUrl = e.detail.profilePictureUrl;
+          localStorage.setItem('user', JSON.stringify(user));
+        } catch (error) {
+          console.warn('⚠️ Error updating user data in LGU-PMT topbar');
+        }
+      }
     }
   });
 
@@ -1048,7 +1227,8 @@
 
   // Clock functionality
   function startLGUPMTClock() {
-    const clockElement = document.getElementById('lgu-pmt-current-date');
+    const sidebarClockEl = document.getElementById('lgu-pmt-sidebar-clock');
+    if (!sidebarClockEl) return;
     
     function updateClock() {
       const now = new Date();
@@ -1062,9 +1242,7 @@
         timeZone: 'Asia/Manila'
       };
       
-      if (clockElement) {
-        clockElement.textContent = now.toLocaleDateString('en-US', options).replace(' at ', ' at ');
-      }
+      sidebarClockEl.textContent = now.toLocaleDateString('en-US', options).replace(' at ', ' at ');
     }
     
     updateClock();
@@ -1104,6 +1282,21 @@
       updateLGUPMTIcon(true);
     }
     
+    // Function to update header class based on sidebar state
+    function updateHeaderClass(isCollapsed) {
+      const header = document.querySelector('header');
+      if (header) {
+        if (isCollapsed) {
+          header.classList.remove('sidebar-expanded');
+        } else {
+          header.classList.add('sidebar-expanded');
+        }
+      }
+    }
+    
+    // Initialize header class based on current sidebar state
+    updateHeaderClass(isCollapsed);
+    
     lgupmtSidebarToggleBtn.addEventListener('click', () => {
       console.log('🔄 Toggling LGU-PMT sidebar');
       
@@ -1114,17 +1307,91 @@
         lgupmtSidebar.classList.remove('collapsed');
         localStorage.setItem('lgu-pmt-sidebar-collapsed', 'false');
         updateLGUPMTIcon(false);
+        updateHeaderClass(false);
         console.log('📖 LGU-PMT Sidebar expanded');
       } else {
         // Collapse sidebar
         lgupmtSidebar.classList.add('collapsed');
         localStorage.setItem('lgu-pmt-sidebar-collapsed', 'true');
         updateLGUPMTIcon(true);
+        updateHeaderClass(true);
         console.log('📕 LGU-PMT Sidebar collapsed');
       }
     });
   } else {
     console.warn('❌ LGU-PMT sidebar toggle elements not found');
+  }
+
+  // Mobile Search Toggle Functionality
+  function initializeLGUPMTMobileSearch() {
+    const mobileSearchToggle = document.getElementById('lgu-pmt-mobile-search-toggle');
+    const mobileSearchWrapper = document.getElementById('lgu-pmt-mobile-search-wrapper');
+    const mobileSearchInput = document.getElementById('lgu-pmt-mobile-search');
+    const mobileSearchClose = document.getElementById('lgu-pmt-mobile-search-close');
+    
+    if (!mobileSearchToggle || !mobileSearchWrapper || !mobileSearchInput) {
+      return;
+    }
+    
+    mobileSearchToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isVisible = !mobileSearchWrapper.classList.contains('invisible');
+      if (isVisible) {
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchInput.blur();
+      } else {
+        mobileSearchWrapper.classList.remove('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.add('opacity-100', 'visible', 'translate-y-0');
+        setTimeout(() => mobileSearchInput.focus(), 100);
+      }
+    });
+    
+    if (mobileSearchClose) {
+      mobileSearchClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        mobileSearchInput.blur();
+      });
+    }
+    
+    document.addEventListener('click', (e) => {
+      if (!mobileSearchWrapper.contains(e.target) && !mobileSearchToggle.contains(e.target)) {
+        if (!mobileSearchWrapper.classList.contains('invisible')) {
+          mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+          mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        }
+      }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileSearchWrapper.classList.contains('invisible')) {
+        mobileSearchWrapper.classList.add('opacity-0', 'invisible', 'translate-y-[-10px]');
+        mobileSearchWrapper.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        mobileSearchInput.blur();
+      }
+    });
+    
+    const desktopSearch = document.getElementById('lgu-pmt-global-search');
+    if (desktopSearch) {
+      mobileSearchInput.addEventListener('input', (e) => {
+        desktopSearch.value = e.target.value;
+        if (desktopSearch.dispatchEvent) {
+          desktopSearch.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      desktopSearch.addEventListener('input', (e) => {
+        mobileSearchInput.value = e.target.value;
+      });
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeLGUPMTMobileSearch);
+  } else {
+    initializeLGUPMTMobileSearch();
   }
 
   // Profile Dropdown Functionality
@@ -1172,14 +1439,19 @@
 
     // Show dropdown function with smooth fade-in
     function showLGUPMTProfileDropdown() {
-      // First remove hidden class to make element visible
-      profileDropdown.classList.remove('hidden');
+      // Remove all hiding classes first
+      profileDropdown.classList.remove('hidden', 'invisible', 'opacity-0', 'scale-95', 'hiding');
       
       // Force a reflow to ensure the element is rendered
       profileDropdown.offsetHeight;
       
       // Add showing class for smooth entrance animation
       profileDropdown.classList.add('showing');
+      
+      // Also ensure visibility classes are set correctly
+      profileDropdown.style.opacity = '1';
+      profileDropdown.style.visibility = 'visible';
+      profileDropdown.style.transform = 'scale(1)';
       
       // Update button aria state
       profileBtn.setAttribute('aria-expanded', 'true');
@@ -1193,14 +1465,21 @@
       profileDropdown.classList.remove('showing');
       profileDropdown.classList.add('hiding');
       
-      // Use setTimeout to ensure smooth animation before hiding
-      setTimeout(() => {
-        profileDropdown.classList.add('hidden');
-        profileDropdown.classList.remove('hiding');
-      }, 300);
+      // Don't set inline styles - let CSS animation handle the transition smoothly
+      // The CSS animation will handle opacity, transform, and visibility
       
-      // Update button aria state
+      // Update button aria state immediately
       profileBtn.setAttribute('aria-expanded', 'false');
+      
+      // Wait for animation to complete before adding hidden class
+      setTimeout(() => {
+        profileDropdown.classList.add('hidden', 'invisible');
+        profileDropdown.classList.remove('hiding');
+        // Clear any inline styles that might interfere
+        profileDropdown.style.opacity = '';
+        profileDropdown.style.visibility = '';
+        profileDropdown.style.transform = '';
+      }, 300); // Match animation duration
       
       console.log('🙈 LGU-PMT profile dropdown hidden with smooth animation');
     }
@@ -1208,6 +1487,37 @@
 </script>
 
 <style>
+  /* Mobile logo and search button visibility */
+  @media (max-width: 767px) {
+    /* Hide logo when sidebar is collapsed, show when expanded */
+    :global(header:not(.sidebar-expanded) .topbar-logo-expanded) {
+      display: none !important;
+    }
+    :global(header.sidebar-expanded .topbar-logo-expanded) {
+      display: flex !important;
+    }
+    
+    /* Hide search button when sidebar is expanded, show when collapsed */
+    :global(header.sidebar-expanded .mobile-search-btn) {
+      display: none !important;
+    }
+    :global(header:not(.sidebar-expanded) .mobile-search-btn) {
+      display: block !important;
+    }
+  }
+
+  /* Blinking pulse animation for notification badge */
+  @keyframes pulse-blink {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
   /* Enhanced Custom Scrollbar for MPMEC Notifications */
   .custom-scrollbar {
     scrollbar-width: thin;
@@ -1570,11 +1880,23 @@
   /* Smooth entrance animation */
   #lgu-pmt-profile-dropdown.showing {
     animation: dropdownFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: scale(1) translateY(0) !important;
   }
 
-  /* Smooth exit animation */
+  /* Smooth exit animation - improved timing */
   #lgu-pmt-profile-dropdown.hiding {
-    animation: dropdownFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: dropdownFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+    opacity: 1 !important; /* Start from visible state */
+    visibility: visible !important;
+    transform: scale(1) translateY(0) !important; /* Start from normal state */
+  }
+  
+  /* Ensure dropdown is visible when not hidden */
+  #lgu-pmt-profile-dropdown:not(.hidden):not(.hiding) {
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   @keyframes dropdownFadeIn {
@@ -1591,15 +1913,53 @@
   }
 
   @keyframes dropdownFadeOut {
-    from {
+    0% {
       opacity: 1;
       transform: scale(1) translateY(0);
       visibility: visible;
     }
-    to {
+    100% {
       opacity: 0;
       transform: scale(0.95) translateY(-10px);
       visibility: hidden;
     }
   }
-</style> 
+</style>
+
+<script>
+  // Initialize message notification badge for MPMEC
+  (async function() {
+    try {
+      const { initMessageNotificationBadge } = await import('/src/scripts/messageNotificationBadge.js');
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            initMessageNotificationBadge('lgu-pmt');
+          });
+        } else {
+          initMessageNotificationBadge('lgu-pmt');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load message notification badge:', error);
+    }
+  })();
+
+  // Initialize announcement notification badge for MPMEC
+  (async function() {
+    try {
+      const { initAnnouncementNotificationBadge } = await import('/src/scripts/announcementNotificationBadge.js');
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            initAnnouncementNotificationBadge('lgu-pmt');
+          });
+        } else {
+          initAnnouncementNotificationBadge('lgu-pmt');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load announcement notification badge:', error);
+    }
+  })();
+</script>

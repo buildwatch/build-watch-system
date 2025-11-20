@@ -70,6 +70,7 @@ class ProfilePictureManager {
         const data = await response.json();
         if (data.success && data.profilePictureUrl) {
           this.profilePictureUrl = data.profilePictureUrl;
+          localStorage.setItem('sysadmin_profile_picture', data.profilePictureUrl);
           localStorage.setItem('profilePictureUrl', data.profilePictureUrl);
           console.log('✅ System Admin profile picture loaded from server:', this.profilePictureUrl);
           this.updateAllProfilePictures();
@@ -80,10 +81,12 @@ class ProfilePictureManager {
       console.log('⚠️ Failed to load from server, trying localStorage:', error);
     }
 
-    // Fallback to localStorage
-    const storedUrl = localStorage.getItem('profilePictureUrl');
+    // Fallback to localStorage - check both keys
+    const storedUrl = localStorage.getItem('sysadmin_profile_picture') || localStorage.getItem('profilePictureUrl');
     if (storedUrl) {
       this.profilePictureUrl = storedUrl;
+      localStorage.setItem('sysadmin_profile_picture', storedUrl);
+      localStorage.setItem('profilePictureUrl', storedUrl);
       console.log('✅ System Admin profile picture loaded from localStorage:', this.profilePictureUrl);
       this.updateAllProfilePictures();
     } else {
@@ -95,10 +98,27 @@ class ProfilePictureManager {
     // Listen for profile picture updates from any SysAdmin module
     window.addEventListener('profilePictureUpdated', (e) => {
       console.log('🌍 System Admin Global Manager received profilePictureUpdated event:', e.detail);
-      if (e.detail.profilePictureUrl) {
+      if (e.detail.profilePictureUrl && this.shouldRunForCurrentUser()) {
         this.profilePictureUrl = e.detail.profilePictureUrl;
+        localStorage.setItem('sysadmin_profile_picture', this.profilePictureUrl);
         localStorage.setItem('profilePictureUrl', this.profilePictureUrl);
         this.updateAllProfilePictures();
+      }
+    });
+
+    // Listen for System Admin specific event
+    window.addEventListener('sysadminProfilePictureUpdated', (e) => {
+      console.log('🌍 System Admin Global Manager received sysadminProfilePictureUpdated event:', e.detail);
+      if (e.detail.profilePictureUrl && this.shouldRunForCurrentUser()) {
+        this.profilePictureUrl = e.detail.profilePictureUrl;
+        localStorage.setItem('sysadmin_profile_picture', this.profilePictureUrl);
+        localStorage.setItem('profilePictureUrl', this.profilePictureUrl);
+        this.updateAllProfilePictures();
+        
+        // Also dispatch the generic event for backward compatibility
+        window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
+          detail: e.detail
+        }));
       }
     });
 
@@ -209,6 +229,12 @@ class ProfilePictureManager {
       this.updateProfilePictureElement(dropdownProfilePic, 'dropdown');
     }
     
+    // Update logout modal profile picture
+    const logoutProfilePic = document.querySelector('#logoutProfilePicture');
+    if (logoutProfilePic) {
+      this.updateProfilePictureElement(logoutProfilePic, 'logout modal');
+    }
+    
     console.log('🎉 System Admin Manager: All profile pictures updated');
   }
 
@@ -225,10 +251,14 @@ class ProfilePictureManager {
     if (this.shouldRunForCurrentUser()) {
       console.log('🔄 Setting new System Admin profile picture globally:', url);
       this.profilePictureUrl = url;
+      localStorage.setItem('sysadmin_profile_picture', url);
       localStorage.setItem('profilePictureUrl', url);
       this.updateAllProfilePictures();
       
-      // Dispatch event for other components
+      // Dispatch events for other components
+      window.dispatchEvent(new CustomEvent('sysadminProfilePictureUpdated', {
+        detail: { profilePictureUrl: url }
+      }));
       window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
         detail: { profilePictureUrl: url }
       }));

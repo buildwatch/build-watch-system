@@ -3,834 +3,1660 @@ export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
 import SysAdminLayout from '../../../../components/SysAdminLayout.astro';
 
-// API configuration
-const API_URL = 'http://localhost:3000/api';
-// Note: For server-side rendering, we'll use a default token approach
-// The client-side JavaScript will handle the actual authentication
-const token = Astro.cookies.get('token')?.value || '';
+// Determine API URL based on environment
+const isProduction = import.meta.env.PROD;
+const isLocalhost = Astro.url.hostname === 'localhost' || Astro.url.hostname === '127.0.0.1' || !isProduction;
+const API_URL = isLocalhost 
+  ? 'http://localhost:3000/api/admin' 
+  : (Astro.url.protocol === 'https:' 
+      ? `${Astro.url.protocol}//${Astro.url.hostname}/api/admin`
+      : `http://${Astro.url.hostname}:3000/api/admin`);
 
-// Fetch real data from backend
+// Initialize empty data - will be fetched client-side
 let departments = [];
 let groups = [];
-let totalUsers = 0;
-let totalDepartments = 0;
-let activeGroups = 0;
-let pendingRequests = 0;
+let users = [];
 let error = '';
-
-// For server-side rendering, we'll set default values
-// The client-side JavaScript will fetch real-time data
-totalDepartments = 0; // Start with 0, let client-side update
-activeGroups = 0; // Start with 0, let client-side update
-totalUsers = 0; // Start with 0, let client-side update
-pendingRequests = 0;
-
-// Organizational metrics data with real values
-const orgMetrics = [
-  { 
-    title: 'Total Departments', 
-    value: totalDepartments.toString(), 
-    change: '+0', 
-    icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', 
-    color: 'blue' 
-  },
-  { 
-    title: 'Active Groups', 
-    value: activeGroups.toString(), 
-    change: '+0', 
-    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z', 
-    color: 'green' 
-  },
-  { 
-    title: 'Total Users', 
-    value: totalUsers.toString(), 
-    change: '+0', 
-    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 
-    color: 'purple' 
-  },
-  { 
-    title: 'Pending Requests', 
-    value: pendingRequests.toString(), 
-    change: '+0', 
-    icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', 
-    color: 'orange' 
-  }
-];
 ---
 
-<Layout title="Departments & User Groups">
+<Layout title="Departments Management">
   <SysAdminLayout>
     <style>
-      @keyframes fadeInUp {
+      /* Standard System Admin Styles */
+      .profile-card {
+        @apply bg-white border border-gray-200 rounded-2xl shadow-lg transition-all duration-500 ease-out hover:shadow-2xl hover:border-black/20 hover:-translate-y-2;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .profile-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .profile-card:hover::before {
+        left: 100%;
+      }
+
+      .profile-card > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .btn-primary {
+        @apply bg-gradient-to-r from-black to-gray-800 hover:from-gray-900 hover:to-black text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-black/25 border border-black/20;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .btn-primary:hover::before {
+        left: 100%;
+      }
+
+      .btn-primary > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .btn-secondary {
+        @apply bg-gradient-to-r from-gray-700 to-gray-800 hover:from-black hover:to-gray-900 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl border border-gray-600 hover:border-black;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-secondary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .btn-secondary:hover::before {
+        left: 100%;
+      }
+
+      .btn-secondary > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .icon-container {
+        @apply w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .icon-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .icon-container > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .icon-container:hover::before {
+        left: 100%;
+      }
+      
+      .icon-container:hover {
+        @apply transform scale-110 rotate-3;
+      }
+
+      .icon-container-small {
+        @apply w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .icon-container-small::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .icon-container-small > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .icon-container-small:hover::before {
+        left: 100%;
+      }
+      
+      .icon-container-small:hover {
+        @apply transform scale-110 rotate-3;
+      }
+
+      .table-row-hover {
+        @apply transition-all duration-200 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50;
+      }
+
+      .btn-action {
+        @apply text-sm font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2;
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.5rem !important;
+      }
+
+      .btn-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-out;
+        z-index: 1;
+      }
+
+      .btn-action > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .btn-action:hover::before {
+        left: 100%;
+      }
+
+      @keyframes drawCheck {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes fadeIn {
         from {
           opacity: 0;
-          transform: translateY(30px);
+          transform: translateY(10px);
         }
         to {
           opacity: 1;
           transform: translateY(0);
         }
       }
-      
-      .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-      }
-      
-      .animate-delay-100 { animation-delay: 0.1s; }
-      .animate-delay-200 { animation-delay: 0.2s; }
-      .animate-delay-300 { animation-delay: 0.3s; }
-      .animate-delay-400 { animation-delay: 0.4s; }
-      .animate-delay-500 { animation-delay: 0.5s; }
-      .animate-delay-600 { animation-delay: 0.6s; }
-      .animate-delay-700 { animation-delay: 0.7s; }
-      .animate-delay-800 { animation-delay: 0.8s; }
-      .animate-delay-900 { animation-delay: 0.9s; }
-      .animate-delay-1000 { animation-delay: 1.0s; }
 
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        backdrop-filter: blur(4px);
-      }
-
-      .modal.show {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .modal-content {
-        background: white;
-        border-radius: 16px;
-        padding: 2rem;
-        width: 90%;
-        max-width: 500px;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
       }
     </style>
 
-    <div class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
-      <!-- Header -->
-      <div class="mb-8 animate-fade-in-up">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Departments & User Groups</h1>
-        <p class="text-gray-600">Manage organizational structure, departments, and user group assignments</p>
-      </div>
-
-      {error && (
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-fade-in-up">
-          <div class="flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            {error}
-          </div>
-        </div>
-      )}
-
-      <!-- Organizational Metrics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {orgMetrics.map((metric, index) => (
-          <div class={`bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 animate-fade-in-up animate-delay-${(index + 1) * 100}`}>
-            <div class="flex items-center justify-between mb-4">
-              <div class={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
-                metric.color === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
-                metric.color === 'green' ? 'bg-gradient-to-br from-green-500 to-green-600' :
-                metric.color === 'purple' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
-                'bg-gradient-to-br from-orange-500 to-orange-600'
-              }`}>
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={metric.icon}></path>
-                </svg>
-              </div>
-              <span class={`text-sm font-semibold px-2 py-1 rounded-full ${
-                metric.change.startsWith('+') ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
-              }`}>
-                {metric.change}
-              </span>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-1" data-metric={metric.title.toLowerCase().replace(/\s+/g, '-')}>{metric.value}</h3>
-            <p class="text-gray-600 text-sm">{metric.title}</p>
-          </div>
-        ))}
-      </div>
-
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Departments Management -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up animate-delay-500">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-800 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Page Header -->
+    <div class="bg-white border-b border-gray-200 px-8 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <div class="icon-container bg-gradient-to-br from-black to-gray-800 shadow-xl">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
               </svg>
-              Departments
-            </h2>
-            <button 
-              id="addDepartmentBtn"
-              class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-500 transition-all text-sm">
-              Add Department
-            </button>
-          </div>
-          
-          <div id="departmentsContainer" class="space-y-4 max-h-96 overflow-y-auto">
-            {departments.length > 0 ? (
-              departments.map((dept, index) => (
-                <div class={`bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all animate-fade-in-up animate-delay-${600 + (index * 50)}`}>
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center">
-                      <div class={`w-3 h-3 rounded-full mr-3 ${dept.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <h3 class="font-semibold text-gray-800">{dept.name}</h3>
-                    </div>
-                    <span class={`px-2 py-1 rounded text-xs font-semibold ${
-                      dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                    }`}>{dept.status}</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                    <div>
-                      <span class="font-medium">Code:</span> {dept.code}
-                    </div>
-                    <div>
-                      <span class="font-medium">Head:</span> {dept.head || 'Not assigned'}
-                    </div>
-                    <div>
-                      <span class="font-medium">Contact:</span> {dept.contactNumber || 'N/A'}
-                    </div>
-                    <div>
-                      <span class="font-medium">Email:</span> {dept.email || 'N/A'}
-                    </div>
-                  </div>
-                  {dept.description && (
-                    <p class="text-sm text-gray-600 mb-3">{dept.description}</p>
-                  )}
-                  <div class="flex items-center justify-between text-xs text-gray-500">
-                    <span>Created: {new Date(dept.createdAt).toLocaleDateString()}</span>
-                    <div class="flex space-x-2">
-                      <button class="text-blue-600 hover:text-blue-800 transition-all">Edit</button>
-                      <button class="text-red-600 hover:text-red-800 transition-all">Delete</button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div class="text-center py-8 text-gray-500 animate-fade-in-up animate-delay-600">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                </svg>
-                <p class="text-lg font-medium mb-2">No Departments Found</p>
-                <p class="text-sm">Click "Add Department" to create your first department</p>
-              </div>
-            )}
+            </div>
+            <div>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">Departments Management</h1>
+              <p class="text-sm text-gray-600">View and manage organizational departments</p>
+            </div>
           </div>
         </div>
-
-        <!-- User Groups Management -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in-up animate-delay-600">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-800 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-              </svg>
-              User Groups
-            </h2>
-            <button 
-              id="addGroupBtn"
-              class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-500 transition-all text-sm">
-              Add Group
-            </button>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <p class="text-sm text-gray-600" id="headerTotalLabel">Total Departments</p>
+            <p class="text-xs text-black font-semibold" id="headerActiveGroups">0 Active Groups</p>
           </div>
-          
-          <div id="groupsContainer" class="space-y-4 max-h-96 overflow-y-auto">
-            {groups.length > 0 ? (
-              groups.map((group, index) => (
-                <div class={`bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all animate-fade-in-up animate-delay-${700 + (index * 50)}`}>
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center">
-                      <div class={`w-3 h-3 rounded-full mr-3 ${group.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <h3 class="font-semibold text-gray-800">{group.name}</h3>
-                    </div>
-                    <span class={`px-2 py-1 rounded text-xs font-semibold ${
-                      group.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                    }`}>{group.status}</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                    <div>
-                      <span class="font-medium">Code:</span> {group.code}
-                    </div>
-                    <div>
-                      <span class="font-medium">Leader:</span> {group.leader || 'Not assigned'}
-                    </div>
-                    <div>
-                      <span class="font-medium">Members:</span> {group.memberCount || 0}
-                    </div>
-                    <div>
-                      <span class="font-medium">Department:</span> {group.department?.name || 'Not assigned'}
-                    </div>
-                  </div>
-                  {group.description && (
-                    <p class="text-sm text-gray-600 mb-3">{group.description}</p>
-                  )}
-                  <div class="flex items-center justify-between text-xs text-gray-500">
-                    <span>Created: {new Date(group.createdAt).toLocaleDateString()}</span>
-                    <div class="flex space-x-2">
-                      <button class="text-blue-600 hover:text-blue-800 transition-all">Edit</button>
-                      <button class="text-red-600 hover:text-red-800 transition-all">Delete</button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div class="text-center py-8 text-gray-500 animate-fade-in-up animate-delay-700">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
-                <p class="text-lg font-medium mb-2">No User Groups Found</p>
-                <p class="text-sm">Click "Add Group" to create your first user group</p>
-              </div>
-            )}
-          </div>
+          <div class="w-4 h-4 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
         </div>
       </div>
+      </div>
 
-      <!-- Organizational Actions -->
-      <div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-6 animate-fade-in-up animate-delay-1000">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Organizational Actions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-500 transition-all">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Generate Report
-          </button>
-          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-500 transition-all">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            Sync Structure
-          </button>
-          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold shadow hover:from-purple-600 hover:to-purple-500 transition-all">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Main Content -->
+    <main class="px-8 py-8 bg-white min-h-screen">
+      <div class="space-y-8">
+        
+        <!-- Action Buttons Section -->
+        <div class="flex items-center justify-end gap-3 flex-wrap">
+          <button id="viewStatisticsBtn" class="btn-secondary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
-            View Chart
+            View Statistics
           </button>
-          <button class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold shadow hover:from-orange-600 hover:to-orange-500 transition-all">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+          <button id="exportDataBtn" class="btn-secondary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            Bulk Actions
+            Export Data
           </button>
+          <button id="refreshBtn" class="btn-primary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+          </button>
+          </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Total Departments</p>
+                <p id="totalDepartments" class="text-2xl font-bold text-black">0</p>
+        </div>
+              <div class="icon-container bg-gradient-to-br from-blue-500 to-blue-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+        </div>
+          </div>
+          
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Active Groups</p>
+                <p id="activeGroups" class="text-2xl font-bold text-black">0</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-green-500 to-green-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Total Users</p>
+                <p id="totalUsers" class="text-2xl font-bold text-black">0</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-purple-500 to-purple-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+              </div>
+            </div>
+      </div>
+
+          <div class="profile-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Unassigned Users</p>
+                <p id="unassignedUsers" class="text-2xl font-bold text-black">0</p>
+              </div>
+              <div class="icon-container bg-gradient-to-br from-orange-500 to-orange-600">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              </div>
+            </div>
+          </div>
+          </div>
+          
+        <!-- Departments Content -->
+        <div id="departmentsContent">
+          <!-- Advanced Filters -->
+          <div class="profile-card p-6 mb-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="icon-container-small bg-gradient-to-br from-gray-600 to-gray-800">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                    </div>
+              <h3 class="text-xl font-bold text-black">Advanced Filters</h3>
+                  </div>
+            
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Search</label>
+                  <input type="text" id="deptSearch" placeholder="Search departments..." class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 bg-white hover:shadow-md">
+                    </div>
+                    <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                  <select id="deptStatusFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 bg-white hover:shadow-md">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                    </div>
+                    <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
+                  <select id="deptSortBy" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 bg-white hover:shadow-md">
+                    <option value="name">Name</option>
+                    <option value="code">Code</option>
+                    <option value="createdAt">Date Created</option>
+                  </select>
+                    </div>
+                <div class="flex items-end">
+                  <button id="clearDeptFilters" class="w-full btn-secondary">Clear Filters</button>
+                    </div>
+                  </div>
+                    </div>
+                  </div>
+
+          <!-- Departments Table -->
+          <div class="profile-card p-8">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-3">
+                <div class="icon-container-small bg-gradient-to-br from-blue-600 to-blue-800">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-black">Departments</h2>
+                  <p class="text-sm text-gray-600">Manage organizational departments</p>
+          </div>
+        </div>
+              <div class="text-sm text-gray-600 italic">
+                <p>Note: Departments are managed through User Management. They appear here automatically when users are assigned to them.</p>
+          </div>
+        </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-lg">
+              <table class="min-w-full table-auto border-collapse">
+                <thead>
+                  <tr class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700">
+                    <th class="px-6 py-4 text-left font-semibold text-gray-800">Name</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-800">Code</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-800">Users</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-800">Groups</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-800">Status</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-800">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="departmentsTableBody" class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                      <div class="flex flex-col items-center gap-2">
+                        <div class="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+                        <p>Loading departments...</p>
+                    </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+                  </div>
+                    </div>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
 
-    <!-- Add Department Modal -->
-    <div id="addDepartmentModal" class="modal">
-      <div class="modal-content">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">Add New Department</h2>
-          <button id="closeDepartmentModal" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Add/Edit Group Modal -->
+    <div id="groupModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+          <h3 id="groupModalTitle" class="text-xl font-bold text-gray-900">Add User Group</h3>
+          <button onclick="closeGroupModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        <form id="groupForm" class="p-6 space-y-4">
+          <input type="hidden" id="groupId">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Group Name *</label>
+            <input type="text" id="groupName" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+                    </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Group Code *</label>
+            <input type="text" id="groupCode" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+                  </div>
+                    <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Department</label>
+            <select id="groupDepartment" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+              <option value="">Select Department (Optional)</option>
+            </select>
+                    </div>
+                    <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+            <textarea id="groupDescription" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent"></textarea>
+                    </div>
+                    <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Group Leader</label>
+            <input type="text" id="groupLeader" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+                    </div>
+                    <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+            <select id="groupStatus" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+                    </div>
+          <div class="flex gap-3 pt-4">
+            <button type="submit" class="flex-1 btn-primary">Save Group</button>
+            <button type="button" onclick="closeGroupModal()" class="flex-1 btn-secondary">Cancel</button>
+                  </div>
+        </form>
+                    </div>
+                  </div>
+          
+    <!-- Bulk Actions Modal -->
+    <div id="bulkActionsModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+          <h3 id="bulkActionsTitle" class="text-xl font-bold text-gray-900">Bulk Actions</h3>
+          <button onclick="closeBulkActionsModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+              </div>
+        <div class="p-6 space-y-4">
+          <p id="bulkActionsCount" class="text-sm text-gray-600">0 items selected</p>
+          <div class="space-y-2">
+            <button onclick="bulkActivate()" class="w-full btn-secondary text-left px-4 py-3">Activate Selected</button>
+            <button onclick="bulkDeactivate()" class="w-full btn-secondary text-left px-4 py-3">Deactivate Selected</button>
+            <button onclick="bulkDelete()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold text-left">Delete Selected</button>
+          </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- User Assignment Modal -->
+    <div id="userAssignmentModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900">Assign Users</h3>
+          <button onclick="closeUserAssignmentModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-        
-        <form id="addDepartmentForm" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Department Name *</label>
-            <input 
-              type="text" 
-              id="deptName" 
-              name="name" 
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter department name">
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Department Code *</label>
-            <input 
-              type="text" 
-              id="deptCode" 
-              name="code" 
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., ENG, FIN, SWD">
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea 
-              id="deptDescription" 
-              name="description"
-              rows="3"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter department description"></textarea>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Department Head</label>
-            <input 
-              type="text" 
-              id="deptHead" 
-              name="head"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter department head name">
-          </div>
-          
+        <div class="p-6 space-y-6">
           <div class="grid grid-cols-2 gap-4">
+          <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Assign to Department</label>
+              <select id="assignDept" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+                <option value="">Select Department</option>
+              </select>
+          </div>
+          <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Assign to Group</label>
+              <select id="assignGroup" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent">
+                <option value="">Select Group</option>
+              </select>
+          </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Select Users</label>
+            <div id="usersList" class="border border-gray-300 rounded-xl p-4 max-h-64 overflow-y-auto space-y-2">
+              <!-- Users will be loaded here -->
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="saveUserAssignments()" class="flex-1 btn-primary">Save Assignments</button>
+            <button onclick="closeUserAssignmentModal()" class="flex-1 btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+          </div>
+          
+    <!-- Department Analytics & Statistics Dashboard Modal -->
+    <div id="statisticsModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 my-8">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-black to-gray-800 rounded-xl flex items-center justify-center shadow-md">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Department Analytics & Statistics Dashboard</h3>
+                <p class="text-sm text-gray-600 mt-0.5">Comprehensive department insights and analytics</p>
+              </div>
+            </div>
+            <button onclick="closeStatisticsModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+      </div>
+    </div>
+
+        <!-- Modal Content -->
+        <div class="p-6 overflow-y-auto flex-1">
+          <!-- Time Range Selector -->
+          <div class="mb-6 flex items-center gap-3">
+            <label class="text-sm font-semibold text-gray-700">Time Range:</label>
+            <select id="departmentStatisticsTimeRange" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all">
+              <option value="all" selected>All Time</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+              <option value="365">Last Year</option>
+            </select>
+            <button id="refreshDepartmentStatisticsBtn" class="btn-secondary flex items-center gap-2 px-4 py-2 text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+              Refresh
+          </button>
+        </div>
+        
+          <!-- Loading State -->
+          <div id="departmentStatisticsLoading" class="hidden flex items-center justify-center py-12">
+            <div class="relative w-16 h-16">
+              <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+              <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+          </div>
+          
+          <!-- Charts Container -->
+          <div id="statisticsContent" class="space-y-6">
+            <!-- Row 1: Department Growth and User Distribution by Department -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Department Growth Over Time Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Department Growth Over Time</h4>
+                <div class="h-64">
+                  <canvas id="departmentGrowthChart"></canvas>
+                </div>
+          </div>
+          
+              <!-- User Distribution by Department Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">User Distribution by Department</h4>
+                <div class="h-64">
+                  <canvas id="userDistributionChart"></canvas>
+                </div>
+              </div>
+          </div>
+          
+            <!-- Row 2: Active vs Inactive Departments and Group Distribution -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Active vs Inactive Departments Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Active vs Inactive Departments</h4>
+                <div class="h-64">
+                  <canvas id="activeInactiveChart"></canvas>
+                </div>
+          </div>
+          
+              <!-- Group Distribution by Department Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Group Distribution by Department</h4>
+                <div class="h-64">
+                  <canvas id="groupDistributionChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: Top Departments by User Count and Department Activity Levels -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Top Departments by User Count Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Top 10 Departments by User Count</h4>
+                <div class="h-64">
+                  <canvas id="topDepartmentsChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Department Activity Levels Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Department Activity Levels</h4>
+                <div class="h-64">
+                  <canvas id="activityLevelsChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 4: Department Size Distribution and User Group Distribution -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Department Size Distribution Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Department Size Distribution</h4>
+                <div class="h-64">
+                  <canvas id="sizeDistributionChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- User Group Distribution Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">User Group Distribution</h4>
+                <div class="h-64">
+                  <canvas id="userGroupChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 5: Department Activity Heatmap and Assignment Trends -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Department Activity Heatmap Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">Department Activity Heatmap</h4>
+                <div class="h-64">
+                  <canvas id="activityHeatmapChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- User Assignment Trends Chart -->
+              <div class="profile-card p-6">
+                <h4 class="text-lg font-bold text-gray-900 mb-4">User Assignment Trends</h4>
+                <div class="h-64">
+                  <canvas id="assignmentTrendsChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+          
+    <!-- Department Users Modal -->
+    <div id="departmentUsersModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto" onclick="if(event.target === this) closeDepartmentUsersModal()">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8 transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
-              <input 
-                type="tel" 
-                id="deptContact" 
-                name="contactNumber"
-                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter contact number">
+              <h3 class="text-xl font-bold text-gray-900" id="departmentUsersModalTitle">Department Users</h3>
+              <p class="text-sm text-gray-600 mt-0.5" id="departmentUsersModalSubtitle">View users in this department</p>
+            </div>
+          </div>
+          <button onclick="closeDepartmentUsersModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="p-6">
+          <div id="departmentUsersContent">
+            <!-- Users list will be populated here -->
+          </div>
+        </div>
+      </div>
             </div>
             
+    <!-- Department Details Modal -->
+    <div id="departmentDetailsModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto" onclick="if(event.target === this) closeDepartmentDetailsModal()">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8 transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+            </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <input 
-                type="email" 
-                id="deptEmail" 
-                name="email"
-                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter email address">
+              <h3 class="text-xl font-bold text-gray-900">Department Details</h3>
+              <p class="text-sm text-gray-600 mt-0.5">View comprehensive department information</p>
             </div>
           </div>
-          
-          <div class="flex space-x-4 pt-4">
-            <button 
-              type="submit"
-              class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow hover:from-blue-600 hover:to-blue-500 transition-all">
-              Create Department
-            </button>
-            <button 
-              type="button"
-              id="cancelDepartmentBtn"
-              class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Add Group Modal -->
-    <div id="addGroupModal" class="modal">
-      <div class="modal-content">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">Add New User Group</h2>
-          <button id="closeGroupModal" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onclick="closeDepartmentDetailsModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-        
-        <form id="addGroupForm" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Group Name *</label>
-            <input 
-              type="text" 
-              id="groupName" 
-              name="name" 
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="Enter group name">
+        <div class="p-6 space-y-6">
+          <div id="departmentDetailsContent">
+            <!-- Department details will be populated here -->
+          </div>
+        </div>
+            </div>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Group Code *</label>
-            <input 
-              type="text" 
-              id="groupCode" 
-              name="code" 
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="e.g., MPMEC, TWG, SEC">
+    <!-- Department Comparison Selection Modal -->
+    <div id="comparisonSelectionModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in" onclick="if(event.target === this) closeComparisonSelectionModal()">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-8 transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900">Compare Departments</h3>
+              <p class="text-sm text-gray-600 mt-0.5">Select two departments to compare</p>
+            </div>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <select 
-              id="groupDepartment" 
-              name="departmentId"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
-              <option value="">Select Department (Optional)</option>
-              {departments.map(dept => (
-                <option value={dept.id}>{dept.name} ({dept.code})</option>
-              ))}
+          <button onclick="closeComparisonSelectionModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            </button>
+        </div>
+        <div class="p-6">
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">First Department</label>
+            <select id="compareDept1" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 bg-white">
+              <option value="">Select first department...</option>
             </select>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea 
-              id="groupDescription" 
-              name="description"
-              rows="3"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="Enter group description"></textarea>
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Second Department</label>
+            <select id="compareDept2" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 bg-white">
+              <option value="">Select second department...</option>
+            </select>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Group Leader</label>
-            <input 
-              type="text" 
-              id="groupLeader" 
-              name="leader"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="Enter group leader name">
-          </div>
-          
-          <div class="flex space-x-4 pt-4">
-            <button 
-              type="submit"
-              class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-500 transition-all">
-              Create Group
+          <div class="flex items-center gap-3">
+            <button onclick="startComparison()" class="flex-1 btn-primary flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Compare
             </button>
-            <button 
-              type="button"
-              id="cancelGroupBtn"
-              class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
-              Cancel
-            </button>
+            <button onclick="closeComparisonSelectionModal()" class="px-6 py-3 btn-secondary">Cancel</button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
 
-    <script>
-      console.log('Office Groups JavaScript loaded');
-      
-      // Global variables for data
-      let departments = [];
-      let groups = [];
-      let users = [];
-
-      // Function to fetch real-time data
-      async function fetchRealTimeData() {
-        try {
-          const token = localStorage.getItem('token');
+    <!-- Department Comparison Modal -->
+    <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto" onclick="if(event.target === this) closeComparisonModal()">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-y-auto my-8 transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex items-center justify-between sticky top-0 z-10">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900">Department Comparison</h3>
+              <p class="text-sm text-gray-600 mt-0.5">Side-by-side comparison of departments</p>
+            </div>
+          </div>
+          <button onclick="closeComparisonModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="comparisonContent" class="p-6">
+          <!-- Comparison content will be populated here -->
+        </div>
+      </div>
+        </div>
+        
+    <!-- Export Format Modal -->
+    <div id="exportFormatModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-black to-gray-800 rounded-xl flex items-center justify-center shadow-md">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          <div>
+              <h3 class="text-xl font-bold text-gray-900">Export Data</h3>
+              <p class="text-sm text-gray-600 mt-0.5">Choose your preferred export format</p>
+            </div>
+          </div>
+          <button onclick="closeExportModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+          </div>
           
-          if (!token) {
-            console.error('No authentication token found');
-            return;
+        <!-- Modal Content -->
+        <div class="p-6 space-y-3">
+          <button onclick="exportData('excel')" class="w-full group relative overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-2 border-green-200 hover:border-green-400 rounded-xl px-5 py-4 flex items-center gap-4 transition-all duration-200 shadow-sm hover:shadow-md">
+            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-200">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+          </div>
+            <div class="flex-1 text-left">
+              <h4 class="font-semibold text-gray-900 group-hover:text-green-700 transition-colors">Export to Excel</h4>
+              <p class="text-sm text-gray-600 mt-0.5">Download as CSV file (.csv)</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+          
+          <button onclick="exportData('pdf')" class="w-full group relative overflow-hidden bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border-2 border-red-200 hover:border-red-400 rounded-xl px-5 py-4 flex items-center gap-4 transition-all duration-200 shadow-sm hover:shadow-md">
+            <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-200">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+          </div>
+            <div class="flex-1 text-left">
+              <h4 class="font-semibold text-gray-900 group-hover:text-red-700 transition-colors">Export to PDF</h4>
+              <p class="text-sm text-gray-600 mt-0.5">Download as PDF document (.pdf)</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+          
+          <button onclick="exportData('html')" class="w-full group relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-200 hover:border-blue-400 rounded-xl px-5 py-4 flex items-center gap-4 transition-all duration-200 shadow-sm hover:shadow-md">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-200">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <h4 class="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Export to HTML Report</h4>
+              <p class="text-sm text-gray-600 mt-0.5">Download as HTML file (.html)</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+          </div>
+          
+    <!-- Export Loading Modal -->
+    <div id="exportLoadingModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4 animate-fade-in" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; margin: 0; padding: 0;">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100" style="margin: auto; position: relative;">
+        <div class="p-8">
+          <div class="flex flex-col items-center justify-center">
+            <!-- Modern Loading Animation -->
+            <div class="relative w-20 h-20 mb-6">
+              <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+              <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+              <div class="absolute inset-2 border-4 border-gray-200 rounded-full"></div>
+              <div class="absolute inset-2 border-4 border-indigo-600 rounded-full border-r-transparent animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Preparing Export</h3>
+            <p class="text-sm text-gray-600 text-center">Please wait while we prepare your data for export...</p>
+          </div>
+        </div>
+      </div>
+          </div>
+          
+    <!-- Export Success Modal -->
+    <div id="exportSuccessModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4 animate-fade-in" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; margin: 0; padding: 0;">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100" style="margin: auto; position: relative;">
+        <div class="p-8">
+          <div class="flex flex-col items-center justify-center">
+            <!-- Modern Success Check Animation -->
+            <div class="relative w-20 h-20 mb-6">
+              <div class="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-75"></div>
+              <div class="relative w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-dasharray: 50; stroke-dashoffset: 50; animation: drawCheck 0.6s ease-out 0.3s forwards;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2" id="exportSuccessTitle">Export Successful!</h3>
+            <p class="text-sm text-gray-600 text-center mb-6" id="exportSuccessMessage">Your data has been exported successfully.</p>
+            <button onclick="closeExportSuccessModal()" id="closeExportSuccessModal" class="px-6 py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notice/Alert Modal -->
+    <div id="noticeModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4 animate-fade-in" onclick="if(event.target === this) closeNoticeModal()">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+        <div class="p-6">
+          <div class="flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2" id="noticeTitle">Notice</h3>
+            <p class="text-sm text-gray-600 mb-6" id="noticeMessage">Please check your input and try again.</p>
+            <button onclick="closeNoticeModal()" class="px-6 py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-[100] items-center justify-center" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; margin: 0; padding: 0;">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 text-center" style="margin: auto; position: relative;">
+        <div class="relative w-20 h-20 mx-auto mb-4">
+          <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-black rounded-full border-t-transparent animate-spin"></div>
+        </div>
+        <p class="text-lg font-semibold text-gray-900">Processing...</p>
+        <p class="text-sm text-gray-600 mt-2">Please wait</p>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-[100] items-center justify-center" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; margin: 0; padding: 0;">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 text-center" style="margin: auto; position: relative;">
+        <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+          <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <p id="successMessage" class="text-lg font-semibold text-gray-900">Success!</p>
+        <button onclick="closeSuccessModal()" class="mt-4 btn-primary">OK</button>
+      </div>
+    </div>
+
+    <script define:vars={{ API_URL }}>
+      // Global state
+      window.officeGroupsData = {
+        departments: [],
+        groups: [],
+        users: [],
+        selectedDepts: [],
+        selectedGroups: [],
+        currentTab: 'departments'
+      };
+
+      // API URL
+      window.API_URL = API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:3000/api/admin' 
+        : `${window.location.protocol}//${window.location.hostname}/api/admin`);
+
+      // Immediately hide all modals on page load (before DOM is ready)
+      (function() {
+        // This runs immediately when the script loads
+        setTimeout(function() {
+          const loadingModal = document.getElementById('loadingModal');
+          const successModal = document.getElementById('successModal');
+          
+          if (loadingModal) {
+            loadingModal.classList.add('hidden');
+            loadingModal.classList.remove('flex');
+            loadingModal.style.display = 'none';
           }
-
-          console.log('Fetching real-time data with token:', token.substring(0, 20) + '...');
-
-          // Fetch departments
-          console.log('Fetching departments...');
-          const deptRes = await fetch('http://localhost:3000/api/admin/departments', {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
-          console.log('Departments response status:', deptRes.status);
-          if (deptRes.ok) {
-            const deptData = await deptRes.json();
-            console.log('Departments data:', deptData);
-            departments = deptData.departments || [];
-            updateDepartmentDisplay();
-          } else {
-            const errorText = await deptRes.text();
-            console.error('Departments API error:', errorText);
+          
+          if (successModal) {
+            successModal.classList.add('hidden');
+            successModal.classList.remove('flex');
+            successModal.style.display = 'none';
           }
+        }, 0);
+      })();
 
-          // Fetch groups
-          console.log('Fetching groups...');
-          const groupRes = await fetch('http://localhost:3000/api/admin/groups', {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
-          console.log('Groups response status:', groupRes.status);
-          if (groupRes.ok) {
-            const groupData = await groupRes.json();
-            console.log('Groups data:', groupData);
-            groups = groupData.groups || [];
-            updateGroupDisplay();
-          } else {
-            const errorText = await groupRes.text();
-            console.error('Groups API error:', errorText);
+      // Initialize module
+      console.log('Departments & User Groups module initialized');
+    </script>
+
+    <script>
+      // ==================== COMPREHENSIVE OFFICE GROUPS MANAGEMENT ====================
+      
+      // Get authentication token
+      function getToken() {
+        return localStorage.getItem('token') || '';
+      }
+
+      // Get API URL
+      function getAPIUrl() {
+        return window.API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? 'http://localhost:3000/api/admin' 
+          : `${window.location.protocol}//${window.location.hostname}/api/admin`);
+      }
+
+      // Show loading modal
+      function showLoading() {
+        const modal = document.getElementById('loadingModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+      }
+
+      // Hide loading modal
+      function hideLoading() {
+        const modal = document.getElementById('loadingModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      }
+
+      // Show success modal
+      function showSuccess(message = 'Operation completed successfully!') {
+        const modal = document.getElementById('successModal');
+        const messageEl = document.getElementById('successMessage');
+        if (messageEl) messageEl.textContent = message;
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+      }
+
+      // Close success modal
+      window.closeSuccessModal = function() {
+        const modal = document.getElementById('successModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          modal.style.display = 'none';
+        }
+      };
+
+      // ==================== DATA FETCHING ====================
+      
+      // Auto-generate department description based on name
+      function generateDepartmentDescription(deptName) {
+        const name = deptName.toLowerCase();
+        
+        // Common department descriptions
+        const descriptions = {
+          'executive office': 'Oversees executive functions and administrative coordination for the municipality.',
+          'external partner company': 'External partner organizations and companies collaborating with the municipality.',
+          'information technology': 'Manages information systems, technology infrastructure, and digital services.',
+          'municipal agriculturist\'s office': 'Handles agricultural programs, services, and development initiatives for the municipality.',
+          'municipal disaster and risk reduction management office': 'Coordinates disaster preparedness, response activities, and risk reduction programs.',
+          'municipal engineer\'s office': 'Manages engineering projects, infrastructure development, and public works.',
+          'municipal environment and natural resources office': 'Oversees environmental protection, natural resources management, and sustainability programs.',
+          'municipal planning and development office': 'Handles urban planning, development projects, and strategic planning initiatives.',
+          'municipal social welfare and development office': 'Implements social welfare programs, community development, and social services.',
+          'municipal general services office': 'Provides general services, maintenance, and support for municipal facilities and operations.',
+          'municipal treasurer\'s office': 'Manages municipal finances, revenue collection, and financial administration.',
+          'municipal budget office': 'Handles budget planning, allocation, and financial resource management.',
+          'municipal health office': 'Oversees public health services, medical programs, and health initiatives.',
+          'municipal civil registry office': 'Manages civil registration, vital records, and official documentation services.'
+        };
+
+        // Check for exact match first
+        if (descriptions[name]) {
+          return descriptions[name];
+        }
+
+        // Check for partial matches
+        for (const [key, desc] of Object.entries(descriptions)) {
+          if (name.includes(key) || key.includes(name)) {
+            return desc;
           }
+        }
 
-          // Fetch users for counting
-          console.log('Fetching users...');
-          const usersRes = await fetch('http://localhost:3000/api/users?limit=1000', {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
+        // Generate description based on keywords
+        if (name.includes('agricultur') || name.includes('agriculture')) {
+          return 'Handles agricultural programs, services, and development initiatives.';
+        } else if (name.includes('disaster') || name.includes('risk reduction') || name.includes('mdrrmo')) {
+          return 'Coordinates disaster preparedness, response activities, and risk reduction programs.';
+        } else if (name.includes('engineer') || name.includes('engineering')) {
+          return 'Manages engineering projects, infrastructure development, and public works.';
+        } else if (name.includes('environment') || name.includes('natural resources')) {
+          return 'Oversees environmental protection, natural resources management, and sustainability programs.';
+        } else if (name.includes('planning') || name.includes('development')) {
+          return 'Handles planning, development projects, and strategic initiatives.';
+        } else if (name.includes('social welfare') || name.includes('welfare')) {
+          return 'Implements social welfare programs, community development, and social services.';
+        } else if (name.includes('general services') || name.includes('services')) {
+          return 'Provides general services, maintenance, and support for municipal operations.';
+        } else if (name.includes('treasurer') || name.includes('treasury')) {
+          return 'Manages municipal finances, revenue collection, and financial administration.';
+        } else if (name.includes('budget')) {
+          return 'Handles budget planning, allocation, and financial resource management.';
+        } else if (name.includes('health') || name.includes('medical')) {
+          return 'Oversees public health services, medical programs, and health initiatives.';
+        } else if (name.includes('civil registry') || name.includes('registry')) {
+          return 'Manages civil registration, vital records, and official documentation services.';
+        } else if (name.includes('information technology') || name.includes('it') || name.includes('technology')) {
+          return 'Manages information systems, technology infrastructure, and digital services.';
+        } else if (name.includes('executive') || name.includes('office')) {
+          return 'Oversees executive functions and administrative coordination.';
+        } else if (name.includes('external') || name.includes('partner') || name.includes('company')) {
+          return 'External partner organizations and companies collaborating with the municipality.';
+        }
+
+        // Default generic description
+        return `Provides services and manages operations for ${deptName}.`;
+      }
+      
+      // Fetch all data
+      async function fetchAllData() {
+        showLoading();
+        try {
+          const token = getToken();
+          const apiUrl = getAPIUrl();
+          
+          // Determine users API URL (same as user-management.astro)
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const usersApiUrl = isLocalhost 
+            ? 'http://localhost:3000/api/users' 
+            : `${window.location.protocol}//${window.location.hostname}/api/users`;
+          
+          console.log('🔍 Fetching data from:', usersApiUrl);
+          
+          // First, fetch users to get complete department list (same as user-management.astro)
+          const usersRes = await fetch(`${usersApiUrl}?limit=1000`, {
+            headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log('Users response status:', usersRes.status);
           if (usersRes.ok) {
             const usersData = await usersRes.json();
-            console.log('Users data count:', usersData.users?.length || 0);
-            users = usersData.users?.filter(user => 
-              user.role !== 'SYS.AD' && user.status !== 'deleted'
-            ) || [];
-            updateMetrics();
+            let fetchedUsers = (usersData.users || []).filter(u => u.role !== 'SYS.AD' && u.status !== 'deleted');
+            
+            // Fetch activity status for all users to determine isActive
+            const userIds = fetchedUsers.map(u => u.id || u.userId || u.email).filter(Boolean);
+            if (userIds.length > 0) {
+              try {
+                const activityRes = await fetch(`${usersApiUrl}/activity/status`, {
+                  method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ userIds: userIds })
+                });
+                
+                if (activityRes.ok) {
+                  const activityData = await activityRes.json();
+                  if (activityData.success && activityData.statusMap) {
+                    // Map isActive status to users
+                    fetchedUsers = fetchedUsers.map(user => {
+                      const identifier = user.id || user.userId || user.email;
+                      const status = activityData.statusMap[identifier];
+                      return {
+                        ...user,
+                        isActive: status ? status.isActive : false
+                      };
+                    });
+                    console.log('✅ Fetched activity status for users');
+                  }
+                }
+              } catch (error) {
+                console.warn('⚠️ Could not fetch activity status, using fallback:', error);
+                // Fallback: calculate isActive based on lastLoginAt and lastLogoutAt
+                fetchedUsers = fetchedUsers.map(user => {
+                  const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+                  const lastLogout = user.lastLogoutAt ? new Date(user.lastLogoutAt) : null;
+                  const isActive = lastLogin && (!lastLogout || lastLogout < lastLogin);
+                  return {
+                    ...user,
+                    isActive: isActive || false
+                  };
+                });
+              }
+            }
+            
+            window.officeGroupsData.users = fetchedUsers;
+            console.log('✅ Fetched users:', window.officeGroupsData.users.length);
           } else {
-            const errorText = await usersRes.text();
-            console.error('Users API error:', errorText);
+            console.error('❌ Failed to fetch users:', usersRes.status);
           }
 
+          // Fetch departments from users ONLY (complete list - same source as user-management)
+          // This is the REAL source of truth - only departments that actually exist in the system
+          // Departments are managed through user management, not here
+          let departmentsFromUsers = [];
+          
+          try {
+            const deptFromUsersRes = await fetch(`${usersApiUrl}/departments`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (deptFromUsersRes.ok) {
+              const deptFromUsersData = await deptFromUsersRes.json();
+              if (deptFromUsersData.success && deptFromUsersData.departments) {
+                departmentsFromUsers = deptFromUsersData.departments || [];
+                console.log('✅ Fetched departments from API:', departmentsFromUsers);
+          } else {
+                console.warn('⚠️ API response format unexpected:', deptFromUsersData);
+              }
+            } else {
+              console.error('❌ Failed to fetch departments from API. Status:', deptFromUsersRes.status);
+              const errorText = await deptFromUsersRes.text();
+              console.error('Error response:', errorText);
+            }
         } catch (error) {
-          console.error('Error fetching real-time data:', error);
+            console.error('❌ Error fetching departments from API:', error);
+          }
+
+          // Fallback: Extract departments directly from users if API fails
+          if (departmentsFromUsers.length === 0 && window.officeGroupsData.users.length > 0) {
+            console.log('📋 Extracting departments directly from users data...');
+            const uniqueDepartments = new Set();
+            window.officeGroupsData.users.forEach(user => {
+              if (user.department && user.department.trim() !== '') {
+                uniqueDepartments.add(user.department.trim());
+              }
+            });
+            departmentsFromUsers = Array.from(uniqueDepartments).sort();
+            console.log('✅ Extracted departments from users:', departmentsFromUsers);
+          }
+
+          // Build departments list from user data only
+          // Each department name from users becomes a department entry
+          const departmentsList = [];
+          
+          departmentsFromUsers.forEach(deptName => {
+            if (deptName && deptName.trim()) {
+              // Create department entry from user data
+              // Generate a simple code from the department name
+              const code = deptName
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase())
+                .join('')
+                .substring(0, 10) || deptName.substring(0, 5).toUpperCase().replace(/\s+/g, '');
+              
+              // Generate description for the department
+              const description = generateDepartmentDescription(deptName);
+              
+              departmentsList.push({
+                id: `dept-${deptName.replace(/\s+/g, '-').replace(/'/g, '').toLowerCase()}`,
+                name: deptName,
+                code: code,
+                description: description,
+                status: 'active',
+                createdAt: new Date().toISOString()
+              });
+            }
+          });
+
+          // Sort by name
+          window.officeGroupsData.departments = departmentsList.sort((a, b) => 
+            a.name.localeCompare(b.name)
+          );
+          
+          console.log('✅ Final departments list:', window.officeGroupsData.departments);
+
+          // Fetch groups
+          const groupRes = await fetch(`${apiUrl}/groups`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (groupRes.ok) {
+            const groupData = await groupRes.json();
+            window.officeGroupsData.groups = groupData.groups || [];
+          }
+
+          updateSummaryCards();
+          renderDepartmentsTable();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          hideLoading();
         }
       }
 
-      // Function to update metrics display
-      function updateMetrics() {
-        const totalUsersElement = document.querySelector('[data-metric="total-users"]');
-        const totalDeptsElement = document.querySelector('[data-metric="total-departments"]');
-        const activeGroupsElement = document.querySelector('[data-metric="active-groups"]');
+      // Update summary cards
+      function updateSummaryCards() {
+        const { departments, groups, users } = window.officeGroupsData;
         
-        if (totalUsersElement) totalUsersElement.textContent = users.length;
-        if (totalDeptsElement) totalDeptsElement.textContent = departments.length;
-        if (activeGroupsElement) activeGroupsElement.textContent = groups.filter(g => g.status === 'active').length;
+        document.getElementById('totalDepartments').textContent = departments.length;
+        
+        // Count unique groups from users (only the 4 valid groups: EIU, LGU-PMT, LGU-IU, Admin Office)
+        const validGroups = new Set(['EIU', 'LGU-PMT', 'LGU-IU', 'Admin Office']);
+        const userGroups = new Set();
+        
+        users.forEach(user => {
+          if (user.group && user.group.trim() !== '') {
+            const groupName = user.group.trim();
+            // Only count if it's one of the valid groups
+            if (validGroups.has(groupName)) {
+              userGroups.add(groupName);
+            }
+          }
+        });
+        
+        // Also check for "Admin Office" in Executive Office and Information Technology departments
+        departments.forEach(dept => {
+          if (dept.name === 'Executive Office' || dept.name === 'Information Technology') {
+            userGroups.add('Admin Office');
+          }
+        });
+        
+        const activeGroupsCount = userGroups.size;
+        const totalDepartmentsCount = departments.length;
+        document.getElementById('activeGroups').textContent = activeGroupsCount;
+        document.getElementById('totalUsers').textContent = users.length;
+        
+        // Update header display
+        const headerTotalLabel = document.getElementById('headerTotalLabel');
+        const headerActiveGroups = document.getElementById('headerActiveGroups');
+        if (headerTotalLabel) {
+          headerTotalLabel.textContent = `Total Departments`;
+        }
+        if (headerActiveGroups) {
+          headerActiveGroups.textContent = `${activeGroupsCount} Active Groups`;
+        }
+        
+        // Count unassigned users accurately
+        const unassigned = users.filter(u => {
+          const hasDept = u.department && u.department.trim() !== '';
+          const hasGroup = u.group && u.group.trim() !== '';
+          return !hasDept && !hasGroup;
+        }).length;
+        document.getElementById('unassignedUsers').textContent = unassigned;
       }
 
-      // Function to update department display
-      function updateDepartmentDisplay() {
-        console.log('Updating department display with', departments.length, 'departments');
-        const deptContainer = document.getElementById('departmentsContainer');
-        if (!deptContainer) {
-          console.error('Department container not found');
-          return;
-        }
 
-        if (departments.length === 0) {
-          deptContainer.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      // ==================== DEPARTMENTS MANAGEMENT ====================
+      
+      // Render departments table
+      function renderDepartmentsTable() {
+        const { departments, users } = window.officeGroupsData;
+        const tbody = document.getElementById('departmentsTableBody');
+        if (!tbody) return;
+
+        const search = document.getElementById('deptSearch')?.value.toLowerCase() || '';
+        const statusFilter = document.getElementById('deptStatusFilter')?.value || '';
+        const sortBy = document.getElementById('deptSortBy')?.value || 'name';
+
+        let filtered = departments.filter(dept => {
+          const matchesSearch = !search || 
+            dept.name.toLowerCase().includes(search) ||
+            dept.code.toLowerCase().includes(search) ||
+            (dept.head && dept.head.toLowerCase().includes(search));
+          const matchesStatus = !statusFilter || dept.status === statusFilter;
+          return matchesSearch && matchesStatus;
+        });
+
+        // Sort
+        filtered.sort((a, b) => {
+          if (sortBy === 'name') return a.name.localeCompare(b.name);
+          if (sortBy === 'code') return a.code.localeCompare(b.code);
+          if (sortBy === 'createdAt') return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          return 0;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                <div class="flex flex-col items-center gap-2">
+                  <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
               </svg>
-              <p class="text-lg font-medium">No Departments Found</p>
-              <p class="text-sm">Create your first department to get started</p>
+                  <p class="text-lg font-medium">No departments found</p>
+                  <p class="text-sm text-gray-400">Departments are created automatically when users are assigned to them in User Management</p>
             </div>
+              </td>
+            </tr>
           `;
           return;
         }
 
-        const deptHtml = departments.map(dept => {
-          const userCount = users.filter(user => user.department === dept.name).length;
+        tbody.innerHTML = filtered.map(dept => {
+          // Count users accurately - match by exact department name
+          const deptUsers = users.filter(u => {
+            const userDept = u.department || '';
+            return userDept === dept.name || userDept === dept.code;
+          });
+          
+          // Get unique groups from users in this department
+          const deptUserGroups = new Set();
+          deptUsers.forEach(user => {
+            if (user.group && user.group.trim() !== '') {
+              deptUserGroups.add(user.group.trim());
+            }
+          });
+          const groupsList = Array.from(deptUserGroups).sort();
+          
+          // Generate description if not present
+          const description = dept.description || generateDepartmentDescription(dept.name);
+          
+          // Check if department has active users based on session activity (isActive)
+          const hasActiveUsers = deptUsers.some(user => user.isActive === true);
+          const statusDotColor = hasActiveUsers ? 'bg-green-500' : 'bg-gray-400';
+          
+          // Get department logo
+          const deptLogo = getDepartmentLogo(dept.name);
+          
           return `
-            <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+            <tr class="table-row-hover">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="relative w-10 h-10 flex-shrink-0">
+                    <img src="${escapeHtml(deptLogo)}" alt="${escapeHtml(dept.name)}" class="w-10 h-10 rounded-lg object-cover border border-gray-200" onerror="this.onerror=null; this.src='/santa-cruz-seal.png';">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 ${statusDotColor} rounded-full border-2 border-white shadow-sm"></div>
                   </div>
                   <div>
-                    <h3 class="font-semibold text-gray-800">${dept.name}</h3>
-                    <p class="text-sm text-gray-500">${dept.code}</p>
+                    <div class="font-semibold text-gray-900">${escapeHtml(dept.name)}</div>
+                    <div class="text-sm text-gray-500">${escapeHtml(description)}</div>
                   </div>
                 </div>
-                <span class="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                  ${userCount} users
+              </td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm font-medium">${escapeHtml(dept.code)}</span>
+              </td>
+              <td class="px-6 py-4">
+                <button onclick="viewDepartmentUsers('${escapeJsString(dept.id)}')" class="btn-action px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:text-blue-600 hover:shadow-md transition-all duration-200" title="View Users">
+                  ${deptUsers.length}
+                </button>
+              </td>
+              <td class="px-6 py-4">
+                ${(() => {
+                  // For Executive Office and Information Technology, show "Admin Office" in subtle black
+                  if (dept.name === 'Executive Office' || dept.name === 'Information Technology') {
+                    return '<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">Admin Office</span>';
+                  }
+                  
+                  // For other departments, show actual groups with color themes
+                  if (groupsList.length > 0) {
+                    return `<div class="flex flex-wrap gap-1">${groupsList.map(group => {
+                      let badgeClass = '';
+                      if (group === 'EIU') {
+                        badgeClass = 'bg-green-100 text-green-700';
+                      } else if (group === 'LGU-IU') {
+                        badgeClass = 'bg-amber-100 text-amber-800';
+                      } else if (group === 'LGU-PMT') {
+                        badgeClass = 'bg-blue-100 text-blue-700';
+                      } else {
+                        badgeClass = 'bg-gray-100 text-gray-700';
+                      }
+                      return `<span class="px-2 py-1 ${badgeClass} rounded text-xs font-medium">${escapeHtml(group)}</span>`;
+                    }).join('')}</div>`;
+                  }
+                  return '<span class="text-sm text-gray-400">-</span>';
+                })()}
+              </td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded text-xs font-medium ${dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
+                  ${dept.status || 'active'}
                 </span>
-              </div>
-              <p class="text-gray-600 text-sm mb-3">${dept.description || 'No description available'}</p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>Head: ${dept.head || 'Not assigned'}</span>
-                <span class="capitalize">${dept.status}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        deptContainer.innerHTML = deptHtml;
-      }
-
-      // Function to update group display
-      function updateGroupDisplay() {
-        console.log('Updating group display with', groups.length, 'groups');
-        const groupContainer = document.getElementById('groupsContainer');
-        if (!groupContainer) {
-          console.error('Group container not found');
-          return;
-        }
-
-        if (groups.length === 0) {
-          groupContainer.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-              </svg>
-              <p class="text-lg font-medium">No User Groups Found</p>
-              <p class="text-sm">Create your first user group to get started</p>
-            </div>
-          `;
-          return;
-        }
-
-        const groupHtml = groups.map(group => {
-          const userCount = users.filter(user => user.group === group.name).length;
-          return `
-            <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 class="font-semibold text-gray-800">${group.name}</h3>
-                    <p class="text-sm text-gray-500">${group.code}</p>
-                  </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <button onclick="viewDepartmentDetails('${escapeJsString(dept.id)}')" class="btn-action px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:text-blue-600 hover:shadow-md transition-all duration-200" title="View Details">
+                    View
+                  </button>
+                  <button onclick="selectDepartmentForComparison('${escapeJsString(dept.id)}')" class="btn-action px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 hover:shadow-lg hover:shadow-black/25 transition-all duration-200" title="Compare Department">
+                    Compare
+                  </button>
                 </div>
-                <span class="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                  ${userCount} users
-                </span>
-              </div>
-              <p class="text-gray-600 text-sm mb-3">${group.description || 'No description available'}</p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>Leader: ${group.leader || 'Not assigned'}</span>
-                <span class="capitalize">${group.status}</span>
-              </div>
-            </div>
+              </td>
+            </tr>
           `;
         }).join('');
-
-        groupContainer.innerHTML = groupHtml;
       }
 
-      // Modal functionality
-      const addDepartmentBtn = document.getElementById('addDepartmentBtn');
-      const addDepartmentModal = document.getElementById('addDepartmentModal');
-      const closeDepartmentModal = document.getElementById('closeDepartmentModal');
-      const cancelDepartmentBtn = document.getElementById('cancelDepartmentBtn');
-      const addDepartmentForm = document.getElementById('addDepartmentForm');
 
-      const addGroupBtn = document.getElementById('addGroupBtn');
-      const addGroupModal = document.getElementById('addGroupModal');
-      const closeGroupModal = document.getElementById('closeGroupModal');
-      const cancelGroupBtn = document.getElementById('cancelGroupBtn');
-      const addGroupForm = document.getElementById('addGroupForm');
+      // HTML escape function
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
 
-      // Department modal
-      addDepartmentBtn.addEventListener('click', () => {
-        addDepartmentModal.classList.add('show');
-      });
+      // JavaScript string escape function for use in onclick attributes
+      function escapeJsString(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/\\/g, '\\\\')
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t');
+      }
 
-      [closeDepartmentModal, cancelDepartmentBtn].forEach(btn => {
-        btn.addEventListener('click', () => {
-          addDepartmentModal.classList.remove('show');
-          addDepartmentForm.reset();
-        });
-      });
+      // Get department logo based on department name
+      function getDepartmentLogo(deptName) {
+        const name = deptName.toLowerCase();
+        
+        if (name.includes('agriculturist') || name.includes('agricultur')) {
+          return '/mao-logo.jfif';
+        } else if (name.includes('disaster') || name.includes('risk reduction') || name.includes('mdrrmo')) {
+          return '/mdrrmo-logo.jfif';
+        } else if (name.includes('environment') || name.includes('natural resources') || name.includes('menro')) {
+          return '/menro-logo.jfif';
+        } else if (name.includes('engineer') || name.includes('engineering')) {
+          return '/meo-logo.jfif';
+        } else if (name.includes('social welfare') || name.includes('welfare') || name.includes('mswdo')) {
+          return '/mswdo-logo.jfif';
+        } else if (name.includes('planning') || name.includes('development') || name.includes('mpado')) {
+          return '/mpado_logo.png';
+        } else {
+          // Default logo for departments without specific logos
+          return '/santa-cruz-seal.png';
+        }
+      }
+
+
+
+      // Update group selection
+      function updateGroupSelection() {
+        const selected = Array.from(document.querySelectorAll('.group-checkbox:checked')).map(cb => cb.value);
+        window.officeGroupsData.selectedGroups = selected;
+      }
+
+      // ==================== MODAL FUNCTIONS ====================
+      
+      // Note: Department management is done through user-management.astro
+      // Departments are created when users are assigned to departments
 
       // Group modal
-      addGroupBtn.addEventListener('click', () => {
-        addGroupModal.classList.add('show');
+      document.getElementById('addGroupBtn')?.addEventListener('click', () => {
+        document.getElementById('groupModalTitle').textContent = 'Add User Group';
+        document.getElementById('groupForm').reset();
+        document.getElementById('groupId').value = '';
+        populateDepartmentSelect();
+        document.getElementById('groupModal').classList.remove('hidden');
       });
 
-      [closeGroupModal, cancelGroupBtn].forEach(btn => {
-        btn.addEventListener('click', () => {
-          addGroupModal.classList.remove('show');
-          addGroupForm.reset();
-        });
-      });
+      window.closeGroupModal = function() {
+        document.getElementById('groupModal').classList.add('hidden');
+        document.getElementById('groupForm').reset();
+      };
 
-      // Close modals when clicking outside
-      [addDepartmentModal, addGroupModal].forEach(modal => {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            modal.classList.remove('show');
-            modal.querySelector('form').reset();
-          }
-        });
-      });
+      window.editGroup = function(id) {
+        const group = window.officeGroupsData.groups.find(g => g.id === id);
+        if (!group) return;
 
-      // Initialize the page with real-time data
-      document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM Content Loaded - Initializing office groups module');
-        fetchRealTimeData();
-      });
+        document.getElementById('groupModalTitle').textContent = 'Edit User Group';
+        document.getElementById('groupId').value = group.id;
+        document.getElementById('groupName').value = group.name || '';
+        document.getElementById('groupCode').value = group.code || '';
+        document.getElementById('groupDescription').value = group.description || '';
+        document.getElementById('groupLeader').value = group.leader || '';
+        document.getElementById('groupStatus').value = group.status || 'active';
+        populateDepartmentSelect();
+        document.getElementById('groupDepartment').value = group.departmentId || '';
+        document.getElementById('groupModal').classList.remove('hidden');
+      };
 
-      // Also try to run immediately if DOM is already loaded
-      if (document.readyState === 'loading') {
-        console.log('DOM still loading, waiting...');
+      window.deleteGroup = async function(id) {
+        if (!confirm('Are you sure you want to delete this group?')) return;
+
+        showLoading();
+        try {
+          const token = getToken();
+          const apiUrl = getAPIUrl();
+          const res = await fetch(`${apiUrl}/groups/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (res.ok) {
+            showSuccess('Group deleted successfully!');
+            await fetchAllData();
       } else {
-        console.log('DOM already loaded, running immediately');
-        fetchRealTimeData();
+            const error = await res.json();
+            alert('Error: ' + (error.error || 'Failed to delete group'));
+          }
+        } catch (error) {
+          console.error('Error deleting group:', error);
+          alert('Error deleting group');
+        } finally {
+          hideLoading();
+        }
+      };
+
+      // Populate department select
+      function populateDepartmentSelect() {
+        const select = document.getElementById('groupDepartment');
+        if (!select) return;
+        
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Select Department (Optional)</option>' +
+          window.officeGroupsData.departments.map(dept => 
+            `<option value="${dept.id}">${escapeHtml(dept.name)} (${escapeHtml(dept.code)})</option>`
+          ).join('');
+        
+        if (currentValue) select.value = currentValue;
       }
 
-             // Function to verify and refresh token if needed
-       async function verifyAndGetToken() {
-         const token = localStorage.getItem('token');
-         
-         if (!token) {
-           alert('Authentication token not found. Please log in again.');
-           window.location.href = '/login/lgu-pmt';
-           return null;
-         }
+      // Form submissions
+      document.getElementById('groupForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveGroup();
+      });
 
-         // Try to verify the token
-         try {
-           const verifyResponse = await fetch('http://localhost:3000/api/auth/verify', {
-             method: 'GET',
-             headers: {
-               'Authorization': `Bearer ${token}`
-             }
-           });
+      async function saveGroup() {
+        showLoading();
+        try {
+          const token = getToken();
+          const apiUrl = getAPIUrl();
+          const id = document.getElementById('groupId').value;
+          
+          const data = {
+            name: document.getElementById('groupName').value,
+            code: document.getElementById('groupCode').value,
+            description: document.getElementById('groupDescription').value,
+            leader: document.getElementById('groupLeader').value,
+            departmentId: document.getElementById('groupDepartment').value || null,
+            status: document.getElementById('groupStatus').value
+          };
 
-           if (!verifyResponse.ok) {
-             // Token is invalid, redirect to login
-             localStorage.removeItem('token');
-             localStorage.removeItem('user');
-             alert('Session expired. Please log in again.');
-             window.location.href = '/login/lgu-pmt';
-             return null;
-           }
+          const url = id ? `${apiUrl}/groups/${id}` : `${apiUrl}/groups`;
+          const method = id ? 'PUT' : 'POST';
 
-           return token;
-         } catch (error) {
-           console.error('Token verification error:', error);
-           return token; // Return token anyway, let the actual request handle the error
-         }
-       }
-
-       // Form submissions
-       addDepartmentForm.addEventListener('submit', async (e) => {
-         e.preventDefault();
-         
-         const formData = new FormData(addDepartmentForm);
-         const data = Object.fromEntries(formData.entries());
-         
-         try {
-           // Verify and get token
-           const token = await verifyAndGetToken();
-           
-           if (!token) {
-             return; // verifyAndGetToken already handled the error
-           }
-           
-           console.log('Department creation - Token verified successfully');
-
-           const response = await fetch('http://localhost:3000/api/admin/departments', {
-             method: 'POST',
+          const res = await fetch(url, {
+            method,
              headers: {
                'Content-Type': 'application/json',
                'Authorization': `Bearer ${token}`
@@ -838,67 +1664,1640 @@ const orgMetrics = [
              body: JSON.stringify(data)
            });
 
-                     if (response.ok) {
-             addDepartmentModal.classList.remove('show');
-             addDepartmentForm.reset();
-             // Refresh data instead of reloading page
-             fetchRealTimeData();
-           } else {
-             const errorData = await response.json();
-             console.error('Department creation error:', errorData);
-             alert('Error creating department: ' + (errorData.error || 'Unknown error'));
+          if (res.ok) {
+            showSuccess(id ? 'Group updated successfully!' : 'Group created successfully!');
+            closeGroupModal();
+            await fetchAllData();
+      } else {
+            const error = await res.json();
+            alert('Error: ' + (error.error || 'Failed to save group'));
            }
          } catch (error) {
-           console.error('Network error:', error);
-           alert('Network error creating department. Please check your connection and try again.');
-         }
+          console.error('Error saving group:', error);
+          alert('Error saving group');
+        } finally {
+          hideLoading();
+        }
+      }
+
+      // ==================== FILTERS ====================
+      
+      document.getElementById('deptSearch')?.addEventListener('input', renderDepartmentsTable);
+      document.getElementById('deptStatusFilter')?.addEventListener('change', renderDepartmentsTable);
+      document.getElementById('deptSortBy')?.addEventListener('change', renderDepartmentsTable);
+      document.getElementById('clearDeptFilters')?.addEventListener('click', () => {
+        document.getElementById('deptSearch').value = '';
+        document.getElementById('deptStatusFilter').value = '';
+        document.getElementById('deptSortBy').value = 'name';
+        renderDepartmentsTable();
       });
 
-             addGroupForm.addEventListener('submit', async (e) => {
-         e.preventDefault();
-         
-         const formData = new FormData(addGroupForm);
-         const data = Object.fromEntries(formData.entries());
-         
-         // Convert empty string to null for departmentId
-         if (data.departmentId === '') {
-           data.departmentId = null;
-         }
-         
-         try {
-           // Verify and get token
-           const token = await verifyAndGetToken();
-           
-           if (!token) {
-             return; // verifyAndGetToken already handled the error
-           }
-           
-           console.log('Group creation - Token verified successfully');
 
-           const response = await fetch('http://localhost:3000/api/admin/groups', {
-             method: 'POST',
+      // Populate department filter
+      function populateDepartmentFilters() {
+        // Function kept for potential future use
+      }
+
+      // ==================== BULK ACTIONS ====================
+      
+      // Note: Bulk actions for departments removed - departments are managed through user-management
+      document.getElementById('bulkDeptActionsBtn')?.addEventListener('click', () => {
+        alert('Department management is done through User Management module. Please manage departments when adding or editing users.');
+      });
+
+      document.getElementById('bulkGroupActionsBtn')?.addEventListener('click', () => {
+        const selected = window.officeGroupsData.selectedGroups;
+        if (selected.length === 0) {
+          alert('Please select at least one group');
+          return;
+        }
+        document.getElementById('bulkActionsTitle').textContent = 'Bulk Group Actions';
+        document.getElementById('bulkActionsCount').textContent = `${selected.length} group(s) selected`;
+        window.currentBulkType = 'groups';
+        document.getElementById('bulkActionsModal').classList.remove('hidden');
+      });
+
+      window.closeBulkActionsModal = function() {
+        document.getElementById('bulkActionsModal').classList.add('hidden');
+      };
+
+      window.bulkActivate = async function() {
+        await performBulkAction('activate');
+      };
+
+      window.bulkDeactivate = async function() {
+        await performBulkAction('deactivate');
+      };
+
+      window.bulkDelete = async function() {
+        if (!confirm('Are you sure you want to delete the selected items? This action cannot be undone.')) return;
+        await performBulkAction('delete');
+      };
+
+      async function performBulkAction(action) {
+        const type = window.currentBulkType;
+        const selected = type === 'departments' ? window.officeGroupsData.selectedDepts : window.officeGroupsData.selectedGroups;
+        
+        if (selected.length === 0) return;
+
+        showLoading();
+        try {
+          const token = getToken();
+          const apiUrl = getAPIUrl();
+          const endpoint = type === 'departments' ? 'departments' : 'groups';
+
+          for (const id of selected) {
+            if (action === 'delete') {
+              await fetch(`${apiUrl}/${endpoint}/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+            } else {
+              await fetch(`${apiUrl}/${endpoint}/${id}`, {
+                method: 'PUT',
              headers: {
-               'Content-Type': 'application/json',
+                  'Content-Type': 'application/json',
                'Authorization': `Bearer ${token}`
-             },
-             body: JSON.stringify(data)
-           });
+                },
+                body: JSON.stringify({ status: action === 'activate' ? 'active' : 'inactive' })
+              });
+            }
+          }
 
-                     if (response.ok) {
-             addGroupModal.classList.remove('show');
-             addGroupForm.reset();
-             // Refresh data instead of reloading page
-             fetchRealTimeData();
-           } else {
-             const errorData = await response.json();
-             console.error('Group creation error:', errorData);
-             alert('Error creating group: ' + (errorData.error || 'Unknown error'));
-           }
-         } catch (error) {
-           console.error('Network error:', error);
-           alert('Network error creating group. Please check your connection and try again.');
-         }
+          showSuccess(`Bulk ${action} completed successfully!`);
+          closeBulkActionsModal();
+          await fetchAllData();
+        } catch (error) {
+          console.error('Error performing bulk action:', error);
+          alert('Error performing bulk action');
+        } finally {
+          hideLoading();
+        }
+      }
+
+
+      // ==================== STATISTICS ====================
+      
+      // Store Chart.js instances for cleanup
+      window.departmentStatisticsCharts = {};
+      
+      document.getElementById('viewStatisticsBtn')?.addEventListener('click', () => {
+        showStatistics();
       });
+
+      window.closeStatisticsModal = function() {
+        // Destroy all charts before closing
+        Object.values(window.departmentStatisticsCharts).forEach(chart => {
+          if (chart && typeof chart.destroy === 'function') {
+            chart.destroy();
+          }
+        });
+        window.departmentStatisticsCharts = {};
+        document.getElementById('statisticsModal').classList.add('hidden');
+      };
+
+      // Load Chart.js and render statistics
+      async function showStatistics() {
+        const modal = document.getElementById('statisticsModal');
+        const loadingEl = document.getElementById('departmentStatisticsLoading');
+        const contentEl = document.getElementById('statisticsContent');
+        
+        if (!modal || !loadingEl || !contentEl) return;
+        
+        // Show modal and loading
+        modal.classList.remove('hidden');
+        loadingEl.classList.remove('hidden');
+        contentEl.style.display = 'none';
+        
+        try {
+          // Load Chart.js dynamically
+          if (typeof Chart === 'undefined') {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+              script.onload = resolve;
+              script.onerror = () => reject(new Error('Failed to load Chart.js'));
+              document.head.appendChild(script);
+            });
+          }
+          
+          // Process data and render charts
+          await renderDepartmentStatistics();
+          
+          // Hide loading, show content
+          loadingEl.classList.add('hidden');
+          contentEl.style.display = 'block';
+        } catch (error) {
+          console.error('Error loading statistics:', error);
+          loadingEl.classList.add('hidden');
+          contentEl.innerHTML = `
+            <div class="text-center py-12">
+              <p class="text-red-500">Failed to load statistics. Please try again.</p>
+            </div>
+          `;
+        }
+      }
+
+      async function renderDepartmentStatistics() {
+        const { departments, groups, users } = window.officeGroupsData;
+        const timeRange = document.getElementById('departmentStatisticsTimeRange')?.value || 'all';
+        
+        // Calculate date filter
+        const now = new Date();
+        let filterDate = null;
+        if (timeRange !== 'all') {
+          filterDate = new Date(now);
+          filterDate.setDate(filterDate.getDate() - parseInt(timeRange));
+        }
+        
+        // Process department data
+        const deptStats = departments.map(dept => {
+          const deptUsers = users.filter(u => {
+            const userDept = u.department || '';
+            const matches = userDept === dept.name || userDept === dept.code;
+            if (filterDate && matches) {
+              const userCreated = u.createdAt ? new Date(u.createdAt) : null;
+              return !userCreated || userCreated >= filterDate;
+            }
+            return matches;
+          });
+          
+          const activeUsers = deptUsers.filter(u => u.isActive === true).length;
+          const deptUserGroups = new Set();
+          deptUsers.forEach(user => {
+            if (user.group && user.group.trim() !== '') {
+              deptUserGroups.add(user.group.trim());
+            }
+          });
+          
+          return {
+            name: dept.name,
+            code: dept.code,
+            totalUsers: deptUsers.length,
+            activeUsers: activeUsers,
+            inactiveUsers: deptUsers.length - activeUsers,
+            groups: Array.from(deptUserGroups),
+            hasActiveUsers: activeUsers > 0,
+            createdAt: dept.createdAt
+          };
+        });
+        
+        // Render all charts
+        renderDepartmentGrowthChart(deptStats, filterDate);
+        renderUserDistributionChart(deptStats);
+        renderActiveInactiveChart(deptStats);
+        renderGroupDistributionChart(deptStats);
+        renderTopDepartmentsChart(deptStats);
+        renderActivityLevelsChart(deptStats);
+        renderSizeDistributionChart(deptStats);
+        renderUserGroupChart(users);
+        renderActivityHeatmapChart(deptStats);
+        renderAssignmentTrendsChart(users, filterDate);
+      }
+
+      function renderDepartmentGrowthChart(deptStats, filterDate) {
+        const ctx = document.getElementById('departmentGrowthChart');
+        if (!ctx) return;
+        
+        // Destroy existing chart
+        if (window.departmentStatisticsCharts.growth) {
+          window.departmentStatisticsCharts.growth.destroy();
+        }
+        
+        // Group by creation date
+        const growthData = {};
+        deptStats.forEach(dept => {
+          if (dept.createdAt) {
+            const date = new Date(dept.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            growthData[date] = (growthData[date] || 0) + 1;
+          }
+        });
+        
+        const sortedDates = Object.keys(growthData).sort((a, b) => new Date(a) - new Date(b));
+        const cumulative = [];
+        let total = 0;
+        sortedDates.forEach(date => {
+          total += growthData[date];
+          cumulative.push(total);
+        });
+        
+        window.departmentStatisticsCharts.growth = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: sortedDates,
+            datasets: [{
+              label: 'Total Departments',
+              data: cumulative,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      function renderUserDistributionChart(deptStats) {
+        const ctx = document.getElementById('userDistributionChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.userDistribution) {
+          window.departmentStatisticsCharts.userDistribution.destroy();
+        }
+        
+        const sorted = [...deptStats].sort((a, b) => b.totalUsers - a.totalUsers).slice(0, 10);
+        
+        window.departmentStatisticsCharts.userDistribution = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: sorted.map(d => d.name.length > 20 ? d.name.substring(0, 20) + '...' : d.name),
+            datasets: [{
+              data: sorted.map(d => d.totalUsers),
+              backgroundColor: [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(20, 184, 166, 0.8)',
+                'rgba(251, 146, 60, 0.8)',
+                'rgba(99, 102, 241, 0.8)',
+                'rgba(168, 85, 247, 0.8)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'right' }
+            }
+          }
+        });
+      }
+
+      function renderActiveInactiveChart(deptStats) {
+        const ctx = document.getElementById('activeInactiveChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.activeInactive) {
+          window.departmentStatisticsCharts.activeInactive.destroy();
+        }
+        
+        const active = deptStats.filter(d => d.hasActiveUsers).length;
+        const inactive = deptStats.length - active;
+        
+        window.departmentStatisticsCharts.activeInactive = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: ['Active Departments', 'Inactive Departments'],
+            datasets: [{
+              data: [active, inactive],
+              backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(156, 163, 175, 0.8)']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'bottom' }
+            }
+          }
+        });
+      }
+
+      function renderGroupDistributionChart(deptStats) {
+        const ctx = document.getElementById('groupDistributionChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.groupDistribution) {
+          window.departmentStatisticsCharts.groupDistribution.destroy();
+        }
+        
+        const groupCounts = {};
+        deptStats.forEach(dept => {
+          dept.groups.forEach(group => {
+            groupCounts[group] = (groupCounts[group] || 0) + 1;
+        });
+      });
+
+        const sortedGroups = Object.entries(groupCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8);
+        
+        window.departmentStatisticsCharts.groupDistribution = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sortedGroups.map(([name]) => name),
+            datasets: [{
+              label: 'Departments',
+              data: sortedGroups.map(([, count]) => count),
+              backgroundColor: 'rgba(59, 130, 246, 0.8)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      function renderTopDepartmentsChart(deptStats) {
+        const ctx = document.getElementById('topDepartmentsChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.topDepartments) {
+          window.departmentStatisticsCharts.topDepartments.destroy();
+        }
+        
+        const sorted = [...deptStats].sort((a, b) => b.totalUsers - a.totalUsers).slice(0, 10);
+        
+        window.departmentStatisticsCharts.topDepartments = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sorted.map(d => d.name.length > 25 ? d.name.substring(0, 25) + '...' : d.name),
+            datasets: [{
+              label: 'User Count',
+              data: sorted.map(d => d.totalUsers),
+              backgroundColor: 'rgba(16, 185, 129, 0.8)'
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      function renderActivityLevelsChart(deptStats) {
+        const ctx = document.getElementById('activityLevelsChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.activityLevels) {
+          window.departmentStatisticsCharts.activityLevels.destroy();
+        }
+        
+        const sorted = [...deptStats].sort((a, b) => b.activeUsers - a.activeUsers).slice(0, 10);
+        
+        window.departmentStatisticsCharts.activityLevels = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: sorted.map(d => d.name.length > 20 ? d.name.substring(0, 20) + '...' : d.name),
+            datasets: [{
+              label: 'Active Users',
+              data: sorted.map(d => d.activeUsers),
+              borderColor: 'rgb(16, 185, 129)',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              tension: 0.4,
+              fill: true
+            }, {
+              label: 'Inactive Users',
+              data: sorted.map(d => d.inactiveUsers),
+              borderColor: 'rgb(156, 163, 175)',
+              backgroundColor: 'rgba(156, 163, 175, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      function renderSizeDistributionChart(deptStats) {
+        const ctx = document.getElementById('sizeDistributionChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.sizeDistribution) {
+          window.departmentStatisticsCharts.sizeDistribution.destroy();
+        }
+        
+        const sizeRanges = {
+          '0 users': 0,
+          '1-5 users': 0,
+          '6-10 users': 0,
+          '11-20 users': 0,
+          '21+ users': 0
+        };
+        
+        deptStats.forEach(dept => {
+          const count = dept.totalUsers;
+          if (count === 0) sizeRanges['0 users']++;
+          else if (count <= 5) sizeRanges['1-5 users']++;
+          else if (count <= 10) sizeRanges['6-10 users']++;
+          else if (count <= 20) sizeRanges['11-20 users']++;
+          else sizeRanges['21+ users']++;
+        });
+        
+        window.departmentStatisticsCharts.sizeDistribution = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(sizeRanges),
+            datasets: [{
+              label: 'Departments',
+              data: Object.values(sizeRanges),
+              backgroundColor: [
+                'rgba(156, 163, 175, 0.8)',
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      function renderUserGroupChart(users) {
+        const ctx = document.getElementById('userGroupChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.userGroup) {
+          window.departmentStatisticsCharts.userGroup.destroy();
+        }
+        
+        const groupCounts = {};
+        users.forEach(user => {
+          if (user.group) {
+            groupCounts[user.group] = (groupCounts[user.group] || 0) + 1;
+          }
+        });
+        
+        const sorted = Object.entries(groupCounts).sort((a, b) => b[1] - a[1]);
+        
+        window.departmentStatisticsCharts.userGroup = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: sorted.map(([name]) => name),
+            datasets: [{
+              data: sorted.map(([, count]) => count),
+              backgroundColor: [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'right' }
+            }
+          }
+        });
+      }
+
+      function renderActivityHeatmapChart(deptStats) {
+        const ctx = document.getElementById('activityHeatmapChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.activityHeatmap) {
+          window.departmentStatisticsCharts.activityHeatmap.destroy();
+        }
+        
+        const sorted = [...deptStats].sort((a, b) => b.activeUsers - a.activeUsers).slice(0, 8);
+        
+        window.departmentStatisticsCharts.activityHeatmap = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: sorted.map(d => d.name.length > 20 ? d.name.substring(0, 20) + '...' : d.name),
+            datasets: [{
+              label: 'Active Users',
+              data: sorted.map(d => d.activeUsers),
+              backgroundColor: sorted.map(d => 
+                d.activeUsers > 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(156, 163, 175, 0.8)'
+              )
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      function renderAssignmentTrendsChart(users, filterDate) {
+        const ctx = document.getElementById('assignmentTrendsChart');
+        if (!ctx) return;
+        
+        if (window.departmentStatisticsCharts.assignmentTrends) {
+          window.departmentStatisticsCharts.assignmentTrends.destroy();
+        }
+        
+        // Group users by creation date
+        const trends = {};
+        users.forEach(user => {
+          if (user.createdAt) {
+            const date = new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            if (!filterDate || new Date(user.createdAt) >= filterDate) {
+              if (!trends[date]) trends[date] = { assigned: 0, unassigned: 0 };
+              const hasDept = user.department && user.department.trim() !== '';
+              const hasGroup = user.group && user.group.trim() !== '';
+              if (hasDept || hasGroup) {
+                trends[date].assigned++;
+           } else {
+                trends[date].unassigned++;
+              }
+            }
+          }
+        });
+        
+        const sortedDates = Object.keys(trends).sort((a, b) => new Date(a) - new Date(b));
+        
+        window.departmentStatisticsCharts.assignmentTrends = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: sortedDates,
+            datasets: [{
+              label: 'Assigned Users',
+              data: sortedDates.map(d => trends[d].assigned),
+              borderColor: 'rgb(16, 185, 129)',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              tension: 0.4,
+              fill: true
+            }, {
+              label: 'Unassigned Users',
+              data: sortedDates.map(d => trends[d].unassigned),
+              borderColor: 'rgb(239, 68, 68)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      // Refresh statistics button
+      document.getElementById('refreshDepartmentStatisticsBtn')?.addEventListener('click', () => {
+        renderDepartmentStatistics();
+      });
+
+      // Time range change handler
+      document.getElementById('departmentStatisticsTimeRange')?.addEventListener('change', () => {
+        renderDepartmentStatistics();
+      });
+
+      // ==================== EXPORT ====================
+      
+      document.getElementById('exportDataBtn')?.addEventListener('click', () => {
+        document.getElementById('exportFormatModal').classList.remove('hidden');
+      });
+
+      window.closeExportModal = function() {
+        document.getElementById('exportFormatModal').classList.add('hidden');
+      };
+
+      // Show export loading modal
+      function showExportLoadingModal() {
+        const modal = document.getElementById('exportLoadingModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+      }
+
+      // Hide export loading modal
+      function hideExportLoadingModal() {
+        const modal = document.getElementById('exportLoadingModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      }
+
+      // Show export success modal
+      function showExportSuccessModal(format) {
+        const modal = document.getElementById('exportSuccessModal');
+        const titleEl = document.getElementById('exportSuccessTitle');
+        const messageEl = document.getElementById('exportSuccessMessage');
+        
+        if (modal) {
+          const formatNames = {
+            'excel': 'Excel',
+            'pdf': 'PDF',
+            'html': 'HTML Report'
+          };
+          
+          if (titleEl) {
+            titleEl.textContent = 'Export Successful!';
+          }
+          if (messageEl) {
+            messageEl.textContent = `Your data has been exported to ${formatNames[format] || format} successfully.`;
+          }
+          
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          
+          // Auto-close after 3 seconds
+          setTimeout(() => {
+            closeExportSuccessModal();
+          }, 3000);
+        }
+      }
+
+      // Close export success modal
+      window.closeExportSuccessModal = function() {
+        const modal = document.getElementById('exportSuccessModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      };
+
+      window.exportData = async function(format) {
+        closeExportModal();
+        showExportLoadingModal();
+        
+        try {
+          // Add a small delay to show the loading animation
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const { departments, groups, users } = window.officeGroupsData;
+          
+          if (format === 'excel') {
+            await exportToExcel(departments, groups, users);
+          } else if (format === 'pdf') {
+            await exportToPDF(departments, groups, users);
+          } else if (format === 'html') {
+            exportToHTML(departments, groups, users);
+          }
+          
+          hideExportLoadingModal();
+          showExportSuccessModal(format);
+         } catch (error) {
+          console.error('Export error:', error);
+          hideExportLoadingModal();
+          alert('Error exporting data. Please try again.');
+        }
+      };
+
+      async function exportToExcel(departments, groups, users) {
+        // CSV format for Excel
+        let csv = 'Type,Name,Code,Description,Head/Leader,Status,Users,Department\n';
+        
+        departments.forEach(dept => {
+          const deptUsers = users.filter(u => u.department === dept.name || u.department === dept.code).length;
+          csv += `Department,"${dept.name}","${dept.code}","${dept.description || ''}","${dept.head || ''}","${dept.status}",${deptUsers},\n`;
+        });
+        
+        groups.forEach(group => {
+          const groupUsers = users.filter(u => u.group === group.name || u.group === group.code).length;
+          const dept = departments.find(d => d.id === group.departmentId);
+          csv += `Group,"${group.name}","${group.code}","${group.description || ''}","${group.leader || ''}","${group.status}",${groupUsers},"${dept?.name || ''}"\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `organizational-structure-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      async function exportToPDF(departments, groups, users) {
+        // Load jsPDF dynamically
+        if (!window.jspdf) {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          await new Promise((resolve) => {
+            script.onload = resolve;
+            document.head.appendChild(script);
+          });
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('Organizational Structure Report', 14, 20);
+        doc.setFontSize(12);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+        
+        let y = 40;
+        doc.setFontSize(14);
+        doc.text('Departments', 14, y);
+        y += 10;
+        
+        departments.forEach((dept, idx) => {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.setFontSize(10);
+          doc.text(`${idx + 1}. ${dept.name} (${dept.code})`, 20, y);
+          y += 7;
+        });
+        
+        y += 5;
+        doc.setFontSize(14);
+        doc.text('Groups', 14, y);
+        y += 10;
+        
+        groups.forEach((group, idx) => {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.setFontSize(10);
+          doc.text(`${idx + 1}. ${group.name} (${group.code})`, 20, y);
+          y += 7;
+        });
+        
+        doc.save(`organizational-structure-${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+
+      function exportToHTML(departments, groups, users) {
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Organizational Structure Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Organizational Structure Report</h1>
+  <p>Generated: ${new Date().toLocaleString()}</p>
+  
+  <h2>Departments (${departments.length})</h2>
+  <table>
+    <tr><th>Name</th><th>Code</th><th>Head</th><th>Status</th><th>Users</th></tr>
+    ${departments.map(dept => {
+      const deptUsers = users.filter(u => u.department === dept.name || u.department === dept.code).length;
+      return `<tr><td>${escapeHtml(dept.name)}</td><td>${escapeHtml(dept.code)}</td><td>${escapeHtml(dept.head || '')}</td><td>${dept.status}</td><td>${deptUsers}</td></tr>`;
+    }).join('')}
+  </table>
+  
+  <h2>Groups (${groups.length})</h2>
+  <table>
+    <tr><th>Name</th><th>Code</th><th>Department</th><th>Leader</th><th>Status</th><th>Members</th></tr>
+    ${groups.map(group => {
+      const groupUsers = users.filter(u => u.group === group.name || u.group === group.code).length;
+      const dept = departments.find(d => d.id === group.departmentId);
+      return `<tr><td>${escapeHtml(group.name)}</td><td>${escapeHtml(group.code)}</td><td>${escapeHtml(dept?.name || '')}</td><td>${escapeHtml(group.leader || '')}</td><td>${group.status}</td><td>${groupUsers}</td></tr>`;
+    }).join('')}
+  </table>
+</body>
+</html>`;
+        
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `organizational-structure-${new Date().toISOString().split('T')[0]}.html`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      // ==================== REFRESH ====================
+      
+      document.getElementById('refreshBtn')?.addEventListener('click', () => {
+        fetchAllData();
+      });
+
+      // ==================== SELECT ALL CHECKBOXES ====================
+      
+      document.getElementById('selectAllGroups')?.addEventListener('change', function() {
+        document.querySelectorAll('.group-checkbox').forEach(cb => {
+          cb.checked = this.checked;
+        });
+        updateGroupSelection();
+      });
+
+      // ==================== VIEW DETAILS ====================
+      
+      window.viewDepartmentDetails = function(id) {
+        const dept = window.officeGroupsData.departments.find(d => d.id === id);
+        if (!dept) return;
+
+        // Count users accurately
+        const deptUsers = window.officeGroupsData.users.filter(u => {
+          const userDept = u.department || '';
+          return userDept === dept.name || userDept === dept.code;
+        });
+        
+        // Get unique groups from users in this department
+        const deptUserGroups = new Set();
+        deptUsers.forEach(user => {
+          if (user.group && user.group.trim() !== '') {
+            deptUserGroups.add(user.group.trim());
+          }
+        });
+        const groupsList = Array.from(deptUserGroups).sort();
+        
+        // Generate description if not present
+        const description = dept.description || generateDepartmentDescription(dept.name);
+        
+        // Determine groups display with badges
+        let groupsDisplay = '';
+        if (dept.name === 'Executive Office' || dept.name === 'Information Technology') {
+          groupsDisplay = '<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">Admin Office</span>';
+        } else if (groupsList.length > 0) {
+          groupsDisplay = groupsList.map(group => {
+            let badgeClass = '';
+            if (group === 'EIU') {
+              badgeClass = 'bg-green-100 text-green-700';
+            } else if (group === 'LGU-IU') {
+              badgeClass = 'bg-amber-100 text-amber-800';
+            } else if (group === 'LGU-PMT') {
+              badgeClass = 'bg-blue-100 text-blue-700';
+           } else {
+              badgeClass = 'bg-gray-100 text-gray-700';
+            }
+            return `<span class="px-2 py-1 ${badgeClass} rounded text-xs font-medium">${escapeHtml(group)}</span>`;
+          }).join(' ');
+        } else {
+          groupsDisplay = '<span class="text-sm text-gray-400">None</span>';
+        }
+
+        // Populate modal content
+        const modalContent = document.getElementById('departmentDetailsContent');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div class="space-y-6">
+              <!-- Department Name -->
+              <div class="flex items-start gap-4 p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-sm font-semibold text-gray-600 mb-1">Department Name</h4>
+                  <p class="text-lg font-bold text-gray-900">${escapeHtml(dept.name)}</p>
+                </div>
+              </div>
+
+              <!-- Code and Status Row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <h4 class="text-sm font-semibold text-gray-600 mb-2">Code</h4>
+                  <span class="px-3 py-1.5 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium inline-block">${escapeHtml(dept.code)}</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <h4 class="text-sm font-semibold text-gray-600 mb-2">Status</h4>
+                  <span class="px-3 py-1.5 rounded-lg text-xs font-medium inline-block ${dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
+                    ${dept.status || 'active'}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-600 mb-2">Description</h4>
+                <p class="text-gray-700 leading-relaxed">${escapeHtml(description)}</p>
+              </div>
+
+              <!-- Users and Groups Row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <h4 class="text-sm font-semibold text-gray-600 mb-2">Total Users</h4>
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="text-2xl font-bold text-gray-900">${deptUsers.length}</span>
+                  </div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <h4 class="text-sm font-semibold text-gray-600 mb-2">User Groups</h4>
+                  <div class="flex flex-wrap gap-2">
+                    ${groupsDisplay}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        // Show modal with animation
+        const modal = document.getElementById('departmentDetailsModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.style.opacity = '0';
+          const modalContent = modal.querySelector('.bg-white');
+          if (modalContent) {
+            modalContent.style.transform = 'scale(0.95) translateY(20px)';
+            modalContent.style.opacity = '0';
+            
+            requestAnimationFrame(() => {
+              modal.style.transition = 'opacity 0.3s ease-out';
+              modal.style.opacity = '1';
+              
+              setTimeout(() => {
+                modalContent.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                modalContent.style.transform = 'scale(1) translateY(0)';
+                modalContent.style.opacity = '1';
+              }, 50);
+            });
+          }
+        }
+      };
+
+      window.closeDepartmentDetailsModal = function() {
+        const modal = document.getElementById('departmentDetailsModal');
+        if (modal) {
+          const modalContent = modal.querySelector('.bg-white');
+          if (modalContent) {
+            modalContent.style.transition = 'all 0.2s ease-in';
+            modalContent.style.transform = 'scale(0.95) translateY(20px)';
+            modalContent.style.opacity = '0';
+          }
+          
+          modal.style.transition = 'opacity 0.2s ease-in';
+          modal.style.opacity = '0';
+          
+          setTimeout(() => {
+            modal.classList.add('hidden');
+          }, 200);
+        }
+      };
+
+      // ==================== VIEW DEPARTMENT USERS ====================
+      
+      window.viewDepartmentUsers = function(id) {
+        const dept = window.officeGroupsData.departments.find(d => d.id === id);
+        if (!dept) return;
+
+        // Get users in this department
+        const deptUsers = window.officeGroupsData.users.filter(u => {
+          const userDept = u.department || '';
+          return userDept === dept.name || userDept === dept.code;
+        });
+
+        // Update modal title
+        const modalTitle = document.getElementById('departmentUsersModalTitle');
+        const modalSubtitle = document.getElementById('departmentUsersModalSubtitle');
+        if (modalTitle) modalTitle.textContent = `Users in ${dept.name}`;
+        if (modalSubtitle) modalSubtitle.textContent = `${deptUsers.length} user${deptUsers.length !== 1 ? 's' : ''} found`;
+
+        // Populate modal content
+        const modalContent = document.getElementById('departmentUsersContent');
+        if (modalContent) {
+          if (deptUsers.length === 0) {
+            modalContent.innerHTML = `
+              <div class="text-center py-12">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <p class="text-lg font-medium text-gray-500">No users found</p>
+                <p class="text-sm text-gray-400 mt-2">This department has no assigned users yet.</p>
+              </div>
+            `;
+          } else {
+            modalContent.innerHTML = `
+              <div class="space-y-4">
+                ${deptUsers.map(user => {
+                  const profilePic = user.profilePictureUrl || '';
+                  const fullName = user.fullName || user.name || 'N/A';
+                  const email = user.email || 'N/A';
+                  const username = user.username || 'N/A';
+                  const role = user.role || 'N/A';
+                  const group = user.group || 'N/A';
+                  const status = user.status || 'active';
+                  
+                  // Determine group badge color
+                  let groupBadgeClass = 'bg-gray-100 text-gray-700';
+                  if (group === 'EIU') {
+                    groupBadgeClass = 'bg-green-100 text-green-700';
+                  } else if (group === 'LGU-IU') {
+                    groupBadgeClass = 'bg-amber-100 text-amber-800';
+                  } else if (group === 'LGU-PMT') {
+                    groupBadgeClass = 'bg-blue-100 text-blue-700';
+                  }
+
+                  return `
+                    <div class="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4 flex-1">
+                          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0 overflow-hidden">
+                            ${profilePic ? 
+                              `<img src="${escapeHtml(profilePic)}" alt="${escapeHtml(fullName)}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                               <div class="w-full h-full hidden items-center justify-center">${fullName.charAt(0).toUpperCase()}</div>` :
+                              `<span>${fullName.charAt(0).toUpperCase()}</span>`
+                            }
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <h4 class="text-lg font-semibold text-gray-900 truncate">${escapeHtml(fullName)}</h4>
+                            <div class="flex flex-wrap items-center gap-3 mt-1">
+                              <p class="text-sm text-gray-600 truncate">
+                                <span class="font-medium">Email:</span> ${escapeHtml(email)}
+                              </p>
+                              <span class="text-gray-300">•</span>
+                              <p class="text-sm text-gray-600 truncate">
+                                <span class="font-medium">Username:</span> ${escapeHtml(username)}
+                              </p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mt-2">
+                              <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">${escapeHtml(role)}</span>
+                              <span class="px-2 py-1 ${groupBadgeClass} rounded text-xs font-medium">${escapeHtml(group)}</span>
+                              <span class="px-2 py-1 rounded text-xs font-medium ${status === 'active' ? 'bg-green-100 text-green-700' : status === 'blocked' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}">
+                                ${escapeHtml(status)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                          <button onclick="navigateToUser('${escapeJsString(username)}', '${escapeJsString(email)}', '${escapeJsString(fullName)}')" class="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `;
+          }
+        }
+
+        // Show modal with animation
+        const modal = document.getElementById('departmentUsersModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.style.opacity = '0';
+          const modalContent = modal.querySelector('.bg-white');
+          if (modalContent) {
+            modalContent.style.transform = 'scale(0.95) translateY(20px)';
+            modalContent.style.opacity = '0';
+            
+            requestAnimationFrame(() => {
+              modal.style.transition = 'opacity 0.3s ease-out';
+              modal.style.opacity = '1';
+              
+              setTimeout(() => {
+                modalContent.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                modalContent.style.transform = 'scale(1) translateY(0)';
+                modalContent.style.opacity = '1';
+              }, 50);
+            });
+          }
+        }
+      };
+
+      window.closeDepartmentUsersModal = function() {
+        const modal = document.getElementById('departmentUsersModal');
+        if (modal) {
+          const modalContent = modal.querySelector('.bg-white');
+          if (modalContent) {
+            modalContent.style.transition = 'all 0.2s ease-in';
+            modalContent.style.transform = 'scale(0.95) translateY(20px)';
+            modalContent.style.opacity = '0';
+          }
+          
+          modal.style.transition = 'opacity 0.2s ease-in';
+          modal.style.opacity = '0';
+          
+          setTimeout(() => {
+            modal.classList.add('hidden');
+          }, 200);
+        }
+      };
+
+      // Navigate to user-management.astro with user filter
+      // ==================== DEPARTMENT COMPARISON ====================
+      
+      // Store selected department for comparison
+      window.comparisonSelectedDept = null;
+      
+      // Select department for comparison
+      window.selectDepartmentForComparison = function(deptId) {
+        window.comparisonSelectedDept = deptId;
+        openComparisonSelectionModal();
+      };
+      
+      // Open comparison selection modal
+      function openComparisonSelectionModal() {
+        const modal = document.getElementById('comparisonSelectionModal');
+        const select1 = document.getElementById('compareDept1');
+        const select2 = document.getElementById('compareDept2');
+        
+        if (!modal || !select1 || !select2) return;
+        
+        // Populate department selects
+        const { departments } = window.officeGroupsData;
+        select1.innerHTML = '<option value="">Select first department...</option>';
+        select2.innerHTML = '<option value="">Select second department...</option>';
+        
+        departments.forEach(dept => {
+          const option1 = document.createElement('option');
+          option1.value = dept.id;
+          option1.textContent = `${dept.name} (${dept.code})`;
+          if (window.comparisonSelectedDept === dept.id) {
+            option1.selected = true;
+          }
+          select1.appendChild(option1);
+          
+          const option2 = document.createElement('option');
+          option2.value = dept.id;
+          option2.textContent = `${dept.name} (${dept.code})`;
+          select2.appendChild(option2);
+        });
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      
+      // Close comparison selection modal
+      window.closeComparisonSelectionModal = function() {
+        const modal = document.getElementById('comparisonSelectionModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        window.comparisonSelectedDept = null;
+      };
+      
+      // Show notice modal
+      function showNoticeModal(title, message) {
+        const modal = document.getElementById('noticeModal');
+        const titleEl = document.getElementById('noticeTitle');
+        const messageEl = document.getElementById('noticeMessage');
+        
+        if (modal && titleEl && messageEl) {
+          titleEl.textContent = title || 'Notice';
+          messageEl.textContent = message || 'Please check your input and try again.';
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+      }
+      
+      // Close notice modal
+      window.closeNoticeModal = function() {
+        const modal = document.getElementById('noticeModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      };
+      
+      // Start comparison
+      window.startComparison = function() {
+        const dept1Id = document.getElementById('compareDept1')?.value;
+        const dept2Id = document.getElementById('compareDept2')?.value;
+        
+        if (!dept1Id || !dept2Id) {
+          showNoticeModal('Selection Required', 'Please select both departments to compare.');
+          return;
+        }
+        
+        if (dept1Id === dept2Id) {
+          showNoticeModal('Invalid Selection', 'Please select two different departments to compare.');
+          return;
+        }
+        
+        closeComparisonSelectionModal();
+        renderComparison(dept1Id, dept2Id);
+      };
+      
+      // Render comparison
+      function renderComparison(dept1Id, dept2Id) {
+        const { departments, users } = window.officeGroupsData;
+        const dept1 = departments.find(d => d.id === dept1Id);
+        const dept2 = departments.find(d => d.id === dept2Id);
+        
+        if (!dept1 || !dept2) {
+          alert('One or both departments not found');
+          return;
+        }
+        
+        // Get users for each department
+        const dept1Users = users.filter(u => {
+          const userDept = u.department || '';
+          return userDept === dept1.name || userDept === dept1.code;
+        });
+        
+        const dept2Users = users.filter(u => {
+          const userDept = u.department || '';
+          return userDept === dept2.name || userDept === dept2.code;
+        });
+        
+        // Calculate metrics
+        const dept1ActiveUsers = dept1Users.filter(u => u.isActive === true).length;
+        const dept2ActiveUsers = dept2Users.filter(u => u.isActive === true).length;
+        
+        // Get unique groups
+        const dept1Groups = new Set();
+        dept1Users.forEach(user => {
+          if (user.group && user.group.trim() !== '') {
+            dept1Groups.add(user.group.trim());
+          }
+        });
+        
+        const dept2Groups = new Set();
+        dept2Users.forEach(user => {
+          if (user.group && user.group.trim() !== '') {
+            dept2Groups.add(user.group.trim());
+          }
+        });
+        
+        const dept1GroupsList = Array.from(dept1Groups).sort();
+        const dept2GroupsList = Array.from(dept2Groups).sort();
+        
+        // Get department logos
+        const dept1Logo = getDepartmentLogo(dept1.name);
+        const dept2Logo = getDepartmentLogo(dept2.name);
+        
+        // Check active status
+        const dept1HasActive = dept1Users.some(u => u.isActive === true);
+        const dept2HasActive = dept2Users.some(u => u.isActive === true);
+        
+        // Helper function to highlight differences
+        function highlightDiff(val1, val2, isHigher = true) {
+          if (val1 === val2) return 'border-gray-200';
+          if (isHigher) {
+            return val1 > val2 ? 'border-green-300 border-2' : 'border-red-300 border-2';
+          } else {
+            return val1 < val2 ? 'border-green-300 border-2' : 'border-red-300 border-2';
+          }
+        }
+        
+        const content = document.getElementById('comparisonContent');
+        if (!content) return;
+        
+        content.innerHTML = `
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Department 1 -->
+            <div class="space-y-6">
+              <div class="profile-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                  <div class="relative w-16 h-16 flex-shrink-0">
+                    <img src="${escapeHtml(dept1Logo)}" alt="${escapeHtml(dept1.name)}" class="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" onerror="this.onerror=null; this.src='/santa-cruz-seal.png';">
+                    <div class="absolute bottom-0 right-0 w-4 h-4 ${dept1HasActive ? 'bg-green-500' : 'bg-gray-400'} rounded-full border-2 border-white shadow-md"></div>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-2xl font-bold text-gray-900">${escapeHtml(dept1.name)}</h4>
+                    <p class="text-sm text-gray-600">${escapeHtml(dept1.code)}</p>
+                  </div>
+                </div>
+                
+                <div class="space-y-4">
+                  <!-- Basic Info -->
+                  <div class="border-t border-gray-200 pt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3">Basic Information</h5>
+                    <div class="space-y-2">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Description:</span>
+                        <span class="text-sm font-medium text-gray-900 text-right">${escapeHtml(dept1.description || generateDepartmentDescription(dept1.name))}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Status:</span>
+                        <span class="px-2 py-1 rounded text-xs font-medium ${dept1.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">${dept1.status || 'active'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- User Metrics -->
+                  <div class="border-t border-gray-200 pt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3">User Metrics</h5>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border ${highlightDiff(dept1Users.length, dept2Users.length)}">
+                        <div class="text-xs text-gray-600 mb-1">Total Users</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept1Users.length}</div>
+                      </div>
+                      <div class="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border ${highlightDiff(dept1ActiveUsers, dept2ActiveUsers)}">
+                        <div class="text-xs text-gray-600 mb-1">Active Users</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept1ActiveUsers}</div>
+                      </div>
+                      <div class="p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border ${highlightDiff(dept1Users.length - dept1ActiveUsers, dept2Users.length - dept2ActiveUsers, false)}">
+                        <div class="text-xs text-gray-600 mb-1">Inactive Users</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept1Users.length - dept1ActiveUsers}</div>
+                      </div>
+                      <div class="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border">
+                        <div class="text-xs text-gray-600 mb-1">Activity Rate</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept1Users.length > 0 ? Math.round((dept1ActiveUsers / dept1Users.length) * 100) : 0}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Groups -->
+                  <div class="border-t border-gray-200 pt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3">User Groups</h5>
+                    <div class="flex flex-wrap gap-2">
+                      ${(() => {
+                        if (dept1.name === 'Executive Office' || dept1.name === 'Information Technology') {
+                          return '<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">Admin Office</span>';
+                        }
+                        if (dept1GroupsList.length > 0) {
+                          return dept1GroupsList.map(group => {
+                            let badgeClass = '';
+                            if (group === 'EIU') badgeClass = 'bg-green-100 text-green-700';
+                            else if (group === 'LGU-IU') badgeClass = 'bg-amber-100 text-amber-800';
+                            else if (group === 'LGU-PMT') badgeClass = 'bg-blue-100 text-blue-700';
+                            else badgeClass = 'bg-gray-100 text-gray-700';
+                            return `<span class="px-2 py-1 ${badgeClass} rounded text-xs font-medium">${escapeHtml(group)}</span>`;
+                          }).join('');
+                        }
+                        return '<span class="text-sm text-gray-400">No groups assigned</span>';
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Department 2 -->
+            <div class="space-y-6">
+              <div class="profile-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                  <div class="relative w-16 h-16 flex-shrink-0">
+                    <img src="${escapeHtml(dept2Logo)}" alt="${escapeHtml(dept2.name)}" class="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" onerror="this.onerror=null; this.src='/santa-cruz-seal.png';">
+                    <div class="absolute bottom-0 right-0 w-4 h-4 ${dept2HasActive ? 'bg-green-500' : 'bg-gray-400'} rounded-full border-2 border-white shadow-md"></div>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-2xl font-bold text-gray-900">${escapeHtml(dept2.name)}</h4>
+                    <p class="text-sm text-gray-600">${escapeHtml(dept2.code)}</p>
+                  </div>
+                </div>
+                
+                <div class="space-y-4">
+                  <!-- Basic Info -->
+                  <div class="border-t border-gray-200 pt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3">Basic Information</h5>
+                    <div class="space-y-2">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Description:</span>
+                        <span class="text-sm font-medium text-gray-900 text-right">${escapeHtml(dept2.description || generateDepartmentDescription(dept2.name))}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Status:</span>
+                        <span class="px-2 py-1 rounded text-xs font-medium ${dept2.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">${dept2.status || 'active'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- User Metrics -->
+                  <div class="border-t border-gray-200 pt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3">User Metrics</h5>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border ${highlightDiff(dept2Users.length, dept1Users.length)}">
+                        <div class="text-xs text-gray-600 mb-1">Total Users</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept2Users.length}</div>
+                      </div>
+                      <div class="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border ${highlightDiff(dept2ActiveUsers, dept1ActiveUsers)}">
+                        <div class="text-xs text-gray-600 mb-1">Active Users</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept2ActiveUsers}</div>
+                      </div>
+                      <div class="p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border ${highlightDiff(dept2Users.length - dept2ActiveUsers, dept1Users.length - dept1ActiveUsers, false)}">
+                        <div class="text-xs text-gray-600 mb-1">Inactive Users</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept2Users.length - dept2ActiveUsers}</div>
+                      </div>
+                      <div class="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border">
+                        <div class="text-xs text-gray-600 mb-1">Activity Rate</div>
+                        <div class="text-2xl font-bold text-gray-900">${dept2Users.length > 0 ? Math.round((dept2ActiveUsers / dept2Users.length) * 100) : 0}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Groups -->
+                  <div class="border-t border-gray-200 pt-4">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3">User Groups</h5>
+                    <div class="flex flex-wrap gap-2">
+                      ${(() => {
+                        if (dept2.name === 'Executive Office' || dept2.name === 'Information Technology') {
+                          return '<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">Admin Office</span>';
+                        }
+                        if (dept2GroupsList.length > 0) {
+                          return dept2GroupsList.map(group => {
+                            let badgeClass = '';
+                            if (group === 'EIU') badgeClass = 'bg-green-100 text-green-700';
+                            else if (group === 'LGU-IU') badgeClass = 'bg-amber-100 text-amber-800';
+                            else if (group === 'LGU-PMT') badgeClass = 'bg-blue-100 text-blue-700';
+                            else badgeClass = 'bg-gray-100 text-gray-700';
+                            return `<span class="px-2 py-1 ${badgeClass} rounded text-xs font-medium">${escapeHtml(group)}</span>`;
+                          }).join('');
+                        }
+                        return '<span class="text-sm text-gray-400">No groups assigned</span>';
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Summary Section -->
+          <div class="mt-6 profile-card p-6">
+            <h5 class="text-lg font-bold text-gray-900 mb-4">Comparison Summary</h5>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                <div class="text-sm text-gray-600 mb-1">User Count Difference</div>
+                <div class="text-2xl font-bold ${dept1Users.length > dept2Users.length ? 'text-green-700' : dept1Users.length < dept2Users.length ? 'text-red-700' : 'text-gray-700'}">
+                  ${dept1Users.length > dept2Users.length ? '+' : ''}${dept1Users.length - dept2Users.length}
+                </div>
+                <div class="text-xs text-gray-600 mt-1">${dept1.name} has ${Math.abs(dept1Users.length - dept2Users.length)} ${dept1Users.length > dept2Users.length ? 'more' : 'fewer'} users</div>
+              </div>
+              <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                <div class="text-sm text-gray-600 mb-1">Active User Difference</div>
+                <div class="text-2xl font-bold ${dept1ActiveUsers > dept2ActiveUsers ? 'text-green-700' : dept1ActiveUsers < dept2ActiveUsers ? 'text-red-700' : 'text-gray-700'}">
+                  ${dept1ActiveUsers > dept2ActiveUsers ? '+' : ''}${dept1ActiveUsers - dept2ActiveUsers}
+                </div>
+                <div class="text-xs text-gray-600 mt-1">${dept1.name} has ${Math.abs(dept1ActiveUsers - dept2ActiveUsers)} ${dept1ActiveUsers > dept2ActiveUsers ? 'more' : 'fewer'} active users</div>
+              </div>
+              <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                <div class="text-sm text-gray-600 mb-1">Activity Rate Difference</div>
+                ${(() => {
+                  const rate1 = dept1Users.length > 0 ? (dept1ActiveUsers / dept1Users.length) * 100 : 0;
+                  const rate2 = dept2Users.length > 0 ? (dept2ActiveUsers / dept2Users.length) * 100 : 0;
+                  const diff = rate1 - rate2;
+                  return `
+                    <div class="text-2xl font-bold ${diff > 0 ? 'text-green-700' : diff < 0 ? 'text-red-700' : 'text-gray-700'}">
+                      ${diff > 0 ? '+' : ''}${diff.toFixed(1)}%
+                    </div>
+                    <div class="text-xs text-gray-600 mt-1">${dept1.name} is ${Math.abs(diff).toFixed(1)}% ${diff > 0 ? 'more' : diff < 0 ? 'less' : 'equally'} active</div>
+                  `;
+                })()}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Show comparison modal
+        const modal = document.getElementById('comparisonModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+      }
+      
+      // Close comparison modal
+      window.closeComparisonModal = function() {
+        const modal = document.getElementById('comparisonModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      };
+
+      window.navigateToUser = function(username, email, fullName) {
+        // Close the modal first
+        closeDepartmentUsersModal();
+        
+        // Build URL with search parameter (user-management.astro uses 'search' param)
+        // Try username first, then email, then name
+        const searchTerm = username || email || fullName;
+        const baseUrl = window.location.origin;
+        const userManagementUrl = `${baseUrl}/dashboard/sysadmin/modules/user-management?search=${encodeURIComponent(searchTerm)}`;
+        
+        // Navigate to user-management page
+        window.location.href = userManagementUrl;
+      };
+
+      window.viewGroupDetails = function(id) {
+        const group = window.officeGroupsData.groups.find(g => g.id === id);
+        if (!group) return;
+
+        // Count group users accurately
+        const groupUsers = window.officeGroupsData.users.filter(u => {
+          const userGroup = u.group || '';
+          return userGroup === group.name || userGroup === group.code;
+        });
+        const dept = window.officeGroupsData.departments.find(d => d.id === group.departmentId);
+
+        alert(`Group: ${group.name}\nCode: ${group.code}\nDepartment: ${dept?.name || 'Not assigned'}\nLeader: ${group.leader || 'Not assigned'}\nMembers: ${groupUsers.length}\nStatus: ${group.status}`);
+      };
+
+      // ==================== INITIALIZATION ====================
+      
+      // Ensure all modals are hidden on initialization
+      function initializeModals() {
+        const loadingModal = document.getElementById('loadingModal');
+        const successModal = document.getElementById('successModal');
+        
+        if (loadingModal) {
+          loadingModal.classList.add('hidden');
+          loadingModal.classList.remove('flex');
+        }
+        
+        if (successModal) {
+          successModal.classList.add('hidden');
+          successModal.classList.remove('flex');
+        }
+      }
+      
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        initializeModals();
+        fetchAllData();
+        populateDepartmentFilters();
+      });
+
+      // Also run if DOM is already loaded
+      if (document.readyState !== 'loading') {
+        initializeModals();
+        fetchAllData();
+        populateDepartmentFilters();
+      } else {
+        // If still loading, ensure modals are hidden immediately
+        initializeModals();
+      }
     </script>
   </SysAdminLayout>
 </Layout> 

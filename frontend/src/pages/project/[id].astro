@@ -3,15 +3,23 @@ export const prerender = false;
 import Layout from "../../layouts/Layout.astro";
 import TopBar from "../../components/TopBar.astro";
 import LGUFooter from "../../components/LGUFooter.astro";
+import ProjectFeedback from "../../islands/ProjectFeedback.jsx";
 
 const API_URL = 'http://localhost:3000/api';
 const { id } = Astro.params;
 
 // Function to get project-specific background images based on category and content
 function getProjectBackgroundImage(project) {
-  // Check if project has an initial photo
-  if (project.initialPhoto) {
-    return project.initialPhoto;
+  // Check if project has an initial photo - format it properly like ProjectCard.astro
+  if (project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None' && project.initialPhoto !== 'null') {
+    // If it's already a full URL, return it as is
+    if (project.initialPhoto.startsWith('http')) {
+      return project.initialPhoto;
+    }
+    // Otherwise, prepend the base URL
+    // Ensure the path starts with '/' before adding base URL
+    const photoPath = project.initialPhoto.startsWith('/') ? project.initialPhoto : `/${project.initialPhoto}`;
+    return `http://localhost:3000${photoPath}`;
   }
   
   // Array of construction and infrastructure background images
@@ -90,12 +98,14 @@ let progressData = null;
 let loading = true;
 let error = '';
 
-// Fetch project data, progress, and milestones
+// Fetch project data, progress, milestones, and media
+let projectMedia = null;
 try {
-  const [projectResponse, progressResponse, milestonesResponse] = await Promise.all([
+  const [projectResponse, progressResponse, milestonesResponse, mediaResponse] = await Promise.all([
     fetch(`${API_URL}/projects/public/${id}`),
     fetch(`${API_URL}/projects/progress/${id}`),
-    fetch(`${API_URL}/milestones/project/${id}/public`)
+    fetch(`${API_URL}/milestones/project/${id}/public`),
+    fetch(`${API_URL}/milestones/project/${id}/public/media`)
   ]);
   
   if (projectResponse.ok) {
@@ -121,6 +131,14 @@ try {
     const milestonesResult = await milestonesResponse.json();
     if (milestonesResult.success && milestonesResult.milestones) {
       project.milestones = milestonesResult.milestones;
+    }
+  }
+  
+  // Fetch media data
+  if (mediaResponse.ok) {
+    const mediaResult = await mediaResponse.json();
+    if (mediaResult.success && mediaResult.media) {
+      projectMedia = mediaResult.media;
     }
   }
 } catch (err) {
@@ -393,7 +411,7 @@ loading = false;
                     Project Information
                   </h3>
                 </div>
-                <div class="hidden sm:block text-sm text-blue-600/70 font-medium">4 Sections Available</div>
+                <div class="hidden sm:block text-sm text-blue-600/70 font-medium">5 Sections Available</div>
               </div>
             </div>
             
@@ -444,6 +462,18 @@ loading = false;
                     </svg>
                   </div>
                   <span class="tab-text font-bold">Videos</span>
+                </div>
+              </button>
+              
+              <!-- Feedback Tab -->
+              <button class="tab-button group relative flex-1 min-w-fit py-4 px-6 text-sm font-bold flex items-center justify-center gap-3 transition-all duration-300 ease-in-out rounded-xl" data-tab="feedback">
+                <div class="relative flex items-center gap-3">
+                  <div class="tab-icon w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300">
+                    <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                  </div>
+                  <span class="tab-text font-bold">Feedback</span>
                 </div>
               </button>
             </nav>
@@ -1205,30 +1235,168 @@ loading = false;
 
         <!-- Photos Tab -->
         <div id="tab-photos" class="tab-content hidden">
-          <div class="bg-white rounded-lg shadow-md p-8">
-            <div class="text-center">
-              <div class="text-6xl mb-4 text-gray-300">📷</div>
-              <h3 class="text-2xl font-bold text-gray-700 mb-2">Project Photos</h3>
-              <p class="text-gray-500 mb-6">No photos available for this project yet.</p>
-              <div class="bg-gray-50 p-6 rounded-lg">
-                <p class="text-gray-600">This section will display project photos, progress images, and documentation when they become available.</p>
+          <div id="photos-content" data-media={JSON.stringify(projectMedia || [])}>
+            {projectMedia && projectMedia.some(m => m.photos && m.photos.length > 0) ? (
+              projectMedia.map((milestoneMedia) => {
+                if (!milestoneMedia.photos || milestoneMedia.photos.length === 0) return null;
+                return (
+                  <div class="bg-white rounded-lg shadow-md p-8 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-500">
+                      {milestoneMedia.milestoneTitle}
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {milestoneMedia.photos.map((photo) => {
+                        const photoUrl = photo.url || '';
+                        const photoName = (photo.name || 'Photo').replace(/'/g, "\\'");
+                        return (
+                          <div class="group relative bg-white rounded-xl overflow-hidden border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 cursor-pointer">
+                            <div class="aspect-square relative overflow-hidden bg-gray-100">
+                              <img 
+                                src={photoUrl} 
+                                alt={photo.name || 'Photo'}
+                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                loading="lazy"
+                              />
+                              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+                                  <button
+                                    onclick={`window.showFullPhotoView('${photoUrl.replace(/'/g, "\\'")}', '${photoName}')`}
+                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                  >
+                                    <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                    </svg>
+                                  </button>
+                                  <a
+                                    href={photoUrl}
+                                    download
+                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                    onclick="event.stopPropagation()"
+                                  >
+                                    <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="p-3">
+                              <h4 class="font-semibold text-gray-800 truncate mb-1 text-sm">{photo.name || 'Photo'}</h4>
+                              <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span class="file-size" data-size={photo.fileSize || 0}>{photo.fileSize > 0 ? (photo.fileSize < 1024 ? `${photo.fileSize} B` : photo.fileSize < 1024 * 1024 ? `${(photo.fileSize / 1024).toFixed(2)} KB` : photo.fileSize < 1024 * 1024 * 1024 ? `${(photo.fileSize / (1024 * 1024)).toFixed(2)} MB` : `${(photo.fileSize / (1024 * 1024 * 1024)).toFixed(2)} GB`) : 'Unknown size'}</span>
+                                <span class="file-date" data-date={photo.uploadDate || ''}>{photo.uploadDate ? new Date(photo.uploadDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div class="bg-white rounded-lg shadow-md p-8">
+                <div class="text-center">
+                  <div class="text-6xl mb-4 text-gray-300">📷</div>
+                  <h3 class="text-2xl font-bold text-gray-700 mb-2">Project Photos</h3>
+                  <p class="text-gray-500 mb-6">No photos available for this project yet.</p>
+                  <div class="bg-gray-50 p-6 rounded-lg">
+                    <p class="text-gray-600">This section will display project photos, progress images, and documentation when they become available.</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
         <!-- Videos Tab -->
         <div id="tab-videos" class="tab-content hidden">
-          <div class="bg-white rounded-lg shadow-md p-8">
-            <div class="text-center">
-              <div class="text-6xl mb-4 text-gray-300">🎥</div>
-              <h3 class="text-2xl font-bold text-gray-700 mb-2">Project Videos</h3>
-              <p class="text-gray-500 mb-6">No videos available for this project yet.</p>
-              <div class="bg-gray-50 p-6 rounded-lg">
-                <p class="text-gray-600">This section will display project videos, progress recordings, and multimedia content when they become available.</p>
+          <div id="videos-content" data-media={JSON.stringify(projectMedia || [])}>
+            {projectMedia && projectMedia.some(m => m.videos && m.videos.length > 0) ? (
+              projectMedia.map((milestoneMedia) => {
+                if (!milestoneMedia.videos || milestoneMedia.videos.length === 0) return null;
+                return (
+                  <div class="bg-white rounded-lg shadow-md p-8 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-500">
+                      {milestoneMedia.milestoneTitle}
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {milestoneMedia.videos.map((video) => {
+                        const videoUrl = video.url || '';
+                        const videoName = (video.name || 'Video').replace(/'/g, "\\'");
+                        return (
+                          <div class="group relative bg-white rounded-xl overflow-hidden border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 cursor-pointer">
+                            <div class="aspect-video relative overflow-hidden bg-gray-900">
+                              {video.thumbnail ? (
+                                <img 
+                                  src={video.thumbnail} 
+                                  alt={video.name || 'Video'}
+                                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                  loading="lazy"
+                                />
+                              ) : null}
+                              <div class="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center">
+                                <div class="bg-white/90 rounded-full p-4 group-hover:scale-110 transition-transform duration-300">
+                                  <svg class="w-8 h-8 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                  </svg>
+                                </div>
+                              </div>
+                              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+                                  <button
+                                    onclick={`window.showFullVideoView('${videoUrl.replace(/'/g, "\\'")}', '${videoName}')`}
+                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                  >
+                                    <svg class="w-6 h-6 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                  </button>
+                                  <a
+                                    href={videoUrl}
+                                    download
+                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                    onclick="event.stopPropagation()"
+                                  >
+                                    <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="p-3">
+                              <h4 class="font-semibold text-gray-800 truncate mb-1 text-sm">{video.name || 'Video'}</h4>
+                              <div class="flex items-center justify-between text-xs text-gray-600">
+                                <span class="file-size" data-size={video.fileSize || 0}>{video.fileSize > 0 ? (video.fileSize < 1024 ? `${video.fileSize} B` : video.fileSize < 1024 * 1024 ? `${(video.fileSize / 1024).toFixed(2)} KB` : video.fileSize < 1024 * 1024 * 1024 ? `${(video.fileSize / (1024 * 1024)).toFixed(2)} MB` : `${(video.fileSize / (1024 * 1024 * 1024)).toFixed(2)} GB`) : 'Unknown size'}</span>
+                                <span class="file-date" data-date={video.uploadDate || ''}>{video.uploadDate ? new Date(video.uploadDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div class="bg-white rounded-lg shadow-md p-8">
+                <div class="text-center">
+                  <div class="text-6xl mb-4 text-gray-300">🎥</div>
+                  <h3 class="text-2xl font-bold text-gray-700 mb-2">Project Videos</h3>
+                  <p class="text-gray-500 mb-6">No videos available for this project yet.</p>
+                  <div class="bg-gray-50 p-6 rounded-lg">
+                    <p class="text-gray-600">This section will display project videos, progress recordings, and multimedia content when they become available.</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
+        </div>
+
+        <!-- Feedback Tab -->
+        <div id="tab-feedback" class="tab-content hidden">
+          <ProjectFeedback client:load projectId={id} />
         </div>
       </div>
     </main>
@@ -1404,6 +1572,119 @@ loading = false;
 </style>
 
 <script>
+  // Utility functions
+  function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return 'Unknown size';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return 'Unknown date';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  // Full photo view modal
+  window.showFullPhotoView = function(photoUrl, photoName) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
+    modal.onclick = function(e) {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    };
+    
+    modal.innerHTML = `
+      <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <img src="${photoUrl}" alt="${photoName || 'Photo'}" class="max-w-full max-h-full object-contain" onclick="event.stopPropagation()" />
+      <a href="${photoUrl}" download class="absolute bottom-4 right-4 bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform" onclick="event.stopPropagation()">
+        <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+      </a>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on ESC key
+    const escHandler = function(e) {
+      if (e.key === 'Escape') {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+  };
+
+  // Full video view modal
+  window.showFullVideoView = function(videoUrl, videoName) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
+    modal.onclick = function(e) {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    };
+    
+    modal.innerHTML = `
+      <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <video src="${videoUrl}" controls class="max-w-full max-h-full" onclick="event.stopPropagation()"></video>
+      <a href="${videoUrl}" download class="absolute bottom-4 right-4 bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform" onclick="event.stopPropagation()">
+        <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+      </a>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on ESC key
+    const escHandler = function(e) {
+      if (e.key === 'Escape') {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+  };
+
+  // Format file sizes and dates on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Format file sizes
+    document.querySelectorAll('.file-size').forEach(el => {
+      const text = el.textContent.trim();
+      if (text && text !== 'Unknown size' && !text.includes('KB') && !text.includes('MB') && !text.includes('GB') && !text.includes('B')) {
+        const bytes = parseInt(text);
+        if (!isNaN(bytes)) {
+          el.textContent = formatFileSize(bytes);
+        }
+      }
+    });
+    
+    // Format dates
+    document.querySelectorAll('.file-date').forEach(el => {
+      const text = el.textContent.trim();
+      if (text && text !== 'Unknown date') {
+        el.textContent = formatDate(text);
+      }
+    });
+  });
+
   // Project page functionality
   document.addEventListener('DOMContentLoaded', function() {
     // Tab functionality with enhanced animations
@@ -1447,7 +1728,8 @@ loading = false;
           'details': 'Project Details',
           'articles': 'Articles & Publications', 
           'photos': 'Photos',
-          'videos': 'Videos'
+          'videos': 'Videos',
+          'feedback': 'Feedback'
         };
         progressIndicator.textContent = `Viewing: ${tabNames[targetTab] || 'Project Details'}`;
       }
@@ -1524,6 +1806,21 @@ loading = false;
       }
     `;
     document.head.appendChild(style);
+
+    // Initial setup - check URL hash or query param for tab
+    const urlHash = window.location.hash.replace('#', '');
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabFromUrl = urlParams.get('tab') || urlHash;
+    
+    if (tabFromUrl) {
+      const matchingButton = document.querySelector(`[data-tab="${tabFromUrl}"]`);
+      if (matchingButton) {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+          switchTab(tabFromUrl);
+        }, 100);
+      }
+    }
 
     console.log('Project page loaded with enhanced tabs');
   });

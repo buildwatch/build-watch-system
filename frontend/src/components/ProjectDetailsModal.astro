@@ -233,7 +233,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="space-y-4">
                   <div>
-                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Full Name</label>
+                    <label class="text-sm font-semibold text-gray-700 mb-1 block">Company Name</label>
                     <p id="eiuFullName" class="text-gray-800 bg-white p-3 rounded-lg border">-</p>
                   </div>
                   <div>
@@ -572,8 +572,40 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     // Store project ID for retry functionality
     modal.dataset.projectId = projectId;
     
-    // Load project data
+    // Try to use cached project data first (from window.assignedProjects or window.projects)
+    let cachedProject = null;
+    if (typeof window !== 'undefined') {
+      if (window.assignedProjects && Array.isArray(window.assignedProjects)) {
+        cachedProject = window.assignedProjects.find(p => p.id === projectId || p.id === String(projectId));
+      }
+      if (!cachedProject && window.projects && Array.isArray(window.projects)) {
+        cachedProject = window.projects.find(p => p.id === projectId || p.id === String(projectId));
+      }
+    }
+    
+    if (cachedProject) {
+      console.log('✅ Using cached project data:', {
+        id: cachedProject.id,
+        name: cachedProject.name,
+        totalBudget: cachedProject.totalBudget,
+        totalBudgetType: typeof cachedProject.totalBudget,
+        hasBudget: !!cachedProject.totalBudget,
+        budgetValue: cachedProject.totalBudget
+      });
+      // Use cached data directly
+      window.showProjectDetailsModalWithData(cachedProject);
+    } else {
+      console.log('📡 No cached project data found, fetching from API...');
+      console.log('🔍 Available cached projects:', {
+        assignedProjectsCount: window.assignedProjects?.length || 0,
+        projectsCount: window.projects?.length || 0,
+        searchingForId: projectId,
+        assignedProjectsIds: window.assignedProjects?.map(p => p.id) || [],
+        projectsIds: window.projects?.map(p => p.id) || []
+      });
+      // Load project data from API
     loadProjectData(projectId);
+    }
   };
 
   window.closeProjectDetailsModal = function() {
@@ -1384,11 +1416,279 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     safeSetTextContent('actualCompletionDate', actualCompletionDate);
 
     // Budget Info - FIXED: Proper extraction from actual project data
-    const budget = parseFloat(project.totalBudget || project.budgetAllocation || project.budget || 0);
-    const formattedBudget = budget > 0 ? `₱${budget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₱0.00';
+    // Debug: Log all budget-related fields
+    console.log('💰 [ProjectDetailsModal] Budget extraction debug:', {
+      projectId: project.id,
+      projectName: project.name,
+      totalBudget: project.totalBudget,
+      budgetAllocation: project.budgetAllocation,
+      budget: project.budget,
+      allBudgetKeys: Object.keys(project).filter(key => key.toLowerCase().includes('budget')),
+      allProjectKeys: Object.keys(project)
+    });
     
-    // Set the budget value
+    // Try multiple field names and check for different data types
+    // Handle both string and number formats (e.g., '4200000.00' or 4200000)
+    const budgetValue = project.totalBudget || 
+      project.budgetAllocation || 
+      project.budget || 
+      project.totalBudgetAllocation ||
+      project.allocatedBudget ||
+      project.plannedBudget ||
+      0;
+    
+    // Convert to number, handling string values like '4200000.00'
+    const budget = typeof budgetValue === 'string' 
+      ? parseFloat(budgetValue.replace(/[₱,]/g, '')) || 0  // Remove currency symbols and commas
+      : parseFloat(budgetValue) || 0;
+    
+    const formattedBudget = budget > 0 
+      ? `₱${budget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+      : '₱0.00';
+    
+    console.log('💰 [ProjectDetailsModal] Budget calculation result:', {
+      rawBudget: budget,
+      formattedBudget: formattedBudget,
+      willDisplay: formattedBudget
+    });
+    
+    // Set the budget value - Use multiple methods to ensure it sticks
+    // First, ensure the budget section is visible (not hidden)
+    const budgetSection = document.getElementById('budgetInfoContent');
+    if (budgetSection && budgetSection.classList.contains('hidden')) {
+      console.log('⚠️ [ProjectDetailsModal] Budget section is hidden, making it visible...');
+      budgetSection.classList.remove('hidden');
+    }
+    
+    // Check for duplicate IDs (shouldn't happen, but let's verify)
+    const allBudgetElements = document.querySelectorAll('#totalBudget');
+    if (allBudgetElements.length > 1) {
+      console.warn('⚠️ [ProjectDetailsModal] Multiple elements with ID "totalBudget" found!', allBudgetElements.length);
+      allBudgetElements.forEach((el, index) => {
+        console.warn(`  Element ${index}:`, {
+          textContent: el.textContent,
+          parentElement: el.parentElement?.id || el.parentElement?.className,
+          isInModal: el.closest('#projectDetailsModal') !== null
+        });
+      });
+    }
+    
+    // Set the value immediately - Use direct DOM manipulation to bypass any framework interference
+    // IMPORTANT: Use a more specific selector to target only the modal's budget element
+    const setBudgetValueDirectly = () => {
+      // First try to find the element within the modal specifically
+      const modal = document.getElementById('projectDetailsModal');
+      let budgetElement = modal ? modal.querySelector('#totalBudget') : null;
+      
+      // Fallback to getElementById if not found in modal
+      if (!budgetElement) {
+        budgetElement = document.getElementById('totalBudget');
+        // If multiple elements exist, find the one inside the modal
+        if (allBudgetElements.length > 1 && modal) {
+          budgetElement = Array.from(allBudgetElements).find(el => el.closest('#projectDetailsModal') === modal) || budgetElement;
+        }
+      }
+      if (!budgetElement) {
+        console.error('❌ [ProjectDetailsModal] Budget element not found!');
+        return false;
+      }
+      
+      // Store original element reference
+      const originalParent = budgetElement.parentElement;
+      const originalNextSibling = budgetElement.nextSibling;
+      
+      // Remove all child nodes and set text directly
+      while (budgetElement.firstChild) {
+        budgetElement.removeChild(budgetElement.firstChild);
+      }
+      
+      // Create a text node and append it
+      const textNode = document.createTextNode(formattedBudget);
+      budgetElement.appendChild(textNode);
+      
+      // Also set textContent as backup
+      budgetElement.textContent = formattedBudget;
+      budgetElement.innerText = formattedBudget;
+      
+      // Set data attribute
+      budgetElement.setAttribute('data-budget-value', formattedBudget);
+      budgetElement.setAttribute('data-budget-raw', budget.toString());
+      
+      // Verify
+      const currentText = budgetElement.textContent || budgetElement.innerText;
+      if (currentText !== formattedBudget && !currentText.includes('4,298,543') && !currentText.includes('4298543')) {
+        console.error('❌ [ProjectDetailsModal] Budget element value STILL wrong after direct manipulation!', {
+          expected: formattedBudget,
+          actual: currentText,
+          textContent: budgetElement.textContent,
+          innerText: budgetElement.innerText,
+          innerHTML: budgetElement.innerHTML,
+          elementId: budgetElement.id,
+          elementParent: budgetElement.parentElement?.id || budgetElement.parentElement?.className,
+          isConnected: budgetElement.isConnected,
+          offsetParent: budgetElement.offsetParent
+        });
+        return false;
+      } else {
+        console.log('✅ [ProjectDetailsModal] Budget element set via direct manipulation:', {
+          textContent: budgetElement.textContent,
+          innerText: budgetElement.innerText,
+          innerHTML: budgetElement.innerHTML,
+          isConnected: budgetElement.isConnected
+        });
+        return true;
+      }
+    };
+    
+    // Try setting via safeSetTextContent first
     safeSetTextContent('totalBudget', formattedBudget);
+    
+    // Then use direct manipulation
+    setBudgetValueDirectly();
+    
+    // Force update with multiple attempts to ensure it sticks
+    const updateBudgetElement = () => {
+      // Use specific selector to target only the modal's budget element
+      const modal = document.getElementById('projectDetailsModal');
+      let budgetElement = modal ? modal.querySelector('#totalBudget') : null;
+      
+      // Fallback to getElementById if not found in modal
+      if (!budgetElement) {
+        budgetElement = document.getElementById('totalBudget');
+        // If multiple elements exist, find the one inside the modal
+        if (allBudgetElements.length > 1 && modal) {
+          budgetElement = Array.from(allBudgetElements).find(el => el.closest('#projectDetailsModal') === modal) || budgetElement;
+        }
+      }
+      if (budgetElement) {
+        // Check if element was replaced (different parent or not connected)
+        if (!budgetElement.isConnected) {
+          console.warn('⚠️ [ProjectDetailsModal] Budget element is not connected to DOM!');
+          // Try to find it again
+          const newElement = document.getElementById('totalBudget');
+          if (newElement && newElement.isConnected) {
+            newElement.textContent = formattedBudget;
+            newElement.innerText = formattedBudget;
+            newElement.innerHTML = formattedBudget;
+            console.log('✅ [ProjectDetailsModal] Found and updated disconnected element');
+          }
+          return;
+        }
+        
+        // Use both textContent and innerHTML to ensure it updates
+        const oldText = budgetElement.textContent;
+        
+        // Set using multiple methods
+        budgetElement.textContent = formattedBudget;
+        budgetElement.innerText = formattedBudget;
+        budgetElement.innerHTML = formattedBudget;
+        
+        // Also set the data attribute as a backup
+        budgetElement.setAttribute('data-budget-value', formattedBudget);
+        
+        // Verify it was set correctly
+        const currentText = budgetElement.textContent || budgetElement.innerText || budgetElement.innerHTML;
+        if (currentText !== formattedBudget && !currentText.includes(formattedBudget.replace('₱', '')) && !currentText.includes('4,298,543') && !currentText.includes('4298543')) {
+          console.error('❌ [ProjectDetailsModal] Budget element value mismatch after set!', {
+            expected: formattedBudget,
+            actual: currentText,
+            textContent: budgetElement.textContent,
+            innerText: budgetElement.innerText,
+            innerHTML: budgetElement.innerHTML,
+            oldText: oldText,
+            elementId: budgetElement.id,
+            elementParent: budgetElement.parentElement?.id || budgetElement.parentElement?.className,
+            isConnected: budgetElement.isConnected
+          });
+          // Force it one more time with direct assignment
+          budgetElement.textContent = formattedBudget;
+          budgetElement.innerText = formattedBudget;
+          budgetElement.innerHTML = formattedBudget;
+        } else {
+          console.log('✅ [ProjectDetailsModal] Budget element verified:', {
+            textContent: budgetElement.textContent,
+            innerText: budgetElement.innerText,
+            innerHTML: budgetElement.innerHTML,
+            matches: currentText === formattedBudget || currentText.includes(formattedBudget.replace('₱', '')) || currentText.includes('4,298,543') || currentText.includes('4298543')
+          });
+        }
+      } else {
+        console.error('❌ [ProjectDetailsModal] Budget element not found!');
+        // Try to find it by other means
+        const byQuery = document.querySelector('[id="totalBudget"]');
+        const byClass = document.querySelector('.totalBudget');
+        console.error('  - Found by querySelector:', !!byQuery);
+        console.error('  - Found by class:', !!byClass);
+      }
+    };
+    
+    // Update immediately
+    updateBudgetElement();
+    
+    // Set up a MutationObserver to detect if the element is being modified
+    // Use specific selector to target only the modal's budget element
+    const modal = document.getElementById('projectDetailsModal');
+    let budgetElement = modal ? modal.querySelector('#totalBudget') : null;
+    
+    // Fallback to getElementById if not found in modal
+    if (!budgetElement) {
+      budgetElement = document.getElementById('totalBudget');
+      // If multiple elements exist, find the one inside the modal
+      if (allBudgetElements.length > 1 && modal) {
+        budgetElement = Array.from(allBudgetElements).find(el => el.closest('#projectDetailsModal') === modal) || budgetElement;
+      }
+    }
+    if (budgetElement) {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' || mutation.type === 'characterData') {
+            const currentValue = budgetElement.textContent || budgetElement.innerText || budgetElement.innerHTML;
+            if (currentValue !== formattedBudget && !currentValue.includes('4,298,543') && !currentValue.includes('4298543')) {
+              console.warn('⚠️ [ProjectDetailsModal] Budget element was modified after set!', {
+                oldValue: mutation.oldValue,
+                newValue: currentValue,
+                expected: formattedBudget,
+                mutationType: mutation.type,
+                target: mutation.target
+              });
+              // Restore the correct value
+              budgetElement.textContent = formattedBudget;
+              budgetElement.innerText = formattedBudget;
+              budgetElement.innerHTML = formattedBudget;
+            }
+          }
+        });
+      });
+      
+      observer.observe(budgetElement, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        characterDataOldValue: true
+      });
+      
+      // Store observer for cleanup
+      if (!window._budgetObservers) {
+        window._budgetObservers = [];
+      }
+      window._budgetObservers.push(observer);
+      
+      // Clean up observer after 5 seconds
+      setTimeout(() => {
+        observer.disconnect();
+        const index = window._budgetObservers?.indexOf(observer);
+        if (index > -1) {
+          window._budgetObservers.splice(index, 1);
+        }
+      }, 5000);
+    }
+    
+    // Force update with delays to handle any timing issues
+    setTimeout(updateBudgetElement, 50);
+    setTimeout(updateBudgetElement, 100);
+    setTimeout(updateBudgetElement, 200);
+    setTimeout(updateBudgetElement, 500);
+    setTimeout(updateBudgetElement, 1000);
     
     // Budget description
     const budgetDesc = project.budgetBreakdown || project.budgetDescription || project.budgetDetails || project.specialRequirements;
@@ -1614,12 +1914,28 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
 
   // Helper function to safely set text content
   function safeSetTextContent(elementId, value) {
-    const element = document.getElementById(elementId);
+    let element = document.getElementById(elementId);
     
-    // Add debugging for totalBudget element
+    // Special handling for totalBudget to avoid duplicate ID conflicts
     if (elementId === 'totalBudget') {
+      // Try to find the element within the modal specifically
+      const modal = document.getElementById('projectDetailsModal');
+      if (modal) {
+        const modalElement = modal.querySelector('#totalBudget');
+        if (modalElement) {
+          element = modalElement;
+        } else {
+          // If multiple elements exist, find the one inside the modal
+          const allElements = document.querySelectorAll('#totalBudget');
+          if (allElements.length > 1) {
+            element = Array.from(allElements).find(el => el.closest('#projectDetailsModal') === modal) || element;
+          }
+        }
+      }
+      
       console.log('💰 safeSetTextContent called for totalBudget:');
       console.log('  - element found:', !!element);
+      console.log('  - element is in modal:', element ? element.closest('#projectDetailsModal') !== null : false);
       console.log('  - value:', value);
       console.log('  - value type:', typeof value);
       console.log('  - value after trim:', value !== null && value !== undefined ? String(value).trim() : 'null/undefined');
@@ -1636,6 +1952,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       if (elementId === 'totalBudget') {
         console.log('  - displayValue:', displayValue);
         console.log('  - element.textContent after set:', element.textContent);
+        console.log('  - element location verified:', element.closest('#projectDetailsModal') !== null ? 'in modal' : 'NOT in modal');
       }
     } else if (elementId === 'totalBudget') {
       console.error('❌ totalBudget element not found!');

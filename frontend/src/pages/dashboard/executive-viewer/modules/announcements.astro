@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import ExecutiveLayout from '../../../../components/ExecutiveLayout.astro';
+import AnnouncementCenter from '../../../../islands/AnnouncementCenter.jsx';
+---
+
+<Layout title="Announcements | Executive Viewer Dashboard">
+  <ExecutiveLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <AnnouncementCenter client:load theme="darkBlue" mode="public" />
+    </section>
+  </ExecutiveLayout>
+</Layout>
+

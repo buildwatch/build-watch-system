@@ -4,6 +4,8 @@ import Layout from '../../../../layouts/Layout.astro';
 import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
 import ProjectCard from '../../../../components/ProjectCard.astro';
 import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
+import ProjectFilterCenter from '../../../../islands/ProjectFilterCenter.jsx';
+import ProjectExportCenter from '../../../../islands/ProjectExportCenter.jsx';
 
 const API_URL = 'http://localhost:3000/api';
 let userData = null;
@@ -435,13 +437,13 @@ loading = false;
     <main class="bg-gradient-to-br from-gray-50 to-white min-h-screen px-8 py-8">
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 mb-8">
-        <button onclick="exportProjects()" class="btn-action bg-green-600 hover:bg-green-700 text-white px-4 py-2">
+        <button onclick="window.projectExportCenter?.export()" class="btn-action bg-blue-600 hover:bg-blue-700 text-white px-4 py-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
-          Export Projects
+          Export Data
         </button>
-        <button onclick="refreshProjects()" class="btn-action bg-[#FE5353] hover:bg-[#E54545] text-white px-4 py-2">
+        <button onclick="refreshProjects()" class="btn-action bg-blue-600 hover:bg-blue-700 text-white px-4 py-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
@@ -587,77 +589,229 @@ loading = false;
         </div>
       </div>
 
-      <!-- Enhanced Filters Section -->
-      <div class="profile-card p-8 mb-8">
-        <div class="mb-8">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="icon-container bg-gradient-to-br from-blue-600 to-blue-700" style="width: 40px; height: 40px; border-radius: 12px;">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-black">Search & Filter Projects</h3>
-          </div>
+      <!-- Initialize data and functions BEFORE React component loads -->
+      <script define:vars={{ approvedProjects }}>
+        // Initialize data immediately when page loads
+        if (typeof window !== 'undefined') {
+          window.approvedProjects = approvedProjects || [];
+          console.log('✅ [MPMEC] window.approvedProjects initialized with', window.approvedProjects.length, 'projects');
           
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Search Projects</label>
-                <input type="text" id="searchInput" placeholder="Search by project name..." class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onkeyup="filterProjects()">
-              </div>
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Status</label>
-                <select id="statusFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onchange="filterProjects()">
-                  <option value="">All Status</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="pending">Pending</option>
-                  <option value="complete">Complete</option>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Department</label>
-                <select id="departmentFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onchange="filterProjects()">
-                  <option value="">All Departments</option>
-                  <option value="Municipal Disaster And Risk Reduction Management Office">Municipal Disaster And Risk Reduction Management Office</option>
-                  <option value="Municipal Social Welfare And Development Office">Municipal Social Welfare And Development Office</option>
-                  <option value="Municipal Environment and Natural Resources Office">Municipal Environment and Natural Resources Office</option>
-                  <option value="Municipal Health Office">Municipal Health Office</option>
-                  <option value="Municipal Agriculture Office">Municipal Agriculture Office</option>
-                  <option value="Municipal Engineering Office">Municipal Engineering Office</option>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Category</label>
-                <select id="categoryFilter" class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md" onchange="filterProjects()">
-                  <option value="">All Categories</option>
-                  <option value="infrastructure">Infrastructure</option>
-                  <option value="health">Health</option>
-                  <option value="education">Education</option>
-                  <option value="agriculture">Agriculture</option>
-                  <option value="social">Social Services</option>
-                  <option value="environment">Environment</option>
-                  <option value="transportation">Transportation</option>
-                </select>
-              </div>
-            </div>
+          // Initialize display function immediately - uses show/hide instead of replacing HTML
+          window.updateApprovedProjectsDisplay = function(projectsToShow) {
+            console.log('📊 [MPMEC] Updating approved projects display with', projectsToShow.length, 'projects');
             
-            <div class="flex flex-wrap items-center gap-3 mt-6">
-              <button onclick="filterProjects()" class="btn-action bg-blue-600 hover:bg-blue-700 text-white px-6 py-3">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                </svg>
-                Apply Filters
-              </button>
-              <button onclick="clearFilters()" class="btn-action bg-gray-600 hover:bg-gray-700 text-white px-6 py-3">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            // Get all project IDs to show
+            const projectIdsToShow = new Set(projectsToShow.map(p => p.id));
+            
+            // Update table view - show/hide existing table rows
+            const tableRows = document.querySelectorAll('#projectsTableBody tr[data-project-id]');
+            tableRows.forEach(row => {
+              const projectId = row.getAttribute('data-project-id');
+              if (projectIdsToShow.has(projectId)) {
+                row.style.display = '';
+                row.classList.remove('hidden');
+              } else {
+                row.style.display = 'none';
+                row.classList.add('hidden');
+              }
+            });
+            
+            // Update card view - show/hide existing ProjectCard components
+            const cardWrappers = document.querySelectorAll('#projectsCardBody .project-card-wrapper');
+            cardWrappers.forEach(wrapper => {
+              const projectId = wrapper.getAttribute('data-project-id');
+              if (projectIdsToShow.has(projectId)) {
+                wrapper.style.display = '';
+                wrapper.classList.remove('hidden');
+              } else {
+                wrapper.style.display = 'none';
+                wrapper.classList.add('hidden');
+              }
+            });
+            
+            // Show empty state if no projects match
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const hasVisibleProjects = projectsToShow.length > 0;
+            
+            // Check if we need to show empty state
+            let emptyStateTable = document.getElementById('mpmecFilteredEmptyStateTable');
+            let emptyStateCard = document.getElementById('mpmecFilteredEmptyStateCard');
+            
+            if (!hasVisibleProjects) {
+              // Show enhanced empty state in table view
+              if (tableView && !emptyStateTable) {
+                emptyStateTable = document.createElement('tr');
+                emptyStateTable.id = 'mpmecFilteredEmptyStateTable';
+                emptyStateTable.innerHTML = `
+                  <td colspan="7" class="px-6 py-16 text-center">
+                    <div class="flex flex-col items-center justify-center">
+                      <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                        <div class="relative w-32 h-32 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center shadow-lg">
+                          <svg class="w-20 h-20 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                          </svg>
+                        </div>
+                      </div>
+                      <h3 class="text-2xl font-bold text-gray-900 mb-3">No Projects Found</h3>
+                      <p class="text-gray-600 text-lg mb-2 max-w-md">We couldn't find any projects matching your current filter criteria.</p>
+                      <p class="text-gray-500 text-sm mb-6">Try adjusting your search terms, status, category, or department filters to see more results.</p>
+                      <button onclick="if(window.projectFilterCenter) window.projectFilterCenter.clearFilters()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear All Filters
+                      </button>
+                    </div>
+                  </td>
+                `;
+                const tableBody = document.getElementById('projectsTableBody');
+                if (tableBody) {
+                  tableBody.appendChild(emptyStateTable);
+                }
+              }
+              
+              // Show enhanced empty state in card view
+              if (cardView && !emptyStateCard) {
+                emptyStateCard = document.createElement('div');
+                emptyStateCard.id = 'mpmecFilteredEmptyStateCard';
+                emptyStateCard.className = 'col-span-full text-center py-16';
+                emptyStateCard.innerHTML = `
+                  <div class="flex flex-col items-center justify-center">
+                    <div class="relative mb-6">
+                      <div class="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                      <div class="relative w-32 h-32 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center shadow-lg">
+                        <svg class="w-20 h-20 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">No Projects Found</h3>
+                    <p class="text-gray-600 text-lg mb-2 max-w-md">We couldn't find any projects matching your current filter criteria.</p>
+                    <p class="text-gray-500 text-sm mb-6">Try adjusting your search terms, status, category, or department filters to see more results.</p>
+                    <button onclick="if(window.projectFilterCenter) window.projectFilterCenter.clearFilters()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      Clear All Filters
+                    </button>
+                  </div>
+                `;
+                const cardGrid = document.getElementById('projectsCardBody');
+                if (cardGrid) {
+                  cardGrid.appendChild(emptyStateCard);
+                }
+              }
+            } else {
+              // Hide empty states if projects are visible
+              if (emptyStateTable) {
+                emptyStateTable.remove();
+              }
+              if (emptyStateCard) {
+                emptyStateCard.remove();
+              }
+            }
+          };
+          
+          // Initialize filter function
+          window.applyProjectFiltersFromCenter = function(filters) {
+            console.log('🔍 [MPMEC] Applying filters from center:', filters);
+            console.log('🔍 [MPMEC] Available projects:', window.approvedProjects?.length || 0);
+            
+            let filteredProjects = window.approvedProjects || [];
+            
+            if (!filteredProjects || filteredProjects.length === 0) {
+              console.warn('⚠️ [MPMEC] No projects available to filter! window.approvedProjects is empty or undefined.');
+              return;
+            }
+            
+            // Apply search filter
+            if (filters.search) {
+              const searchTerm = filters.search.toLowerCase();
+              filteredProjects = filteredProjects.filter(project => 
+                project.name?.toLowerCase().includes(searchTerm) ||
+                project.description?.toLowerCase().includes(searchTerm) ||
+                project.projectCode?.toLowerCase().includes(searchTerm) ||
+                project.implementingOfficeName?.toLowerCase().includes(searchTerm)
+              );
+            }
+            
+            // Apply status filter
+            if (filters.status) {
+              filteredProjects = filteredProjects.filter(project => project.status === filters.status);
+            }
+            
+            // Apply category filter
+            if (filters.category) {
+              filteredProjects = filteredProjects.filter(project => project.category === filters.category);
+            }
+            
+            // Apply department filter
+            if (filters.department) {
+              filteredProjects = filteredProjects.filter(project => 
+                project.implementingOfficeName === filters.department
+              );
+            }
+            
+            // Apply sorting
+            switch(filters.sortBy) {
+              case 'name':
+                filteredProjects.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                break;
+              case 'date':
+                filteredProjects.sort((a, b) => {
+                  const dateA = new Date(a.secretariatApprovalDate || a.approvalDate || a.createdAt || 0);
+                  const dateB = new Date(b.secretariatApprovalDate || b.approvalDate || b.createdAt || 0);
+                  return dateB - dateA;
+                });
+                break;
+              case 'status':
+                filteredProjects.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+                break;
+              case 'department':
+                filteredProjects.sort((a, b) => {
+                  const deptA = a.implementingOfficeName || '';
+                  const deptB = b.implementingOfficeName || '';
+                  return deptA.localeCompare(deptB);
+                });
+                break;
+            }
+            
+            // Update display
+            console.log('🔍 [MPMEC] Filtered projects count:', filteredProjects.length);
+            window.updateApprovedProjectsDisplay(filteredProjects);
+          };
+          
+          // Store the callback function on window so React component can access it
+          window.projectFilterCallback = function(filters) {
+            console.log('🔍 [MPMEC] onFilterChange callback triggered with filters:', filters);
+            if (typeof window !== 'undefined' && window.applyProjectFiltersFromCenter) {
+              window.applyProjectFiltersFromCenter(filters);
+            } else {
+              console.warn('⚠️ [MPMEC] applyProjectFiltersFromCenter not available yet');
+            }
+          };
+          
+          console.log('✅ [MPMEC] All filter functions initialized');
+        }
+      </script>
+
+      <!-- Centralized Filter Component -->
+      <ProjectFilterCenter 
+        client:load
+        theme="blue"
+        moduleType="mpmec"
+      />
+
+      <!-- Centralized Export Component -->
+      <ProjectExportCenter 
+        client:load
+        theme="blue"
+        data={approvedProjects}
+        exportType="approved"
+        fileNamePrefix="mpmec-approved-projects"
+      />
 
       {loading ? (
         <div class="profile-card">
@@ -778,7 +932,7 @@ loading = false;
                     const endDate = project.endDate ? new Date(project.endDate) : null;
                     
                     return (
-                      <tr class="hover:bg-gray-50">
+                      <tr data-project-id={project.id} class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div class="text-sm font-medium text-gray-900">{project.name}</div>
@@ -874,11 +1028,13 @@ loading = false;
           <div id="cardView" class="tab-content hidden p-6">
             <div id="projectsCardBody" class="card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {approvedProjects.map(project => (
-                <ProjectCard 
-                  project={project}
-                  userTheme="mpmec"
-                  onClick="viewProjectDetails"
-                />
+                <div data-project-id={project.id} class="project-card-wrapper">
+                  <ProjectCard 
+                    project={project}
+                    userTheme="mpmec"
+                    onClick="viewProjectDetails"
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -1178,14 +1334,85 @@ loading = false;
     cardView.classList.add('block');
   }
 
-  // Filter projects function
+  // New function to work with centralized filter component
+  window.applyProjectFiltersFromCenter = function(filters) {
+    console.log('🔍 [MPMEC] Applying filters from center:', filters);
+    
+    let filteredProjects = approvedProjects || [];
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filteredProjects = filteredProjects.filter(project => 
+        project.name?.toLowerCase().includes(searchTerm) ||
+        project.description?.toLowerCase().includes(searchTerm) ||
+        project.projectCode?.toLowerCase().includes(searchTerm) ||
+        project.implementingOfficeName?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    // Apply status filter
+    if (filters.status) {
+      filteredProjects = filteredProjects.filter(project => project.status === filters.status);
+    }
+    
+    // Apply category filter
+    if (filters.category) {
+      filteredProjects = filteredProjects.filter(project => project.category === filters.category);
+    }
+    
+    // Apply department filter
+    if (filters.department) {
+      filteredProjects = filteredProjects.filter(project => 
+        project.implementingOfficeName === filters.department
+      );
+    }
+    
+    // Apply sorting
+    switch(filters.sortBy) {
+      case 'name':
+        filteredProjects.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'date':
+        filteredProjects.sort((a, b) => {
+          const dateA = new Date(a.secretariatApprovalDate || a.approvalDate || a.createdAt || 0);
+          const dateB = new Date(b.secretariatApprovalDate || b.approvalDate || b.createdAt || 0);
+          return dateB - dateA;
+        });
+        break;
+      case 'status':
+        filteredProjects.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+        break;
+      case 'department':
+        filteredProjects.sort((a, b) => {
+          const deptA = a.implementingOfficeName || '';
+          const deptB = b.implementingOfficeName || '';
+          return deptA.localeCompare(deptB);
+        });
+        break;
+    }
+    
+    // Update display
+    console.log('🔍 [MPMEC] Filtered projects count:', filteredProjects.length);
+    window.updateApprovedProjectsDisplay(filteredProjects);
+  };
+
+  // Filter projects function - now uses centralized component
   function filterProjects() {
+    if (window.projectFilterCenter) {
+      const filters = window.projectFilterCenter.getFilters();
+      window.applyProjectFiltersFromCenter(filters);
+    }
+  }
+
+  // Old filter function kept for reference (will be removed if not needed)
+  function filterProjectsOld() {
     const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
     const departmentFilter = document.getElementById('departmentFilter')?.value || '';
     const categoryFilter = document.getElementById('categoryFilter')?.value || '';
 
-    const filteredProjects = projects.filter(project => {
+    const filteredProjects = approvedProjects.filter(project => {
       const matchesSearch = project.name.toLowerCase().includes(searchTerm) || 
                            project.projectCode.toLowerCase().includes(searchTerm);
       const matchesStatus = !statusFilter || project.status === statusFilter;
@@ -1198,17 +1425,31 @@ loading = false;
     updateProjectsUI(filteredProjects);
   }
 
-  // Clear filters function
+  // Clear filters function - now uses centralized component
   function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('departmentFilter').value = '';
-    document.getElementById('categoryFilter').value = '';
-    updateProjectsUI(projects);
+    if (window.projectFilterCenter) {
+      window.projectFilterCenter.clearFilters();
+    } else {
+      // Fallback to old method if component not available
+      const searchInput = document.getElementById('searchInput');
+      const statusFilter = document.getElementById('statusFilter');
+      const departmentFilter = document.getElementById('departmentFilter');
+      const categoryFilter = document.getElementById('categoryFilter');
+      
+      if (searchInput) searchInput.value = '';
+      if (statusFilter) statusFilter.value = '';
+      if (departmentFilter) departmentFilter.value = '';
+      if (categoryFilter) categoryFilter.value = '';
+      
+      updateProjectsUI(approvedProjects);
+    }
   }
 
+  // OLD updateApprovedProjectsDisplay function removed - now using the show/hide version defined earlier in initialization script
+  // This ensures ProjectCard.astro components are preserved and only shown/hidden based on filters
+
   // Update projects UI function
-  function updateProjectsUI(projectsToShow = projects) {
+  function updateProjectsUI(projectsToShow = approvedProjects) {
     updateProjectsTable(projectsToShow);
     updateProjectsCards(projectsToShow);
   }
@@ -1268,6 +1509,11 @@ loading = false;
   window.loadProjects = loadProjects;
   window.refreshProjects = refreshProjects;
   window.exportProjects = exportProjects;
+  
+  // Store all approved projects globally for filtering
+  if (typeof window !== 'undefined') {
+    window.allApprovedProjects = approvedProjects;
+  }
   window.viewProjectDetails = viewProjectDetails;
   window.viewProgress = viewProgress;
 

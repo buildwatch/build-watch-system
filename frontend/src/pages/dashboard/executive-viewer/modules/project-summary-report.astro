@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import ExecutiveLayout from '../../../../components/ExecutiveLayout.astro';
+import ProjectSummaryReportCenter from '../../../../islands/ProjectSummaryReportCenter.jsx';
+---
+
+<Layout title="Project Summary & Report | Executive Viewer Dashboard">
+  <ExecutiveLayout>
+    <section class="p-8 bg-gradient-to-br from-indigo-50 to-white min-h-screen">
+      <ProjectSummaryReportCenter client:load userRole="Executive Viewer" accessLevel="all" />
+    </section>
+  </ExecutiveLayout>
+</Layout>
+

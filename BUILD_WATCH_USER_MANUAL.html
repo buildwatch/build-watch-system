@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Watch User Manual</title>
+    <style>
+        @page {
+            size: 8.5in 13in; /* Long bond paper */
+            margin: 0.75in;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            font-size: 11pt;
+            max-width: 7.5in;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 24pt;
+            margin-top: 20pt;
+            margin-bottom: 12pt;
+            page-break-after: avoid;
+            color: #1a1a1a;
+        }
+        
+        h2 {
+            font-size: 18pt;
+            margin-top: 16pt;
+            margin-bottom: 10pt;
+            page-break-after: avoid;
+            color: #2a2a2a;
+            border-bottom: 2px solid #3C9CEB;
+            padding-bottom: 5pt;
+        }
+        
+        h3 {
+            font-size: 14pt;
+            margin-top: 12pt;
+            margin-bottom: 8pt;
+            page-break-after: avoid;
+            color: #3a3a3a;
+        }
+        
+        h4 {
+            font-size: 12pt;
+            margin-top: 10pt;
+            margin-bottom: 6pt;
+            page-break-after: avoid;
+            color: #4a4a4a;
+        }
+        
+        p {
+            margin-bottom: 8pt;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin-left: 20pt;
+            margin-bottom: 10pt;
+        }
+        
+        li {
+            margin-bottom: 5pt;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12pt 0;
+            page-break-inside: avoid;
+            font-size: 10pt;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8pt;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #3C9CEB;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .screenshot-indicator {
+            background-color: #f0f0f0;
+            border-left: 4px solid #3C9CEB;
+            padding: 10pt;
+            margin: 10pt 0;
+            page-break-inside: avoid;
+        }
+        
+        .screenshot-indicator strong {
+            color: #3C9CEB;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .no-break {
+            page-break-inside: avoid;
+        }
+        
+        .toc {
+            margin: 20pt 0;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 5pt;
+        }
+        
+        .toc a {
+            text-decoration: none;
+            color: #3C9CEB;
+        }
+        
+        .footer {
+            margin-top: 30pt;
+            padding-top: 10pt;
+            border-top: 1px solid #ddd;
+            font-size: 9pt;
+            color: #666;
+            text-align: center;
+        }
+        
+        .cover-page {
+            text-align: center;
+            page-break-after: always;
+            padding-top: 2in;
+        }
+        
+        .cover-page h1 {
+            font-size: 32pt;
+            margin-bottom: 20pt;
+            color: #3C9CEB;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 18pt;
+            color: #666;
+            margin-bottom: 30pt;
+        }
+        
+        .cover-page .info {
+            font-size: 12pt;
+            color: #888;
+            margin-top: 40pt;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2pt 4pt;
+            border-radius: 3pt;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+        }
+        
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+            
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            
+            table {
+                page-break-inside: avoid;
+            }
+        }
+        
+        @media screen {
+            body {
+                background-color: #f5f5f5;
+                padding: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cover-page">
+        <h1>BUILD WATCH USER MANUAL</h1>
+        <div class="subtitle">Project Monitoring and Evaluation System</div>
+        <div class="subtitle" style="margin-top: 10pt;">Municipality of Santa Cruz, Laguna</div>
+        <div class="info">
+            <p><strong>Version:</strong> 1.0</p>
+            <p><strong>Date:</strong> January 2025</p>
+            <p><strong>Format:</strong> Long Bond Paper Booklet</p>
+        </div>
+    </div>
+
+    <h1>TABLE OF CONTENTS</h1>
+    <div class="toc">
+        <ul>
+            <li>1. <a href="#introduction">Introduction</a></li>
+            <li>2. <a href="#system-overview">System Overview</a></li>
+            <li>3. <a href="#public-pages-guide">Public Pages Guide</a></li>
+            <li>4. <a href="#quick-start-guides">Quick Start Guides</a></li>
+            <li>5. <a href="#user-roles-features">User Roles & Features</a></li>
+            <li>6. <a href="#roles-permissions-table">Roles & Permissions Table</a></li>
+            <li>7. <a href="#troubleshooting-faq">Troubleshooting & FAQ</a></li>
+            <li>8. <a href="#screenshot-guidelines">Screenshot Guidelines</a></li>
+        </ul>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1 id="introduction">INTRODUCTION</h1>
+    
+    <h2>What is Build Watch?</h2>
+    <p>Build Watch is the official web-based Project Monitoring and Evaluation System (PMES) for the Municipality of Santa Cruz, Laguna. It provides transparent, real-time tracking of infrastructure projects and social development programs.</p>
+    
+    <h2>Purpose of This Manual</h2>
+    <p>This manual provides step-by-step instructions for using Build Watch, covering all public pages and user roles. Use it as your reference guide for navigating the system efficiently.</p>
+    
+    <h2>System Requirements</h2>
+    <ul>
+        <li><strong>Browser:</strong> Chrome, Firefox, Safari, or Edge (latest version)</li>
+        <li><strong>Internet:</strong> Stable internet connection</li>
+        <li><strong>Device:</strong> Computer, tablet, or smartphone</li>
+        <li><strong>Screen:</strong> Minimum 1024px width for optimal experience</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h1 id="system-overview">SYSTEM OVERVIEW</h1>
+    
+    <h2>User Roles</h2>
+    <p>Build Watch supports six unique user accounts:</p>
+    <ol>
+        <li><strong>EIU</strong> (External Implementing Unit) - Blue Theme</li>
+        <li><strong>LGU-IU</strong> (LGU Implementing Unit) - Yellow Theme</li>
+        <li><strong>MPMEC</strong> (Municipal Project Monitoring and Evaluation Committee) - Red Theme</li>
+        <li><strong>MPMEC Secretariat</strong> - Red Theme</li>
+        <li><strong>Executive Viewer</strong> - Executive Blue Theme</li>
+        <li><strong>System Admin</strong> - Dark Theme</li>
+    </ol>
+    
+    <h2>Login Access</h2>
+    <p>All users access the system through a single login page:</p>
+    <ul>
+        <li><strong>URL:</strong> <code>/login/lgu-pmt</code></li>
+        <li><strong>Default Password:</strong> <code>LGU_Pass</code> (change on first login)</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h1 id="public-pages-guide">PUBLIC PAGES GUIDE</h1>
+    
+    <h2>1. Home Page</h2>
+    <p><strong>Purpose:</strong> Main landing page showcasing Build Watch features and recent project highlights.</p>
+    <p><strong>Menu Path:</strong> Home → (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Navigate to the website homepage</li>
+        <li>View featured projects and statistics</li>
+        <li>Browse project categories</li>
+        <li>Access login button in the top navigation</li>
+        <li>Explore interactive project map</li>
+        <li>View recent news and updates</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 01</strong> — <code>01_public_home-page_main-hero.png</code><br>
+        <strong>Location:</strong> Home page hero section with navigation bar<br>
+        <strong>Caption:</strong> "Build Watch homepage with featured projects and navigation menu"
+    </div>
+
+    <h2>2. About Page</h2>
+    <p><strong>Purpose:</strong> Learn about Build Watch, its mission, vision, and system architecture.</p>
+    <p><strong>Menu Path:</strong> Home → About (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "About" in the top navigation menu</li>
+        <li>Read system overview and purpose</li>
+        <li>View mission and vision statements</li>
+        <li>Explore user role descriptions</li>
+        <li>Review system architecture information</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 02</strong> — <code>02_public_about-page_mission-vision.png</code><br>
+        <strong>Location:</strong> About page mission and vision section<br>
+        <strong>Caption:</strong> "About page showing Build Watch mission and vision"
+    </div>
+
+    <h2>3. Projects Page</h2>
+    <p><strong>Purpose:</strong> Browse and search all public projects with filtering options.</p>
+    <p><strong>Menu Path:</strong> Home → Projects (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "Projects" in the top navigation</li>
+        <li>Use search bar to find specific projects</li>
+        <li>Apply filters (status, category, location, funding source)</li>
+        <li>Click on a project card to view details</li>
+        <li>View project statistics and summaries</li>
+        <li>Access project detail page</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 03</strong> — <code>03_public_projects-page_search-filter.png</code><br>
+        <strong>Location:</strong> Projects page with search and filter interface<br>
+        <strong>Caption:</strong> "Projects page showing search bar and filter options"
+    </div>
+
+    <h2>4. Project Details Page</h2>
+    <p><strong>Purpose:</strong> View comprehensive information about a specific project.</p>
+    <p><strong>Menu Path:</strong> Home → Projects → [Project Name]</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Navigate to Projects page</li>
+        <li>Click on any project card</li>
+        <li>View project overview and details</li>
+        <li>Check progress timeline</li>
+        <li>Review budget information</li>
+        <li>View project documents and images</li>
+        <li>See location on map</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 04</strong> — <code>04_public_project-details_overview.png</code><br>
+        <strong>Location:</strong> Project detail page showing project information<br>
+        <strong>Caption:</strong> "Project detail page with overview and progress information"
+    </div>
+
+    <h2>5. Contact Us Page</h2>
+    <p><strong>Purpose:</strong> Contact the Build Watch team for inquiries and support.</p>
+    <p><strong>Menu Path:</strong> Home → Contact Us (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "Contact Us" in the top navigation</li>
+        <li>Fill out contact form with your information</li>
+        <li>Enter your message or inquiry</li>
+        <li>Submit the form</li>
+        <li>Wait for response via email</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 05</strong> — <code>05_public_contact-us_form.png</code><br>
+        <strong>Location:</strong> Contact Us page with contact form<br>
+        <strong>Caption:</strong> "Contact Us page with contact form fields"
+    </div>
+
+    <h2>6. News & Updates Page</h2>
+    <p><strong>Purpose:</strong> View latest news, announcements, and updates from the LGU.</p>
+    <p><strong>Menu Path:</strong> Home → News & Articles (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "News & Articles" in the top navigation</li>
+        <li>Browse latest news articles</li>
+        <li>Click on an article to read full content</li>
+        <li>View article categories</li>
+        <li>Check publication dates</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 06</strong> — <code>06_public_news-page_article-list.png</code><br>
+        <strong>Location:</strong> News page showing article listings<br>
+        <strong>Caption:</strong> "News page displaying latest articles and updates"
+    </div>
+
+    <h2>7. FAQs Page</h2>
+    <p><strong>Purpose:</strong> Find answers to frequently asked questions about Build Watch.</p>
+    <p><strong>Menu Path:</strong> Home → FAQs (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "FAQs" in the top navigation</li>
+        <li>Browse question categories</li>
+        <li>Click on a question to view answer</li>
+        <li>Use search to find specific topics</li>
+        <li>Contact support if question not answered</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 07</strong> — <code>07_public_faqs-page_questions.png</code><br>
+        <strong>Location:</strong> FAQs page with question categories<br>
+        <strong>Caption:</strong> "FAQs page showing question categories and answers"
+    </div>
+
+    <h2>8. Open Data Portal</h2>
+    <p><strong>Purpose:</strong> Access public data, reports, and downloadable resources.</p>
+    <p><strong>Menu Path:</strong> Home → Open Data (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "Open Data" in the top navigation</li>
+        <li>Browse available datasets</li>
+        <li>Filter by category or date</li>
+        <li>Download reports in PDF or Excel format</li>
+        <li>View data visualizations</li>
+        <li>Export data for analysis</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 08</strong> — <code>08_public_open-data_datasets.png</code><br>
+        <strong>Location:</strong> Open Data portal showing available datasets<br>
+        <strong>Caption:</strong> "Open Data portal with downloadable datasets and reports"
+    </div>
+
+    <h2>9. Getting Started Page</h2>
+    <p><strong>Purpose:</strong> Guide for new users on how to use Build Watch.</p>
+    <p><strong>Menu Path:</strong> Home → Getting Started (Top Navigation)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Click "Getting Started" in the top navigation</li>
+        <li>Read introduction to Build Watch</li>
+        <li>Follow step-by-step setup guide</li>
+        <li>Learn about user roles</li>
+        <li>Access training materials</li>
+        <li>View video tutorials (if available)</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 09</strong> — <code>09_public_getting-started_guide.png</code><br>
+        <strong>Location:</strong> Getting Started page with user guide<br>
+        <strong>Caption:</strong> "Getting Started page with step-by-step instructions"
+    </div>
+
+    <h2>10. Barangay Pages</h2>
+    <p><strong>Purpose:</strong> View projects and information specific to each barangay.</p>
+    <p><strong>Menu Path:</strong> Home → [Barangay Name] (via project map or search)</p>
+    <p><strong>Step-by-Step Guide:</strong></p>
+    <ol>
+        <li>Navigate to a barangay page (via map or search)</li>
+        <li>View barangay-specific projects</li>
+        <li>Check project statistics for the barangay</li>
+        <li>View barangay information and location</li>
+        <li>Access related projects</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 10</strong> — <code>10_public_barangay-page_projects.png</code><br>
+        <strong>Location:</strong> Barangay page showing barangay-specific projects<br>
+        <strong>Caption:</strong> "Barangay page displaying projects for specific barangay"
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1 id="quick-start-guides">QUICK START GUIDES</h1>
+    
+    <h2>EIU (External Implementing Unit) - Quick Start</h2>
+    <p><strong>Theme Color:</strong> Blue (#3C9CEB)</p>
+    <p><strong>Login Steps:</strong></p>
+    <ol>
+        <li>Navigate to <code>/login/lgu-pmt</code></li>
+        <li>Enter your EIU username and password</li>
+        <li>Click "Log In"</li>
+        <li>You will be redirected to the EIU Dashboard</li>
+    </ol>
+    <p><strong>Key Features:</strong></p>
+    <ul>
+        <li><strong>My Projects:</strong> View all assigned projects</li>
+        <li><strong>Submit Update:</strong> Submit physical and financial progress reports</li>
+        <li><strong>Upload Documents:</strong> Upload project documents and images</li>
+        <li><strong>LGU Feedback:</strong> View and respond to LGU communications</li>
+        <li><strong>Access to Documents:</strong> View and download all available documents</li>
+        <li><strong>Export Data:</strong> Export own project data and reports</li>
+        <li><strong>View Heatmap:</strong> Access geographic visualization of projects</li>
+        <li><strong>Messaging:</strong> Send messages to all users</li>
+        <li><strong>Profile:</strong> Manage company profile and credentials</li>
+    </ul>
+    <p><strong>First Steps After Login:</strong></p>
+    <ol>
+        <li>Review assigned projects in "My Projects"</li>
+        <li>Check for pending update requests</li>
+        <li>Submit initial progress report if needed</li>
+        <li>Upload required documents</li>
+        <li>Set up profile information</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 11</strong> — <code>11_EIU_dashboard_overview.png</code><br>
+        <strong>Location:</strong> EIU Dashboard main page<br>
+        <strong>Caption:</strong> "EIU Dashboard showing project overview and quick actions"
+    </div>
+
+    <h2>LGU-IU (LGU Implementing Unit) - Quick Start</h2>
+    <p><strong>Theme Color:</strong> Yellow (#F8C734)</p>
+    <p><strong>Login Steps:</strong></p>
+    <ol>
+        <li>Navigate to <code>/login/lgu-pmt</code></li>
+        <li>Enter your LGU-IU username and password</li>
+        <li>Click "Log In"</li>
+        <li>You will be redirected to the LGU-IU Dashboard</li>
+    </ol>
+    <p><strong>Key Features:</strong></p>
+    <ul>
+        <li><strong>Project Management:</strong> Create and manage projects</li>
+        <li><strong>Progress Timeline:</strong> Track project progress visually</li>
+        <li><strong>EIU Activity Feed:</strong> Monitor EIU submissions</li>
+        <li><strong>Message Center:</strong> Communicate with all users</li>
+        <li><strong>Office Profile:</strong> Manage department information</li>
+        <li><strong>Validate Reports:</strong> Review and validate submitted reports</li>
+        <li><strong>Upload Documents:</strong> Upload project documents</li>
+        <li><strong>Access to Documents:</strong> View and download all available documents</li>
+        <li><strong>Export Data:</strong> Export project data and reports</li>
+        <li><strong>View Heatmap:</strong> Access geographic visualization of projects</li>
+        <li><strong>View Audit Logs:</strong> View own activity logs</li>
+    </ul>
+    <p><strong>First Steps After Login:</strong></p>
+    <ol>
+        <li>Review active projects in "Project Management"</li>
+        <li>Check EIU activity feed for updates</li>
+        <li>Create new project if needed</li>
+        <li>Update progress for existing projects</li>
+        <li>Validate reports from EIU</li>
+        <li>Respond to messages from Secretariat and other users</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 12</strong> — <code>12_LGU-IU_dashboard_overview.png</code><br>
+        <strong>Location:</strong> LGU-IU Dashboard main page<br>
+        <strong>Caption:</strong> "LGU-IU Dashboard showing project management interface"
+    </div>
+
+    <h2>MPMEC (Municipal Project Monitoring and Evaluation Committee) - Quick Start</h2>
+    <p><strong>Theme Color:</strong> Red (#FE5353)</p>
+    <p><strong>Login Steps:</strong></p>
+    <ol>
+        <li>Navigate to <code>/login/lgu-pmt</code></li>
+        <li>Enter your MPMEC username and password</li>
+        <li>Click "Log In"</li>
+        <li>You will be redirected to the MPMEC Dashboard</li>
+    </ol>
+    <p><strong>Key Features:</strong></p>
+    <ul>
+        <li><strong>Approved Projects:</strong> View committee-approved projects (read-only)</li>
+        <li><strong>Progress & Timeline:</strong> Monitor project progress</li>
+        <li><strong>Policy Documents:</strong> Access LGU policies and documents</li>
+        <li><strong>Secretariat Inbox:</strong> Receive reports from Secretariat</li>
+        <li><strong>Send Feedback:</strong> Communicate with Secretariat</li>
+        <li><strong>Policy Dashboard:</strong> View policy impact analytics</li>
+        <li><strong>Upload Documents:</strong> Upload policy documents and related files</li>
+        <li><strong>Generate Reports:</strong> Create and generate project reports</li>
+        <li><strong>Access to Documents:</strong> View and download all available documents</li>
+        <li><strong>Export Data:</strong> Export project data and reports</li>
+        <li><strong>View Heatmap:</strong> Access geographic visualization of projects</li>
+        <li><strong>Messaging:</strong> Send messages to all users</li>
+        <li><strong>View Audit Logs:</strong> View own activity logs</li>
+    </ul>
+    <p><strong>Important Restrictions:</strong></p>
+    <ul>
+        <li><strong>Cannot create projects:</strong> MPMEC cannot create new projects</li>
+        <li><strong>Cannot edit projects:</strong> MPMEC cannot modify existing projects</li>
+        <li><strong>Cannot submit updates:</strong> No progress update submission allowed</li>
+        <li><strong>Cannot validate reports:</strong> No report validation functionality</li>
+    </ul>
+    <p><strong>First Steps After Login:</strong></p>
+    <ol>
+        <li>Review approved projects for FY 2025</li>
+        <li>Check Secretariat inbox for reports</li>
+        <li>Review policy documents</li>
+        <li>Monitor project progress and timelines</li>
+        <li>Generate reports as needed</li>
+        <li>Send feedback to Secretariat as needed</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 13</strong> — <code>13_MPMEC_dashboard_overview.png</code><br>
+        <strong>Location:</strong> MPMEC Dashboard main page<br>
+        <strong>Caption:</strong> "MPMEC Dashboard showing approved projects and policy overview"
+    </div>
+
+    <h2>MPMEC Secretariat - Quick Start</h2>
+    <p><strong>Theme Color:</strong> Red (#FE5353)</p>
+    <p><strong>Login Steps:</strong></p>
+    <ol>
+        <li>Navigate to <code>/login/lgu-pmt</code></li>
+        <li>Enter your Secretariat username and password</li>
+        <li>Click "Log In"</li>
+        <li>You will be redirected to the Secretariat Dashboard</li>
+    </ol>
+    <p><strong>Key Features:</strong></p>
+    <ul>
+        <li><strong>Submissions & Tracker:</strong> Monitor all incoming reports</li>
+        <li><strong>Compilation Summary:</strong> Consolidated reports per office</li>
+        <li><strong>Templates & Forms:</strong> Manage report templates</li>
+        <li><strong>Draft Reports:</strong> Generate QPR and Annual reports</li>
+        <li><strong>MPMEC Communication:</strong> Exchange updates with MPMEC</li>
+        <li><strong>Coordination Calendar:</strong> Manage LGU-wide calendar</li>
+        <li><strong>Upload Documents:</strong> Upload templates and documents</li>
+        <li><strong>Access to Documents:</strong> View and download all available documents</li>
+        <li><strong>Export Data:</strong> Export reports and data</li>
+        <li><strong>View Heatmap:</strong> Access geographic visualization of projects</li>
+        <li><strong>Messaging:</strong> Send messages to all users</li>
+        <li><strong>View Audit Logs:</strong> View own activity logs</li>
+    </ul>
+    <p><strong>Important Restrictions:</strong></p>
+    <ul>
+        <li><strong>Cannot create projects:</strong> Secretariat cannot create new projects</li>
+        <li><strong>Cannot edit projects:</strong> Secretariat cannot modify existing projects</li>
+        <li><strong>Cannot validate reports:</strong> No report validation functionality (validation is done by LGU-IU)</li>
+        <li><strong>Cannot submit updates:</strong> No progress update submission allowed</li>
+    </ul>
+    <p><strong>First Steps After Login:</strong></p>
+    <ol>
+        <li>Check "Submissions & Tracker" for new reports</li>
+        <li>Review compilation summaries</li>
+        <li>Compile summary reports</li>
+        <li>Generate QPR and Annual reports</li>
+        <li>Coordinate with MPMEC and implementing offices</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 14</strong> — <code>14_Secretariat_dashboard_overview.png</code><br>
+        <strong>Location:</strong> Secretariat Dashboard main page<br>
+        <strong>Caption:</strong> "Secretariat Dashboard showing submissions tracker and key metrics"
+    </div>
+
+    <h2>Executive Viewer - Quick Start</h2>
+    <p><strong>Theme Color:</strong> Executive Blue (#3D50D7)</p>
+    <p><strong>Login Steps:</strong></p>
+    <ol>
+        <li>Navigate to <code>/login/lgu-pmt</code></li>
+        <li>Enter your Executive Viewer username and password</li>
+        <li>Click "Log In"</li>
+        <li>You will be redirected to the Executive Dashboard</li>
+    </ol>
+    <p><strong>Key Features:</strong></p>
+    <ul>
+        <li><strong>Projects:</strong> View all projects (read-only)</li>
+        <li><strong>Reports:</strong> Access comprehensive reports (read-only)</li>
+        <li><strong>Heatmap:</strong> Geographic visualization of projects</li>
+        <li><strong>Export:</strong> Export data in PDF/Excel format</li>
+        <li><strong>Search:</strong> Advanced search and filtering</li>
+        <li><strong>Notices:</strong> View executive notices</li>
+        <li><strong>Access to Documents:</strong> View and download all available documents</li>
+        <li><strong>Messaging:</strong> Send messages to all users</li>
+        <li><strong>View Audit Logs:</strong> View own activity logs</li>
+    </ul>
+    <p><strong>Important Restrictions:</strong></p>
+    <ul>
+        <li><strong>Read-only access:</strong> Cannot create, edit, or modify any data</li>
+        <li><strong>Cannot submit updates:</strong> No progress update submission allowed</li>
+        <li><strong>Cannot upload documents:</strong> No document upload functionality</li>
+    </ul>
+    <p><strong>First Steps After Login:</strong></p>
+    <ol>
+        <li>Review dashboard overview with all projects</li>
+        <li>Check delayed projects (red indicators)</li>
+        <li>View high-budget programs</li>
+        <li>Generate reports for briefings</li>
+        <li>Explore heatmap for geographic overview</li>
+        <li>Access documents and reports as needed</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 15</strong> — <code>15_ExecViewer_dashboard_overview.png</code><br>
+        <strong>Location:</strong> Executive Viewer Dashboard main page<br>
+        <strong>Caption:</strong> "Executive Viewer Dashboard showing project overview and key metrics"
+    </div>
+
+    <h2>System Admin - Quick Start</h2>
+    <p><strong>Theme Color:</strong> Dark Theme</p>
+    <p><strong>Login Steps:</strong></p>
+    <ol>
+        <li>Navigate to <code>/login/lgu-pmt</code></li>
+        <li>Enter your System Admin username and password</li>
+        <li>Click "Log In"</li>
+        <li>You will be redirected to the System Admin Dashboard</li>
+    </ol>
+    <p><strong>Key Features:</strong></p>
+    <ul>
+        <li><strong>User Management:</strong> Create and manage user accounts</li>
+        <li><strong>User Logs:</strong> View audit trail and activity logs (all users)</li>
+        <li><strong>Office Groups:</strong> Manage departments and user groups</li>
+        <li><strong>Security:</strong> Configure security settings</li>
+        <li><strong>Configuration:</strong> System configuration and settings</li>
+        <li><strong>Backup & Maintenance:</strong> Database backup and maintenance</li>
+        <li><strong>Announcements:</strong> Manage system announcements</li>
+        <li><strong>Messaging:</strong> Send messages to all users</li>
+    </ul>
+    <p><strong>Important Restrictions:</strong></p>
+    <ul>
+        <li><strong>Cannot access projects:</strong> System Admin cannot view, create, edit, or manage any projects</li>
+        <li><strong>Cannot submit updates:</strong> No progress update submission allowed</li>
+        <li><strong>Cannot upload documents:</strong> No document upload functionality</li>
+        <li><strong>Cannot view heatmap:</strong> No geographic visualization access</li>
+        <li><strong>No project-related features:</strong> All project management features are restricted</li>
+    </ul>
+    <p><strong>First Steps After Login:</strong></p>
+    <ol>
+        <li>Review system health status</li>
+        <li>Check user activity logs</li>
+        <li>Manage user accounts if needed</li>
+        <li>Review security settings</li>
+        <li>Perform system maintenance tasks</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 16</strong> — <code>16_SysAdmin_dashboard_overview.png</code><br>
+        <strong>Location:</strong> System Admin Dashboard main page<br>
+        <strong>Caption:</strong> "System Admin Dashboard showing system overview and management tools"
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1 id="user-roles-features">USER ROLES & FEATURES</h1>
+    
+    <p><em>Note: Due to space constraints, detailed feature documentation for each role is available in the full markdown version. Key features are summarized in the Quick Start sections above.</em></p>
+
+    <div class="page-break"></div>
+
+    <h1 id="roles-permissions-table">ROLES & PERMISSIONS TABLE</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>EIU</th>
+                <th>LGU-IU</th>
+                <th>MPMEC</th>
+                <th>Secretariat</th>
+                <th>Exec Viewer</th>
+                <th>Sys Admin</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>View Public Pages</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td><strong>Login to Dashboard</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td><strong>Create Projects</strong></td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Edit Projects</strong></td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Submit Progress Updates</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Upload Documents</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>View All Projects</strong></td>
+                <td>Assigned Only</td>
+                <td>Office Only</td>
+                <td>All (Read)</td>
+                <td>All</td>
+                <td>All (Read)</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Validate Reports</strong></td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Generate Reports</strong></td>
+                <td>Own Reports</td>
+                <td>Own Reports</td>
+                <td>✅</td>
+                <td>All Reports</td>
+                <td>All (Read)</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Manage Users</strong></td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td><strong>View Audit Logs</strong></td>
+                <td>Own Activity</td>
+                <td>Own Activity</td>
+                <td>Own Activity</td>
+                <td>Own Activity</td>
+                <td>Own Activity</td>
+                <td>All</td>
+            </tr>
+            <tr>
+                <td><strong>System Configuration</strong></td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td><strong>Send Messages</strong></td>
+                <td>To All</td>
+                <td>To All</td>
+                <td>To All</td>
+                <td>To All</td>
+                <td>To All</td>
+                <td>To All</td>
+            </tr>
+            <tr>
+                <td><strong>Access to Documents</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td><strong>Export Data</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td><strong>View Heatmap</strong></td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>❌</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Legend:</strong></p>
+    <ul>
+        <li>✅ = Full Access</li>
+        <li>❌ = No Access</li>
+        <li>Limited = Restricted Access</li>
+        <li>Read = Read-Only Access</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h1 id="troubleshooting-faq">TROUBLESHOOTING & FAQ</h1>
+    
+    <h2>1. Cannot Log In</h2>
+    <p><strong>Problem:</strong> Unable to log in with correct credentials.</p>
+    <p><strong>Quick Fix:</strong></p>
+    <ol>
+        <li>Verify username and password are correct (case-sensitive)</li>
+        <li>Clear browser cache and cookies</li>
+        <li>Try a different browser</li>
+        <li>Check internet connection</li>
+        <li>Contact System Admin if problem persists</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 52</strong> — <code>52_troubleshooting_login-error.png</code><br>
+        <strong>Location:</strong> Login page showing error message<br>
+        <strong>Caption:</strong> "Login error message display"
+    </div>
+
+    <h2>2. Dashboard Not Loading</h2>
+    <p><strong>Problem:</strong> Dashboard page shows blank or takes too long to load.</p>
+    <p><strong>Quick Fix:</strong></p>
+    <ol>
+        <li>Refresh the page (F5 or Ctrl+R)</li>
+        <li>Check internet connection speed</li>
+        <li>Clear browser cache</li>
+        <li>Disable browser extensions temporarily</li>
+        <li>Try incognito/private browsing mode</li>
+        <li>Contact System Admin if issue continues</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 53</strong> — <code>53_troubleshooting_dashboard-loading.png</code><br>
+        <strong>Location:</strong> Dashboard showing loading state<br>
+        <strong>Caption:</strong> "Dashboard loading screen or error"
+    </div>
+
+    <h2>3. Cannot Upload Documents</h2>
+    <p><strong>Problem:</strong> File upload fails or shows error.</p>
+    <p><strong>Quick Fix:</strong></p>
+    <ol>
+        <li>Check file size (should be under 10MB)</li>
+        <li>Verify file format is allowed (PDF, JPG, PNG, DOCX)</li>
+        <li>Check internet connection stability</li>
+        <li>Try uploading a smaller file first</li>
+        <li>Clear browser cache</li>
+        <li>Contact System Admin if problem persists</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 54</strong> — <code>54_troubleshooting_upload-error.png</code><br>
+        <strong>Location:</strong> Upload page showing error message<br>
+        <strong>Caption:</strong> "File upload error message display"
+    </div>
+
+    <h2>4. Cannot Submit Progress Update</h2>
+    <p><strong>Problem:</strong> Progress update form submission fails.</p>
+    <p><strong>Quick Fix:</strong></p>
+    <ol>
+        <li>Verify all required fields are filled</li>
+        <li>Check that progress percentage is valid (0-100)</li>
+        <li>Ensure budget amounts are correct</li>
+        <li>Verify project is assigned to your account</li>
+        <li>Check for validation error messages</li>
+        <li>Try submitting again after a few minutes</li>
+        <li>Contact Secretariat if issue persists</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 55</strong> — <code>55_troubleshooting_submit-error.png</code><br>
+        <strong>Location:</strong> Submit Update form showing validation errors<br>
+        <strong>Caption:</strong> "Progress update submission error display"
+    </div>
+
+    <h2>5. Cannot View Projects</h2>
+    <p><strong>Problem:</strong> Projects list is empty or projects not visible.</p>
+    <p><strong>Quick Fix:</strong></p>
+    <ol>
+        <li>Check if projects are assigned to your account (EIU/LGU-IU)</li>
+        <li>Verify you have correct role permissions</li>
+        <li>Try refreshing the page</li>
+        <li>Check filters are not hiding projects</li>
+        <li>Clear browser cache</li>
+        <li>Contact System Admin to verify account permissions</li>
+    </ol>
+    <div class="screenshot-indicator">
+        <strong>Photo 56</strong> — <code>56_troubleshooting_no-projects.png</code><br>
+        <strong>Location:</strong> Projects page showing empty state<br>
+        <strong>Caption:</strong> "Empty projects list display"
+    </div>
+
+    <div class="page-break"></div>
+
+    <h1 id="screenshot-guidelines">SCREENSHOT GUIDELINES</h1>
+    
+    <h2>Resolution Requirements</h2>
+    <ul>
+        <li><strong>Minimum Resolution:</strong> 1920x1080 pixels (Full HD)</li>
+        <li><strong>Recommended Resolution:</strong> 2560x1440 pixels (2K) or higher</li>
+        <li><strong>Aspect Ratio:</strong> 16:9 (landscape) for dashboard screenshots</li>
+        <li><strong>File Format:</strong> PNG (preferred) or JPG</li>
+        <li><strong>Color Mode:</strong> RGB</li>
+    </ul>
+
+    <h2>Cropping Rules</h2>
+    <ol>
+        <li><strong>Remove Browser UI:</strong> Crop out browser address bar, bookmarks, and taskbar</li>
+        <li><strong>Focus on Content:</strong> Include only relevant page content</li>
+        <li><strong>Consistent Margins:</strong> Maintain 20-30px margins around content</li>
+        <li><strong>Full Page vs. Section:</strong> Use full page for overview screenshots; use section crop for specific features</li>
+    </ol>
+
+    <h2>Highlighting Guidelines</h2>
+    <ol>
+        <li><strong>Use Red Arrows:</strong> Point to important elements</li>
+        <li><strong>Red Boxes:</strong> Highlight key areas (use 2-3px red border)</li>
+        <li><strong>Annotations:</strong> Add text labels for clarity</li>
+        <li><strong>Consistency:</strong> Use same highlighting style throughout manual</li>
+    </ol>
+
+    <h2>Filename Format</h2>
+    <p><strong>Format:</strong> <code>XX_role_page-element_description.png</code></p>
+    <p><strong>Components:</strong></p>
+    <ul>
+        <li><strong>XX:</strong> Two-digit photo number (01, 02, 03...)</li>
+        <li><strong>role:</strong> public / EIU / LGU-IU / MPMEC / Secretariat / ExecViewer / SysAdmin</li>
+        <li><strong>page-element:</strong> Short hyphenated description (e.g., <code>dashboard-overview</code>, <code>submit-update-form</code>)</li>
+        <li><strong>description:</strong> Brief feature description</li>
+    </ul>
+    <p><strong>Examples:</strong></p>
+    <ul>
+        <li><code>01_public_home-page_main-hero.png</code></li>
+        <li><code>17_EIU_dashboard_statistics.png</code></li>
+        <li><code>34_Secretariat_submissions-tracker_dashboard.png</code></li>
+    </ul>
+
+    <h2>Screenshot Checklist</h2>
+    <p>Before taking a screenshot:</p>
+    <ul>
+        <li>[ ] Browser is in full-screen mode</li>
+        <li>[ ] Page is fully loaded</li>
+        <li>[ ] No personal/sensitive data visible</li>
+        <li>[ ] Content is centered and clear</li>
+        <li>[ ] Highlighting/annotations added if needed</li>
+        <li>[ ] Filename follows naming convention</li>
+        <li>[ ] Screenshot saved in correct folder</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h1>APPENDIX</h1>
+    
+    <h2>Contact Information</h2>
+    <p><strong>Build Watch Support:</strong></p>
+    <ul>
+        <li>Email: support@buildwatch.santacruz.gov.ph</li>
+        <li>Phone: (049) 123-4567</li>
+        <li>Office Hours: Monday-Friday, 8:00 AM - 5:00 PM</li>
+    </ul>
+
+    <h2>System URLs</h2>
+    <ul>
+        <li><strong>Public Site:</strong> https://buildwatch.santacruz.gov.ph</li>
+        <li><strong>Login Page:</strong> https://buildwatch.santacruz.gov.ph/login/lgu-pmt</li>
+        <li><strong>Documentation:</strong> https://buildwatch.santacruz.gov.ph/getting-started</li>
+    </ul>
+
+    <h2>Keyboard Shortcuts</h2>
+    <ul>
+        <li><strong>Refresh Page:</strong> F5 or Ctrl+R</li>
+        <li><strong>Go to Home:</strong> Alt+H</li>
+        <li><strong>Search:</strong> Ctrl+F (in-page search)</li>
+        <li><strong>Logout:</strong> Click logout button in top-right</li>
+    </ul>
+
+    <h2>Browser Compatibility</h2>
+    <ul>
+        <li><strong>Chrome:</strong> Version 90+ (Recommended)</li>
+        <li><strong>Firefox:</strong> Version 88+</li>
+        <li><strong>Safari:</strong> Version 14+</li>
+        <li><strong>Edge:</strong> Version 90+</li>
+    </ul>
+
+    <div class="footer">
+        <p><strong>Document Version:</strong> 1.0</p>
+        <p><strong>Last Updated:</strong> January 2025</p>
+        <p><strong>Next Review:</strong> July 2025</p>
+        <p style="margin-top: 20pt;"><em>This manual is designed for long bond paper (8.5" x 13") booklet printing. For best results, print double-sided and bind as a booklet.</em></p>
+    </div>
+</body>
+</html>
+

@@ -98,12 +98,12 @@ const rightLinks = [
         </a>
         
         <!-- Version Control -->
-        <div class="version-control group relative ml-2 px-4 py-2.5 border border-white/60 text-white/80 font-medium text-sm rounded-lg bg-white/10 backdrop-blur-sm">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="version-control group relative ml-2 px-2 text-white/70 font-normal text-xs">
+          <div class="flex items-center gap-1.5">
+            <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            <span class="relative z-10">v0.1.0</span>
+            <span>v0.1.0</span>
           </div>
         </div>
       </div>
@@ -254,11 +254,11 @@ const rightLinks = [
             
             <!-- Version Label at Bottom -->
             <div class="flex items-center justify-center mt-4">
-              <div class="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full border border-white/30">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex items-center gap-1.5 px-2">
+                <svg class="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                <span class="text-white text-sm font-semibold">v0.1.0</span>
+                <span class="text-white/70 text-xs font-normal">v0.1.0</span>
               </div>
             </div>
           </div>
@@ -303,14 +303,11 @@ const rightLinks = [
   /* Version control styles */
   .version-control {
     position: relative;
-    transform-origin: center;
-    transition: all 0.3s ease;
+    transition: opacity 0.2s ease;
   }
 
   .version-control:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.8);
-    color: white;
+    opacity: 0.9;
   }
 
   /* Active state enhancements */

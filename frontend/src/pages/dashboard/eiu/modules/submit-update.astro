@@ -2278,10 +2278,35 @@ loading = false;
       const container = document.getElementById('milestonesContainer');
       console.log('📦 Container found:', container);
       
+      // Check if project is pending approval - disable milestone submissions
+      const projectStatus = selectedProject?.status || 'pending';
+      const isApproved = selectedProject?.approvedBySecretariat === true;
+      const isProjectPending = projectStatus.toLowerCase() === 'pending' || !isApproved;
+      
       if (!projectMilestones || projectMilestones.length === 0) {
         console.log('❌ No milestones found');
         if (container) {
           container.innerHTML = '<p class="text-gray-500">No milestones found for this project.</p>';
+        }
+        return;
+      }
+      
+      // If project is pending, show disabled message
+      if (isProjectPending) {
+        if (container) {
+          container.innerHTML = `
+            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-8 text-center">
+              <div class="flex items-center justify-center gap-4 mb-4">
+                <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-amber-600">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h4 class="text-xl font-bold text-yellow-800">Milestone Submissions Disabled</h4>
+              </div>
+              <p class="text-yellow-700 text-lg">This project is currently pending Secretariat approval. Milestone submissions will be enabled once the project is approved and status changes to "ONGOING".</p>
+            </div>
+          `;
         }
         return;
       }
@@ -3247,61 +3272,738 @@ loading = false;
         }).join('');
       }
 
-      // Show delayed milestones (locked - overdue)
+      // Show delayed milestones (can be submitted with reason)
       if (delayedMilestones.length > 0) {
-        milestonesHTML += '<h4 class="text-lg font-bold text-red-800 mb-6 flex items-center gap-2"><svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>Delayed Milestones (Locked - Overdue)</h4>';
-        milestonesHTML += delayedMilestones.map((milestone, index) => `
-          <div class="bg-white rounded-xl shadow-sm border border-red-200 mb-4 opacity-75">
-            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-pink-50 border-b border-red-100">
-              <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                  </svg>
+        milestonesHTML += '<h4 class="text-lg font-bold text-red-800 mb-6 flex items-center gap-2"><svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>Delayed Milestones (Late Submission)</h4>';
+        milestonesHTML += delayedMilestones.map((milestone, index) => {
+          const dueDate = new Date(milestone.dueDate);
+          dueDate.setHours(0, 0, 0, 0);
+          const isOverdue = dueDate < today;
+          
+          // Calculate days overdue
+          const timeDiff = today.getTime() - dueDate.getTime();
+          const daysOverdue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          
+          return `
+            <!-- Individual Delayed Milestone Collapsible Card -->
+            <div class="bg-white border border-red-200 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:border-red-300 hover:-translate-y-1 mb-4 overflow-hidden">
+              <div class="bg-gradient-to-r from-red-50 to-pink-50 px-6 py-4 border-b border-red-200 cursor-pointer hover:from-red-100 hover:to-pink-100 transition-all duration-300 group" 
+                   onclick="toggleMilestoneCard('milestone-${milestone.id}')">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-4">
+                    <div class="icon-container-small bg-gradient-to-br from-red-500 to-red-600 group-hover:from-red-600 group-hover:to-red-700">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-bold text-black group-hover:text-red-800 transition-colors duration-300">${milestone.title}</h4>
+                      <div class="flex flex-wrap items-center gap-3 mt-2">
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Delayed</span>
+                        <span class="text-sm text-gray-600">Weight: ${milestone.weight}%</span>
+                        <span class="text-sm text-red-600 font-medium">Due: ${milestone.dueDate} OVERDUE</span>
+                        <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full shadow-sm bg-red-600 text-white">
+                          🚨 ${daysOverdue} days overdue
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="text-right">
+                      <div class="text-lg font-bold text-red-600">${milestone.weight}%</div>
+                      <div class="text-xs text-gray-500">Weight</div>
+                    </div>
+                    <div class="icon-container-small bg-gradient-to-br from-gray-600 to-gray-700 hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-gray-500 hover:border-gray-400 rounded-xl">
+                      <svg id="milestone-${milestone.id}-icon" class="w-4 h-4 text-white milestone-icon transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 class="font-semibold text-gray-800 text-lg">${milestone.title}</h4>
-                  <div class="flex items-center gap-3 mt-1">
-                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Delayed</span>
-                    <span class="text-sm text-gray-500">Weight: ${milestone.weight}%</span>
+              </div>
+              
+              <div id="milestone-${milestone.id}-content" class="section-content">
+                <div class="p-6 space-y-6">
+                  <!-- Delayed Milestone Warning -->
+                  <div class="bg-red-100 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center gap-3">
+                      <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                      </svg>
+                      <div>
+                        <p class="text-sm text-red-700 font-medium">This milestone is overdue and has been automatically marked as delayed.</p>
+                        <p class="text-xs text-red-600 mt-1">Please provide a reason for the delay and submit your update. This will be marked as a late submission.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Enhanced Milestone Update Form (Same as pending but with Reason of Delayed field) -->
+                  <div class="border-t border-gray-200 pt-6">
+                    <!-- Enhanced Form Header -->
+                    <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 mb-6 border border-red-200">
+                      <div class="flex items-center gap-3 mb-4">
+                        <div class="icon-container-small bg-gradient-to-br from-red-500 to-red-600">
+                          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
+                        </div>
+                        <h5 class="text-xl font-bold text-red-800">Delayed Milestone Submission (Late)</h5>
+                      </div>
+                      
+                      <!-- Reason of Delayed Field (Required for delayed milestones) -->
+                      <div class="bg-white rounded-lg p-4 border border-red-200 mb-4">
+                        <label class="block text-sm font-medium text-red-700 mb-3 flex items-center gap-2">
+                          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                          </svg>
+                          Reason of Delayed *
+                        </label>
+                        <textarea 
+                          id="milestone-${milestone.id}-delay-reason" 
+                          rows="4" 
+                          maxlength="500"
+                          class="w-full px-4 py-3 text-sm border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors resize-none" 
+                          placeholder="Please provide a detailed explanation for the delay. Include any challenges, issues, or circumstances that caused the milestone to be delayed. Auto-capitalize first letter."
+                          oninput="autoCapitalizeFirst(this); updateCharacterCount('${milestone.id}', 'delay'); validateDelayReason('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                          required
+                        ></textarea>
+                        <div class="flex justify-between items-center mt-2">
+                          <div class="flex items-center gap-2">
+                            <span class="text-xs text-red-600 font-medium">Required:</span>
+                            <span class="text-xs text-red-600">Explain why this milestone was delayed</span>
+                          </div>
+                          <span id="milestone-${milestone.id}-delay-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
+                        </div>
+                        <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-delay-reason-error">Error: Reason of Delayed is required</div>
+                      </div>
+                      
+                      <!-- Project Header Information (Not Editable) - Same as pending milestones -->
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
+                        <div class="space-y-3">
+                          <div class="bg-white rounded-lg p-4 border border-red-200">
+                            <label class="block text-sm font-medium text-red-700 mb-1">Project Name</label>
+                            <div id="form-project-name-${milestone.id}" class="text-lg font-bold text-gray-900">Loading...</div>
+                          </div>
+                          <div class="bg-white rounded-lg p-4 border border-red-200">
+                            <label class="block text-sm font-medium text-red-700 mb-1">Project Code</label>
+                            <div id="form-project-code-${milestone.id}" class="text-sm font-semibold text-gray-700">Loading...</div>
+                          </div>
+                        </div>
+                        <div class="space-y-3">
+                          <div class="bg-white rounded-lg p-4 border border-red-200">
+                            <label class="block text-sm font-medium text-red-700 mb-1">Total Budget Allocation (₱)</label>
+                            <div id="form-total-budget-${milestone.id}" class="text-lg font-bold text-red-600">0.00</div>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white rounded-lg p-4 border border-red-200">
+                              <label class="block text-sm font-medium text-red-700 mb-1">Start Date</label>
+                              <div id="form-start-date-${milestone.id}" class="text-sm font-semibold text-gray-700">–</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-red-200">
+                              <label class="block text-sm font-medium text-red-700 mb-1">Target Completion Date</label>
+                              <div id="form-target-completion-date-${milestone.id}" class="text-sm font-semibold text-gray-700">–</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Milestone Sub-header Information (Not Editable) -->
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6 border border-gray-200">
+                      <h6 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Milestone Information
+                      </h6>
+                      
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                          <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Milestone Name (Item of Work)</label>
+                            <div id="form-milestone-name-${milestone.id}" class="text-lg font-bold text-gray-900">Loading...</div>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                              <label class="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                              <div id="form-milestone-status-${milestone.id}" class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700">Delayed</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                              <label class="block text-sm font-medium text-gray-600 mb-1">Weight</label>
+                              <div id="form-milestone-weight-${milestone.id}" class="text-lg font-bold text-red-600">0%</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="space-y-3">
+                          <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Planned Budget</label>
+                            <div id="form-milestone-budget-${milestone.id}" class="text-lg font-bold text-red-600">₱0.00</div>
+                          </div>
+                          <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
+                            <div id="form-milestone-due-date-${milestone.id}" class="text-sm font-semibold text-gray-700">Not set</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="mt-4 bg-white rounded-lg p-4 border border-gray-200">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                        <div id="form-milestone-description-${milestone.id}" class="text-sm text-gray-700">No description available</div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                      <!-- Three Divisions Section -->
+                      <div class="space-y-6">
+                        <!-- Enhanced Timeline Division -->
+                        <div class="form-section bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 shadow-sm">
+                          <h6 class="text-xl font-bold text-blue-800 mb-6 flex items-center gap-3">
+                            <div class="icon-container-small bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              </svg>
+                            </div>
+                            Timeline Division
+                          </h6>
+                          
+                          <!-- Timeline Info Grid (Not Editable) -->
+                          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4 border border-blue-200">
+                              <label class="block text-sm font-medium text-blue-700 mb-2">Weight (%)</label>
+                              <div id="form-timeline-weight-${milestone.id}" class="text-xl font-bold text-blue-800">0.0%</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-blue-200">
+                              <label class="block text-sm font-medium text-blue-700 mb-2">Start Date</label>
+                              <div id="form-timeline-start-date-${milestone.id}" class="text-sm font-semibold text-gray-700">Not set</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-blue-200">
+                              <label class="block text-sm font-medium text-blue-700 mb-2">End Date</label>
+                              <div id="form-timeline-end-date-${milestone.id}" class="text-sm font-semibold text-gray-700">Not set</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-blue-200">
+                              <label class="block text-sm font-medium text-blue-700 mb-2">Submission Date *</label>
+                              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                <input 
+                                  type="datetime-local" 
+                                  id="milestone-${milestone.id}-submission-date" 
+                                  class="flex-1 min-w-0 px-3 py-2 text-sm border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-gray-50" 
+                                  required 
+                                  readonly
+                                  onchange="validateTimelineSubmissionDate('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                                />
+                                <button 
+                                  type="button" 
+                                  onclick="generateServerBasedSubmissionDate('${milestone.id}')" 
+                                  class="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-1 whitespace-nowrap" 
+                                  title="Use current server time (Philippine Standard Time)"
+                                >
+                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                  </svg>
+                                  Now
+                                </button>
+                              </div>
+                              <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-timeline-date-error">Error: Submission Date is required</div>
+                            </div>
+                          </div>
+                          
+                          <!-- Enhanced Timeline Activities & Deliverables -->
+                          <div class="bg-white rounded-lg p-4 border border-blue-200">
+                            <div class="flex items-center justify-between mb-3">
+                              <label class="text-sm font-medium text-blue-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Timeline Activities & Deliverables *
+                              </label>
+                              <button 
+                                type="button"
+                                onclick="addTimelineActivity('${milestone.id}')"
+                                class="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                              >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Add Activity
+                              </button>
+                            </div>
+                            
+                            <!-- Activities Container -->
+                            <div id="milestone-${milestone.id}-activities-container" class="space-y-3">
+                              <!-- Initial activity entry will be added by JavaScript -->
+                            </div>
+                            
+                            <!-- Summary Info -->
+                            <div class="mt-3 pt-3 border-t border-blue-100">
+                              <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center gap-4">
+                                  <span class="text-blue-600 font-medium">Required:</span>
+                                  <span class="text-blue-600">At least one activity entry with date and description</span>
+                                </div>
+                                <span id="milestone-${milestone.id}-activities-count" class="text-blue-600 font-medium">0 activities</span>
+                              </div>
+                            </div>
+                            <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-timeline-activities-error">Error: At least one timeline activity is required</div>
+                          </div>
+                        </div>
+                        
+                        <!-- Enhanced Budget Division -->
+                        <div class="form-section bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm">
+                          <h6 class="text-xl font-bold text-green-800 mb-6 flex items-center gap-3">
+                            <div class="icon-container-small bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                              </svg>
+                            </div>
+                            Budget Division
+                          </h6>
+                          
+                          <!-- Enhanced Budget Summary Cards (Not Editable) -->
+                          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                              <label class="block text-sm font-medium text-green-700 mb-2">Weight (%)</label>
+                              <div id="form-budget-weight-${milestone.id}" class="text-xl font-bold text-green-800">0.0%</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                              <label class="block text-sm font-medium text-green-700 mb-2">Planned Budget</label>
+                              <div id="form-budget-planned-${milestone.id}" class="text-lg font-bold text-emerald-600">₱0.00</div>
+                              <div class="text-xs text-gray-500 mt-1">Milestone Budget Only</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                              <label class="block text-sm font-medium text-green-700 mb-2">Funding Source</label>
+                              <div id="form-budget-funding-source-${milestone.id}" class="text-sm font-semibold text-gray-700">LOCAL FUND</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                              <label class="block text-sm font-medium text-green-700 mb-2">Used Budget</label>
+                              <div class="text-lg font-bold text-green-600" id="milestone-${milestone.id}-used-display">₱0.00</div>
+                              <div class="text-xs text-green-600 mt-1">Auto-calculated</div>
+                            </div>
+                            <div class="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                              <label class="block text-sm font-medium text-emerald-700 mb-2">Remaining Budget</label>
+                              <div class="text-lg font-bold text-emerald-600" id="milestone-${milestone.id}-remaining-display">₱0.00</div>
+                              <div class="text-xs text-emerald-600 mt-1">
+                                <div><span id="milestone-${milestone.id}-budget-division-utilized">0.00%</span> Division Utilized</div>
+                                <div><span id="milestone-${milestone.id}-milestone-utilized">0.00%</span> Milestone Utilized</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <!-- Enhanced Budget Input Section -->
+                          <div class="space-y-4">
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                              <label class="block text-sm font-medium text-green-700 mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                                Used Budget Amount (₱) *
+                              </label>
+                              <input 
+                                type="text" 
+                                id="milestone-${milestone.id}-budget-amount" 
+                                class="w-full px-4 py-3 text-sm border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors" 
+                                placeholder="1,000,000.00"
+                                maxlength="18"
+                                oninput="formatCurrencyInput(this); updateBudgetCalculations('${milestone.id}'); validateBudgetAmount('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                                onkeydown="handleBudgetKeydown(event)"
+                                required
+                              />
+                              <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-green-600 font-medium">Required: Enter the actual amount spent for this milestone</span>
+                                <span class="text-xs text-gray-500">Max: ₱999,999,999,999.99</span>
+                              </div>
+                              <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-budget-amount-error">Error: Used Budget Amount is required</div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                              <label class="block text-sm font-medium text-green-700 mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Budget Breakdown & Allocation *
+                              </label>
+                              <textarea 
+                                id="milestone-${milestone.id}-budget-breakdown" 
+                                rows="5" 
+                                maxlength="500"
+                                class="w-full px-4 py-3 text-sm border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors resize-none" 
+                                placeholder="Provide detailed breakdown of budget utilization, expenses, and allocation. Auto-capitalize first letter."
+                                oninput="autoCapitalizeFirst(this); updateCharacterCount('${milestone.id}', 'budget'); validateBudgetBreakdown('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                                required
+                              ></textarea>
+                              <div class="flex justify-between items-center mt-2">
+                                <div class="flex items-center gap-2">
+                                  <span class="text-xs text-green-600 font-medium">Required:</span>
+                                  <span class="text-xs text-green-600">Include specific expenses and cost breakdown</span>
+                                </div>
+                                <span id="milestone-${milestone.id}-budget-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
+                              </div>
+                              <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-budget-breakdown-error">Error: Budget Breakdown & Allocation is required</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Enhanced Physical Division -->
+                        <div class="form-section bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-6 shadow-sm">
+                          <h6 class="text-xl font-bold text-orange-800 mb-6 flex items-center gap-3">
+                            <div class="icon-container-small bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl">
+                              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2-2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                              </svg>
+                            </div>
+                            Physical Division
+                          </h6>
+                          
+                          <!-- Enhanced Physical Info Grid (Not Editable) -->
+                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4 border border-orange-200">
+                              <label class="block text-sm font-medium text-orange-700 mb-2">Weight (%)</label>
+                              <div id="form-physical-weight-${milestone.id}" class="text-xl font-bold text-orange-800">0.0%</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-orange-200">
+                              <label class="block text-sm font-medium text-orange-700 mb-2">Required Proofs</label>
+                              <div class="text-sm font-semibold text-gray-700">Photo, Video, Excel</div>
+                              <div class="text-xs text-gray-500 mt-1">Not Editable</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-orange-200">
+                              <label class="block text-sm font-medium text-orange-700 mb-2">Upload Status</label>
+                              <div class="text-sm font-medium" id="milestone-${milestone.id}-upload-status">
+                                <span class="text-red-600">Pending Upload</span>
+                              </div>
+                              <div class="text-xs text-gray-500 mt-1">Auto-updates</div>
+                            </div>
+                          </div>
+                          
+                          <!-- Enhanced Proof Upload System -->
+                          <div class="space-y-6">
+                            <!-- Photo Evidence Upload Section -->
+                            <div class="bg-white rounded-lg border border-orange-200 p-6">
+                              <div class="flex items-center gap-3 mb-4">
+                                <div class="icon-container-small bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                  </svg>
+                                </div>
+                                <h7 class="text-lg font-semibold text-orange-800">Photo Evidence *</h7>
+                              </div>
+                              <div 
+                                class="border-2 border-dashed border-orange-300 rounded-lg p-8 text-center hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-300 cursor-pointer"
+                                ondrop="handleFileDrop(event, '${milestone.id}', 'photo')" 
+                                ondragover="handleDragOver(event)" 
+                                ondragenter="handleDragEnter(event)"
+                                ondragleave="handleDragLeave(event)"
+                                onclick="document.getElementById('milestone-${milestone.id}-photo-files').click()"
+                              >
+                                <input 
+                                  type="file" 
+                                  id="milestone-${milestone.id}-photo-files" 
+                                  multiple 
+                                  accept="image/*" 
+                                  class="hidden" 
+                                  onchange="handlePhotoUpload('${milestone.id}', this); validatePhotoEvidence('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                                  required
+                                />
+                                <div class="text-orange-500">
+                                  <svg class="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                  </svg>
+                                  <p class="text-lg font-medium mb-2">Upload Photo Evidence</p>
+                                  <p class="text-sm text-orange-600 mb-1">Click to browse or drag and drop files</p>
+                                  <p class="text-xs text-gray-500">JPG, PNG, GIF up to 10MB each • Maximum 5 files allowed</p>
+                                </div>
+                              </div>
+                              <div id="milestone-${milestone.id}-photo-preview" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                              <div class="text-xs text-red-600 mt-2 hidden" id="milestone-${milestone.id}-photo-error">Error: Photo Evidence is required</div>
+                            </div>
+                            
+                            <!-- Video Evidence Upload Section -->
+                            <div class="bg-white rounded-lg border border-orange-200 p-6">
+                              <div class="flex items-center gap-3 mb-4">
+                                <div class="icon-container-small bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
+                                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                  </svg>
+                                </div>
+                                <h7 class="text-lg font-semibold text-orange-800">Video Evidence *</h7>
+                              </div>
+                              <div 
+                                class="border-2 border-dashed border-orange-300 rounded-lg p-8 text-center hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-300 cursor-pointer"
+                                ondrop="handleFileDrop(event, '${milestone.id}', 'video')" 
+                                ondragover="handleDragOver(event)" 
+                                ondragenter="handleDragEnter(event)"
+                                ondragleave="handleDragLeave(event)"
+                                onclick="document.getElementById('milestone-${milestone.id}-video-files').click()"
+                              >
+                                <input 
+                                  type="file" 
+                                  id="milestone-${milestone.id}-video-files" 
+                                  multiple 
+                                  accept="video/*" 
+                                  class="hidden" 
+                                  onchange="handleVideoUpload('${milestone.id}', this); validateVideoEvidence('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                                  required
+                                />
+                                <div class="text-orange-500">
+                                  <svg class="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                  </svg>
+                                  <p class="text-lg font-medium mb-2">Upload Video Evidence</p>
+                                  <p class="text-sm text-orange-600 mb-1">Click to browse or drag and drop files</p>
+                                  <p class="text-xs text-gray-500">MP4, MOV, AVI up to 100MB each • Multiple files allowed</p>
+                                </div>
+                              </div>
+                              <div id="milestone-${milestone.id}-video-preview" class="mt-4 space-y-2"></div>
+                              <div class="text-xs text-red-600 mt-2 hidden" id="milestone-${milestone.id}-video-error">Error: Video Evidence is required</div>
+                            </div>
+                            
+                            <!-- Excel/Document Files Upload Section -->
+                            <div class="bg-white rounded-lg border border-orange-200 p-6">
+                              <div class="flex items-center gap-3 mb-4">
+                                <div class="icon-container-small bg-gradient-to-br from-green-600 to-green-700 rounded-xl">
+                                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                  </svg>
+                                </div>
+                                <h7 class="text-lg font-semibold text-orange-800">Excel/Document Files *</h7>
+                              </div>
+                              <div 
+                                class="border-2 border-dashed border-orange-300 rounded-lg p-8 text-center hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-300 cursor-pointer"
+                                ondrop="handleFileDrop(event, '${milestone.id}', 'document')" 
+                                ondragover="handleDragOver(event)" 
+                                ondragenter="handleDragEnter(event)"
+                                ondragleave="handleDragLeave(event)"
+                                onclick="document.getElementById('milestone-${milestone.id}-document-files').click()"
+                              >
+                                <input 
+                                  type="file" 
+                                  id="milestone-${milestone.id}-document-files" 
+                                  multiple 
+                                  accept=".xlsx,.xls,.pdf,.doc,.docx" 
+                                  class="hidden" 
+                                  onchange="handleDocumentUpload('${milestone.id}', this); validateDocumentEvidence('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                                  required
+                                />
+                                <div class="text-orange-500">
+                                  <svg class="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                  </svg>
+                                  <p class="text-lg font-medium mb-2">Upload Excel/Documents</p>
+                                  <p class="text-sm text-orange-600 mb-1">Click to browse or drag and drop files</p>
+                                  <p class="text-xs text-gray-500">XLSX, PDF, DOC up to 50MB each • Multiple files allowed</p>
+                                </div>
+                              </div>
+                              <div id="milestone-${milestone.id}-document-preview" class="mt-4 space-y-2"></div>
+                              <div class="text-xs text-red-600 mt-2 hidden" id="milestone-${milestone.id}-document-error">Error: Excel/Document Files are required</div>
+                            </div>
+                          </div>
+                          
+                          <!-- Enhanced Physical Progress Description -->
+                          <div class="bg-white rounded-lg p-4 border border-orange-200 mt-6">
+                            <label class="block text-sm font-medium text-orange-700 mb-3 flex items-center gap-2">
+                              <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                              </svg>
+                              Physical Progress Description *
+                            </label>
+                            <textarea 
+                              id="milestone-${milestone.id}-physical-description" 
+                              rows="5" 
+                              maxlength="500"
+                              class="w-full px-4 py-3 text-sm border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none" 
+                              placeholder="Describe the physical progress, construction status, and measurable outputs achieved. Auto-capitalize first letter."
+                              oninput="autoCapitalizeFirst(this); updateCharacterCount('${milestone.id}', 'physical'); validatePhysicalDescription('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                              required
+                            ></textarea>
+                            <div class="flex justify-between items-center mt-2">
+                              <div class="flex items-center gap-2">
+                                <span class="text-xs text-orange-600 font-medium">Required:</span>
+                                <span class="text-xs text-orange-600">Include % completed and specific outputs achieved</span>
+                              </div>
+                              <span id="milestone-${milestone.id}-physical-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
+                            </div>
+                            <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-physical-description-error">Error: Physical Progress Description is required</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Enhanced Additional Notes -->
+                      <div class="bg-white rounded-lg p-4 border border-gray-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7"></path>
+                          </svg>
+                          Additional Notes *
+                        </label>
+                        <textarea 
+                          id="milestone-${milestone.id}-notes" 
+                          rows="4" 
+                          maxlength="500"
+                          class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors resize-none" 
+                          placeholder="Any additional information, comments, or observations. Auto-capitalize first letter."
+                          oninput="autoCapitalizeFirst(this); updateCharacterCount('${milestone.id}', 'notes'); validateAdditionalNotes('${milestone.id}'); updateFormValidation('${milestone.id}');"
+                          required
+                        ></textarea>
+                        <div class="flex justify-between items-center mt-2">
+                          <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-600 font-medium">Required:</span>
+                            <span class="text-xs text-gray-600">Include any additional information or comments</span>
+                          </div>
+                          <span id="milestone-${milestone.id}-notes-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
+                        </div>
+                        <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-notes-error">Error: Additional Notes is required</div>
+                      </div>
+                      
+                      <!-- Enhanced Progress Display (Controlled by SECRETARIAT) -->
+                      <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-3">
+                          <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <span class="text-lg font-semibold text-emerald-800">Current Progress</span>
+                          </div>
+                          <span id="form-milestone-progress-text-${milestone.id}" class="text-2xl font-bold text-emerald-600">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
+                          <div id="form-milestone-progress-bar-${milestone.id}" class="bg-gradient-to-r from-emerald-500 to-emerald-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="bg-white rounded-lg p-3 border border-emerald-200">
+                          <p class="text-sm text-gray-700 font-medium mb-1">Progress Determination:</p>
+                          <p class="text-xs text-gray-600">Progress percentage is determined by SECRETARIAT based on submitted documentation, reports, and milestone evaluation. This value updates only after official review and approval.</p>
+                        </div>
+                      </div>
+                      
+                      <!-- Auto-Progress Preview Panel -->
+                      <div id="milestone-${milestone.id}-preview-panel" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6 mb-6" style="display: none;">
+                        <h6 class="text-lg font-bold text-indigo-800 mb-4 flex items-center gap-2">
+                          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                          </svg>
+                          Submission Preview
+                        </h6>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div class="bg-white rounded-lg p-4 border border-indigo-200">
+                            <div class="flex items-center justify-between">
+                              <span class="text-sm font-medium text-gray-700">Timeline Progress</span>
+                              <span id="milestone-${milestone.id}-timeline-preview" class="text-lg font-bold text-blue-600">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                              <div id="milestone-${milestone.id}-timeline-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                          </div>
+                          <div class="bg-white rounded-lg p-4 border border-indigo-200">
+                            <div class="flex items-center justify-between">
+                              <span class="text-sm font-medium text-gray-700">Budget Utilization</span>
+                              <span id="milestone-${milestone.id}-budget-preview" class="text-lg font-bold text-green-600">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                              <div id="milestone-${milestone.id}-budget-bar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                          </div>
+                          <div class="bg-white rounded-lg p-4 border border-indigo-200">
+                            <div class="flex items-center justify-between">
+                              <span class="text-sm font-medium text-gray-700">Physical Progress</span>
+                              <span id="milestone-${milestone.id}-physical-preview" class="text-lg font-bold text-orange-600">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                              <div id="milestone-${milestone.id}-physical-bar" class="bg-orange-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Validation Status -->
+                        <div id="milestone-${milestone.id}-validation" class="space-y-2">
+                          <div class="flex items-center gap-2 text-sm">
+                            <div id="milestone-${milestone.id}-timeline-validation" class="flex items-center gap-1">
+                              <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                              </svg>
+                              <span class="text-red-600">Timeline description required</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2 text-sm">
+                            <div id="milestone-${milestone.id}-budget-validation" class="flex items-center gap-1">
+                              <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                              </svg>
+                              <span class="text-red-600">Budget amount required</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2 text-sm">
+                            <div id="milestone-${milestone.id}-physical-validation" class="flex items-center gap-1">
+                              <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                              </svg>
+                              <span class="text-red-600">Physical proofs and description required</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Enhanced Action Buttons -->
+                      <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                        <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+                          <div class="flex items-center gap-4">
+                            <button 
+                              onclick="saveMilestoneDraft('${milestone.id}')" 
+                              class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md"
+                            >
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 0V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v3m-1 0h6m-6 0V4a2 2 0 012-2h2a2 2 0 012 2v3"></path>
+                              </svg>
+                              Save Draft
+                            </button>
+                            <button 
+                              onclick="previewMilestoneSubmission('${milestone.id}')" 
+                              class="px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md"
+                            >
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                              </svg>
+                              Preview Submission
+                            </button>
+                          </div>
+                          
+                          <button 
+                            onclick="submitMilestoneToAdminOffice('${milestone.id}')" 
+                            class="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" 
+                            id="milestone-${milestone.id}-submit-btn" 
+                            disabled
+                          >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            Submit Delayed Milestone (Late Submission)
+                          </button>
+                        </div>
+                        
+                        <!-- Form Validation Summary -->
+                        <div id="milestone-${milestone.id}-validation-summary" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg hidden">
+                          <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h6 class="text-sm font-semibold text-red-800">Please complete the following required fields:</h6>
+                          </div>
+                          <ul id="milestone-${milestone.id}-validation-list" class="text-xs text-red-700 space-y-1 ml-7">
+                            <!-- Validation errors will be populated here -->
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <div class="p-6">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-red-50 rounded-lg mb-4">
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-red-600">${milestone.weight}%</div>
-                  <div class="text-sm text-gray-600">Weight</div>
-                </div>
-                <div class="text-center">
-                  <div class="text-lg font-semibold text-gray-800">₱${(milestone.plannedBudget || 0).toLocaleString()}</div>
-                  <div class="text-sm text-gray-600">Planned Budget</div>
-                </div>
-                <div class="text-center">
-                  <div class="text-lg font-semibold text-red-600">${milestone.dueDate}</div>
-                  <div class="text-sm text-red-600 font-medium">OVERDUE</div>
-                </div>
-              </div>
-              
-              <div class="text-sm text-gray-600 leading-relaxed mb-4">${milestone.description || 'No description available'}</div>
-              
-              <!-- Locked Milestone Form -->
-              <div class="bg-red-100 border border-red-200 rounded-lg p-4">
-                <div class="flex items-center gap-3">
-                  <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                  </svg>
-                  <div>
-                    <p class="text-sm text-red-700 font-medium">This milestone is overdue and has been automatically marked as delayed.</p>
-                    <p class="text-xs text-red-600 mt-1">Please contact the project manager to extend the due date or mark as completed.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
              // Show revision request milestones (can be resubmitted)
@@ -7208,9 +7910,6 @@ loading = false;
         delayedProjects++;
       }
       
-      // Estimate budget utilization based on progress
-      const progress = parseFloat(project.overallProgress || project.progress || 0);
-      budgetUtilized += (parseFloat(project.totalBudget || 0) * progress) / 100;
     });
     
     // Update DOM elements
@@ -7233,14 +7932,124 @@ loading = false;
     if (delayedMilestonesCountEl) delayedMilestonesCountEl.textContent = delayedMilestones;
     if (revisionEl) revisionEl.textContent = revisionRequests;
     if (budgetEl) budgetEl.textContent = totalBudgetAssigned.toLocaleString();
-    if (utilizedEl) utilizedEl.textContent = budgetUtilized.toFixed(1);
     if (headerCountEl) headerCountEl.textContent = `${assignedProjects} Projects Available`;
+    
+    // Fetch accurate budget data from /api/home/stats endpoint
+    fetchBudgetData();
+  }
+  
+  // Fetch accurate budget data from EIU's assigned projects only
+  async function fetchBudgetData() {
+    try {
+      console.log('🔍 [fetchBudgetData] Starting budget data fetch for EIU...');
+      
+      // Get EIU's assigned projects (from window.allProjects or fetch from API)
+      let eiuProjects = [];
+      
+      if (window.allProjects && Array.isArray(window.allProjects) && window.allProjects.length > 0) {
+        eiuProjects = window.allProjects;
+        console.log('🔍 [fetchBudgetData] Using window.allProjects:', eiuProjects.length, 'projects');
+      } else {
+        // Fetch EIU projects from API
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
+          console.warn('⚠️ [fetchBudgetData] No token found');
+          return;
+        }
+        
+        const API_URL = 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/eiu/projects`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.projects) {
+            eiuProjects = data.projects;
+            console.log('🔍 [fetchBudgetData] Fetched EIU projects from API:', eiuProjects.length, 'projects');
+          }
+        }
+      }
+      
+      // Calculate total budget from EIU's assigned projects only
+      let totalBudget = 0;
+      let utilizedBudget = 0;
+      
+      eiuProjects.forEach(project => {
+        const projectBudget = parseFloat(project.totalBudget || 0);
+        totalBudget += projectBudget;
+        
+        // Calculate utilized budget from milestone submissions
+        if (project.milestones && Array.isArray(project.milestones)) {
+          project.milestones.forEach(milestone => {
+            const usedBudget = parseFloat(milestone.usedBudget || 0);
+            if (usedBudget > 0) {
+              utilizedBudget += usedBudget;
+            }
+          });
+        }
+      });
+      
+      // Fallback: If no milestone data, calculate from budget progress
+      if (utilizedBudget === 0) {
+        eiuProjects.forEach(project => {
+          const projectBudget = parseFloat(project.totalBudget || 0);
+          const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
+          utilizedBudget += (projectBudget * budgetProgress / 100);
+        });
+      }
+      
+      console.log('💰 [fetchBudgetData] Calculated budget for EIU:', {
+        totalBudget,
+        utilizedBudget,
+        projectsCount: eiuProjects.length,
+        projects: eiuProjects.map(p => ({ name: p.name, budget: p.totalBudget }))
+      });
+      
+      // Update Total Budget Assigned
+      const budgetEl = document.getElementById('totalBudgetAssigned');
+      if (budgetEl) {
+        const formattedTotal = totalBudget.toLocaleString('en-PH', { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        });
+        budgetEl.textContent = formattedTotal;
+        console.log('✅ [fetchBudgetData] Updated totalBudgetAssigned to:', formattedTotal);
+      } else {
+        console.error('❌ [fetchBudgetData] totalBudgetAssigned element not found!');
+      }
+      
+      // Update Budget Utilized (as percentage)
+      const budgetUtilization = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
+      const utilizedEl = document.getElementById('budgetUtilized');
+      if (utilizedEl) {
+        utilizedEl.textContent = budgetUtilization.toFixed(1);
+        console.log('✅ [fetchBudgetData] Updated budgetUtilized to:', budgetUtilization.toFixed(1) + '%');
+      } else {
+        console.error('❌ [fetchBudgetData] budgetUtilized element not found!');
+      }
+      
+    } catch (error) {
+      console.error('❌ [fetchBudgetData] Error fetching budget data:', error);
+      console.error('❌ [fetchBudgetData] Error stack:', error.stack);
+    }
+  }
+  
+  // Make function available globally for debugging
+  if (typeof window !== 'undefined') {
+    window.fetchBudgetData = fetchBudgetData;
   }
 
   // Initialize summary cards when page loads
   document.addEventListener('DOMContentLoaded', function() {
     // Update summary cards
     updateSummaryCards();
+    
+    // Also fetch budget data directly (in case updateSummaryCards doesn't call it)
+    fetchBudgetData();
     
     // Add hover tooltips to summary cards
     const summaryCards = document.querySelectorAll('.summary-card');
@@ -7250,6 +8059,11 @@ loading = false;
       });
     });
   });
+  
+  // Also call fetchBudgetData immediately if DOM is already loaded
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(fetchBudgetData, 100);
+  }
 
   // Toggle collapsible sections (renamed to avoid conflict with ProjectDetailsModal)
   window.toggleProjectSection = function(sectionName) {
@@ -7636,9 +8450,11 @@ loading = false;
   // Character count update with color coding
   window.updateCharacterCount = function(milestoneId, fieldType) {
     const textarea = document.getElementById(`milestone-${milestoneId}-${fieldType}-description`) || 
+                     document.getElementById(`milestone-${milestoneId}-${fieldType}-reason`) ||
                      document.getElementById(`milestone-${milestoneId}-${fieldType}`) ||
                      document.getElementById(`milestone-${milestoneId}-notes`);
     const counter = document.getElementById(`milestone-${milestoneId}-${fieldType}-char-count`) ||
+                   document.getElementById(`milestone-${milestoneId}-delay-char-count`) ||
                    document.getElementById(`milestone-${milestoneId}-notes-char-count`);
     
     if (textarea && counter) {
@@ -7741,6 +8557,26 @@ loading = false;
       }
     }
     return false;
+  };
+
+  window.validateDelayReason = function(milestoneId) {
+    const delayReasonField = document.getElementById(`milestone-${milestoneId}-delay-reason`);
+    const errorElement = document.getElementById(`milestone-${milestoneId}-delay-reason-error`);
+    
+    if (!delayReasonField) return true; // Field doesn't exist (not a delayed milestone)
+    
+    const value = delayReasonField.value.trim();
+    const isValid = value.length > 0;
+    
+    if (errorElement) {
+      if (isValid) {
+        errorElement.classList.add('hidden');
+      } else {
+        errorElement.classList.remove('hidden');
+      }
+    }
+    
+    return isValid;
   };
 
   window.validatePhysicalDescription = function(milestoneId) {
@@ -8848,6 +9684,11 @@ window.restoreVideosFromStorage = function(milestoneId) {
       const physicalDescription = document.getElementById(`milestone-${milestoneId}-physical-description`)?.value || '';
       const additionalNotes = document.getElementById(`milestone-${milestoneId}-notes`)?.value || '';
       const submissionDate = document.getElementById(`milestone-${milestoneId}-submission-date`)?.value || '';
+      
+      // Collect delay reason if milestone is delayed
+      const delayReasonField = document.getElementById(`milestone-${milestoneId}-delay-reason`);
+      const delayReason = delayReasonField ? delayReasonField.value.trim() : null;
+      const isDelayed = milestone.status === 'delayed' || delayReason !== null;
 
       // Collect file uploads
       console.log('📁 Starting file collection...');
@@ -8922,7 +9763,11 @@ window.restoreVideosFromStorage = function(milestoneId) {
 
         // Additional Information
         additionalNotes: additionalNotes,
-        submissionDate: submissionDate
+        submissionDate: submissionDate,
+        
+        // Delay Information (only for delayed milestones)
+        isDelayed: isDelayed,
+        delayReason: delayReason || null
       };
 
     } catch (error) {

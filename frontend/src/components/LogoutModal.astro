@@ -118,51 +118,167 @@
         }
       });
       
-      // Listen for MPMEC profile picture updates specifically
-      window.addEventListener('mpmecProfilePictureUpdated', (e) => {
-        if (this.isVisible() && e.detail.profilePictureUrl) {
-          console.log('🔄 Logout modal received MPMEC profile picture update:', e.detail.profilePictureUrl);
-          this.updateProfilePicture(e.detail.profilePictureUrl);
-        }
-      });
-      
-      // Listen for Secretariat profile picture updates
-      window.addEventListener('secretariatProfilePictureUpdated', (e) => {
-        if (this.isVisible() && e.detail.profilePictureUrl) {
-          console.log('🔄 Logout modal received Secretariat profile picture update:', e.detail.profilePictureUrl);
-          this.updateProfilePicture(e.detail.profilePictureUrl);
-        }
-      });
-      
-      // Listen for EIU profile picture updates
-      window.addEventListener('eiuProfilePictureUpdated', (e) => {
-        if (this.isVisible() && e.detail.profilePictureUrl) {
-          console.log('🔄 Logout modal received EIU profile picture update:', e.detail.profilePictureUrl);
-          this.updateProfilePicture(e.detail.profilePictureUrl);
-        }
-      });
       
       // Listen for LGU-IU IOO profile picture updates
       window.addEventListener('iuProfilePictureUpdated', (e) => {
-        if (this.isVisible() && e.detail.profilePictureUrl) {
-          console.log('🔄 Logout modal received IU profile picture update:', e.detail.profilePictureUrl);
-          this.updateProfilePicture(e.detail.profilePictureUrl);
+        if (e.detail && e.detail.profilePictureUrl) {
+          // CRITICAL: Only update if this is for the current user
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              // Only update if the current user is LGU-IU/IU
+              if (user.role === 'LGU-IU' || user.role === 'IU' || user.role === 'iu') {
+                console.log('🔄 Logout modal received IU profile picture update:', e.detail.profilePictureUrl);
+                this.updateProfilePicture(e.detail.profilePictureUrl);
+                // Store in localStorage for persistence (even when modal is not visible)
+                localStorage.setItem('iu_profile_picture', e.detail.profilePictureUrl);
+                localStorage.setItem('lgu_iu_profile_picture', e.detail.profilePictureUrl);
+              } else {
+                console.log('⚠️ Logout modal ignoring IU profile picture update - not current user');
+              }
+            } catch (error) {
+              console.warn('⚠️ Error checking user role in IU profile picture update');
+            }
+          }
         }
       });
       
       // Listen for System Admin profile picture updates
       window.addEventListener('sysadminProfilePictureUpdated', (e) => {
-        if (this.isVisible() && e.detail.profilePictureUrl) {
+        if (e.detail && e.detail.profilePictureUrl) {
           console.log('🔄 Logout modal received System Admin profile picture update:', e.detail.profilePictureUrl);
           this.updateProfilePicture(e.detail.profilePictureUrl);
+          // Store in localStorage for future use
+          localStorage.setItem('sysadmin_profile_picture', e.detail.profilePictureUrl);
+          localStorage.setItem('profilePictureUrl', e.detail.profilePictureUrl);
         }
       });
       
+      // Listen for EIU profile picture updates
+      window.addEventListener('eiuProfilePictureUpdated', (e) => {
+        if (e.detail && e.detail.profilePictureUrl) {
+          // CRITICAL: Only update if this is for the current user
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              // Only update if the current user is EIU
+              if (user.role === 'EIU') {
+                console.log('🔄 Logout modal received EIU profile picture update:', e.detail.profilePictureUrl);
+                this.updateProfilePicture(e.detail.profilePictureUrl);
+                // Store in localStorage for persistence (even when modal is not visible)
+                localStorage.setItem('eiu_profile_picture', e.detail.profilePictureUrl);
+                
+                // CRITICAL: Also update user data for persistence (like office-groups.astro)
+                user.profilePictureUrl = e.detail.profilePictureUrl;
+                localStorage.setItem('user', JSON.stringify(user));
+                console.log('✅ Logout modal: User data updated with profile picture URL');
+              } else {
+                console.log('⚠️ Logout modal ignoring EIU profile picture update - not current user');
+              }
+            } catch (error) {
+              console.warn('⚠️ Error checking user role in EIU profile picture update');
+            }
+          }
+        }
+      });
+      
+      // Listen for MPMEC profile picture updates
+      window.addEventListener('mpmecProfilePictureUpdated', (e) => {
+        if (e.detail && e.detail.profilePictureUrl) {
+          // CRITICAL: Only update if this is for the current user
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              // Only update if the current user is MPMEC
+              if ((user.role === 'LGU-PMT' && (user.subRole === 'MPMEC' || !user.subRole)) || user.role === 'MPMEC') {
+                console.log('🔄 Logout modal received MPMEC profile picture update:', e.detail.profilePictureUrl);
+                this.updateProfilePicture(e.detail.profilePictureUrl);
+                // Store in localStorage for persistence (even when modal is not visible)
+                localStorage.setItem('mpmec_profile_picture', e.detail.profilePictureUrl);
+                localStorage.setItem('lgu_pmt_profile_picture', e.detail.profilePictureUrl);
+              } else {
+                console.log('⚠️ Logout modal ignoring MPMEC profile picture update - not current user');
+              }
+            } catch (error) {
+              console.warn('⚠️ Error checking user role in MPMEC profile picture update');
+            }
+          }
+        }
+      });
+      
+      // Listen for Secretariat profile picture updates
+      // CRITICAL: Use arrow function to preserve 'this' context, but also bind to instance
+      const secretariatHandler = (e) => {
+        if (e.detail && e.detail.profilePictureUrl) {
+          // CRITICAL: Only update if this is for the current user
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              // Only update if the current user is Secretariat (check multiple role variations)
+              // CRITICAL: Use includes() to handle subRoles like "MPMEC Secretariat - Focal Person (Admin)"
+              const isSecretariat = user.role === 'MPMEC Secretariat' || 
+                                   user.role === 'Secretariat' || 
+                                   user.role === 'secretariat' ||
+                                   (user.role === 'LGU-PMT' && user.subRole && 
+                                    (user.subRole.toLowerCase().includes('mpmec secretariat') || 
+                                     user.subRole.toLowerCase().includes('secretariat')));
+              
+              if (isSecretariat) {
+                console.log('🔄 Logout modal received Secretariat profile picture update:', e.detail.profilePictureUrl);
+                console.log('🔍 Current user role:', user.role, 'subRole:', user.subRole);
+                console.log('🔍 Is Secretariat?', isSecretariat);
+                
+                // CRITICAL: Update profile picture immediately (even if modal is not visible)
+                this.updateProfilePicture(e.detail.profilePictureUrl);
+                
+                // Store in localStorage for persistence (even when modal is not visible)
+                localStorage.setItem('secretariat_profile_picture', e.detail.profilePictureUrl);
+                localStorage.setItem('mpmec_profile_picture', e.detail.profilePictureUrl);
+                localStorage.setItem('lgu_pmt_profile_picture', e.detail.profilePictureUrl);
+                
+                // CRITICAL: Also update user data for persistence (like office-groups.astro)
+                user.profilePictureUrl = e.detail.profilePictureUrl;
+                localStorage.setItem('user', JSON.stringify(user));
+                console.log('✅ Logout modal: User data updated with Secretariat profile picture URL');
+              } else {
+                console.log('⚠️ Logout modal ignoring Secretariat profile picture update - not current user');
+                console.log('  Current user role:', user.role, 'subRole:', user.subRole);
+              }
+            } catch (error) {
+              console.warn('⚠️ Error checking user role in Secretariat profile picture update:', error);
+            }
+          } else {
+            console.warn('⚠️ No user data found in localStorage for Secretariat profile picture update');
+          }
+        }
+      };
+      window.addEventListener('secretariatProfilePictureUpdated', secretariatHandler);
+      
       // Listen for Executive Viewer profile picture updates
       window.addEventListener('executiveProfilePictureUpdated', (e) => {
-        if (this.isVisible() && e.detail.profilePictureUrl) {
-          console.log('🔄 Logout modal received Executive Viewer profile picture update:', e.detail.profilePictureUrl);
-          this.updateProfilePicture(e.detail.profilePictureUrl);
+        if (e.detail && e.detail.profilePictureUrl) {
+          // CRITICAL: Only update if this is for the current user
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              // Only update if the current user is Executive Viewer
+              if (user.role === 'Executive Viewer' || user.role === 'EXEC') {
+                console.log('🔄 Logout modal received Executive Viewer profile picture update:', e.detail.profilePictureUrl);
+                this.updateProfilePicture(e.detail.profilePictureUrl);
+                // Store in localStorage for persistence (even when modal is not visible)
+                localStorage.setItem('executive_profile_picture', e.detail.profilePictureUrl);
+              } else {
+                console.log('⚠️ Logout modal ignoring Executive Viewer profile picture update - not current user');
+              }
+            } catch (error) {
+              console.warn('⚠️ Error checking user role in Executive Viewer profile picture update');
+            }
+          }
         }
       });
     }
@@ -212,10 +328,19 @@
         
         // Create user-specific localStorage keys based on user role and ID
         let userSpecificKey = '';
-        if (user.role === 'sysadmin' || user.role === 'SYS.AD') {
-          userSpecificKey = 'sysadmin';
-        } else if (user.role === 'secretariat') {
+        // CRITICAL: Check Secretariat FIRST (before other roles) to prevent conflicts
+        // CRITICAL: Use includes() to handle subRoles like "MPMEC Secretariat - Focal Person (Admin)"
+        const isSecretariat = user.role === 'MPMEC Secretariat' || 
+                             user.role === 'Secretariat' || 
+                             user.role === 'secretariat' ||
+                             (user.role === 'LGU-PMT' && user.subRole && 
+                              (user.subRole.toLowerCase().includes('mpmec secretariat') || 
+                               user.subRole.toLowerCase().includes('secretariat')));
+        
+        if (isSecretariat) {
           userSpecificKey = 'secretariat';
+        } else if (user.role === 'sysadmin' || user.role === 'SYS.AD') {
+          userSpecificKey = 'sysadmin';
         } else if (user.role === 'eiu') {
           userSpecificKey = 'eiu';
         } else if (user.role === 'LGU-PMT' && user.subRole && user.subRole.toLowerCase() === 'mpmec') {
@@ -256,12 +381,21 @@
         
         // Update user role
         if (this.userRoleElement) {
-          if (user.role === 'iu') {
+          // CRITICAL: Check Secretariat FIRST (before other roles)
+          // CRITICAL: Use includes() to handle subRoles like "MPMEC Secretariat - Focal Person (Admin)"
+          const isSecretariat = user.role === 'MPMEC Secretariat' || 
+                               user.role === 'Secretariat' || 
+                               user.role === 'secretariat' ||
+                               (user.role === 'LGU-PMT' && user.subRole && 
+                                (user.subRole.toLowerCase().includes('mpmec secretariat') || 
+                                 user.subRole.toLowerCase().includes('secretariat')));
+          
+          if (isSecretariat) {
+            this.userRoleElement.textContent = 'Secretariat';
+          } else if (user.role === 'iu') {
             this.userRoleElement.textContent = user.subRole || 'Implementing Office-Officer';
           } else if (user.role === 'eiu') {
             this.userRoleElement.textContent = 'EIU Personnel';
-          } else if (user.role === 'secretariat') {
-            this.userRoleElement.textContent = 'Secretariat';
           } else if (user.role === 'mpmec') {
             this.userRoleElement.textContent = 'MPMEC';
           } else if (user.role === 'sysadmin') {
@@ -413,38 +547,98 @@
           }
         }
         
-        // For Secretariat users, prioritize Secretariat profile picture manager
-        if (user.role === 'secretariat') {
-          // Check Secretariat profile picture manager first
-          if (window.secretariatProfilePictureManager && window.secretariatProfilePictureManager.profilePictureUrl) {
-            profileUrl = window.secretariatProfilePictureManager.profilePictureUrl;
-            console.log('🎯 Secretariat user, using manager profile picture:', profileUrl);
-          }
+        // CRITICAL: Check Secretariat users FIRST (before other roles) to prevent fallthrough
+        // Check multiple role variations to ensure we catch Secretariat users
+        // CRITICAL: Use includes() to handle subRoles like "MPMEC Secretariat - Focal Person (Admin)"
+        const isSecretariat = user.role === 'MPMEC Secretariat' || 
+                             user.role === 'Secretariat' || 
+                             user.role === 'secretariat' ||
+                             (user.role === 'LGU-PMT' && user.subRole && 
+                              (user.subRole.toLowerCase().includes('mpmec secretariat') || 
+                               user.subRole.toLowerCase().includes('secretariat')));
+        
+        if (isSecretariat) {
+          console.log('🎯 Secretariat user detected, loading profile picture (EIU-style)...');
+          console.log('🔍 Secretariat user data:', user);
           
-          // If no manager URL, check Secretariat localStorage
-          if (!profileUrl) {
-            profileUrl = localStorage.getItem('secretariat_profile_picture');
-            if (profileUrl) {
-              console.log('🔄 Secretariat user, using localStorage profile picture:', profileUrl);
+          // CRITICAL: Use actual userId from user data
+          const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
+          
+          // EIU-style direct loading: Try user.profilePictureUrl first, then server, then localStorage
+          if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+            console.log('✅ Secretariat: Using profilePictureUrl from user data:', user.profilePictureUrl);
+            const profilePicture = document.getElementById('logoutProfilePicture');
+            if (profilePicture) {
+              const img = new Image();
+              img.onload = function() {
+                profilePicture.src = user.profilePictureUrl;
+                console.log('✅ Secretariat logout modal profile picture updated from user data');
+              };
+              img.src = user.profilePictureUrl;
             }
+            return; // Exit early - we're done
           }
           
-          // If still no URL, try to get from server with actual user ID
-          if (!profileUrl) {
-            try {
-              const userId = user.employeeId || user.username || user.id || user.userId || 'SEC-0001';
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
-              if (profileResponse.ok) {
-                const profileData = await profileResponse.json();
-                if (profileData.profilePictureUrl) {
-                  profileUrl = profileData.profilePictureUrl;
-                  console.log('🔄 Secretariat user, using server profile picture:', profileUrl);
+          // Try server with actual userId
+          try {
+            console.log('🔄 Secretariat: Fetching profile picture from server for userId:', userId);
+            const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
+            
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success && result.profilePictureUrl) {
+                console.log('✅ Secretariat: Profile picture loaded from server:', result.profilePictureUrl);
+                
+                // EIU-style direct update: Update the img src immediately with preloading
+                const profilePicture = document.getElementById('logoutProfilePicture');
+                if (profilePicture) {
+                  // Preload the image to prevent blinking
+                  const img = new Image();
+                  img.onload = function() {
+                    profilePicture.src = result.profilePictureUrl;
+                    console.log('✅ Secretariat logout modal profile picture updated:', result.profilePictureUrl);
+                  };
+                  img.src = result.profilePictureUrl;
                 }
+                
+                // Store in localStorage for future use
+                localStorage.setItem('secretariat_profile_picture', result.profilePictureUrl);
+                localStorage.setItem('mpmec_profile_picture', result.profilePictureUrl);
+                localStorage.setItem('lgu_pmt_profile_picture', result.profilePictureUrl);
+                
+                // Also update user data
+                if (user) {
+                  user.profilePictureUrl = result.profilePictureUrl;
+                  localStorage.setItem('user', JSON.stringify(user));
+                }
+                return; // Exit early - we're done
               }
-            } catch (error) {
-              console.log('Failed to load Secretariat profile picture from server:', error);
             }
+          } catch (error) {
+            console.log('Secretariat: Server fetch failed, trying localStorage:', error);
           }
+          
+          // Fallback to localStorage if server fails
+          const storedUrl = localStorage.getItem('secretariat_profile_picture') || 
+                           localStorage.getItem('mpmec_profile_picture') || 
+                           localStorage.getItem('lgu_pmt_profile_picture');
+          if (storedUrl) {
+            console.log('🔄 Secretariat: Using localStorage profile picture:', storedUrl);
+            const profilePicture = document.getElementById('logoutProfilePicture');
+            if (profilePicture) {
+              // Preload the image to prevent blinking
+              const img = new Image();
+              img.onload = function() {
+                profilePicture.src = storedUrl;
+                console.log('✅ Secretariat logout modal profile picture updated from localStorage:', storedUrl);
+              };
+              img.src = storedUrl;
+            }
+            return; // Exit early - we're done
+          }
+          
+          console.log('❌ Secretariat: No profile picture found in server or localStorage');
+          return; // Exit early - let the generic placeholder remain
         }
         
         // For Executive Viewer users, prioritize Executive Viewer profile picture manager
@@ -452,8 +646,14 @@
           console.log('🎯 Executive Viewer user detected, loading profile picture...');
           console.log('🔍 Executive Viewer user data:', user);
           
-          // Check Executive Viewer profile picture manager first
-          if (window.executiveProfilePictureManager && window.executiveProfilePictureManager.profilePictureUrl) {
+          // CRITICAL: Use user.profilePictureUrl first (from database)
+          if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+            profileUrl = user.profilePictureUrl;
+            console.log('✅ Executive Viewer: Using profilePictureUrl from user data:', profileUrl);
+          }
+          
+          // Check Executive Viewer profile picture manager
+          if (!profileUrl && window.executiveProfilePictureManager && window.executiveProfilePictureManager.profilePictureUrl) {
             profileUrl = window.executiveProfilePictureManager.profilePictureUrl;
             console.log('🎯 Executive Viewer user, using manager profile picture:', profileUrl);
           }
@@ -466,47 +666,60 @@
             }
           }
           
-          // If still no URL, try to get from server with multiple user IDs
+          // If still no URL, try to get from server with actual userId
           if (!profileUrl) {
             try {
-              // For Executive Viewer, try common keys: email, EV-001, username, etc.
-              const possibleUserIds = ['exeviewer@gmail.com', 'EV-001', user.employeeId, user.username, user.email, user.id, user.userId].filter(Boolean);
-              console.log('🔄 Executive Viewer user, trying user IDs in order:', possibleUserIds);
-              
-              for (const userId of possibleUserIds) {
-                console.log('🔄 Trying Executive Viewer userId:', userId);
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+              // For Executive Viewer, try userId first, then email, username, etc.
+              const userId = user.userId || user.id || user.employeeId || user.username || user.email || 'EXEC-0001';
+              console.log('🔄 Executive Viewer: Trying to fetch from server with userId:', userId);
+              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
-                  if (profileData.success && profileData.profilePictureUrl) {
+                if (profileData.success && profileData.profilePictureUrl) {
                   profileUrl = profileData.profilePictureUrl;
-                    console.log('✅ Executive Viewer user, found profile picture with userId:', userId, 'URL:', profileUrl);
-                    // Store it for future use
-                    localStorage.setItem('executive_profile_picture', profileUrl);
-                    break; // Exit loop once we find a valid profile picture
+                  console.log('✅ Executive Viewer user, using server profile picture:', profileUrl);
+                  
+                  // Store in localStorage and update user data
+                  localStorage.setItem('executive_profile_picture', profileUrl);
+                  if (user) {
+                    user.profilePictureUrl = profileUrl;
+                    localStorage.setItem('user', JSON.stringify(user));
                   }
                 }
               }
-              
-              if (!profileUrl) {
-                console.log('❌ Executive Viewer user, no profile picture found with any user ID');
-              }
             } catch (error) {
-              console.log('❌ Failed to load Executive Viewer profile picture from server:', error);
+              console.log('Failed to load Executive Viewer profile picture from server:', error);
             }
           }
         }
         
         // For LGU-IU IOO users, use EIU-style direct loading
-        if (user.role === 'iu' || user.role === 'IU') {
+        if (user.role === 'LGU-IU' || user.role === 'IU' || user.role === 'iu') {
           console.log('🎯 LGU-IU IOO user detected, loading profile picture (EIU-style)...');
           console.log('🔍 LGU-IU IOO user data:', user);
           
-          // EIU-style direct loading: Try server first, then localStorage
+          // CRITICAL: Use actual userId from user data, not hardcoded
+          const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-IU-0001';
+          
+          // EIU-style direct loading: Try user.profilePictureUrl first, then server, then localStorage
+          if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+            console.log('✅ LGU-IU IOO: Using profilePictureUrl from user data:', user.profilePictureUrl);
+            const profilePicture = document.getElementById('logoutProfilePicture');
+            if (profilePicture) {
+              const img = new Image();
+              img.onload = function() {
+                profilePicture.src = user.profilePictureUrl;
+                console.log('✅ LGU-IU IOO logout modal profile picture updated from user data');
+              };
+              img.src = user.profilePictureUrl;
+            }
+            return;
+          }
+          
+          // Try server with actual userId
           try {
-            // Try LGU-IU-0001 first (common key in profile-data.json)
-            console.log('🔄 LGU-IU IOO: Fetching profile picture from server for userId: LGU-IU-0001');
-            const response = await fetch(`http://localhost:3000/api/profile/picture/LGU-IU-0001`);
+            console.log('🔄 LGU-IU IOO: Fetching profile picture from server for userId:', userId);
+            const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
             
             if (response.ok) {
               const result = await response.json();
@@ -527,6 +740,7 @@
                 
                 // Store in localStorage for future use
                 localStorage.setItem('iu_profile_picture', result.profilePictureUrl);
+                localStorage.setItem('lgu_iu_profile_picture', result.profilePictureUrl);
                 return; // Exit early - we're done
               }
             }
@@ -535,7 +749,7 @@
           }
           
           // Fallback to localStorage if server fails
-          const storedUrl = localStorage.getItem('iu_profile_picture');
+          const storedUrl = localStorage.getItem('iu_profile_picture') || localStorage.getItem('lgu_iu_profile_picture');
           if (storedUrl) {
             console.log('🔄 LGU-IU IOO: Using localStorage profile picture:', storedUrl);
             const profilePicture = document.getElementById('logoutProfilePicture');
@@ -662,17 +876,31 @@
     
     updateProfilePicture(profileUrl) {
       const profilePicture = document.getElementById('logoutProfilePicture');
+      const profileFallback = document.getElementById('logoutProfileFallback');
       
       if (profilePicture && profileUrl) {
-        // EIU-style direct update: Preload the image to prevent blinking
+        // CRITICAL: Hide fallback BEFORE updating to prevent blinking
+        if (profileFallback) {
+          profileFallback.style.display = 'none';
+        }
+        
+        // Preload the image to prevent blinking
         const img = new Image();
         img.onload = function() {
-        profilePicture.src = profileUrl;
-          console.log('✅ Logout modal profile picture updated (EIU-style):', profileUrl);
+          profilePicture.src = profileUrl;
+          profilePicture.style.display = 'block';
+          if (profileFallback) {
+            profileFallback.style.display = 'none';
+          }
+          console.log('✅ Logout modal profile picture updated:', profileUrl);
         };
         img.onerror = function() {
           console.log('❌ Logout modal profile picture failed to load:', profileUrl);
-          // Keep the existing placeholder - don't switch to complex fallback
+          // Show fallback if image fails
+          if (profileFallback) {
+            profileFallback.style.display = 'flex';
+          }
+          profilePicture.style.display = 'none';
         };
         img.src = profileUrl;
       }
@@ -718,6 +946,15 @@
           }
           
           if (user.role === 'EIU') {
+            console.log('🎯 EIU user detected in refresh, loading profile picture...');
+            
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ EIU: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
+            
             // EIU user - prioritize EIU profile picture manager
             if (window.eiuProfilePictureManager && window.eiuProfilePictureManager.profilePictureUrl) {
               console.log('🎯 EIU user detected, using EIU manager profile picture:', window.eiuProfilePictureManager.profilePictureUrl);
@@ -735,8 +972,8 @@
             
             // If still no URL, try to get from server with actual user ID
             try {
-              const userId = user.employeeId || user.username || user.id || user.userId || 'EIU-0001';
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+              const userId = user.userId || user.id || user.employeeId || user.username || 'EIU-0001';
+              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.profilePictureUrl) {
@@ -750,7 +987,25 @@
             }
           }
           
-          if (user.role === 'secretariat') {
+          // Check Secretariat users (check multiple role variations)
+          // CRITICAL: Use includes() to handle subRoles like "MPMEC Secretariat - Focal Person (Admin)"
+          const isSecretariat = user.role === 'MPMEC Secretariat' || 
+                               user.role === 'Secretariat' || 
+                               user.role === 'secretariat' ||
+                               (user.role === 'LGU-PMT' && user.subRole && 
+                                (user.subRole.toLowerCase().includes('mpmec secretariat') || 
+                                 user.subRole.toLowerCase().includes('secretariat')));
+          
+          if (isSecretariat) {
+            console.log('🎯 Secretariat user detected in refresh, loading profile picture...');
+            
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ Secretariat: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
+            
             // Secretariat user - prioritize Secretariat profile picture manager
             if (window.secretariatProfilePictureManager && window.secretariatProfilePictureManager.profilePictureUrl) {
               console.log('🎯 Secretariat user detected, using Secretariat manager profile picture:', window.secretariatProfilePictureManager.profilePictureUrl);
@@ -759,7 +1014,9 @@
             }
             
             // Fallback to Secretariat localStorage
-            const secretariatProfileUrl = localStorage.getItem('secretariat_profile_picture');
+            const secretariatProfileUrl = localStorage.getItem('secretariat_profile_picture') || 
+                                         localStorage.getItem('mpmec_profile_picture') || 
+                                         localStorage.getItem('lgu_pmt_profile_picture');
             if (secretariatProfileUrl) {
               console.log('🔄 Secretariat user, using localStorage profile picture:', secretariatProfileUrl);
               this.updateProfilePicture(secretariatProfileUrl);
@@ -768,8 +1025,8 @@
             
             // If still no URL, try to get from server with actual user ID
             try {
-              const userId = user.employeeId || user.username || user.id || user.userId || 'SEC-0001';
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+              const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
+              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.profilePictureUrl) {
@@ -786,6 +1043,13 @@
           if (user.role === 'Executive Viewer' || user.role === 'EXEC') {
             console.log('🎯 Executive Viewer user detected in refresh, loading profile picture...');
             console.log('🔍 Executive Viewer user data in refresh:', user);
+            
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ Executive Viewer: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
             
             // Executive Viewer user - prioritize Executive Viewer profile picture manager
             if (window.executiveProfilePictureManager && window.executiveProfilePictureManager.profilePictureUrl) {
@@ -971,22 +1235,30 @@
           }
           
           // For LGU-IU IOO users, force immediate update (EIU-style)
-          if (user.role === 'iu' || user.role === 'IU') {
+          if (user.role === 'LGU-IU' || user.role === 'IU' || user.role === 'iu') {
             console.log('🚀 Force updating LGU-IU IOO logout modal profile picture (EIU-style)...');
             console.log('🔍 LGU-IU IOO user data in force update:', user);
             
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ LGU-IU IOO: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
+            
             // Check localStorage first
-            const iuProfileUrl = localStorage.getItem('iu_profile_picture');
+            const iuProfileUrl = localStorage.getItem('iu_profile_picture') || localStorage.getItem('lgu_iu_profile_picture');
             if (iuProfileUrl) {
               console.log('🎯 Force updating with LGU-IU IOO localStorage URL:', iuProfileUrl);
               this.updateProfilePicture(iuProfileUrl);
               return;
             }
             
-            // If no localStorage, try to fetch from server immediately (LGU-IU-0001 primary key)
-            console.log('🎯 Force fetching LGU-IU IOO profile from server for userId: LGU-IU-0001');
+            // If no localStorage, try to fetch from server immediately with actual userId
+            const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-IU-0001';
+            console.log('🎯 Force fetching LGU-IU IOO profile from server for userId:', userId);
             
-            fetch(`http://localhost:3000/api/profile/picture/LGU-IU-0001`)
+            fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`)
               .then(response => response.json())
               .then(profileData => {
                 if (profileData.success && profileData.profilePictureUrl) {
@@ -994,8 +1266,162 @@
                   this.updateProfilePicture(profileData.profilePictureUrl);
                   // Store it for future use
                   localStorage.setItem('iu_profile_picture', profileData.profilePictureUrl);
+                  localStorage.setItem('lgu_iu_profile_picture', profileData.profilePictureUrl);
                 } else {
                   console.log('❌ Force update: No LGU-IU IOO profile picture found');
+                }
+              })
+              .catch(error => {
+                console.log('❌ Force update error:', error);
+              });
+          }
+          
+          // For Executive Viewer users, force immediate update
+          if (user.role === 'Executive Viewer' || user.role === 'EXEC') {
+            console.log('🚀 Force updating Executive Viewer logout modal profile picture...');
+            console.log('🔍 Executive Viewer user data in force update:', user);
+            
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ Executive Viewer: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
+            
+            // Check localStorage first
+            const executiveProfileUrl = localStorage.getItem('executive_profile_picture');
+            if (executiveProfileUrl) {
+              console.log('🎯 Force updating with Executive Viewer localStorage URL:', executiveProfileUrl);
+              this.updateProfilePicture(executiveProfileUrl);
+              return;
+            }
+            
+            // If no localStorage, try to fetch from server immediately with actual userId
+            const userId = user.userId || user.id || user.employeeId || user.username || user.email || 'EXEC-0001';
+            console.log('🎯 Force fetching Executive Viewer profile from server for userId:', userId);
+            
+            fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`)
+              .then(response => response.json())
+              .then(profileData => {
+                if (profileData.success && profileData.profilePictureUrl) {
+                  console.log('✅ Force update: Found Executive Viewer profile picture:', profileData.profilePictureUrl);
+                  this.updateProfilePicture(profileData.profilePictureUrl);
+                  // Store it for future use
+                  localStorage.setItem('executive_profile_picture', profileData.profilePictureUrl);
+                  
+                  // Also update user data
+                  if (user) {
+                    user.profilePictureUrl = profileData.profilePictureUrl;
+                    localStorage.setItem('user', JSON.stringify(user));
+                  }
+                } else {
+                  console.log('❌ Force update: No Executive Viewer profile picture found');
+                }
+              })
+              .catch(error => {
+                console.log('❌ Force update error:', error);
+              });
+          }
+          
+          // For EIU users, force immediate update
+          if (user.role === 'EIU') {
+            console.log('🚀 Force updating EIU logout modal profile picture...');
+            console.log('🔍 EIU user data in force update:', user);
+            
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ EIU: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
+            
+            // Check localStorage first
+            const eiuProfileUrl = localStorage.getItem('eiu_profile_picture');
+            if (eiuProfileUrl) {
+              console.log('🎯 Force updating with EIU localStorage URL:', eiuProfileUrl);
+              this.updateProfilePicture(eiuProfileUrl);
+              return;
+            }
+            
+            // If no localStorage, try to fetch from server immediately with actual userId
+            const userId = user.userId || user.id || user.employeeId || user.username || 'EIU-0001';
+            console.log('🎯 Force fetching EIU profile from server for userId:', userId);
+            
+            fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`)
+              .then(response => response.json())
+              .then(profileData => {
+                if (profileData.success && profileData.profilePictureUrl) {
+                  console.log('✅ Force update: Found EIU profile picture:', profileData.profilePictureUrl);
+                  this.updateProfilePicture(profileData.profilePictureUrl);
+                  // Store it for future use
+                  localStorage.setItem('eiu_profile_picture', profileData.profilePictureUrl);
+                  
+                  // Also update user data
+                  if (user) {
+                    user.profilePictureUrl = profileData.profilePictureUrl;
+                    localStorage.setItem('user', JSON.stringify(user));
+                  }
+                } else {
+                  console.log('❌ Force update: No EIU profile picture found');
+                }
+              })
+              .catch(error => {
+                console.log('❌ Force update error:', error);
+              });
+          }
+          
+          // For Secretariat users, force immediate update (check multiple role variations)
+          // CRITICAL: Use includes() to handle subRoles like "MPMEC Secretariat - Focal Person (Admin)"
+          const isSecretariat = user.role === 'MPMEC Secretariat' || 
+                               user.role === 'Secretariat' || 
+                               user.role === 'secretariat' ||
+                               (user.role === 'LGU-PMT' && user.subRole && 
+                                (user.subRole.toLowerCase().includes('mpmec secretariat') || 
+                                 user.subRole.toLowerCase().includes('secretariat')));
+          
+          if (isSecretariat) {
+            console.log('🚀 Force updating Secretariat logout modal profile picture...');
+            console.log('🔍 Secretariat user data in force update:', user);
+            
+            // CRITICAL: Use user.profilePictureUrl first (from database)
+            if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
+              console.log('✅ Secretariat: Using profilePictureUrl from user data:', user.profilePictureUrl);
+              this.updateProfilePicture(user.profilePictureUrl);
+              return;
+            }
+            
+            // Check localStorage first
+            const secretariatProfileUrl = localStorage.getItem('secretariat_profile_picture') || 
+                                         localStorage.getItem('mpmec_profile_picture') || 
+                                         localStorage.getItem('lgu_pmt_profile_picture');
+            if (secretariatProfileUrl) {
+              console.log('🎯 Force updating with Secretariat localStorage URL:', secretariatProfileUrl);
+              this.updateProfilePicture(secretariatProfileUrl);
+              return;
+            }
+            
+            // If no localStorage, try to fetch from server immediately with actual userId
+            const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
+            console.log('🎯 Force fetching Secretariat profile from server for userId:', userId);
+            
+            fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`)
+              .then(response => response.json())
+              .then(profileData => {
+                if (profileData.success && profileData.profilePictureUrl) {
+                  console.log('✅ Force update: Found Secretariat profile picture:', profileData.profilePictureUrl);
+                  this.updateProfilePicture(profileData.profilePictureUrl);
+                  // Store it for future use
+                  localStorage.setItem('secretariat_profile_picture', profileData.profilePictureUrl);
+                  localStorage.setItem('mpmec_profile_picture', profileData.profilePictureUrl);
+                  localStorage.setItem('lgu_pmt_profile_picture', profileData.profilePictureUrl);
+                  
+                  // Also update user data
+                  if (user) {
+                    user.profilePictureUrl = profileData.profilePictureUrl;
+                    localStorage.setItem('user', JSON.stringify(user));
+                  }
+                } else {
+                  console.log('❌ Force update: No Secretariat profile picture found');
                 }
               })
               .catch(error => {

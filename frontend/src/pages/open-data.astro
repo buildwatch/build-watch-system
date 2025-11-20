@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import TopBar from "../components/TopBar.astro";
 import LGUFooter from "../components/LGUFooter.astro";
+import OpenDataCenter from "../islands/OpenDataCenter.jsx";
 ---
 <Layout title="Open Data | Build Watch LGU" description="Access public data, reports, and analytics about LGU projects and programs in Santa Cruz, Laguna.">
   <TopBar />
@@ -89,8 +90,13 @@ import LGUFooter from "../components/LGUFooter.astro";
         </div>
       </div>
     </div>
-    <!-- Enhanced Content Grid -->
-    <div class="relative z-10 w-full max-w-7xl">
+    <!-- Open Data Center Component -->
+    <div class="relative z-10 w-full">
+      <OpenDataCenter client:load />
+    </div>
+
+    <!-- Legacy Content (Hidden - kept for reference) -->
+    <div class="relative z-10 w-full max-w-7xl hidden">
       <!-- Data Categories Section -->
       <div class="mb-12">
         <div class="flex items-center gap-4 mb-8">
@@ -625,6 +631,24 @@ import LGUFooter from "../components/LGUFooter.astro";
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Remove all yellow highlights on page load
+    function removeAllYellowHighlights() {
+      document.querySelectorAll('mark.bg-yellow-200, mark.bg-yellow-300, .search-highlight').forEach(mark => {
+        const parent = mark.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(mark.textContent), mark);
+          parent.normalize();
+        }
+      });
+    }
+    
+    // Remove highlights immediately
+    removeAllYellowHighlights();
+    
+    // Also remove after a short delay to catch any dynamically added ones
+    setTimeout(removeAllYellowHighlights, 100);
+    setTimeout(removeAllYellowHighlights, 500);
+    
     // Search Functionality
     const searchInput = document.getElementById('data-search');
     const dataCards = document.querySelectorAll('.data-card');
@@ -649,12 +673,8 @@ import LGUFooter from "../components/LGUFooter.astro";
           card.style.transform = 'scale(1)';
           visibleCards++;
           
-          // Highlight matching text
-          if (searchTerm !== '') {
-            highlightText(card, searchTerm);
-          } else {
-            removeHighlights(card);
-          }
+          // Remove any existing highlights (highlighting disabled)
+          removeHighlights(card);
         } else {
           card.style.opacity = '0.3';
           card.style.transform = 'scale(0.95)';
@@ -675,30 +695,30 @@ import LGUFooter from "../components/LGUFooter.astro";
     }
     
     function highlightText(card, searchTerm) {
-      const title = card.querySelector('h3');
-      const description = card.querySelector('p');
-      
-      // Remove existing highlights
-      removeHighlights(card);
-      
-      // Add highlights
-      title.innerHTML = title.textContent.replace(
-        new RegExp(searchTerm, 'gi'),
-        match => `<mark class="bg-yellow-200 px-1 rounded font-semibold">${match}</mark>`
-      );
-      
-      description.innerHTML = description.textContent.replace(
-        new RegExp(searchTerm, 'gi'),
-        match => `<mark class="bg-yellow-200 px-1 rounded font-semibold">${match}</mark>`
-      );
+      // Highlighting disabled - no yellow highlights
+      // This function is kept for compatibility but does nothing
     }
     
     function removeHighlights(card) {
+      // Remove any existing highlights
       const title = card.querySelector('h3');
       const description = card.querySelector('p');
       
-      title.innerHTML = title.textContent;
-      description.innerHTML = description.textContent;
+      if (title) {
+        title.innerHTML = title.textContent;
+      }
+      if (description) {
+        description.innerHTML = description.textContent;
+      }
+      
+      // Also remove any mark elements
+      card.querySelectorAll('mark').forEach(mark => {
+        const parent = mark.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(mark.textContent), mark);
+          parent.normalize();
+        }
+      });
     }
     
     // Search event listeners
@@ -892,14 +912,25 @@ import LGUFooter from "../components/LGUFooter.astro";
     transform: translateY(-4px) scale(1.02);
   }
   
-  /* Search highlight animation */
-  mark {
-    animation: highlightFade 0.3s ease-in-out;
+  /* Search highlight animation - disabled - remove all yellow highlights */
+  mark.bg-yellow-200,
+  mark.bg-yellow-300,
+  mark.search-highlight,
+  .search-highlight,
+  mark[class*="yellow"] {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-weight: inherit !important;
   }
   
-  @keyframes highlightFade {
-    from { background-color: #FEF3C7; }
-    to { background-color: #FEF08A; }
+  /* Remove yellow highlights from any mark elements */
+  mark {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
   }
   
   /* Modal animations */

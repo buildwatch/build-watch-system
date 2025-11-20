@@ -4,6 +4,10 @@ import Layout from '../../../../layouts/Layout.astro';
 import EIULayout from '../../../../components/EIULayout.astro';
 import ProjectCard from '../../../../components/ProjectCard.astro';
 import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
+import ProjectFilterCenter from '../../../../islands/ProjectFilterCenter.jsx';
+import ProjectExportCenter from '../../../../islands/ProjectExportCenter.jsx';
+import ProjectNotesCenter from '../../../../islands/ProjectNotesCenter.jsx';
+import ProjectNotificationCenter from '../../../../islands/ProjectNotificationCenter.jsx';
 
 // Determine API URL based on environment (server-side)
 const isProduction = import.meta.env.PROD;
@@ -77,8 +81,9 @@ try {
         
         // Calculate statistics
         projectStats.totalProjects = assignedProjects.length;
-        projectStats.activeProjects = assignedProjects.filter(p => p.status === 'ongoing').length;
-        projectStats.completedProjects = assignedProjects.filter(p => p.status === 'complete').length;
+        // Active projects include both 'ongoing' and 'delayed' statuses (delayed projects are still ongoing)
+        projectStats.activeProjects = assignedProjects.filter(p => p.status === 'ongoing' || p.status === 'delayed').length;
+        projectStats.completedProjects = assignedProjects.filter(p => p.status === 'complete' || p.status === 'completed').length;
         
         const totalBudget = assignedProjects.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
         projectStats.totalBudget = `₱${totalBudget.toLocaleString()}`;
@@ -95,13 +100,32 @@ try {
         const avgProgress = assignedProjects.length > 0 
           ? assignedProjects.reduce((sum, p) => {
               // Use the overallProgress directly from backend calculation
-              const progress = parseFloat(p.overallProgress || 0);
+              // Check multiple possible field names for progress
+              const progress = parseFloat(
+                p.overallProgress || 
+                p.progress?.overall || 
+                p.progress?.overallProgress || 
+                0
+              );
               
-              console.log(`Project ${p.name}: overall=${progress}%`);
+              console.log(`Project ${p.name}: overall=${progress}%`, {
+                overallProgress: p.overallProgress,
+                progressObject: p.progress,
+                allProgressKeys: Object.keys(p).filter(k => k.toLowerCase().includes('progress'))
+              });
               return sum + progress;
             }, 0) / assignedProjects.length
           : 0;
         projectStats.averageProgress = Math.round(avgProgress);
+        
+        console.log('📊 Calculated Average Progress:', {
+          totalProjects: assignedProjects.length,
+          sumOfProgress: assignedProjects.reduce((sum, p) => {
+            return sum + parseFloat(p.overallProgress || p.progress?.overall || 0);
+          }, 0),
+          averageProgress: avgProgress,
+          roundedAverageProgress: Math.round(avgProgress)
+        });
         
         console.log('Calculated project stats:', projectStats);
       } else {
@@ -347,7 +371,7 @@ loading = false;
     <main class="bg-gradient-to-br from-gray-50 to-white min-h-screen px-8 py-8">
       <!-- Enhanced Action Buttons -->
       <div class="flex items-center justify-end gap-3 mb-8">
-        <button onclick="exportData()" class="btn-success btn-sm inline-flex items-center gap-2">
+        <button onclick="window.projectExportCenter?.export()" class="btn-success btn-sm inline-flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -431,92 +455,171 @@ loading = false;
         </div>
       </div>
 
-      <!-- Enhanced Search & Filter Section -->
-      <div class="profile-card p-8 mb-8">
-        <!-- Enhanced Filters Section -->
-        <div class="mb-8">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="icon-container-small bg-gradient-to-br from-emerald-500 to-emerald-600">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-black">Search & Filter Projects</h3>
-          </div>
+      <!-- Initialize data and functions BEFORE React component loads -->
+      <script define:vars={{ assignedProjects }}>
+        // Initialize data immediately when page loads
+        if (typeof window !== 'undefined') {
+          window.assignedProjects = assignedProjects || [];
+          console.log('✅ [EIU] window.assignedProjects initialized with', window.assignedProjects.length, 'projects');
           
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Search Projects</label>
-                <div class="relative">
-                  <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search by project name..." 
-                    class="form-input"
-                  >
-                  <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                  </svg>
-                </div>
-              </div>
-              
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Status</label>
-                <select 
-                  id="statusFilter" 
-                  class="form-select"
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="complete">Complete</option>
-                </select>
-              </div>
-              
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Priority</label>
-                <select 
-                  id="priorityFilter" 
-                  class="form-select"
-                >
-                  <option value="">All Priorities</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              
-              <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">Sort By</label>
-                <select 
-                  id="sortFilter" 
-                  class="form-select"
-                >
-                  <option value="name">Project Name</option>
-                  <option value="date">Start Date</option>
-                  <option value="progress">Progress</option>
-                  <option value="priority">Priority</option>
-                </select>
-              </div>
-            </div>
+          // Initialize display function immediately - uses show/hide instead of replacing HTML
+          window.updateProjectDisplay = function(projectsToShow) {
+            console.log('📊 [EIU] Updating project display with', projectsToShow.length, 'projects');
             
-            <div class="flex flex-wrap items-center gap-3 mt-6">
-              <button onclick="applyFilters()" class="btn-primary inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                </svg>
-                Apply Filters
-              </button>
-              <button onclick="clearFilters()" class="btn-secondary inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
+            // Update header count
+            const headerCount = document.getElementById('headerProjectCount');
+            if (headerCount) {
+              headerCount.textContent = `${projectsToShow.length} Projects Available`;
+            }
+            
+            // Get all project IDs to show
+            const projectIdsToShow = new Set(projectsToShow.map(p => p.id));
+            
+            // Update card view - show/hide existing ProjectCard components
+            const cardWrappers = document.querySelectorAll('#eiuProjectsGrid .project-card-wrapper, .grid.grid-cols-1.lg\\:grid-cols-2.xl\\:grid-cols-3 .project-card-wrapper');
+            cardWrappers.forEach(wrapper => {
+              const projectId = wrapper.getAttribute('data-project-id');
+              if (projectIdsToShow.has(projectId)) {
+                wrapper.style.display = '';
+                wrapper.classList.remove('hidden');
+              } else {
+                wrapper.style.display = 'none';
+                wrapper.classList.add('hidden');
+              }
+            });
+            
+            // Show empty state if no projects match
+            const projectsGrid = document.getElementById('eiuProjectsGrid');
+            const hasVisibleProjects = projectsToShow.length > 0;
+            
+            // Check if we need to show empty state
+            let emptyState = document.getElementById('eiuFilteredEmptyState');
+            
+            if (!hasVisibleProjects) {
+              // Show enhanced empty state
+              if (projectsGrid && !emptyState) {
+                emptyState = document.createElement('div');
+                emptyState.id = 'eiuFilteredEmptyState';
+                emptyState.className = 'col-span-full text-center py-16';
+                emptyState.innerHTML = `
+                  <div class="flex flex-col items-center justify-center">
+                    <div class="relative mb-6">
+                      <div class="absolute inset-0 bg-emerald-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                      <div class="relative w-32 h-32 bg-gradient-to-br from-emerald-100 to-green-100 rounded-full flex items-center justify-center shadow-lg">
+                        <svg class="w-20 h-20 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">No Projects Found</h3>
+                    <p class="text-gray-600 text-lg mb-2 max-w-md">We couldn't find any projects matching your current filter criteria.</p>
+                    <p class="text-gray-500 text-sm mb-6">Try adjusting your search terms, status, priority, or sort options to see more results.</p>
+                    <button onclick="if(window.projectFilterCenter) window.projectFilterCenter.clearFilters()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      Clear All Filters
+                    </button>
+                  </div>
+                `;
+                projectsGrid.appendChild(emptyState);
+              }
+            } else {
+              // Hide empty state if projects are visible
+              if (emptyState) {
+                emptyState.remove();
+              }
+            }
+          };
+          
+          // Initialize filter function
+          window.applyProjectFiltersFromCenter = function(filters) {
+            console.log('🔍 [EIU] Applying filters from center:', filters);
+            console.log('🔍 [EIU] Available projects:', window.assignedProjects?.length || 0);
+            
+            let filteredProjects = window.assignedProjects || [];
+            
+            if (!filteredProjects || filteredProjects.length === 0) {
+              console.warn('⚠️ [EIU] No projects available to filter! window.assignedProjects is empty or undefined.');
+              return;
+            }
+            
+            // Apply search filter
+            if (filters.search) {
+              const searchTerm = filters.search.toLowerCase();
+              filteredProjects = filteredProjects.filter(project => 
+                project.name?.toLowerCase().includes(searchTerm) ||
+                project.description?.toLowerCase().includes(searchTerm) ||
+                project.projectCode?.toLowerCase().includes(searchTerm)
+              );
+            }
+            
+            // Apply status filter
+            if (filters.status) {
+              filteredProjects = filteredProjects.filter(project => project.status === filters.status);
+            }
+            
+            // Apply priority filter
+            if (filters.priority) {
+              filteredProjects = filteredProjects.filter(project => project.priority === filters.priority);
+            }
+            
+            // Apply sorting
+            switch(filters.sortBy) {
+              case 'name':
+                filteredProjects.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                break;
+              case 'date':
+                filteredProjects.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0));
+                break;
+              case 'progress':
+                filteredProjects.sort((a, b) => {
+                  const progressA = parseFloat(a.overallProgress || a.progress?.overall || 0);
+                  const progressB = parseFloat(b.overallProgress || b.progress?.overall || 0);
+                  return progressB - progressA;
+                });
+                break;
+              case 'priority':
+                filteredProjects.sort((a, b) => {
+                  const priorityOrder = { high: 3, medium: 2, low: 1 };
+                  return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+                });
+                break;
+            }
+            
+            // Update project display
+            window.updateProjectDisplay(filteredProjects);
+          };
+          
+          // Store the callback function on window so React component can access it
+          window.projectFilterCallback = function(filters) {
+            console.log('🔍 [EIU] onFilterChange callback triggered with filters:', filters);
+            if (typeof window !== 'undefined' && window.applyProjectFiltersFromCenter) {
+              window.applyProjectFiltersFromCenter(filters);
+            } else {
+              console.warn('⚠️ [EIU] applyProjectFiltersFromCenter not available yet');
+            }
+          };
+          
+          console.log('✅ [EIU] All filter functions initialized');
+        }
+      </script>
+
+      <!-- Centralized Filter Component -->
+      <ProjectFilterCenter 
+        client:load
+        theme="green"
+        moduleType="eiu"
+      />
+
+      <!-- Centralized Export Component -->
+      <ProjectExportCenter 
+        client:load
+        theme="green"
+        data={assignedProjects}
+        exportType="projects"
+        fileNamePrefix="eiu-projects"
+      />
 
         <!-- Project Selection Section -->
         <div class="mb-6">
@@ -527,6 +630,35 @@ loading = false;
               </svg>
             </div>
             <h3 class="text-xl font-bold text-black">Select Project to View Full Information</h3>
+          </div>
+
+          <!-- View Toggle Buttons -->
+          <div class="flex items-center justify-end gap-3 mb-4">
+            <button 
+              onclick="if(window.projectNotificationCenter) { const count = window.projectNotificationCenter.getUnreadCount(); if(count > 0) { window.projectNotificationCenter.openModal(); } else { window.projectNotificationCenter.openModal(); } }"
+              class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2 relative"
+              title="View Notifications"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+              Notifications
+              <span id="eiuNotificationBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center hidden">0</span>
+            </button>
+            <div class="flex bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-300 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300" style="width: 280px;">
+              <button id="eiuCardTab" class="tab-button text-sm font-medium text-gray-900 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white transition-all duration-300 flex items-center gap-3 active relative overflow-hidden px-6 py-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Card View
+              </button>
+              <button id="eiuTableTab" class="tab-button text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gradient-to-r hover:from-gray-200 hover:to-gray-300 transition-all duration-300 flex items-center gap-3 relative overflow-hidden px-6 py-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                Table View
+              </button>
+            </div>
           </div>
           
           {loading ? (
@@ -550,16 +682,142 @@ loading = false;
               <p class="text-gray-600 mb-6">You don't have any projects assigned to your EIU organization yet. Projects will appear here once they are created by Implementing Offices and assigned to your organization.</p>
             </div>
           ) : (
-            <!-- Enhanced Projects Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {assignedProjects.map(project => (
-                <ProjectCard 
-                  project={project} 
-                  userTheme="eiu"
-                  onClick="viewProjectDetails"
-                />
-              ))}
-            </div>
+            <>
+              <!-- Card View Content -->
+              <div id="eiuCardView" class="tab-content block">
+                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="eiuProjectsGrid">
+                  {assignedProjects.map(project => (
+                    <div data-project-id={project.id} class="project-card-wrapper relative group">
+                      <!-- Notes Button -->
+                      <button
+                        onclick={`if(window.projectNotesCenter) window.projectNotesCenter.openModal(${JSON.stringify(project)})`}
+                        class="absolute top-4 right-4 z-10 px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-xs font-medium transition-all opacity-0 group-hover:opacity-100"
+                        title="View Notes & Annotations"
+                      >
+                        Notes
+                      </button>
+                      <ProjectCard 
+                        project={project} 
+                        userTheme="eiu"
+                        onClick="viewProjectDetails"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <!-- Table View Content -->
+              <div id="eiuTableView" class="tab-content hidden">
+                <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-md">
+                  <table class="w-full text-sm" id="eiuProjectsTable">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="eiuProjectsTableBody" class="bg-white divide-y divide-gray-200">
+                      {assignedProjects.map((project) => {
+                        const progress = project.progress || {
+                          timeline: project.timelineProgress || 0,
+                          budget: project.budgetProgress || 0,
+                          physical: project.physicalProgress || 0,
+                          overall: project.overallProgress || 0
+                        };
+                        const overallProgress = parseFloat(progress.overall || 0);
+                        const statusColors = {
+                          pending: 'bg-yellow-100 text-yellow-800',
+                          ongoing: 'bg-blue-100 text-blue-800',
+                          delayed: 'bg-red-100 text-red-800',
+                          complete: 'bg-green-100 text-green-800'
+                        };
+                        return (
+                          <tr key={project.id} data-project-id={project.id} class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                              <div class="font-medium text-gray-900">{project.name}</div>
+                              <div class="text-xs text-gray-500">{project.projectCode}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                              <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 capitalize">
+                                {project.category || 'N/A'}
+                              </span>
+                            </td>
+                            <td class="px-4 py-3">
+                              <span class={`px-2 py-1 text-xs font-medium rounded-full capitalize ${statusColors[project.status] || 'bg-gray-100 text-gray-800'}`}>
+                                {project.status || 'N/A'}
+                              </span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-900">
+                              ₱{parseFloat(project.totalBudget || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td class="px-4 py-3">
+                              <div class="flex items-center gap-2">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    class={`h-2 rounded-full transition-all ${
+                                      overallProgress >= 75 ? 'bg-green-500' :
+                                      overallProgress >= 50 ? 'bg-blue-500' :
+                                      overallProgress >= 25 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`}
+                                    style={`width: ${overallProgress}%`}
+                                  ></div>
+                                </div>
+                                <span class="text-xs font-medium text-gray-700">{overallProgress.toFixed(1)}%</span>
+                              </div>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 text-xs">
+                              {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'N/A'}
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 text-xs">
+                              {project.location || 'N/A'}
+                            </td>
+                            <td class="px-4 py-3">
+                              <div class="flex items-center gap-1 flex-wrap">
+                                <button 
+                                  onclick={`viewProjectDetails('${project.id}')`}
+                                  class="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
+                                >
+                                  View
+                                </button>
+                                <button
+                                  onclick={`if(window.projectNotesCenter) window.projectNotesCenter.openModal(${JSON.stringify(project)})`}
+                                  class="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
+                                  title="View Notes & Annotations"
+                                >
+                                  Notes
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Table Footer -->
+                <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200 rounded-b-xl mt-4">
+                  <div class="text-sm text-gray-600">
+                    Showing <span id="eiuTableProjectCount">{assignedProjects.length}</span> of <span>{assignedProjects.length}</span> projects
+                    <span class="ml-2 inline-flex items-center gap-1">
+                      <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      <span>Live Data</span>
+                    </span>
+                  </div>
+                  <button onclick="refreshData()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -650,6 +908,7 @@ loading = false;
           // Update global variable if window is available
           if (typeof window !== 'undefined') {
             window.assignedProjects = assignedProjects;
+            console.log('✅ [EIU] window.assignedProjects initialized with', assignedProjects.length, 'projects');
           }
           filteredProjects = [...projects];
           updateProjectsUI();
@@ -705,47 +964,19 @@ loading = false;
     renderFilteredProjects();
   }
 
-  // Apply filters from form
+  // Apply filters from form - now uses centralized component
   function applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const priorityFilter = document.getElementById('priorityFilter').value;
-    const sortFilter = document.getElementById('sortFilter').value;
-    
-    filteredProjects = projects.filter(project => {
-      const matchesSearch = project.name.toLowerCase().includes(searchTerm);
-      const matchesStatus = !statusFilter || project.status === statusFilter;
-      const matchesPriority = !priorityFilter || project.priority?.toLowerCase() === priorityFilter;
-      
-      return matchesSearch && matchesStatus && matchesPriority;
-    });
-    
-    // Sort projects
-    switch(sortFilter) {
-      case 'name':
-        filteredProjects.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'date':
-        filteredProjects.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-        break;
-      case 'progress':
-        filteredProjects.sort((a, b) => parseFloat(b.overallProgress || 0) - parseFloat(a.overallProgress || 0));
-        break;
-      case 'priority':
-        const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-        filteredProjects.sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
-        break;
+    if (window.projectFilterCenter) {
+      const filters = window.projectFilterCenter.getFilters();
+      window.applyProjectFiltersFromCenter(filters);
     }
-    
-    renderFilteredProjects();
   }
 
-  // Clear all filters
+  // Clear all filters - now uses centralized component
   function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('priorityFilter').value = '';
-    document.getElementById('sortFilter').value = 'name';
+    if (window.projectFilterCenter) {
+      window.projectFilterCenter.clearFilters();
+    }
     
     // Remove active class from all cards
     document.querySelectorAll('.summary-card').forEach(card => {
@@ -763,12 +994,75 @@ loading = false;
     console.log('Filtered projects:', filteredProjects);
   }
 
-  // Export data function
+  // Export data function - now uses centralized component
   function exportData() {
     console.log('Exporting project data...');
-    // Implement export functionality
-    alert('Export functionality will be implemented soon.');
+    if (window.projectExportCenter) {
+      window.projectExportCenter.export();
+    }
   }
+
+  // New function to work with centralized filter component
+  window.applyProjectFiltersFromCenter = function(filters) {
+    console.log('🔍 [EIU] Applying filters from center:', filters);
+    console.log('🔍 [EIU] Available projects:', window.assignedProjects?.length || 0);
+    
+    let filteredProjects = window.assignedProjects || [];
+    
+    if (!filteredProjects || filteredProjects.length === 0) {
+      console.warn('⚠️ [EIU] No projects available to filter! window.assignedProjects is empty or undefined.');
+      return;
+    }
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filteredProjects = filteredProjects.filter(project => 
+        project.name?.toLowerCase().includes(searchTerm) ||
+        project.description?.toLowerCase().includes(searchTerm) ||
+        project.projectCode?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    // Apply status filter
+    if (filters.status) {
+      filteredProjects = filteredProjects.filter(project => project.status === filters.status);
+    }
+    
+    // Apply priority filter
+    if (filters.priority) {
+      filteredProjects = filteredProjects.filter(project => project.priority === filters.priority);
+    }
+    
+    // Apply sorting
+    switch(filters.sortBy) {
+      case 'name':
+        filteredProjects.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'date':
+        filteredProjects.sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0));
+        break;
+      case 'progress':
+        filteredProjects.sort((a, b) => {
+          const progressA = parseFloat(a.overallProgress || a.progress?.overall || 0);
+          const progressB = parseFloat(b.overallProgress || b.progress?.overall || 0);
+          return progressB - progressA;
+        });
+        break;
+      case 'priority':
+        filteredProjects.sort((a, b) => {
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+        });
+        break;
+    }
+    
+    // Update project display
+    window.updateProjectDisplay(filteredProjects);
+  };
+
+  // OLD updateProjectDisplay function removed - now using the show/hide version defined earlier
+  // This ensures ProjectCard.astro components are preserved and only shown/hidden based on filters
 
   // Refresh data function
   function refreshData() {
@@ -825,8 +1119,83 @@ loading = false;
   // Initialize the page when DOM is ready
   document.addEventListener('DOMContentLoaded', function() {
     initializePage();
+
+    // View switching functionality
+    const cardTab = document.getElementById('eiuCardTab');
+    const tableTab = document.getElementById('eiuTableTab');
+    const cardView = document.getElementById('eiuCardView');
+    const tableView = document.getElementById('eiuTableView');
+
+    function switchToCardView() {
+      if (cardTab && tableTab && cardView && tableView) {
+        cardTab.classList.add('bg-gradient-to-r', 'from-emerald-600', 'to-emerald-700', 'text-white');
+        cardTab.classList.remove('text-gray-600');
+        tableTab.classList.remove('bg-gradient-to-r', 'from-emerald-600', 'to-emerald-700', 'text-white');
+        tableTab.classList.add('text-gray-600');
+        cardView.classList.remove('hidden');
+        cardView.classList.add('block');
+        tableView.classList.remove('block');
+        tableView.classList.add('hidden');
+      }
+    }
+
+    function switchToTableView() {
+      if (cardTab && tableTab && cardView && tableView) {
+        tableTab.classList.add('bg-gradient-to-r', 'from-emerald-600', 'to-emerald-700', 'text-white');
+        tableTab.classList.remove('text-gray-600');
+        cardTab.classList.remove('bg-gradient-to-r', 'from-emerald-600', 'to-emerald-700', 'text-white');
+        cardTab.classList.add('text-gray-600');
+        tableView.classList.remove('hidden');
+        tableView.classList.add('block');
+        cardView.classList.remove('block');
+        cardView.classList.add('hidden');
+      }
+    }
+
+    if (cardTab) {
+      cardTab.addEventListener('click', switchToCardView);
+    }
+    if (tableTab) {
+      tableTab.addEventListener('click', switchToTableView);
+    }
+
+    // Update notification badge
+    function updateEIUNotificationBadge() {
+      if (window.projectNotificationCenter) {
+        const count = window.projectNotificationCenter.getUnreadCount();
+        const badge = document.getElementById('eiuNotificationBadge');
+        if (badge) {
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      }
+    }
+    
+    // Update badge every 30 seconds
+    setInterval(updateEIUNotificationBadge, 30000);
+    
+    // Initial update after components load
+    setTimeout(updateEIUNotificationBadge, 2000);
   });
 </script>
 
 <!-- Include the standardized project details modal -->
-<ProjectDetailsModal userTheme="eiu" />
+      <ProjectDetailsModal userTheme="eiu" />
+
+      <!-- Project Notes Center - Visible to EIU users -->
+      <ProjectNotesCenter 
+        client:load
+        theme="emerald"
+        projects={assignedProjects}
+      />
+
+      <!-- Project Notification Center - Visible to EIU users -->
+      <ProjectNotificationCenter 
+        client:load
+        theme="emerald"
+        projects={assignedProjects}
+      />

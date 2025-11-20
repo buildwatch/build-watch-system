@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+import ProjectSummaryReportCenter from '../../../../islands/ProjectSummaryReportCenter.jsx';
+---
+
+<Layout title="Project Summary & Report | LGU-IU Dashboard">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-orange-50 to-white min-h-screen">
+      <ProjectSummaryReportCenter client:load userRole="LGU-IU" accessLevel="implemented" />
+    </section>
+  </IUImplementingOfficeLayout>
+</Layout>
+
