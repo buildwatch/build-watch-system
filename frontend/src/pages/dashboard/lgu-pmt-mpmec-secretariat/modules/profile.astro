@@ -1,14 +1,14 @@
 ---
 export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
-import SECRETARIATLayout from '../../../../components/SECRETARIATLayout.astro';
+import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 import ProfileCenter from '../../../../islands/ProfileCenter.jsx';
 ---
 
 <Layout title="Secretariat Profile | MPMEC Secretariat Dashboard">
-  <SECRETARIATLayout>
+  <SecretariatLayout>
     <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
       <ProfileCenter client:load theme="blue" />
     </section>
-  </SECRETARIATLayout>
+  </SecretariatLayout>
 </Layout>
