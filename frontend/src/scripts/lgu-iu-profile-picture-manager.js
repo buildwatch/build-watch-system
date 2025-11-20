@@ -40,11 +40,19 @@ class LGUIUProfilePictureManager {
         // FIRST: Check if user data already has profilePictureUrl (from database) - like office-groups.astro
         if (user.profilePictureUrl && user.profilePictureUrl.startsWith('http')) {
           console.log('✅ LGU-IU Manager: Using profilePictureUrl from user data (database):', user.profilePictureUrl.substring(0, 50) + '...');
-          this.profilePictureUrl = user.profilePictureUrl;
+          // Convert localhost:3000 URLs to production URLs if in production
+          let urlToUse = user.profilePictureUrl;
+          const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+          if (isProd && (urlToUse.includes('localhost:3000') || urlToUse.includes('127.0.0.1:3000'))) {
+            urlToUse = urlToUse.replace(/http:\/\/localhost:3000/g, `${window.location.protocol}//${window.location.hostname}`);
+            urlToUse = urlToUse.replace(/http:\/\/127\.0\.0\.1:3000/g, `${window.location.protocol}//${window.location.hostname}`);
+            console.log('🔄 Converted localhost URL to production URL:', urlToUse.substring(0, 50) + '...');
+          }
+          this.profilePictureUrl = urlToUse;
           
           // Store in both keys for consistency
-          localStorage.setItem('iu_profile_picture', user.profilePictureUrl);
-          localStorage.setItem('lgu_iu_profile_picture', user.profilePictureUrl);
+          localStorage.setItem('iu_profile_picture', urlToUse);
+          localStorage.setItem('lgu_iu_profile_picture', urlToUse);
           return;
         }
         
@@ -97,6 +105,18 @@ class LGUIUProfilePictureManager {
     
     // Prefer HTTP URL over base64 data URL
     let storedUrl = null;
+    
+    // Convert localhost:3000 URLs to production URLs if in production
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const convertUrl = (url) => {
+      if (!url) return null;
+      if (isProd && (url.includes('localhost:3000') || url.includes('127.0.0.1:3000'))) {
+        return url.replace(/http:\/\/localhost:3000/g, `${window.location.protocol}//${window.location.hostname}`)
+                  .replace(/http:\/\/127\.0\.0\.1:3000/g, `${window.location.protocol}//${window.location.hostname}`);
+      }
+      return url;
+    };
+    
     if (iuProfile && lguIuProfile) {
       // If both exist, prefer HTTP URL
       if (iuProfile.startsWith('http') && !lguIuProfile.startsWith('http')) {
@@ -260,11 +280,19 @@ class LGUIUProfilePictureManager {
       // Remove any existing error handlers
       element.onerror = null;
       
-      // Convert server URL to data URL if needed (only in development)
+      // Convert localhost:3000 URLs to production URLs if in production
       let finalUrl = this.profilePictureUrl;
-      const isLocalhost = this.profilePictureUrl.startsWith('http://localhost:3000') || this.profilePictureUrl.startsWith('http://127.0.0.1:3000');
+      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      if (isProd && (finalUrl.includes('localhost:3000') || finalUrl.includes('127.0.0.1:3000'))) {
+        finalUrl = finalUrl.replace(/http:\/\/localhost:3000/g, `${window.location.protocol}//${window.location.hostname}`)
+                           .replace(/http:\/\/127\.0\.0\.1:3000/g, `${window.location.protocol}//${window.location.hostname}`);
+        console.log('🔄 Converted localhost URL to production URL for display');
+      }
+      
+      // Convert server URL to data URL if needed (only in development)
+      const isLocalhost = finalUrl.startsWith('http://localhost:3000') || finalUrl.startsWith('http://127.0.0.1:3000');
       if (isLocalhost && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-        finalUrl = await this.convertToDataURL(this.profilePictureUrl);
+        finalUrl = await this.convertToDataURL(finalUrl);
       }
       
       // CRITICAL: Hide fallback BEFORE updating to prevent flicker
