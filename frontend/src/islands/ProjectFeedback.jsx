@@ -676,14 +676,24 @@ export default function ProjectFeedback({ projectId }) {
     if (typeof window === 'undefined' || !projectId) return;
 
     const socketUrl = getSocketUrl();
+    const isProduction = window.location.hostname.includes('build-watch.com');
+    
     console.log('🔌 Connecting to feedback Socket.IO namespace:', `${socketUrl}/feedback`);
 
     // Connect to feedback namespace (no auth required)
+    // For production, Socket.IO path should be /socket.io (default)
+    // For development, use default path
     socketRef.current = io(`${socketUrl}/feedback`, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      // For production HTTPS, ensure we use the correct path
+      path: isProduction ? '/socket.io' : '/socket.io',
+      // Force upgrade to websocket
+      upgrade: true,
+      // Timeout for connection
+      timeout: 20000
     });
 
     socketRef.current.on('connect', () => {
