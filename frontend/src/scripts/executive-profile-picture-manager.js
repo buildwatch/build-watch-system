@@ -38,7 +38,12 @@ class ExecutiveProfilePictureManager {
         const employeeId = user.employeeId || user.username || user.id || user.userId || 'EXEC-0001';
         
         console.log('🔍 Fetching Executive Viewer profile picture from server for:', employeeId);
-        const response = await fetch(`http://localhost:3000/api/profile/picture/${employeeId}`);
+        // Determine API URL based on environment
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const API_URL = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/profile/picture/${employeeId}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.profilePictureUrl) {
@@ -174,9 +179,10 @@ class ExecutiveProfilePictureManager {
       // Remove any existing error handlers
       element.onerror = null;
       
-      // Convert server URL to data URL if needed
+      // Convert server URL to data URL if needed (only in development)
       let finalUrl = this.profilePictureUrl;
-      if (this.profilePictureUrl.startsWith('http://localhost:3000')) {
+      const isLocalhost = this.profilePictureUrl.startsWith('http://localhost:3000') || this.profilePictureUrl.startsWith('http://127.0.0.1:3000');
+      if (isLocalhost && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         finalUrl = await this.convertToDataURL(this.profilePictureUrl);
       }
       
@@ -271,7 +277,9 @@ class ExecutiveProfilePictureManager {
       
       // Convert server URL to data URL if needed to avoid CORS issues
       let finalUrl = this.profilePictureUrl;
-      if (this.profilePictureUrl.startsWith('http://localhost:3000')) {
+      // Check if URL is localhost (development) or needs to be converted
+      const isLocalhost = this.profilePictureUrl.startsWith('http://localhost:3000') || this.profilePictureUrl.startsWith('http://127.0.0.1:3000');
+      if (isLocalhost && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         this.convertToDataURL(this.profilePictureUrl).then(dataUrl => {
           if (dataUrl) {
             logoutProfilePic.src = dataUrl;

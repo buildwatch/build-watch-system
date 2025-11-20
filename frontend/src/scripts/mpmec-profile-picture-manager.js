@@ -199,7 +199,12 @@ class MPMECProfilePictureManager {
         const employeeId = user.email || user.userId || user.username;
         
         console.log('🔍 Fetching MPMEC profile picture from server for user:', employeeId);
-        const response = await fetch(`http://localhost:3000/api/profile/picture/${employeeId}`, {
+        // Determine API URL based on environment
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const API_URL = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/profile/picture/${employeeId}`, {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache',
@@ -350,8 +355,9 @@ class MPMECProfilePictureManager {
       // ✅ CRITICAL FIX: Convert server URL to data URL to bypass CORS issues
       let imageUrl = this.profilePictureUrl;
       
-      // If it's a server URL, convert to data URL to avoid CORS issues
-      if (imageUrl.startsWith('http://localhost:3000/uploads/')) {
+      // If it's a localhost URL in development, convert to data URL to avoid CORS issues
+      const isLocalhost = imageUrl.startsWith('http://localhost:3000/uploads/') || imageUrl.startsWith('http://127.0.0.1:3000/uploads/');
+      if (isLocalhost && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         console.log(`🔄 MPMEC ${elementName}: Converting server URL to data URL to bypass CORS...`);
         try {
           const dataUrl = await this.convertToDataURL(imageUrl);
@@ -374,8 +380,9 @@ class MPMECProfilePictureManager {
       const handleError = () => {
         console.log(`⚠️ MPMEC ${elementName} failed to load, trying alternative methods...`);
         
-        // Try converting to data URL as fallback
-        if (this.profilePictureUrl.startsWith('http://localhost:3000/uploads/')) {
+        // Try converting to data URL as fallback (only in development)
+        const isLocalhost = this.profilePictureUrl.startsWith('http://localhost:3000/uploads/') || this.profilePictureUrl.startsWith('http://127.0.0.1:3000/uploads/');
+        if (isLocalhost && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
           console.log(`🔄 MPMEC ${elementName}: Attempting data URL conversion as fallback...`);
           this.convertToDataURL(this.profilePictureUrl).then(dataUrl => {
             if (dataUrl) {

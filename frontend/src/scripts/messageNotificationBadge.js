@@ -5,17 +5,26 @@
  */
 
 // Determine API and Socket URLs based on environment
-const API_URL = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : `${window.location.protocol}//${window.location.hostname}:3000/api`)
-  : 'http://localhost:3000/api';
+// Import centralized API config
+let API_URL, SOCKET_URL;
 
-const SOCKET_URL = typeof window !== 'undefined'
-  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000'
-      : `${window.location.protocol}//${window.location.hostname}:3000`)
-  : 'http://localhost:3000';
+if (typeof window !== 'undefined') {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // Check if we're in development (localhost)
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    API_URL = 'http://localhost:3000/api';
+    SOCKET_URL = 'http://localhost:3000';
+  } else {
+    // Production: Use same protocol and domain (no port, reverse proxy handles it)
+    API_URL = `${protocol}//${hostname}/api`;
+    SOCKET_URL = `${protocol}//${hostname}`;
+  }
+} else {
+  API_URL = 'http://localhost:3000/api';
+  SOCKET_URL = 'http://localhost:3000';
+}
 
 // Badge ID mapping for each account
 const BADGE_IDS = {

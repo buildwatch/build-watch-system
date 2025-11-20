@@ -52,7 +52,12 @@ class SecretariatProfilePictureManager {
         console.log('🔍 Fetching Secretariat profile picture from server for user:', userId);
         console.log('🔍 User data:', { id: user.id, userId: user.userId, employeeId: user.employeeId, username: user.username });
         
-        const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+        // Determine API URL based on environment
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const API_URL = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+        const response = await fetch(`${API_URL}/profile/picture/${userId}`);
         console.log('📡 Profile picture API response status:', response.status);
         
         if (response.ok) {
@@ -154,9 +159,10 @@ class SecretariatProfilePictureManager {
       // Remove any existing error handlers
       element.onerror = null;
       
-      // Convert server URL to data URL if needed
+      // Convert server URL to data URL if needed (only in development)
       let finalUrl = this.profilePictureUrl;
-      if (this.profilePictureUrl.startsWith('http://localhost:3000')) {
+      const isLocalhost = this.profilePictureUrl.startsWith('http://localhost:3000') || this.profilePictureUrl.startsWith('http://127.0.0.1:3000');
+      if (isLocalhost && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         finalUrl = await this.convertToDataURL(this.profilePictureUrl);
       }
       

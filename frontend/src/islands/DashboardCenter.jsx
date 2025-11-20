@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_URL = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : `${window.location.protocol}//${window.location.hostname}:3000/api`)
-  : 'http://localhost:3000/api';
+// Import centralized API config
+import { getApiUrl } from '../config/api.js';
+
+const API_URL = typeof window !== 'undefined' ? getApiUrl() : 'http://localhost:3000/api';
 
 // Barangay coordinates for Santa Cruz, Laguna
 const barangayCoordinates = {

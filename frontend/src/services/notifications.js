@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+import { getApiUrl } from '../config/api.js';
+
+const API_BASE_URL = getApiUrl();
 
 class NotificationService {
   constructor() {

@@ -1227,7 +1227,12 @@ const currentTime = new Date().toLocaleString('en-PH', {
       
       // First try to get from server
       console.log('System Admin Topbar: Fetching profile picture from server for userId:', userId);
-      const response = await fetch(`http://localhost:3000/api/profile/picture/${userId}`);
+      // Determine API URL based on environment
+      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      const API_URL = isProd 
+        ? `${window.location.protocol}//${window.location.hostname}/api`
+        : 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/profile/picture/${userId}`);
       
       if (response.ok) {
         const result = await response.json();
