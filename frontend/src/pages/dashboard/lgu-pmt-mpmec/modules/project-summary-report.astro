@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 import Layout from '../../../../layouts/Layout.astro';
-import MPMECLayout from '../../../../components/MPMECLayout.astro';
+import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
 import ProjectSummaryReportCenter from '../../../../islands/ProjectSummaryReportCenter.jsx';
 ---
 
 <Layout title="Project Summary & Report | MPMEC Dashboard">
-  <MPMECLayout>
+  <LGUPMTLayout>
     <section class="p-8 bg-gradient-to-br from-blue-50 to-white min-h-screen">
       <ProjectSummaryReportCenter client:load userRole="MPMEC" accessLevel="all" />
     </section>
-  </MPMECLayout>
+  </LGUPMTLayout>
 </Layout>
 
