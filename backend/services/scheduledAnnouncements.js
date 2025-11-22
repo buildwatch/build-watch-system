@@ -150,6 +150,7 @@ const checkAndExpireAnnouncements = async () => {
     const Op = require('sequelize').Op;
     
     // Find all active announcements that have expired
+    // Exclude createdBy from attributes since column may not exist in database
     const expiredAnnouncements = await Announcement.findAll({
       where: {
         status: 'active',
@@ -157,6 +158,9 @@ const checkAndExpireAnnouncements = async () => {
           [Op.lte]: now,
           [Op.ne]: null
         }
+      },
+      attributes: {
+        exclude: ['createdBy'] // Exclude createdBy if column doesn't exist
       }
     });
     

@@ -98,7 +98,10 @@ router.get('/stats', async (req, res) => {
         // Sum all used budgets from approved submissions
         utilizedBudget = Object.values(latestSubmissionMap).reduce((sum, budget) => sum + budget, 0);
         
-        console.log(`💰 Total utilized budget from ${Object.keys(latestSubmissionMap).length} approved milestone submissions: ₱${utilizedBudget.toLocaleString()}`);
+        // Debug log only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`💰 Total utilized budget from ${Object.keys(latestSubmissionMap).length} approved milestone submissions: ₱${utilizedBudget.toLocaleString()}`);
+        }
       }
     }
     
@@ -112,7 +115,10 @@ router.get('/stats', async (req, res) => {
           projectsWithProgress++;
         }
         
-        console.log(`Project ${project.projectCode}: Progress ${overallProgress}%`);
+        // Debug log only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Project ${project.projectCode}: Progress ${overallProgress}%`);
+        }
         
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);

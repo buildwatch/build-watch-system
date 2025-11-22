@@ -1,6 +1,13 @@
 const { Project, ProjectMilestone, ProjectUpdate, User, ActivityLog, MilestoneSubmission } = require('../models');
 const { Op } = require('sequelize');
 
+// Helper function for conditional debug logging (only in development)
+const debugLog = (...args) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(...args);
+  }
+};
+
 class ProgressCalculationService {
   
   /**
@@ -89,7 +96,7 @@ class ProgressCalculationService {
       });
 
       // Debug: Log the expectedDaysOfCompletion field and activity logs
-      console.log('🔍 ProgressCalculationService - Project data:', {
+      debugLog('🔍 ProgressCalculationService - Project data:', {
         id: project.id,
         name: project.name,
         expectedDaysOfCompletion: project.expectedDaysOfCompletion,
@@ -154,30 +161,15 @@ class ProgressCalculationService {
         };
       } else {
         // Fallback to milestone-based calculation
-        console.log(`🔍 [calculateProjectProgress] Using milestone-based calculation for project ${projectId}`);
+        debugLog(`🔍 [calculateProjectProgress] Using milestone-based calculation for project ${projectId}`);
         
         // Calculate milestone-based progress
-        console.log(`🔍 [calculateProjectProgress] Step 1: Calculating milestone progress...`);
         const milestoneProgressData = await this.calculateMilestoneProgress(projectId);
         
-        console.log(`📊 [calculateProjectProgress] Milestone progress data:`, {
-          appliedWeight: milestoneProgressData.appliedWeight,
-          totalWeight: milestoneProgressData.totalWeight,
-          remainingWeight: milestoneProgressData.remainingWeight
-        });
-        
         // Calculate division-based progress based on Secretariat approval verdicts (contribution to overall)
-        console.log(`🔍 [calculateProjectProgress] Step 2: Calculating division progress...`);
         divisionProgress = await this.calculateDivisionProgress(projectId);
         
-        console.log(`📊 [calculateProjectProgress] Division progress data:`, {
-          timeline: divisionProgress.timeline,
-          budget: divisionProgress.budget,
-          physical: divisionProgress.physical
-        });
-        
         // Calculate internal division progress (percentage within each division)
-        console.log(`🔍 [calculateProjectProgress] Step 3: Calculating internal division progress...`);
         internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
         
         // Calculate overall progress based on approved milestone weights (not division weights)
@@ -187,14 +179,6 @@ class ProgressCalculationService {
           ? (milestoneProgressData.appliedWeight / totalWeight) * 100 
           : 0;
         overallProgress = Math.round(Math.min(100, Math.max(0, calculatedProgress)) * 100) / 100;
-        
-        console.log(`📊 [calculateProjectProgress] Overall progress calculation:`, {
-          appliedWeight: milestoneProgressData.appliedWeight,
-          totalWeight: totalWeight,
-          calculatedProgress: calculatedProgress,
-          finalOverallProgress: overallProgress,
-          formula: `(${milestoneProgressData.appliedWeight} / ${totalWeight}) * 100 = ${calculatedProgress}%`
-        });
       }
       
       // Calculate milestone-based progress for milestone data (already calculated above, but need for response)
@@ -306,21 +290,11 @@ class ProgressCalculationService {
    * Calculate milestone-based progress
    */
   static async calculateMilestoneProgress(projectId) {
-    console.log(`🔍 [calculateMilestoneProgress] Starting calculation for project ${projectId}`);
+    debugLog(`🔍 [calculateMilestoneProgress] Starting calculation for project ${projectId}`);
     const milestones = await ProjectMilestone.findAll({
       where: { projectId },
       order: [['order', 'ASC']]
     });
-
-    console.log(`📋 [calculateMilestoneProgress] Found ${milestones.length} milestones:`, milestones.map(m => ({
-      id: m.id,
-      title: m.title,
-      weight: m.weight,
-      status: m.status,
-      timelineStatus: m.timelineStatus,
-      budgetStatus: m.budgetStatus,
-      physicalStatus: m.physicalStatus
-    })));
 
     // Get approved milestone submissions
     const approvedSubmissions = await MilestoneSubmission.findAll({
@@ -330,11 +304,6 @@ class ProgressCalculationService {
       },
       attributes: ['milestoneId', 'status']
     });
-    
-    console.log(`✅ [calculateMilestoneProgress] Found ${approvedSubmissions.length} approved submissions:`, approvedSubmissions.map(s => ({
-      milestoneId: s.milestoneId,
-      status: s.status
-    })));
 
     const latestUpdate = await ProjectUpdate.findOne({
       where: {
@@ -359,24 +328,17 @@ class ProgressCalculationService {
     }
 
     const totalWeight = milestones.reduce((sum, m) => sum + parseFloat(m.weight || 0), 0);
-    console.log(`📊 [calculateMilestoneProgress] Total project weight: ${totalWeight}`);
     let appliedWeight = 0;
 
     const milestoneStatus = milestones.map((milestone, index) => {
-      console.log(`🔍 [calculateMilestoneProgress] Processing milestone ${index + 1}/${milestones.length}: "${milestone.title}"`);
       const update = milestoneUpdates.find(u => u.milestoneId === milestone.id);
       const progress = update?.progress || 0;
       const weight = parseFloat(milestone.weight || 0);
-      
-      console.log(`  📐 [calculateMilestoneProgress] Milestone "${milestone.title}" weight: ${weight}`);
       
       // Check if milestone has an approved submission
       const hasApprovedSubmission = approvedSubmissions.some(
         sub => sub.milestoneId === milestone.id
       );
-      
-      console.log(`  ✅ [calculateMilestoneProgress] Milestone "${milestone.title}" has approved submission: ${hasApprovedSubmission}`);
-      console.log(`  📋 [calculateMilestoneProgress] Milestone "${milestone.title}" current status: ${milestone.status}`);
       
       // Prioritize ProjectMilestone.status over update status for approved milestones
       let status = milestone.status || update?.status || 'pending';
@@ -386,14 +348,10 @@ class ProgressCalculationService {
         status = milestone.status === 'approved' || milestone.status === 'completed' 
           ? milestone.status 
           : 'approved';
-        console.log(`  ✅ [calculateMilestoneProgress] Milestone "${milestone.title}" is approved! Setting status to: ${status}`);
       }
       
       if (status === 'completed' || status === 'approved') {
         appliedWeight += weight;
-        console.log(`  ➕ [calculateMilestoneProgress] Added weight ${weight} from "${milestone.title}". Running total: ${appliedWeight}`);
-      } else {
-        console.log(`  ⏸️ [calculateMilestoneProgress] Milestone "${milestone.title}" is not approved (status: ${status}), not adding weight`);
       }
 
       return {
@@ -438,7 +396,7 @@ class ProgressCalculationService {
       remainingWeight: totalWeight - appliedWeight
     };
     
-    console.log(`📊 [calculateMilestoneProgress] Final calculation result:`, {
+    debugLog(`📊 [calculateMilestoneProgress] Final calculation result:`, {
       totalWeight: result.totalWeight,
       appliedWeight: result.appliedWeight,
       remainingWeight: result.remainingWeight,

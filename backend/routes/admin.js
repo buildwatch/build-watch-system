@@ -2873,8 +2873,12 @@ router.get('/public/announcements/unread-count', authenticateToken, async (req, 
     };
 
     // Get all relevant announcements
+    // Exclude createdBy from attributes since column may not exist in database
     const announcements = await Announcement.findAll({
       where: whereConditions,
+      attributes: {
+        exclude: ['createdBy'] // Exclude createdBy if column doesn't exist
+      },
       include: [{
         model: ReadReceipt,
         as: 'readReceipts',
@@ -2884,10 +2888,10 @@ router.get('/public/announcements/unread-count', authenticateToken, async (req, 
     });
 
     // Count unread announcements (no read receipt for this user or readAt is null)
-    // IMPORTANT: Exclude announcements created by the current user
+    // IMPORTANT: Exclude announcements created by the current user (if createdBy exists)
     const unreadCount = announcements.filter(ann => {
-      // Skip announcements created by the current user
-      if (String(ann.createdBy) === String(userId)) {
+      // Skip announcements created by the current user (if createdBy field exists)
+      if (ann.createdBy && String(ann.createdBy) === String(userId)) {
         return false;
       }
       // Find receipt for this specific user

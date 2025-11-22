@@ -111,16 +111,19 @@ const calculateProjectProgress = async (project, userRole = 'any') => {
   try {
     const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, userRole);
     
-    console.log('🔍 ProgressCalculationService returned:', {
-      hasProgress: !!progressData.progress,
-      progressKeys: progressData.progress ? Object.keys(progressData.progress) : 'No progress',
-      internalTimeline: progressData.progress?.internalTimeline,
-      internalBudget: progressData.progress?.internalBudget,
-      internalPhysical: progressData.progress?.internalPhysical,
-      timeline: progressData.progress?.timeline,
-      budget: progressData.progress?.budget,
-      physical: progressData.progress?.physical
-    });
+    // Debug log only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 ProgressCalculationService returned:', {
+        hasProgress: !!progressData.progress,
+        progressKeys: progressData.progress ? Object.keys(progressData.progress) : 'No progress',
+        internalTimeline: progressData.progress?.internalTimeline,
+        internalBudget: progressData.progress?.internalBudget,
+        internalPhysical: progressData.progress?.internalPhysical,
+        timeline: progressData.progress?.timeline,
+        budget: progressData.progress?.budget,
+        physical: progressData.progress?.physical
+      });
+    }
     
     return {
       // Use internal division progress (percentage within each division) instead of contribution to overall
