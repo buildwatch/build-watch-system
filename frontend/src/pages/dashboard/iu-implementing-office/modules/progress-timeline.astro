@@ -6346,17 +6346,19 @@ This compilation report has been generated automatically based on approved EIU m
                   
                   // Ensure URL is properly formatted
                   if (photoUrl && !photoUrl.startsWith('http')) {
+                    const baseUrl = API_URL.replace('/api', '');
                     // If it's just a filename, construct the full URL
                     if (!photoUrl.includes('/')) {
-                      photoUrl = `http://localhost:3000/uploads/${photoUrl}`;
+                      photoUrl = `${baseUrl}/uploads/${photoUrl}`;
                     } else {
                       // If it's a relative path, make it absolute
-                      photoUrl = `http://localhost:3000/${photoUrl}`;
+                      photoUrl = `${baseUrl}/${photoUrl}`;
                     }
                   }
                   
                   // Validate that we have a complete URL
-                  if (!photoUrl || photoUrl === 'http://localhost:3000/uploads/' || photoUrl.endsWith('file-')) {
+                  const baseUrl = API_URL.replace('/api', '');
+                  if (!photoUrl || photoUrl === `${baseUrl}/uploads/` || photoUrl.endsWith('file-')) {
                     console.warn('⚠️ Incomplete photo URL detected:', photoUrl, 'for photo:', photo);
                     return `
                       <div class="w-full h-20 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center justify-center">
@@ -6427,17 +6429,19 @@ This compilation report has been generated automatically based on approved EIU m
                   
                   // Ensure URL is properly formatted
                   if (videoUrl && !videoUrl.startsWith('http')) {
+                    const baseUrl = API_URL.replace('/api', '');
                     // If it's just a filename, construct the full URL
                     if (!videoUrl.includes('/')) {
-                    videoUrl = `http://localhost:3000/uploads/${videoUrl}`;
+                    videoUrl = `${baseUrl}/uploads/${videoUrl}`;
                     } else {
                       // If it's a relative path, make it absolute
-                      videoUrl = `http://localhost:3000/${videoUrl}`;
+                      videoUrl = `${baseUrl}/${videoUrl}`;
                     }
                   }
                   
                   // Validate that we have a complete URL
-                  if (!videoUrl || videoUrl === 'http://localhost:3000/uploads/' || videoUrl.endsWith('file-')) {
+                  const baseUrl = API_URL.replace('/api', '');
+                  if (!videoUrl || videoUrl === `${baseUrl}/uploads/` || videoUrl.endsWith('file-')) {
                     console.warn('⚠️ Incomplete video URL detected:', videoUrl, 'for video:', video);
                     return `
                       <div class="w-full h-24 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center justify-center">
