@@ -642,9 +642,17 @@ app.get('/uploads/profile-pictures/:filename', (req, res) => {
     res.sendFile(filePath);
   } else {
     // File not found - try to serve default profile picture
+    // Try PNG first, then SVG
+    const defaultSvgPath = path.join(__dirname, 'uploads', 'profile-pictures', 'default-profile.svg');
+    
     if (fs.existsSync(defaultProfilePath)) {
-      console.log(`⚠️  Profile picture not found: ${filename}, serving default`);
+      console.log(`⚠️  Profile picture not found: ${filename}, serving default PNG`);
+      res.setHeader('Content-Type', 'image/png');
       res.sendFile(defaultProfilePath);
+    } else if (fs.existsSync(defaultSvgPath)) {
+      console.log(`⚠️  Profile picture not found: ${filename}, serving default SVG`);
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.sendFile(defaultSvgPath);
     } else {
       // No default either - return 404 with a helpful message
       console.log(`❌ Profile picture not found: ${filename} (no default available)`);
