@@ -10939,6 +10939,21 @@ This compilation report has been generated automatically based on approved EIU m
   window.initialProjectsData = serverProjects;
   console.log('Server-side projects loaded:', serverProjects ? serverProjects.length : 0);
   
+  // Define API_URL in this scope (same as the main script block)
+  const API_URL = typeof window !== 'undefined' 
+    ? (() => {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3000/api';
+        }
+        if (hostname.includes('build-watch.com')) {
+          return `${protocol}//${hostname}/api`;
+        }
+        return 'http://localhost:3000/api';
+      })()
+    : 'http://localhost:3000/api';
+  
   // Calculate and update Total Budget Monitored (Utilized Budget) from /api/home/stats endpoint
   async function updateTotalBudgetMonitored() {
     try {
@@ -10948,7 +10963,7 @@ This compilation report has been generated automatically based on approved EIU m
         return;
       }
       
-      // Use the global API_URL already defined above
+      // Use the API_URL defined in this scope
       const response = await fetch(`${API_URL}/home/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
