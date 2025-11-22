@@ -85,35 +85,35 @@ sudo nginx -t  # Test configuration
 sudo systemctl reload nginx  # Reload Nginx
 ```
 
-## Caddy Configuration
+## Caddy Configuration (PRIMARY - You're using Caddy)
 
-If using Caddy, update your `Caddyfile`:
+Update your `Caddyfile` (usually at `/etc/caddy/Caddyfile`):
 
-```
+```caddy
 www.build-watch.com {
-    # Frontend
-    handle / {
-        reverse_proxy localhost:4321 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-For {remote}
-            header_up X-Forwarded-Proto {scheme}
-        }
-    }
-
-    # Socket.IO WebSocket
+    # Socket.IO WebSocket proxy - MUST be before /api/ handle
+    # This handles WebSocket upgrades for Socket.IO connections
     handle /socket.io/* {
         reverse_proxy localhost:3000 {
+            # Forward original headers
             header_up Host {host}
             header_up X-Real-IP {remote}
             header_up X-Forwarded-For {remote}
             header_up X-Forwarded-Proto {scheme}
-            header_up Connection "Upgrade"
-            header_up Upgrade "websocket"
+            
+            # CRITICAL: Forward WebSocket upgrade headers
+            # {>Connection} and {>Upgrade} forward the client's headers
+            header_up Connection {>Connection}
+            header_up Upgrade {>Upgrade}
+            
+            # Ensure WebSocket transport is enabled
+            transport http {
+                versions h2c 1.1
+            }
         }
     }
-
-    # Backend API
+    
+    # Backend API - Route /api/* requests to backend on port 3000
     handle /api/* {
         reverse_proxy localhost:3000 {
             header_up Host {host}
@@ -122,8 +122,8 @@ www.build-watch.com {
             header_up X-Forwarded-Proto {scheme}
         }
     }
-
-    # Backend uploads
+    
+    # File uploads - Route /uploads/* requests to backend
     handle /uploads/* {
         reverse_proxy localhost:3000 {
             header_up Host {host}
@@ -132,12 +132,77 @@ www.build-watch.com {
             header_up X-Forwarded-Proto {scheme}
         }
     }
+    
+    # Frontend - Everything else goes to frontend on port 4321
+    reverse_proxy localhost:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+build-watch.com {
+    # Same configuration as www.build-watch.com
+    handle /socket.io/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up Connection {>Connection}
+            header_up Upgrade {>Upgrade}
+            transport http {
+                versions h2c 1.1
+            }
+        }
+    }
+    
+    handle /api/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+    
+    handle /uploads/* {
+        reverse_proxy localhost:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+    
+    reverse_proxy localhost:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
 }
 ```
 
-**Important:** After updating Caddyfile:
+**IMPORTANT:** 
+1. The `/socket.io/*` handle block **MUST** come **BEFORE** the `/api/*` handle block
+2. Use `{>Connection}` and `{>Upgrade}` (with `>` prefix) to forward client headers, not hardcoded values
+3. The `transport http` block with `versions h2c 1.1` ensures HTTP/1.1 support for WebSocket upgrades
+
+**After updating Caddyfile:**
 ```bash
-sudo caddy reload  # Reload Caddy configuration
+# Test Caddy configuration
+sudo caddy validate --config /etc/caddy/Caddyfile
+
+# Reload Caddy (apply changes)
+sudo systemctl reload caddy
+
+# OR if running directly:
+sudo caddy reload --config /etc/caddy/Caddyfile
+
+# Check status
+sudo systemctl status caddy
 ```
 
 ## Testing

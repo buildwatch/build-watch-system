@@ -3,14 +3,24 @@
 
 build-watch.com {
     # Socket.IO WebSocket proxy - MUST be before /api/ handle
+    # This handles WebSocket upgrades for Socket.IO connections
     handle /socket.io/* {
         reverse_proxy localhost:3000 {
+            # Forward original headers
             header_up Host {host}
             header_up X-Real-IP {remote}
             header_up X-Forwarded-For {remote}
             header_up X-Forwarded-Proto {scheme}
+            
+            # CRITICAL: Forward WebSocket upgrade headers
+            # {>Connection} and {>Upgrade} forward the client's headers
             header_up Connection {>Connection}
             header_up Upgrade {>Upgrade}
+            
+            # Ensure WebSocket transport is enabled
+            transport http {
+                versions h2c 1.1
+            }
         }
     }
     
@@ -45,14 +55,24 @@ build-watch.com {
 
 www.build-watch.com {
     # Socket.IO WebSocket proxy - MUST be before /api/ handle
+    # This handles WebSocket upgrades for Socket.IO connections
     handle /socket.io/* {
         reverse_proxy localhost:3000 {
+            # Forward original headers
             header_up Host {host}
             header_up X-Real-IP {remote}
             header_up X-Forwarded-For {remote}
             header_up X-Forwarded-Proto {scheme}
+            
+            # CRITICAL: Forward WebSocket upgrade headers
+            # {>Connection} and {>Upgrade} forward the client's headers
             header_up Connection {>Connection}
             header_up Upgrade {>Upgrade}
+            
+            # Ensure WebSocket transport is enabled
+            transport http {
+                versions h2c 1.1
+            }
         }
     }
     
