@@ -1,0 +1,178 @@
+-- Fix Missing Tables Script
+-- This script creates all missing tables identified in the error logs
+-- Run this on your production database to resolve the errors
+
+USE buildwatch_lgu;
+
+-- ============================================
+-- 1. Create messages table
+-- ============================================
+CREATE TABLE IF NOT EXISTS messages (
+  id CHAR(36) BINARY NOT NULL PRIMARY KEY,
+  senderId CHAR(36) BINARY NOT NULL,
+  recipientId CHAR(36) BINARY NOT NULL,
+  content TEXT NOT NULL,
+  type ENUM('text', 'image', 'video', 'file', 'system') NOT NULL DEFAULT 'text',
+  attachments JSON DEFAULT NULL,
+  isRead BOOLEAN NOT NULL DEFAULT FALSE,
+  readAt DATETIME DEFAULT NULL,
+  deliveredAt DATETIME DEFAULT NULL,
+  metadata JSON DEFAULT NULL,
+  reactions JSON DEFAULT NULL COMMENT 'Stores reactions as { emoji: [userId1, userId2, ...] }',
+  projectId CHAR(36) BINARY DEFAULT NULL COMMENT 'Optional link to a project for project-aware messaging',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (senderId) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (recipientId) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  
+  INDEX idx_messages_sender_recipient (senderId, recipientId),
+  INDEX idx_messages_recipient_read (recipientId, isRead),
+  INDEX idx_messages_created_at (created_at),
+  INDEX idx_messages_project (projectId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 2. Create announcement_versions table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_versions (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  announcement_id INT UNSIGNED NOT NULL,
+  version_number INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  content_html TEXT DEFAULT NULL,
+  priority ENUM('urgent', 'high', 'normal', 'low') NOT NULL,
+  announcement_type ENUM('system_maintenance', 'system_update', 'general', 'project_related', 'policy_related', 'administration', 'project_update') NOT NULL,
+  target_audience VARCHAR(50) NOT NULL,
+  change_description TEXT DEFAULT NULL,
+  changed_by CHAR(36) BINARY NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+  FOREIGN KEY (changed_by) REFERENCES users(id),
+  
+  INDEX idx_announcement_versions_announcement_id (announcement_id),
+  INDEX idx_announcement_versions_changed_by (changed_by)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 3. Create announcement_approvals table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_approvals (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  announcement_id INT UNSIGNED NOT NULL,
+  approval_level INT NOT NULL DEFAULT 1,
+  status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+  approved_by CHAR(36) BINARY DEFAULT NULL,
+  comments TEXT DEFAULT NULL,
+  approved_at DATETIME DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+  FOREIGN KEY (approved_by) REFERENCES users(id),
+  
+  INDEX idx_announcement_approvals_announcement_id (announcement_id),
+  INDEX idx_announcement_approvals_approved_by (approved_by),
+  INDEX idx_announcement_approvals_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 4. Create announcement_categories table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_categories (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT DEFAULT NULL,
+  color VARCHAR(7) DEFAULT '#3B82F6',
+  created_by CHAR(36) BINARY DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 5. Create announcement_tags table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_tags (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  color VARCHAR(7) DEFAULT '#6B7280',
+  created_by CHAR(36) BINARY DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 6. Create announcement_category_mappings table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_category_mappings (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  announcement_id INT UNSIGNED NOT NULL,
+  category_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+  FOREIGN KEY (category_id) REFERENCES announcement_categories(id) ON DELETE CASCADE,
+  
+  UNIQUE KEY unique_announcement_category (announcement_id, category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 7. Create announcement_tag_mappings table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_tag_mappings (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  announcement_id INT UNSIGNED NOT NULL,
+  tag_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES announcement_tags(id) ON DELETE CASCADE,
+  
+  UNIQUE KEY unique_announcement_tag (announcement_id, tag_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 8. Create announcement_notification_preferences table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_notification_preferences (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id CHAR(36) BINARY NOT NULL UNIQUE,
+  email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+  push_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_on_new_announcement BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_on_update BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_on_comment BOOLEAN NOT NULL DEFAULT TRUE,
+  notify_on_reaction BOOLEAN NOT NULL DEFAULT FALSE,
+  priority_filter ENUM('all', 'urgent', 'high', 'urgent_high') NOT NULL DEFAULT 'all',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Verification: Check which tables were created
+-- ============================================
+SELECT 'Tables created successfully!' AS status;
+SELECT TABLE_NAME 
+FROM INFORMATION_SCHEMA.TABLES 
+WHERE TABLE_SCHEMA = 'buildwatch_lgu' 
+AND TABLE_NAME IN (
+  'messages',
+  'announcement_versions',
+  'announcement_approvals',
+  'announcement_categories',
+  'announcement_tags',
+  'announcement_category_mappings',
+  'announcement_tag_mappings',
+  'announcement_notification_preferences'
+)
+ORDER BY TABLE_NAME;
+
