@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS announcement_templates (
 -- ============================================
 -- 10. Create Departments table (case-sensitive: capital D)
 -- ============================================
-CREATE TABLE IF NOT EXISTS Departments (
+CREATE TABLE IF NOT EXISTS `Departments` (
   id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   code VARCHAR(255) NOT NULL UNIQUE,
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS Departments (
 -- ============================================
 -- 11. Create Groups table (case-sensitive: capital G)
 -- ============================================
-CREATE TABLE IF NOT EXISTS Groups (
+CREATE TABLE IF NOT EXISTS `Groups` (
   id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   code VARCHAR(255) NOT NULL UNIQUE,
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS Groups (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  FOREIGN KEY (department_id) REFERENCES Departments(id) ON UPDATE CASCADE ON DELETE SET NULL
+  FOREIGN KEY (department_id) REFERENCES `Departments`(id) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
