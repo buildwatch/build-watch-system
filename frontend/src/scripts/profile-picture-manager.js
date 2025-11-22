@@ -42,6 +42,20 @@ class ProfilePictureManager {
     return false;
   }
 
+  // Get current user ID
+  getCurrentUserId() {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.userId || user.id || user.employeeId || 'SA-001';
+      }
+    } catch (error) {
+      console.log('⚠️ Error getting user ID:', error);
+    }
+    return 'SA-001'; // Default fallback
+  }
+
   async init() {
     console.log('🚀 Initializing System Admin Global Profile Picture Manager...');
     
