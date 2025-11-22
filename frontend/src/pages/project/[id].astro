@@ -134,6 +134,22 @@ try {
     }
   }
   
+  // Fetch milestone submissions to check for approved status
+  try {
+    const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${id}`);
+    if (submissionsResponse.ok) {
+      const submissionsData = await submissionsResponse.json();
+      if (submissionsData.success && submissionsData.submissions && project.milestones) {
+        // Attach submissions to their respective milestones
+        project.milestones.forEach(milestone => {
+          milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+        });
+      }
+    }
+  } catch (submissionError) {
+    console.warn('Could not fetch milestone submissions:', submissionError);
+  }
+  
   // Fetch media data
   if (mediaResponse.ok) {
     const mediaResult = await mediaResponse.json();
@@ -905,8 +921,68 @@ loading = false;
                         const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budget || 0);
                         const dueDate = milestone.dueDate || milestone.targetDate;
                         const description = milestone.description || 'No description provided.';
-                        const status = milestone.status || 'pending';
+                        let status = milestone.status || 'pending';
                         const priority = milestone.priority || 'medium';
+                        
+                        // DEBUGGING: Log milestone data
+                        console.log(`🔍 [${title}] Milestone Debug Info:`, {
+                          id: milestone.id,
+                          originalStatus: milestone.status,
+                          submissions: milestone.submissions,
+                          submissionsCount: milestone.submissions?.length || 0,
+                          timelineStatus: milestone.timelineStatus,
+                          budgetStatus: milestone.budgetStatus,
+                          physicalStatus: milestone.physicalStatus,
+                          dueDate: dueDate
+                        });
+                        
+                        // Check if milestone has approved submission
+                        const hasApprovedSubmission = milestone.submissions?.some(s => 
+                          s.status === 'approved' || s.status === 'iu_approved'
+                        ) || false;
+                        
+                        console.log(`🔍 [${title}] Has approved submission:`, hasApprovedSubmission);
+                        
+                        // If milestone has approved submission OR division statuses are approved, it's completed
+                        const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                                     milestone.budgetStatus === 'approved' || 
+                                                     milestone.physicalStatus === 'approved';
+                        
+                        if ((hasApprovedSubmission || hasApprovedDivisions) && status !== 'completed') {
+                          status = 'completed';
+                          console.log(`✅ [${title}] Status updated to completed (hasApprovedSubmission: ${hasApprovedSubmission}, hasApprovedDivisions: ${hasApprovedDivisions})`);
+                        }
+                        
+                        // Check if milestone is overdue
+                        const isOverdue = dueDate && (() => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const milestoneDate = new Date(dueDate);
+                          milestoneDate.setHours(0, 0, 0, 0);
+                          return milestoneDate < today;
+                        })();
+                        
+                        console.log(`🔍 [${title}] Is overdue:`, isOverdue);
+                        
+                        // Map status for display - check if completed but was delayed
+                        let displayStatus = status;
+                        if (status === 'completed' || status === 'approved' || hasApprovedSubmission || hasApprovedDivisions) {
+                          if (isOverdue || milestone.status === 'delayed') {
+                            displayStatus = 'Delayed (Completed)';
+                          } else {
+                            displayStatus = 'Completed';
+                          }
+                        } else if (status === 'delayed' || isOverdue) {
+                          displayStatus = 'Delayed';
+                        } else if (status === 'in_progress' || status === 'ongoing') {
+                          displayStatus = 'Ongoing';
+                        } else {
+                          displayStatus = 'Pending';
+                        }
+                        
+                        console.log(`🔍 [${title}] Final display status:`, displayStatus);
+                        
+                        status = displayStatus;
                         
                         // Timeline Division data
                         const timelineWeight = parseFloat(milestone.timelineWeight || milestone.timelineDivision?.weight || milestone.timeline?.weight || 33.33);
@@ -929,29 +1005,53 @@ loading = false;
                         
                         // Status badge classes
                         const getStatusBadgeClass = (status) => {
-                          switch (status) {
-                            case 'completed': return 'bg-green-100 text-green-800';
-                            case 'delayed': return 'bg-red-100 text-red-800';
-                            case 'in-progress': return 'bg-yellow-100 text-yellow-800';
-                            case 'pending': return 'bg-yellow-100 text-yellow-800';
-                            default: return 'bg-yellow-100 text-yellow-800';
+                          const statusLower = (status || '').toLowerCase();
+                          
+                          // Check for "Delayed (Completed)" first
+                          if (statusLower.includes('delayed') && statusLower.includes('completed')) {
+                            return 'bg-orange-100 text-orange-800'; // Orange for delayed but completed
+                          }
+                          
+                          switch (statusLower) {
+                            case 'completed':
+                            case 'approved':
+                              return 'bg-green-100 text-green-800';
+                            case 'delayed':
+                              return 'bg-red-100 text-red-800';
+                            case 'in-progress':
+                            case 'ongoing':
+                              return 'bg-blue-100 text-blue-800';
+                            case 'pending':
+                              return 'bg-yellow-100 text-yellow-800';
+                            default:
+                              return 'bg-yellow-100 text-yellow-800';
                           }
                         };
                         
-                        // Update division statuses to delayed if the main milestone is delayed
+                        // Update division statuses based on main milestone status
                         let timelineStatusUpdated = timelineStatus;
                         let budgetStatusUpdated = budgetStatus;
                         let physicalStatusUpdated = physicalStatus;
                         
-                        if (status === 'delayed') {
-                          // If milestone is delayed, mark divisions as delayed too (unless they have specific approval status)
+                        // Check if milestone is completed (including "Delayed (Completed)")
+                        const isCompleted = status === 'Completed' || status === 'completed' || status === 'approved' || 
+                                           status === 'Delayed (Completed)' || hasApprovedSubmission;
+                        const isDelayed = status === 'Delayed' || status === 'delayed' || (isOverdue && !isCompleted);
+                        
+                        if (isDelayed && !isCompleted) {
+                          // If milestone is delayed (but not completed), mark divisions as delayed too (unless they have specific approval status)
                           if (timelineStatus === 'pending') timelineStatusUpdated = 'delayed';
                           if (budgetStatus === 'pending') budgetStatusUpdated = 'delayed';
                           if (physicalStatus === 'pending') physicalStatusUpdated = 'delayed';
+                        } else if (isCompleted) {
+                          // If milestone is completed/approved, mark all divisions as completed too
+                          timelineStatusUpdated = 'completed';
+                          budgetStatusUpdated = 'completed';
+                          physicalStatusUpdated = 'completed';
                         }
                         
                         return (
-                          <div class="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
+                          <div class="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200" data-milestone-id={milestone.id}>
                             {/* Milestone Header */}
                             <div class="flex items-start justify-between mb-4">
                               <div>
@@ -1842,6 +1942,50 @@ loading = false;
 
   // Initialize animations when page loads
   window.addEventListener('load', addSmoothAnimations);
+  
+  // Debug function for milestone status
+  window.debugMilestoneStatus = function() {
+    console.log('🔍 === MILESTONE STATUS DEBUG ===');
+    const milestones = document.querySelectorAll('[data-milestone-id]');
+    console.log(`Found ${milestones.length} milestones in DOM`);
+    
+    milestones.forEach((el, idx) => {
+      const milestoneId = el.getAttribute('data-milestone-id');
+      const title = el.querySelector('h4')?.textContent || 'Unknown';
+      const statusBadge = el.querySelector('.status-badge')?.textContent || 'No badge';
+      
+      console.log(`\n📋 Milestone ${idx + 1}:`, {
+        id: milestoneId,
+        title: title,
+        statusBadge: statusBadge,
+        element: el
+      });
+    });
+    
+    // Try to get milestone data from the page context
+    const projectData = window.projectData || {};
+    if (projectData.milestones) {
+      console.log('\n📊 Milestones from project data:');
+      projectData.milestones.forEach(m => {
+        console.log(`  - ${m.title || m.name}:`, {
+          id: m.id,
+          status: m.status,
+          submissions: m.submissions?.length || 0,
+          hasApproved: m.submissions?.some(s => s.status === 'approved' || s.status === 'iu_approved') || false,
+          timelineStatus: m.timelineStatus,
+          budgetStatus: m.budgetStatus,
+          physicalStatus: m.physicalStatus
+        });
+      });
+    } else {
+      console.log('⚠️ No milestone data found in window.projectData');
+    }
+  };
+  
+  // Make project data available globally for debugging
+  if (typeof project !== 'undefined' && project) {
+    window.projectData = project;
+  }
 
   // Progress bar animation functions
   function getProgressColor(progress) {

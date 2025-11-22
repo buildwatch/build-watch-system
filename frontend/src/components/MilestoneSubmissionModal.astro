@@ -288,7 +288,7 @@ const { submissionId } = Astro.props;
         </div>
 
         <!-- Admin Actions Section -->
-        <div class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-lg border-2 border-yellow-200">
+        <div id="adminActionsSection" class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-lg border-2 border-yellow-200">
           <h3 class="text-xl font-bold text-yellow-800 mb-6 flex items-center gap-3">
             <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,31 +340,13 @@ const { submissionId } = Astro.props;
             </svg>
             <span id="submissionDate">Submitted: --</span>
           </div>
-          <div class="text-xs text-gray-500" id="submissionStatus">
-            Status: Under Review
+          <div class="text-xs font-medium" id="submissionStatus">
+            Status: <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700">Under Review</span>
           </div>
         </div>
         
-        <div class="flex items-center gap-4">
-          <button 
-            onclick="rejectMilestoneSubmissionWithLifecycle()"
-            class="px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-            Reject & Request Revision
-          </button>
-          
-          <button 
-            onclick="submitToMPMECSecretariatWithLifecycle()"
-            class="px-8 py-3 bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:via-emerald-700 hover:to-green-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            Approve & Submit to MPMEC
-          </button>
+        <div class="flex items-center gap-4" id="modalActionButtons">
+          <!-- Buttons will be conditionally shown based on submission status -->
         </div>
       </div>
     </div>

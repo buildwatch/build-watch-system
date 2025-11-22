@@ -1805,6 +1805,24 @@ loading = false;
   </EIULayout>
 </Layout>
 
+<!-- Modern Modal Component for Alerts and Confirmations -->
+<div id="modernModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[9999] overflow-y-auto backdrop-blur-sm">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 transform transition-all">
+      <div class="p-6">
+        <div id="modalIcon" class="flex justify-center mb-4">
+          <!-- Icon will be inserted here -->
+        </div>
+        <h3 id="modalTitle" class="text-2xl font-bold text-gray-800 text-center mb-4"></h3>
+        <p id="modalMessage" class="text-gray-600 text-center mb-6"></p>
+        <div id="modalButtons" class="flex gap-3 justify-center">
+          <!-- Buttons will be inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // API Configuration (client-side)
   // Get API URL dynamically based on environment (same logic as config/api.js)
@@ -2216,6 +2234,47 @@ loading = false;
             dueDate: m.dueDate || m.deadline || m.targetDate || m.completionDate
           })));
           
+          // Fetch existing submissions to check which milestones are under approval or approved
+          try {
+            // Fetch all submissions (pending, approved, etc.)
+            const submissionsRes = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (submissionsRes.ok) {
+              const submissionsData = await submissionsRes.json();
+              if (submissionsData.success && submissionsData.submissions) {
+                console.log('✅ Found existing submissions:', submissionsData.submissions.length);
+                
+                // Process all submissions and attach to milestones
+                submissionsData.submissions.forEach(submission => {
+                  const milestone = projectMilestones.find(m => m.id === submission.milestoneId);
+                  if (milestone) {
+                    // Attach submission to milestone for tooltip progress calculation
+                    if (!milestone.submissions) {
+                      milestone.submissions = [];
+                    }
+                    milestone.submissions.push(submission);
+                    
+                    // If milestone has approved submission, mark as completed
+                    if (submission.status === 'approved' || submission.status === 'iu_approved') {
+                      milestone.status = 'completed';
+                      console.log(`✅ Marked milestone ${milestone.id} (${milestone.title}) as completed (has approved submission)`);
+                    }
+                    // If milestone has pending submission, mark as under_approval
+                    else if (submission.status === 'pending_review' || submission.status === 'under_approval') {
+                      milestone.status = 'under_approval';
+                      console.log(`✅ Marked milestone ${milestone.id} (${milestone.title}) as under_approval`);
+                    }
+                  }
+                });
+              }
+            }
+          } catch (submissionError) {
+            console.warn('⚠️ Could not fetch existing submissions:', submissionError);
+            // Continue without submission data - not critical
+          }
+          
           // Update the project UI again now that we have milestone data
           updateSelectedProjectUI();
           
@@ -2324,19 +2383,10 @@ loading = false;
       
       // Categorize milestones based on new status system and project workflow
       const pendingMilestones = projectMilestones.filter(milestone => {
-        const dueDate = new Date(milestone.dueDate);
-        dueDate.setHours(0, 0, 0, 0);
-        const isOverdue = dueDate < today;
-        
-        // Check if milestone is overdue and should be marked as delayed
-        if (isOverdue && milestone.status !== 'completed' && milestone.status !== 'under_approval' && milestone.status !== 'revision_request') {
-          // Auto-update milestone status to delayed if overdue
-          updateMilestoneStatus(milestone.id, 'delayed');
-          milestone.status = 'delayed';
-        }
-        
-        // Check if milestone has been submitted for approval
+        // Check if milestone has been submitted for approval FIRST (before checking overdue)
+        // Also check for pending_review status from submissions
         const hasBeenSubmitted = milestone.status === 'under_approval' || 
+                                milestone.status === 'pending_review' ||
                                 milestone.timelineStatus === 'approved' || 
                                 milestone.timelineStatus === 'rejected' || 
                                 milestone.budgetStatus === 'approved' || 
@@ -2344,17 +2394,36 @@ loading = false;
                                 milestone.physicalStatus === 'approved' || 
                                 milestone.physicalStatus === 'rejected';
         
+        // Exclude submitted milestones from pending
+        if (hasBeenSubmitted) {
+          console.log(`Milestone ${milestone.id} - EXCLUDED from pending (has been submitted)`);
+          return false;
+        }
+        
+        // Check if milestone is overdue and should be marked as delayed
+        const dueDate = new Date(milestone.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        const isOverdue = dueDate < today;
+        
+        // Only auto-mark as delayed if not already completed, under_approval, or revision_request
+        // AND if it's currently pending/not_started (not already delayed)
+        if (isOverdue && 
+            milestone.status !== 'completed' && 
+            milestone.status !== 'under_approval' && 
+            milestone.status !== 'revision_request' &&
+            milestone.status !== 'delayed') {
+          // Auto-update milestone status to delayed if overdue
+          updateMilestoneStatus(milestone.id, 'delayed');
+          milestone.status = 'delayed';
+          // Don't include in pending if we just marked it as delayed
+          return false;
+        }
+        
         // Use selectedProject since milestones belong to the currently selected project
         const project = selectedProject || projects.find(p => p.id === milestone.projectId);
         console.log(`Milestone ${milestone.id} (${milestone.title}) - Project:`, project);
         console.log(`Milestone ${milestone.id} - Project workflow status:`, project?.workflowStatus);
         console.log(`Milestone ${milestone.id} - Has been submitted:`, hasBeenSubmitted);
-        
-        // Only exclude from pending if milestone has actually been submitted
-        if (hasBeenSubmitted) {
-          console.log(`Milestone ${milestone.id} - EXCLUDED from pending (has been submitted)`);
-          return false;
-        }
         
         const isPending = milestone.status === 'pending' || milestone.status === 'not_started';
         console.log(`Milestone ${milestone.id} - Status: ${milestone.status}, IsPending: ${isPending}`);
@@ -2363,7 +2432,9 @@ loading = false;
 
       const underApprovalMilestones = projectMilestones.filter(milestone => {
         // Check if milestone has been submitted for approval
+        // Also check for pending_review status from submissions
         const hasBeenSubmitted = milestone.status === 'under_approval' || 
+                                milestone.status === 'pending_review' ||
                                 milestone.timelineStatus === 'approved' || 
                                 milestone.timelineStatus === 'rejected' || 
                                 milestone.budgetStatus === 'approved' || 
@@ -2386,9 +2457,13 @@ loading = false;
         return hasBeenSubmitted && !needsResubmission;
       });
 
-      const delayedMilestones = projectMilestones.filter(milestone => 
-        milestone.status === 'delayed'
-      );
+      const delayedMilestones = projectMilestones.filter(milestone => {
+        // Only show delayed milestones that haven't been submitted
+        // Exclude milestones that are under_approval or pending_review
+        return milestone.status === 'delayed' && 
+               milestone.status !== 'under_approval' && 
+               milestone.status !== 'pending_review';
+      });
 
       const revisionRequestMilestones = projectMilestones.filter(milestone => {
         const needsResubmission = milestone.status === 'revision_request' || 
@@ -2772,7 +2847,7 @@ loading = false;
                               />
                               <div class="flex justify-between items-center mt-2">
                                 <span class="text-xs text-green-600 font-medium">Required: Enter the actual amount spent for this milestone</span>
-                                <span class="text-xs text-gray-500">Max: ₱999,999,999,999.99</span>
+                                <span class="text-xs text-gray-500" id="milestone-${milestone.id}-budget-max-info">Max: ₱999,999,999,999.99</span>
                               </div>
                               <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-budget-amount-error">Error: Used Budget Amount is required</div>
                             </div>
@@ -3284,6 +3359,16 @@ loading = false;
           const timeDiff = today.getTime() - dueDate.getTime();
           const daysOverdue = Math.ceil(timeDiff / (1000 * 3600 * 24));
           
+          // Check if milestone has been submitted (check both status and if it was originally delayed but now under approval)
+          const hasBeenSubmitted = milestone.status === 'under_approval' || 
+                                 milestone.status === 'pending_review' ||
+                                 milestone.timelineStatus === 'approved' || 
+                                 milestone.timelineStatus === 'rejected' ||
+                                 milestone.budgetStatus === 'approved' || 
+                                 milestone.budgetStatus === 'rejected' ||
+                                 milestone.physicalStatus === 'approved' || 
+                                 milestone.physicalStatus === 'rejected';
+          
           return `
             <!-- Individual Delayed Milestone Collapsible Card -->
             <div class="bg-white border border-red-200 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:border-red-300 hover:-translate-y-1 mb-4 overflow-hidden">
@@ -3324,6 +3409,26 @@ loading = false;
               
               <div id="milestone-${milestone.id}-content" class="section-content">
                 <div class="p-6 space-y-6">
+                  ${hasBeenSubmitted ? `
+                    <!-- Locked Milestone Form (Under Approval) -->
+                    <div class="bg-amber-100 border border-amber-200 rounded-lg p-6">
+                      <div class="flex items-center gap-4 mb-4">
+                        <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+                          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          </svg>
+                        </div>
+                        <div>
+                          <h5 class="text-lg font-bold text-amber-800 mb-1">Under Approval</h5>
+                          <p class="text-sm text-amber-700">This milestone submission is currently under review by the Implementing Office Admin. You cannot edit or resubmit until a decision is made.</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-lg border border-amber-200">
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 text-sm rounded-full font-medium">Status: Under Approval</span>
+                        <span class="text-xs text-amber-600">Awaiting review from LGU-IU</span>
+                      </div>
+                    </div>
+                  ` : `
                   <!-- Delayed Milestone Warning -->
                   <div class="bg-red-100 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center gap-3">
@@ -3614,7 +3719,7 @@ loading = false;
                               />
                               <div class="flex justify-between items-center mt-2">
                                 <span class="text-xs text-green-600 font-medium">Required: Enter the actual amount spent for this milestone</span>
-                                <span class="text-xs text-gray-500">Max: ₱999,999,999,999.99</span>
+                                <span class="text-xs text-gray-500" id="milestone-${milestone.id}-budget-max-info">Max: ₱999,999,999,999.99</span>
                               </div>
                               <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-budget-amount-error">Error: Used Budget Amount is required</div>
                             </div>
@@ -3999,6 +4104,7 @@ loading = false;
                       </div>
                     </div>
                   </div>
+                  `}
                 </div>
               </div>
             </div>
@@ -6389,10 +6495,68 @@ loading = false;
     tooltip.style.backdropFilter = 'blur(10px)';
     tooltip.style.background = 'rgba(255, 255, 255, 0.95)';
     
-    // Calculate division progress
-    const timelineProgress = milestone.timelineProgress || 0;
-    const budgetProgress = milestone.budgetProgress || 0;
-    const physicalProgress = milestone.physicalProgress || 0;
+    // Calculate milestone's actual progress percentage (not contribution to project)
+    let timelineProgress = milestone.timelineProgress || 0;
+    let budgetProgress = milestone.budgetProgress || 0;
+    let physicalProgress = milestone.physicalProgress || 0;
+    
+    // Try to get progress from approved milestone submission
+    if (milestone.submissions && Array.isArray(milestone.submissions)) {
+      const approvedSubmission = milestone.submissions.find(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      );
+      
+      if (approvedSubmission) {
+        // First, try to use actual progress values from submission if available
+        if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
+          timelineProgress = parseFloat(approvedSubmission.timelineProgress);
+        }
+        if (approvedSubmission.budgetProgress !== undefined && approvedSubmission.budgetProgress !== null) {
+          budgetProgress = parseFloat(approvedSubmission.budgetProgress);
+        }
+        if (approvedSubmission.physicalProgress !== undefined && approvedSubmission.physicalProgress !== null) {
+          physicalProgress = parseFloat(approvedSubmission.physicalProgress);
+        }
+        
+        // If progress values are still 0, milestone is completed so show 100%
+        if (timelineProgress === 0 && budgetProgress === 0 && physicalProgress === 0) {
+          timelineProgress = 100;
+          budgetProgress = 100;
+          physicalProgress = 100;
+        }
+        
+        console.log(`✅ Using progress from approved submission for milestone "${milestone.title}":`, {
+          timeline: timelineProgress,
+          budget: budgetProgress,
+          physical: physicalProgress
+        });
+      }
+    }
+    
+    // If still 0, check milestone division statuses
+    if (timelineProgress === 0 && budgetProgress === 0 && physicalProgress === 0) {
+      // If milestone is completed/approved, show 100% for each division
+      if (milestone.status === 'completed' || milestone.status === 'approved' ||
+          milestone.timelineStatus === 'approved' || milestone.budgetStatus === 'approved' || 
+          milestone.physicalStatus === 'approved') {
+        timelineProgress = 100;
+        budgetProgress = 100;
+        physicalProgress = 100;
+        
+        console.log(`✅ Milestone "${milestone.title}" is completed/approved, showing 100% for all divisions`);
+      } else {
+        // Check individual division statuses
+        if (milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'completed') {
+          timelineProgress = 100;
+        }
+        if (milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'completed') {
+          budgetProgress = 100;
+        }
+        if (milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'completed') {
+          physicalProgress = 100;
+        }
+      }
+    }
     
     // Determine delay reason if delayed
     let delayReason = '';
@@ -6484,7 +6648,7 @@ loading = false;
       <div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <span style="color: #374151; font-weight: 600; font-size: 12px;">📊 Overall Progress:</span>
-          <span style="color: #10b981; font-weight: 700; font-size: 14px;">${overallProgress.toFixed(1)}%</span>
+          <span style="color: #10b981; font-weight: 700; font-size: 14px;">${((timelineProgress + budgetProgress + physicalProgress) / 3).toFixed(1)}%</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
           <span style="color: #6b7280; font-size: 11px;">⏱️ Timeline:</span>
@@ -6810,7 +6974,10 @@ loading = false;
   async function updateMilestoneStatus(milestoneId, newStatus) {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.warn('No token available for milestone status update');
+        return;
+      }
 
       const response = await fetch(`${API_URL}/milestones/${milestoneId}/status`, {
         method: 'PUT',
@@ -6820,6 +6987,12 @@ loading = false;
         },
         body: JSON.stringify({ status: newStatus })
       });
+      
+      // Handle 404 gracefully - endpoint might not exist, but local status update is fine
+      if (response.status === 404) {
+        console.warn(`Milestone status update endpoint not found for milestone ${milestoneId}. Status updated locally only.`);
+        return;
+      }
 
       if (response.ok) {
         console.log(`Milestone ${milestoneId} status updated to ${newStatus}`);
@@ -8393,31 +8566,65 @@ loading = false;
       value = parts[0] + '.' + parts[1].substring(0, 2);
     }
     
+    // Get planned budget from the milestone form
+    const milestoneId = input.id.replace('milestone-', '').replace('-budget-amount', '');
+    const plannedBudgetEl = document.getElementById(`form-budget-planned-${milestoneId}`);
+    let plannedBudget = 0;
+    
+    if (plannedBudgetEl) {
+      // Extract numeric value from formatted text (e.g., "₱644,781.45" -> 644781.45)
+      const plannedBudgetText = plannedBudgetEl.textContent.replace(/[^\d.]/g, '');
+      plannedBudget = parseFloat(plannedBudgetText) || 0;
+    }
+    
     // Check maximum limit (₱999,999,999,999.00)
     const numericValue = parseFloat(value.replace(/,/g, ''));
     const maxLimit = 999999999999.99; // Maximum allowed value
     
-    if (numericValue > maxLimit) {
-      // If exceeds limit, set to maximum allowed value
+    // Check if value exceeds planned budget
+    if (plannedBudget > 0 && numericValue > plannedBudget) {
+      // If exceeds planned budget, set to planned budget value
+      value = plannedBudget.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      // Show warning notification
+      showNotification('warning', 'Budget Limit Exceeded', `Used budget cannot exceed planned budget of ₱${plannedBudget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+    } else if (numericValue > maxLimit) {
+      // If exceeds global limit, set to maximum allowed value
       value = '999,999,999,999.99';
       // Show warning notification
       showNotification('warning', 'Amount Limit Reached', 'Maximum allowed amount is ₱999,999,999,999.99');
     }
     
     // Add thousand separators
-    if (parts[0]) {
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      value = parts.join('.');
+    const finalParts = value.split('.');
+    if (finalParts[0]) {
+      finalParts[0] = finalParts[0].replace(/,/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      value = finalParts.join('.');
     }
     
     input.value = value;
+    
+    // Trigger validation after formatting
+    if (milestoneId) {
+      validateBudgetAmount(milestoneId);
+    }
   };
 
-  // Handle budget input keydown to prevent exceeding maximum limit
+  // Handle budget input keydown to prevent exceeding maximum limit and planned budget
   window.handleBudgetKeydown = function(event) {
     const input = event.target;
     const currentValue = input.value.replace(/[^\d.]/g, ''); // Remove formatting
     const maxLimit = 999999999999.99;
+    
+    // Get planned budget from the milestone form
+    const milestoneId = input.id.replace('milestone-', '').replace('-budget-amount', '');
+    const plannedBudgetEl = document.getElementById(`form-budget-planned-${milestoneId}`);
+    let plannedBudget = 0;
+    
+    if (plannedBudgetEl) {
+      // Extract numeric value from formatted text (e.g., "₱644,781.45" -> 644781.45)
+      const plannedBudgetText = plannedBudgetEl.textContent.replace(/[^\d.]/g, '');
+      plannedBudget = parseFloat(plannedBudgetText) || 0;
+    }
     
     // Allow backspace, delete, tab, escape, enter, and arrow keys
     if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(event.keyCode) !== -1 ||
@@ -8437,10 +8644,17 @@ loading = false;
       return;
     }
     
-    // Check if adding this character would exceed the limit
+    // Check if adding this character would exceed the planned budget
     const testValue = currentValue + event.key;
     const numericTestValue = parseFloat(testValue);
     
+    if (plannedBudget > 0 && numericTestValue > plannedBudget) {
+      event.preventDefault();
+      showNotification('warning', 'Budget Limit', `Cannot exceed planned budget of ₱${plannedBudget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+      return;
+    }
+    
+    // Check if adding this character would exceed the global limit
     if (numericTestValue > maxLimit) {
       event.preventDefault();
       showNotification('warning', 'Amount Limit', 'Cannot exceed ₱999,999,999,999.99');
@@ -8524,12 +8738,36 @@ loading = false;
     
     if (input && errorDiv) {
       const value = input.value.replace(/[^\d.]/g, '');
-      if (!value || parseFloat(value) <= 0) {
+      const numericValue = parseFloat(value) || 0;
+      
+      // Get planned budget
+      const plannedBudgetEl = document.getElementById(`form-budget-planned-${milestoneId}`);
+      let plannedBudget = 0;
+      
+      if (plannedBudgetEl) {
+        // Extract numeric value from formatted text (e.g., "₱644,781.45" -> 644781.45)
+        const plannedBudgetText = plannedBudgetEl.textContent.replace(/[^\d.]/g, '');
+        plannedBudget = parseFloat(plannedBudgetText) || 0;
+      }
+      
+      // Check if value is empty or zero
+      if (!value || numericValue <= 0) {
         input.classList.add('border-red-500', 'bg-red-50');
         input.classList.remove('border-green-500', 'bg-green-50');
+        errorDiv.textContent = 'Error: Used Budget Amount is required';
         errorDiv.classList.remove('hidden');
         return false;
-      } else {
+      }
+      // Check if value exceeds planned budget
+      else if (plannedBudget > 0 && numericValue > plannedBudget) {
+        input.classList.add('border-red-500', 'bg-red-50');
+        input.classList.remove('border-green-500', 'bg-green-50');
+        errorDiv.textContent = `Error: Used budget cannot exceed planned budget of ₱${plannedBudget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        errorDiv.classList.remove('hidden');
+        return false;
+      }
+      // Valid value
+      else {
         input.classList.add('border-green-500', 'bg-green-50');
         input.classList.remove('border-red-500', 'bg-red-50');
         errorDiv.classList.add('hidden');
@@ -9435,18 +9673,39 @@ window.restoreVideosFromStorage = function(milestoneId) {
   window.submitMilestoneToAdminOffice = async function(milestoneId) {
     console.log('🚀 Submitting milestone to Admin Office:', milestoneId);
     
+    const submitButton = document.getElementById(`milestone-${milestoneId}-submit-btn`);
+    const milestone = projectMilestones.find(m => m.id === milestoneId);
+    const originalButtonText = milestone && milestone.status === 'delayed'
+      ? 'Submit Delayed Milestone (Late Submission)'
+      : 'Submit This Milestone to Admin Office for Review';
+    
     try {
       window.updateFormValidation(milestoneId);
       
-      const submitButton = document.getElementById(`milestone-${milestoneId}-submit-btn`);
       if (submitButton && submitButton.disabled) {
         showNotification('error', 'Validation Error', 'Please complete all required fields before submitting.');
         return;
       }
 
-      // Confirm submission
-      const confirmSubmit = confirm('Are you sure you want to submit this milestone for review? Once submitted, it cannot be edited until reviewed by the Implementing Office Admin.');
+      // Confirm submission with modern modal
+      const confirmSubmit = await window.modernConfirm(
+        'Are you sure you want to submit this milestone for review? Once submitted, it cannot be edited until reviewed by the Implementing Office Admin.',
+        'Confirm Submission'
+      );
       if (!confirmSubmit) return;
+
+      // Show loading state on submit button
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Submitting...
+        `;
+        submitButton.classList.add('opacity-75', 'cursor-not-allowed');
+      }
 
       // Collect all milestone data
       console.log('📋 About to call collectMilestoneSubmissionData for milestone:', milestoneId);
@@ -9455,6 +9714,12 @@ window.restoreVideosFromStorage = function(milestoneId) {
       if (!milestoneData) {
         console.error('❌ collectMilestoneSubmissionData returned null/undefined');
         showNotification('error', 'Data Collection Error', 'Failed to collect milestone data. Please try again.');
+        // Reset button state
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+          submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
         return;
       }
 
@@ -9463,6 +9728,12 @@ window.restoreVideosFromStorage = function(milestoneId) {
       if (!token) {
         showNotification('error', 'Authentication Error', 'Please log in again.');
         window.location.href = '/login/lgu-pmt';
+        // Reset button state
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+          submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
         return;
       }
 
@@ -9494,9 +9765,15 @@ window.restoreVideosFromStorage = function(milestoneId) {
       if (result.success) {
         showNotification('success', 'Submission Complete', 'Milestone submitted successfully! It will be reviewed by the Implementing Office Admin.');
         
+        // Update milestone status locally to 'under_approval'
+        const milestone = projectMilestones.find(m => m.id === milestoneId);
+        if (milestone) {
+          milestone.status = 'under_approval';
+          console.log('✅ Updated milestone status to under_approval:', milestoneId);
+        }
+        
         // Create notification for LGU-IU IOO about the new milestone submission
         try {
-          const milestone = projectMilestones.find(m => m.id === milestoneId);
           await createLGUNotification({
             projectId: selectedProject?.id,
             projectName: selectedProject?.projectName || 'Unknown Project',
@@ -9531,25 +9808,54 @@ window.restoreVideosFromStorage = function(milestoneId) {
           milestoneCard.classList.add('opacity-75', 'pointer-events-none');
           const statusBadge = milestoneCard.querySelector('.status-badge');
           if (statusBadge) {
-            statusBadge.textContent = 'Under Review';
-            statusBadge.className = 'status-badge px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium';
+            statusBadge.textContent = 'Under Approval';
+            statusBadge.className = 'status-badge px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium';
           }
         }
 
-        // Disable submit button
+        // Update submit button with "Under Approval" badge
         if (submitButton) {
           submitButton.disabled = true;
-          submitButton.textContent = 'Submitted for Review';
+          submitButton.innerHTML = `
+            <span class="px-3 py-1 bg-amber-100 text-amber-700 text-sm rounded-full font-medium mr-2">Under Approval</span>
+            Submitted for Review
+          `;
           submitButton.classList.add('opacity-50', 'cursor-not-allowed');
         }
 
+        // Close the milestone card form (collapse it)
+        const milestoneContent = document.getElementById(`milestone-${milestoneId}-content`);
+        const milestoneIcon = document.getElementById(`milestone-${milestoneId}-icon`);
+        if (milestoneContent && milestoneIcon) {
+          milestoneContent.classList.remove('expanded');
+          milestoneIcon.classList.remove('expanded');
+          milestoneIcon.style.transform = 'rotate(0deg)';
+          console.log(`🔼 Closed milestone form: milestone-${milestoneId}`);
+        }
+        
+        // Re-render milestones to move it to "Under Approval" section
+        displayMilestones();
+
       } else {
         showNotification('error', 'Submission Failed', result.error || 'Failed to submit milestone. Please try again.');
+        // Reset button state on error
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+          submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
       }
 
     } catch (error) {
       console.error('Error submitting milestone:', error);
       showNotification('error', 'Network Error', 'Network error occurred. Please check your connection and try again.');
+      // Reset button state on error
+      const errorSubmitButton = document.getElementById(`milestone-${milestoneId}-submit-btn`);
+      if (errorSubmitButton) {
+        errorSubmitButton.disabled = false;
+        errorSubmitButton.innerHTML = originalButtonText;
+        errorSubmitButton.classList.remove('opacity-75', 'cursor-not-allowed');
+      }
     }
   };
 
@@ -10083,6 +10389,12 @@ window.restoreVideosFromStorage = function(milestoneId) {
         formatted: budgetPlanned.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
       });
       budgetPlannedEl.textContent = '₱' + budgetPlanned.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      
+      // Update the max info text to show planned budget limit
+      const maxInfoEl = document.getElementById(`milestone-${milestone.id}-budget-max-info`);
+      if (maxInfoEl && budgetPlanned > 0) {
+        maxInfoEl.textContent = `Max: ₱${budgetPlanned.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      }
     }
     if (budgetFundingSourceEl) {
       let fundingSource = 'LOCAL FUND'; // Default value
@@ -10874,6 +11186,122 @@ window.restoreVideosFromStorage = function(milestoneId) {
 
   // Export function globally
   window.animateDashboardProgressBars = animateDashboardProgressBars;
+
+  // Modern Modal Functions (replacement for alert/confirm)
+  function showModernModal(title, message, type = 'info', options = {}) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('modernModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMessage = document.getElementById('modalMessage');
+      const modalIcon = document.getElementById('modalIcon');
+      const modalButtons = document.getElementById('modalButtons');
+      
+      if (!modal || !modalTitle || !modalMessage || !modalIcon || !modalButtons) {
+        // Fallback to native alert if modal elements not found
+        if (options.confirm) {
+          resolve(confirm(message));
+        } else {
+          alert(message);
+          resolve(true);
+        }
+        return;
+      }
+      
+      // Set title and message
+      modalTitle.textContent = title || (options.confirm ? 'Confirm Action' : 'Notification');
+      modalMessage.textContent = message;
+      
+      // Set icon based on type
+      let iconSvg = '';
+      let iconColor = 'text-blue-500';
+      
+      if (type === 'success') {
+        iconColor = 'text-green-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      } else if (type === 'error' || type === 'danger') {
+        iconColor = 'text-red-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      } else if (type === 'warning') {
+        iconColor = 'text-amber-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>`;
+      } else {
+        iconColor = 'text-blue-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      }
+      
+      modalIcon.innerHTML = iconSvg;
+      
+      // Set buttons
+      if (options.confirm) {
+        modalButtons.innerHTML = `
+          <button id="modalCancelBtn" class="px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-200">
+            ${options.cancelText || 'Cancel'}
+          </button>
+          <button id="modalConfirmBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg">
+            ${options.confirmText || 'OK'}
+          </button>
+        `;
+        
+        document.getElementById('modalCancelBtn').onclick = () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          resolve(false);
+        };
+        
+        document.getElementById('modalConfirmBtn').onclick = () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          resolve(true);
+        };
+      } else {
+        modalButtons.innerHTML = `
+          <button id="modalOkBtn" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg">
+            ${options.okText || 'OK'}
+          </button>
+        `;
+        
+        document.getElementById('modalOkBtn').onclick = () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          resolve(true);
+        };
+      }
+      
+      // Show modal
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      
+      // Close on backdrop click
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          if (options.confirm) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        }
+      };
+    });
+  }
+  
+  // Replace window.alert and window.confirm
+  window.modernAlert = (message, type = 'info') => {
+    return showModernModal('Notification', message, type);
+  };
+  
+  window.modernConfirm = (message, title = 'Confirm Action') => {
+    return showModernModal(title, message, 'warning', { confirm: true });
+  };
 
 </script>
 

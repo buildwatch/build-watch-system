@@ -2155,9 +2155,31 @@ loading = false;
   <ProjectDetailsModal userTheme="iu-implementing-office" />
 </Layout>
 
+<!-- Modern Modal Component for Alerts and Confirmations -->
+<div id="modernModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[9999] overflow-y-auto backdrop-blur-sm">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 transform transition-all">
+      <div class="p-6">
+        <div id="modalIcon" class="flex justify-center mb-4">
+          <!-- Icon will be inserted here -->
+        </div>
+        <h3 id="modalTitle" class="text-2xl font-bold text-gray-800 text-center mb-4"></h3>
+        <p id="modalMessage" class="text-gray-600 text-center mb-6"></p>
+        <div id="modalButtons" class="flex gap-3 justify-center">
+          <!-- Buttons will be inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // Make API_URL available to client-side JavaScript
-  const API_URL = 'http://localhost:3000/api';
+  const API_URL = typeof window !== 'undefined' 
+    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : `${window.location.protocol}//${window.location.hostname}/api`)
+    : 'http://localhost:3000/api';
   let selectedProject = null;
   let projectUpdates = [];
   let projects = [];
@@ -2864,18 +2886,19 @@ loading = false;
     
     // selectedProjectInfo section removed - info now shown in Project Management Dashboard
     
+    // Show sections if they exist (optional elements)
     if (milestonesSection) {
       milestonesSection.style.display = 'block';
       console.log('Milestones section shown');
     } else {
-      console.error('milestonesSection element not found');
+      console.warn('milestonesSection element not found (optional element)');
     }
     
     if (updatesHistory) {
       updatesHistory.style.display = 'block';
       console.log('Updates history section shown');
     } else {
-      console.error('updatesHistory element not found');
+      console.warn('updatesHistory element not found (optional element)');
     }
     
     // Project info now updated in Project Management Dashboard section
@@ -2975,6 +2998,31 @@ loading = false;
         console.log('Separate milestones API response:', data);
         if (data.success && data.milestones && data.milestones.length > 0) {
           console.log('Milestones fetched separately:', data.milestones);
+          
+          // Fetch milestone submissions and attach to milestones
+          try {
+            const submissionsResponse = await fetch(`http://localhost:3000/api/milestones/milestone-submissions?projectId=${projectId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (submissionsResponse.ok) {
+              const submissionsData = await submissionsResponse.json();
+              if (submissionsData.success && submissionsData.submissions) {
+                console.log(`✅ Found ${submissionsData.submissions.length} milestone submissions`);
+                
+                // Attach submissions to their milestones
+                data.milestones.forEach(milestone => {
+                  milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+                  if (milestone.submissions.length > 0) {
+                    console.log(`✅ Attached ${milestone.submissions.length} submissions to milestone "${milestone.title}"`);
+                  }
+                });
+              }
+            }
+          } catch (submissionError) {
+            console.warn('⚠️ Could not fetch milestone submissions:', submissionError);
+          }
+          
           displayMilestones(data.milestones, progressData);
           
           // Load horizontal timeline after milestones are fetched
@@ -3387,7 +3435,7 @@ loading = false;
     console.log('Displaying updates:', updates);
     const updatesContainer = document.getElementById('updatesContainer');
     if (!updatesContainer) {
-      console.error('Updates container not found!');
+      // Silently return if container doesn't exist (might not be rendered in current view)
       return;
     }
 
@@ -4269,15 +4317,15 @@ This compilation report has been generated automatically based on approved EIU m
   
   // Render timeline for a project
   async function renderProjectTimeline(project, milestones) {
-    const timelineSection = document.getElementById('horizontalTimelineSection');
-    const timelineContainer = document.getElementById('projectTimelineContainer');
+    const timelineSection = document.getElementById('timelineSection');
+    const timelineContainer = document.getElementById('modernTimelineContainer');
     const startDateSpan = document.getElementById('timelineStartDate');
     const targetDateSpan = document.getElementById('timelineTargetDate');
     const actualDateSpan = document.getElementById('timelineActualDate');
     const expectedDaysSpan = document.getElementById('timelineExpectedDays');
     
     if (!timelineSection || !timelineContainer || !startDateSpan || !targetDateSpan || !actualDateSpan || !expectedDaysSpan) {
-      console.error('Timeline elements not found');
+      // Silently return if elements don't exist (they might not be rendered yet)
       return;
     }
     
@@ -5462,30 +5510,42 @@ This compilation report has been generated automatically based on approved EIU m
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <button onclick="deleteSubmission('${submission.id}')" class="px-4 py-2.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-2 border-gray-200 rounded-xl hover:from-gray-100 hover:to-gray-200 hover:border-gray-300 transition-all duration-300 font-semibold shadow-sm hover:shadow-md">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                  </svg>
-                  Delete
-                </span>
-              </button>
-              <button onclick="rejectSubmission('${submission.id}')" class="px-5 py-2.5 bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border-2 border-red-200 rounded-xl hover:from-red-100 hover:to-rose-100 hover:border-red-300 transition-all duration-300 font-semibold shadow-sm hover:shadow-md">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                  Reject
-                </span>
-              </button>
-              <button onclick="openMilestoneSubmissionModal('${submission.id}')" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Review & Approve
-                </span>
-              </button>
+              ${submission.status === 'approved' ? `
+                <button onclick="openMilestoneSubmissionModal('${submission.id}')" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Review
+                  </span>
+                </button>
+              ` : `
+                <button onclick="deleteSubmission('${submission.id}')" class="px-4 py-2.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-2 border-gray-200 rounded-xl hover:from-gray-100 hover:to-gray-200 hover:border-gray-300 transition-all duration-300 font-semibold shadow-sm hover:shadow-md">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Delete
+                  </span>
+                </button>
+                <button onclick="rejectSubmission('${submission.id}')" class="px-5 py-2.5 bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border-2 border-red-200 rounded-xl hover:from-red-100 hover:to-rose-100 hover:border-red-300 transition-all duration-300 font-semibold shadow-sm hover:shadow-md">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Reject
+                  </span>
+                </button>
+                <button onclick="openMilestoneSubmissionModal('${submission.id}')" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Review & Approve
+                  </span>
+                </button>
+              `}
             </div>
           </div>
         </div>
@@ -5816,7 +5876,7 @@ This compilation report has been generated automatically based on approved EIU m
     } catch (error) {
       console.error('❌ Error opening submission modal:', error);
       console.error('❌ Error stack:', error.stack);
-      alert(`Failed to load submission details: ${error.message}`);
+      await window.modernAlert(`Failed to load submission details: ${error.message}`, 'error');
     }
   }
 
@@ -6576,15 +6636,84 @@ This compilation report has been generated automatically based on approved EIU m
       const delayReasonInfo = document.getElementById('delayReasonInfo');
       if (delayReasonSection && delayReasonInfo) {
         // Check if submission has delay reason or is marked as delayed
-        const submissionData = submission.submissionData || {};
-        const isDelayed = submission.isDelayed || submissionData.isDelayed || submission.status === 'delayed';
-        const delayReason = submission.delayReason || submissionData.delayReason;
+        // Parse submissionData if it's a JSON string
+        let submissionData = {};
+        if (submission.submissionData) {
+          if (typeof submission.submissionData === 'string') {
+            try {
+              submissionData = JSON.parse(submission.submissionData);
+            } catch (e) {
+              console.warn('Failed to parse submissionData:', e);
+              submissionData = {};
+            }
+          } else {
+            submissionData = submission.submissionData;
+          }
+        }
+        
+        const isDelayed = submission.isDelayed || submissionData.isDelayed || submission.status === 'delayed' || submission.status === 'pending_review';
+        // Try multiple sources for delay reason - check all possible locations
+        let delayReason = submission.delayReason || 
+                         submissionData.delayReason || 
+                         submissionData.reasonOfDelayed ||
+                         submission.reasonOfDelayed ||
+                         (submissionData.divisions && submissionData.divisions.delayReason);
+        
+        // If still not found, check nested structures
+        if (!delayReason && submissionData) {
+          // Check if delayReason is nested in other structures
+          if (submissionData.additionalInfo && submissionData.additionalInfo.delayReason) {
+            delayReason = submissionData.additionalInfo.delayReason;
+          }
+          // Check raw submissionData string if it's still a string
+          if (!delayReason && typeof submissionData === 'string') {
+            try {
+              const parsed = JSON.parse(submissionData);
+              delayReason = parsed.delayReason || parsed.reasonOfDelayed;
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+        }
+        
+        // Also check the submission object directly for nested data
+        if (!delayReason && submission.data) {
+          if (typeof submission.data === 'string') {
+            try {
+              const parsed = JSON.parse(submission.data);
+              delayReason = parsed.delayReason || parsed.reasonOfDelayed;
+            } catch (e) {
+              // Ignore parse errors
+            }
+          } else {
+            delayReason = submission.data.delayReason || submission.data.reasonOfDelayed;
+          }
+        }
+        
+        console.log('🔍 Delay reason check:', {
+          isDelayed,
+          delayReason,
+          submissionStatus: submission.status,
+          submissionDataKeys: Object.keys(submissionData),
+          submissionKeys: Object.keys(submission),
+          submissionData: submissionData,
+          submissionDelayReason: submission.delayReason,
+          submissionDataDelayReason: submissionData.delayReason
+        });
         
         if (isDelayed && delayReason) {
           delayReasonSection.classList.remove('hidden');
           delayReasonInfo.innerHTML = `
             <div class="bg-white/60 p-4 rounded-xl border border-red-200">
-              <p class="text-sm text-red-800 leading-relaxed">${delayReason}</p>
+              <p class="text-sm text-red-800 leading-relaxed whitespace-pre-wrap">${delayReason}</p>
+            </div>
+          `;
+        } else if (isDelayed) {
+          // Show section even if no reason provided (for delayed status)
+          delayReasonSection.classList.remove('hidden');
+          delayReasonInfo.innerHTML = `
+            <div class="bg-white/60 p-4 rounded-xl border border-red-200">
+              <p class="text-sm text-red-800 leading-relaxed italic">No specific reason provided for the delay. The EIU should provide an explanation for the delayed submission.</p>
             </div>
           `;
         } else {
@@ -6730,12 +6859,84 @@ This compilation report has been generated automatically based on approved EIU m
     const submissionStatus = document.getElementById('submissionStatus');
     if (submissionStatus) {
       const status = submission.status || 'pending_review';
-      const statusText = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-      submissionStatus.textContent = `Status: ${statusText}`;
+      let statusText = '';
+      let statusClass = '';
+      
+      // Map status to user-friendly text with appropriate styling
+      if (status === 'pending_review' || status === 'pending') {
+        statusText = 'Under Approval of LGU-IU';
+        statusClass = 'px-2 py-1 rounded-full bg-amber-100 text-amber-700';
+      } else if (status === 'approved') {
+        statusText = 'Approved & Forwarded to MPMEC';
+        statusClass = 'px-2 py-1 rounded-full bg-green-100 text-green-700';
+      } else if (status === 'rejected') {
+        statusText = 'Rejected - Revision Required';
+        statusClass = 'px-2 py-1 rounded-full bg-red-100 text-red-700';
+      } else if (status === 'delayed') {
+        statusText = 'Delayed Submission';
+        statusClass = 'px-2 py-1 rounded-full bg-orange-100 text-orange-700';
+      } else {
+        statusText = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        statusClass = 'px-2 py-1 rounded-full bg-gray-100 text-gray-700';
+      }
+      
+      submissionStatus.innerHTML = `Status: <span class="${statusClass}">${statusText}</span>`;
     }
 
     // Store current submission ID for actions
     window.currentReviewSubmissionId = submission.id;
+    
+    // Conditionally show/hide action buttons section and footer buttons based on submission status
+    const status = submission.status || 'pending_review';
+    
+    // Hide "Action Buttons" section (RPMES form upload, etc.) for approved submissions
+    const actionButtonsSection = document.getElementById('adminActionsSection');
+    if (actionButtonsSection) {
+      if (status === 'approved') {
+        actionButtonsSection.style.display = 'none';
+      } else {
+        actionButtonsSection.style.display = 'block';
+      }
+    }
+    
+    // Conditionally show/hide footer action buttons
+    const modalActionButtons = document.getElementById('modalActionButtons');
+    if (modalActionButtons) {
+      if (status === 'approved') {
+        // Hide action buttons for approved submissions
+        modalActionButtons.innerHTML = `
+          <div class="px-6 py-3 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-2 border-green-200 rounded-xl font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Already Approved & Forwarded to MPMEC
+          </div>
+        `;
+      } else {
+        // Show action buttons for pending/rejected submissions
+        modalActionButtons.innerHTML = `
+          <button 
+            onclick="rejectMilestoneSubmissionWithLifecycle()"
+            class="px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            Reject & Request Revision
+          </button>
+          
+          <button 
+            onclick="submitToMPMECSecretariatWithLifecycle()"
+            class="px-8 py-3 bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:via-emerald-700 hover:to-green-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Approve & Submit to MPMEC
+          </button>
+        `;
+      }
+    }
     
     // Initialize character counter for notes
     initializeNotesCharCounter();
@@ -8034,12 +8235,12 @@ This compilation report has been generated automatically based on approved EIU m
           modal.classList.add('hidden');
         }
       } else {
-        alert('Error rejecting submission: ' + (data.error || 'Unknown error'));
+        await window.modernAlert('Error rejecting submission: ' + (data.error || 'Unknown error'), 'error');
       }
       
     } catch (error) {
       console.error('❌ Error rejecting submission:', error);
-      alert('Error rejecting submission. Please try again.');
+      await window.modernAlert('Error rejecting submission. Please try again.', 'error');
     }
   }
 
@@ -8125,7 +8326,7 @@ This compilation report has been generated automatically based on approved EIU m
   }
 
   // Enhanced rejection with status lifecycle
-  function rejectMilestoneSubmissionWithLifecycle() {
+  async function rejectMilestoneSubmissionWithLifecycle() {
      if (!window.currentReviewSubmissionId) return;
      
      const submission = milestoneSubmissions.find(s => s.id === window.currentReviewSubmissionId);
@@ -8133,14 +8334,15 @@ This compilation report has been generated automatically based on approved EIU m
      
      const reason = prompt('Please provide a reason for rejection (optional):');
      
-     if (confirm('Are you sure you want to reject this milestone submission? The EIU will need to revise and resubmit.')) {
+     const confirmed = await window.modernConfirm('Are you sure you want to reject this milestone submission? The EIU will need to revise and resubmit.', 'Confirm Rejection');
+     if (confirmed) {
        // Process status change with lifecycle rules
        processSubmissionStatusChange(window.currentReviewSubmissionId, STATUS_LIFECYCLE.MILESTONE.NEED_REVISION, reason || 'Rejected by IOO Admin');
        
        closeMilestoneSubmissionModal();
        
        // Show enhanced notification
-       alert(`Milestone submission rejected. ${reason ? 'Reason: ' + reason + '. ' : ''}The EIU has been notified to make revisions.`);
+       await window.modernAlert(`Milestone submission rejected. ${reason ? 'Reason: ' + reason + '. ' : ''}The EIU has been notified to make revisions.`, 'success');
      }
    }
 
@@ -8150,13 +8352,14 @@ This compilation report has been generated automatically based on approved EIU m
      
      const rpmesForm = document.getElementById('rpmesFormUpload');
      if (!rpmesForm || !rpmesForm.files.length) {
-       alert('Please attach the RPMES form before submitting to the Secretariat.');
+       await window.modernAlert('Please attach the RPMES form before submitting to the Secretariat.', 'warning');
        return;
      }
      
      const additionalNotes = document.getElementById('adminNotes')?.value || '';
      
-     if (confirm('Are you sure you want to submit this milestone to the MPMEC Secretariat? This action cannot be undone.')) {
+     const confirmed = await window.modernConfirm('Are you sure you want to submit this milestone to the MPMEC Secretariat? This action cannot be undone.', 'Confirm Submission');
+     if (confirmed) {
        try {
          // Show loading state
          const submitButton = document.querySelector('button[onclick="submitToMPMECSecretariatWithLifecycle()"]');
@@ -8266,7 +8469,17 @@ This compilation report has been generated automatically based on approved EIU m
          // Get authentication token
          const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
          
+         if (!token) {
+           throw new Error('Authentication required. Please log in again.');
+         }
+         
          // Update milestone submission status via API
+         console.log('📡 Updating submission status:', {
+           submissionId: window.currentReviewSubmissionId,
+           API_URL: API_URL,
+           endpoint: `${API_URL}/milestones/milestone-submissions/${window.currentReviewSubmissionId}/status`
+         });
+         
          const response = await fetch(`${API_URL}/milestones/milestone-submissions/${window.currentReviewSubmissionId}/status`, {
            method: 'PUT',
            headers: {
@@ -8279,9 +8492,24 @@ This compilation report has been generated automatically based on approved EIU m
            })
          });
 
+         console.log('📡 Status update response:', {
+           status: response.status,
+           statusText: response.statusText,
+           ok: response.ok
+         });
+
          if (!response.ok) {
-           const errorData = await response.json();
-           throw new Error(errorData.error || 'Failed to update submission status');
+           let errorMessage = 'Failed to update submission status';
+           try {
+             const errorData = await response.json();
+             errorMessage = errorData.error || errorData.message || errorMessage;
+             console.error('❌ API Error Response:', errorData);
+           } catch (e) {
+             const errorText = await response.text();
+             console.error('❌ API Error Text:', errorText);
+             errorMessage = errorText || errorMessage;
+           }
+           throw new Error(errorMessage);
          }
 
          // Upload RPMES form if provided
@@ -8380,11 +8608,11 @@ This compilation report has been generated automatically based on approved EIU m
          closeMilestoneSubmissionModal();
          
          // Show enhanced notification
-         alert('Milestone submission approved and forwarded to MPMEC Secretariat successfully! Project status updated based on milestone completion.');
+         await window.modernAlert('Milestone submission approved and forwarded to MPMEC Secretariat successfully! Project status updated based on milestone completion.', 'success');
          
        } catch (error) {
          console.error('Error submitting to MPMEC Secretariat:', error);
-         alert(`Failed to submit to MPMEC Secretariat: ${error.message}`);
+         await window.modernAlert(`Failed to submit to MPMEC Secretariat: ${error.message}`, 'error');
        } finally {
          // Reset button state
          const submitButton = document.querySelector('button[onclick="submitToMPMECSecretariatWithLifecycle()"]');
@@ -9370,9 +9598,68 @@ This compilation report has been generated automatically based on approved EIU m
     tooltip.style.backdropFilter = 'blur(10px)';
     tooltip.style.background = 'rgba(255, 255, 255, 0.95)';
     
-    const timelineProgress = milestone.timelineProgress || 0;
-    const budgetProgress = milestone.budgetProgress || 0;
-    const physicalProgress = milestone.physicalProgress || 0;
+    // Calculate milestone's actual progress percentage (not contribution to project)
+    let timelineProgress = milestone.timelineProgress || 0;
+    let budgetProgress = milestone.budgetProgress || 0;
+    let physicalProgress = milestone.physicalProgress || 0;
+    
+    // Try to get progress from approved milestone submission
+    if (milestone.submissions && Array.isArray(milestone.submissions)) {
+      const approvedSubmission = milestone.submissions.find(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      );
+      
+      if (approvedSubmission) {
+        // First, try to use actual progress values from submission if available
+        if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
+          timelineProgress = parseFloat(approvedSubmission.timelineProgress);
+        }
+        if (approvedSubmission.budgetProgress !== undefined && approvedSubmission.budgetProgress !== null) {
+          budgetProgress = parseFloat(approvedSubmission.budgetProgress);
+        }
+        if (approvedSubmission.physicalProgress !== undefined && approvedSubmission.physicalProgress !== null) {
+          physicalProgress = parseFloat(approvedSubmission.physicalProgress);
+        }
+        
+        // If progress values are still 0, milestone is completed so show 100%
+        if (timelineProgress === 0 && budgetProgress === 0 && physicalProgress === 0) {
+          timelineProgress = 100;
+          budgetProgress = 100;
+          physicalProgress = 100;
+        }
+        
+        console.log(`✅ Using progress from approved submission for milestone "${milestone.title}":`, {
+          timeline: timelineProgress,
+          budget: budgetProgress,
+          physical: physicalProgress
+        });
+      }
+    }
+    
+    // If still 0, check milestone division statuses
+    if (timelineProgress === 0 && budgetProgress === 0 && physicalProgress === 0) {
+      // If milestone is completed/approved, show 100% for each division
+      if (milestone.status === 'completed' || milestone.status === 'approved' ||
+          milestone.timelineStatus === 'approved' || milestone.budgetStatus === 'approved' || 
+          milestone.physicalStatus === 'approved') {
+        timelineProgress = 100;
+        budgetProgress = 100;
+        physicalProgress = 100;
+        
+        console.log(`✅ Milestone "${milestone.title}" is completed/approved, showing 100% for all divisions`);
+      } else {
+        // Check individual division statuses
+        if (milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'completed') {
+          timelineProgress = 100;
+        }
+        if (milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'completed') {
+          budgetProgress = 100;
+        }
+        if (milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'completed') {
+          physicalProgress = 100;
+        }
+      }
+    }
     
     let delayReason = '';
     if (milestone.status === 'delayed') {
@@ -9428,7 +9715,7 @@ This compilation report has been generated automatically based on approved EIU m
         </div>
         <div class="flex justify-between items-center text-sm">
           <span class="font-medium text-gray-700">Overall Progress:</span>
-          <span class="font-bold text-gray-900">${milestone.overallProgress?.toFixed(1) || '0.0'}%</span>
+          <span class="font-bold text-gray-900">${((timelineProgress + budgetProgress + physicalProgress) / 3).toFixed(1)}%</span>
         </div>
       </div>
       
@@ -10493,6 +10780,122 @@ This compilation report has been generated automatically based on approved EIU m
   window.animateProgressBars = animateProgressBars;
   window.setupProgressAnimation = setupProgressAnimation;
   window.animateDashboardProgressBars = animateDashboardProgressBars;
+  
+  // Modern Modal Functions (replacement for alert/confirm)
+  function showModernModal(title, message, type = 'info', options = {}) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('modernModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMessage = document.getElementById('modalMessage');
+      const modalIcon = document.getElementById('modalIcon');
+      const modalButtons = document.getElementById('modalButtons');
+      
+      if (!modal || !modalTitle || !modalMessage || !modalIcon || !modalButtons) {
+        // Fallback to native alert if modal elements not found
+        if (options.confirm) {
+          resolve(confirm(message));
+        } else {
+          alert(message);
+          resolve(true);
+        }
+        return;
+      }
+      
+      // Set title and message
+      modalTitle.textContent = title || (options.confirm ? 'Confirm Action' : 'Notification');
+      modalMessage.textContent = message;
+      
+      // Set icon based on type
+      let iconSvg = '';
+      let iconColor = 'text-blue-500';
+      
+      if (type === 'success') {
+        iconColor = 'text-green-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      } else if (type === 'error' || type === 'danger') {
+        iconColor = 'text-red-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      } else if (type === 'warning') {
+        iconColor = 'text-amber-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>`;
+      } else {
+        iconColor = 'text-blue-500';
+        iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>`;
+      }
+      
+      modalIcon.innerHTML = iconSvg;
+      
+      // Set buttons
+      if (options.confirm) {
+        modalButtons.innerHTML = `
+          <button id="modalCancelBtn" class="px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-200">
+            ${options.cancelText || 'Cancel'}
+          </button>
+          <button id="modalConfirmBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg">
+            ${options.confirmText || 'OK'}
+          </button>
+        `;
+        
+        document.getElementById('modalCancelBtn').onclick = () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          resolve(false);
+        };
+        
+        document.getElementById('modalConfirmBtn').onclick = () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          resolve(true);
+        };
+      } else {
+        modalButtons.innerHTML = `
+          <button id="modalOkBtn" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg">
+            ${options.okText || 'OK'}
+          </button>
+        `;
+        
+        document.getElementById('modalOkBtn').onclick = () => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          resolve(true);
+        };
+      }
+      
+      // Show modal
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      
+      // Close on backdrop click
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+          document.body.style.overflow = 'auto';
+          if (options.confirm) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        }
+      };
+    });
+  }
+  
+  // Replace window.alert and window.confirm
+  window.modernAlert = (message, type = 'info') => {
+    return showModernModal('Notification', message, type);
+  };
+  
+  window.modernConfirm = (message, title = 'Confirm Action') => {
+    return showModernModal(title, message, 'warning', { confirm: true });
+  };
   
 </script>
 

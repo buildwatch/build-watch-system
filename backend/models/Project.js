@@ -66,7 +66,7 @@ module.exports = (sequelize) => {
       comment: 'Expected outputs and results'
     },
     targetBeneficiaries: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
       comment: 'Target beneficiaries'
     },

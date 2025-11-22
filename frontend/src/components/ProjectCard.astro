@@ -82,6 +82,29 @@ const formatBudget = (amount) => {
 const getActualStatus = (proj) => {
   let actualStatus = proj.status;
   
+  // First, check if all milestones are completed - if so, project should be completed
+  if (proj.milestones && Array.isArray(proj.milestones) && proj.milestones.length > 0) {
+    const allMilestonesCompleted = proj.milestones.every(milestone => {
+      const status = milestone.status || 'pending';
+      // Check if milestone has approved submission
+      const hasApprovedSubmission = milestone.submissions?.some(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      ) || false;
+      
+      // Check if milestone divisions are approved
+      const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                   milestone.budgetStatus === 'approved' || 
+                                   milestone.physicalStatus === 'approved';
+      
+      return status === 'completed' || status === 'approved' || hasApprovedSubmission || hasApprovedDivisions;
+    });
+    
+    if (allMilestonesCompleted) {
+      return 'completed';
+    }
+  }
+  
+  // If not all milestones completed, check for delayed milestones
   if (actualStatus !== 'completed' && actualStatus !== 'complete' && actualStatus !== 'ongoing' && proj.milestones && Array.isArray(proj.milestones)) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -262,7 +285,17 @@ const handleClick = () => {
     <div class="flex justify-between items-center text-xs text-gray-500 mb-4">
       <span>Start: {project.startDate || project.createdDate || 'N/A'}</span>
       <span>Target: {project.targetCompletionDate || project.targetDateOfCompletion || project.endDate || 'N/A'}</span>
-      <span>Actual: {project.completionDate || project.actualCompletionDate || '–'}</span>
+      <span>Actual: {(() => {
+        const date = project.actualCompletionDate || project.completionDate;
+        if (!date) return '–';
+        try {
+          const dateObj = new Date(date);
+          if (isNaN(dateObj.getTime())) return '–';
+          return dateObj.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        } catch (e) {
+          return date;
+        }
+      })()}</span>
       <span>Days: {project.expectedDaysOfCompletion ? `${project.expectedDaysOfCompletion} days` : '–'}</span>
     </div>
 

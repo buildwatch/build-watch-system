@@ -256,6 +256,12 @@ router.get('/project/:projectId', authenticateToken, async (req, res) => {
           model: Project,
           as: 'project',
           attributes: ['id', 'name', 'projectCode']
+        },
+        {
+          model: MilestoneSubmission,
+          as: 'submissions',
+          required: false,
+          attributes: ['id', 'status', 'submittedAt', 'reviewedAt']
         }
       ],
       order: [['order', 'ASC']]
@@ -1430,37 +1436,243 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
       milestoneId: submission.milestoneId
     });
 
+    // Verify user exists before setting reviewedBy
+    const reviewer = await User.findByPk(req.user.id);
+    if (!reviewer) {
+      console.log('❌ Reviewer user not found:', req.user.id);
+      return res.status(404).json({
+        success: false,
+        error: 'Reviewer user not found'
+      });
+    }
+
     // Update submission
-    await submission.update({
-      status,
-      reviewedBy: req.user.id,
-      reviewedAt: new Date(),
-      reviewNotes
-    });
+    try {
+      await submission.update({
+        status,
+        reviewedBy: req.user.id,
+        reviewedAt: new Date(),
+        reviewNotes: reviewNotes || null
+      });
+      // Reload the instance to ensure it's fresh
+      await submission.reload();
+      console.log('✅ Submission updated successfully');
+    } catch (updateError) {
+      console.error('❌ Error updating submission:', updateError);
+      throw updateError;
+    }
 
-    // Reload with associations
-    const updatedSubmission = await MilestoneSubmission.findByPk(id, {
-      include: [
-        {
-          model: Project,
-          as: 'project',
-          attributes: ['id', 'name', 'projectCode', 'description', 'location', 'implementingOfficeName', 'implementingOffice', 'totalBudget', 'status', 'category', 'overallProgress', 'progress', 'initialPhoto']
-        },
-        {
-          model: ProjectMilestone,
-          as: 'milestone',
-          attributes: ['id', 'title', 'description']
-        },
-        {
-          model: User,
-          as: 'reviewer',
-          attributes: ['id', 'name']
-        }
-      ]
-    });
+    // Reload with associations (make all associations optional to prevent failures)
+    let updatedSubmission;
+    try {
+      updatedSubmission = await MilestoneSubmission.findByPk(id, {
+        include: [
+          {
+            model: Project,
+            as: 'project',
+            required: false,
+            attributes: ['id', 'name', 'projectCode', 'description', 'location', 'implementingOfficeName', 'implementingOffice', 'totalBudget', 'status', 'category', 'overallProgress', 'progress', 'initialPhoto']
+          },
+          {
+            model: ProjectMilestone,
+            as: 'milestone',
+            required: false,
+            attributes: ['id', 'title', 'description']
+          },
+          {
+            model: User,
+            as: 'reviewer',
+            required: false,
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+    } catch (reloadError) {
+      console.error('⚠️ Error reloading submission with associations, falling back to basic reload:', reloadError);
+      // Fallback to basic reload if associations fail
+      updatedSubmission = await MilestoneSubmission.findByPk(id);
+    }
 
-    // Auto-generate news article when milestone is approved
+    // Ensure we have a valid submission
+    if (!updatedSubmission) {
+      console.error('❌ Failed to reload submission after update');
+      // Use the original submission instance as fallback
+      updatedSubmission = submission;
+    }
+
+    // Update milestone and project progress when milestone submission is approved
     if (status === 'approved' && updatedSubmission.project && updatedSubmission.milestone) {
+      try {
+        console.log('🔄 ========== MILESTONE APPROVAL DEBUG START ==========');
+        console.log('🔄 Updating milestone and project progress after approval...');
+        
+        const milestone = updatedSubmission.milestone;
+        const project = updatedSubmission.project;
+        
+        console.log('📋 Milestone Info:', {
+          id: milestone.id,
+          title: milestone.title,
+          currentStatus: milestone.status,
+          weight: milestone.weight,
+          timelineWeight: milestone.timelineWeight,
+          budgetWeight: milestone.budgetWeight,
+          physicalWeight: milestone.physicalWeight
+        });
+        
+        console.log('📊 Project Info:', {
+          id: project.id,
+          name: project.name,
+          currentOverallProgress: project.overallProgress,
+          currentTimelineProgress: project.timelineProgress,
+          currentBudgetProgress: project.budgetProgress,
+          currentPhysicalProgress: project.physicalProgress
+        });
+        
+        // Get all milestones for this project to see total weight
+        const allMilestones = await ProjectMilestone.findAll({
+          where: { projectId: project.id },
+          attributes: ['id', 'title', 'weight', 'status']
+        });
+        
+        console.log('📋 All Project Milestones:', allMilestones.map(m => ({
+          id: m.id,
+          title: m.title,
+          weight: m.weight,
+          status: m.status
+        })));
+        
+        const totalWeight = allMilestones.reduce((sum, m) => sum + parseFloat(m.weight || 0), 0);
+        console.log('📊 Total Project Weight:', totalWeight);
+        
+        // Get all approved submissions
+        const allApprovedSubmissions = await MilestoneSubmission.findAll({
+          where: {
+            projectId: project.id,
+            status: 'approved'
+          },
+          include: [{
+            model: ProjectMilestone,
+            as: 'milestone',
+            attributes: ['id', 'title', 'weight']
+          }]
+        });
+        
+        console.log('✅ Approved Milestone Submissions:', allApprovedSubmissions.map(s => ({
+          id: s.id,
+          milestoneId: s.milestoneId,
+          milestoneTitle: s.milestone?.title,
+          milestoneWeight: s.milestone?.weight,
+          status: s.status
+        })));
+        
+        const approvedWeight = allApprovedSubmissions.reduce((sum, s) => {
+          const weight = parseFloat(s.milestone?.weight || 0);
+          console.log(`  ➕ Adding weight ${weight} from milestone "${s.milestone?.title}"`);
+          return sum + weight;
+        }, 0);
+        
+        console.log('📊 Approved Weight Sum:', approvedWeight);
+        console.log('📊 Expected Overall Progress:', totalWeight > 0 ? (approvedWeight / totalWeight) * 100 : 0);
+        
+        // Update milestone division statuses to 'approved' and overall status to 'completed'
+        const milestoneUpdateData = {
+          timelineStatus: 'approved',
+          budgetStatus: 'approved',
+          physicalStatus: 'approved',
+          status: 'completed', // Set to 'completed' so it shows correctly in all modules
+          completedDate: updatedSubmission.submissionDate || new Date(),
+          validationDate: new Date(),
+          validatedBy: req.user.id,
+          validationComments: reviewNotes || 'Approved by IOO Admin'
+        };
+        
+        await milestone.update(milestoneUpdateData);
+        console.log('✅ Milestone division statuses updated to approved');
+        
+        // Reload milestone to verify update
+        await milestone.reload();
+        console.log('✅ Milestone after update:', {
+          status: milestone.status,
+          timelineStatus: milestone.timelineStatus,
+          budgetStatus: milestone.budgetStatus,
+          physicalStatus: milestone.physicalStatus
+        });
+        
+        // Recalculate and update project progress using ProgressCalculationService
+        const ProgressCalculationService = require('../services/progressCalculationService');
+        console.log('🔄 Calling ProgressCalculationService.calculateProjectProgress...');
+        const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, req.user.role || 'iu');
+        
+        console.log('📊 Progress Calculation Results:', {
+          overall: progressData.progress.overall,
+          timeline: progressData.progress.timeline,
+          budget: progressData.progress.budget,
+          physical: progressData.progress.physical,
+          milestoneProgress: {
+            appliedWeight: progressData.milestones?.appliedWeight,
+            totalWeight: progressData.milestones?.totalWeight,
+            remainingWeight: progressData.milestones?.remainingWeight
+          }
+        });
+        
+        // Update project with calculated progress
+        const projectUpdateData = {
+          overallProgress: progressData.progress.overall,
+          timelineProgress: progressData.progress.timeline,
+          budgetProgress: progressData.progress.budget,
+          physicalProgress: progressData.progress.physical,
+          lastProgressUpdate: new Date()
+        };
+        
+        await project.update(projectUpdateData);
+        console.log('✅ Project progress updated in database:', {
+          overall: projectUpdateData.overallProgress,
+          timeline: projectUpdateData.timelineProgress,
+          budget: projectUpdateData.budgetProgress,
+          physical: projectUpdateData.physicalProgress
+        });
+        
+        // Check if all milestones are completed
+        const allProjectMilestones = await ProjectMilestone.findAll({
+          where: { projectId: project.id },
+          attributes: ['id', 'status']
+        });
+
+        const allMilestonesCompleted = allProjectMilestones.length > 0 && 
+          allProjectMilestones.every(m => m.status === 'completed' || m.status === 'approved');
+
+        // If all milestones are completed, mark project as completed
+        if (allMilestonesCompleted) {
+          const completionDate = new Date();
+          await project.update({
+            status: 'completed',
+            actualCompletionDate: completionDate,
+            completionDate: completionDate
+          });
+          console.log('✅ All milestones completed. Project marked as completed with date:', completionDate);
+        }
+        
+        // Reload project to verify update
+        await project.reload();
+        console.log('✅ Project after update:', {
+          overallProgress: project.overallProgress,
+          timelineProgress: project.timelineProgress,
+          budgetProgress: project.budgetProgress,
+          physicalProgress: project.physicalProgress,
+          status: project.status,
+          actualCompletionDate: project.actualCompletionDate,
+          lastProgressUpdate: project.lastProgressUpdate
+        });
+        
+        console.log('🔄 ========== MILESTONE APPROVAL DEBUG END ==========');
+        
+      } catch (progressError) {
+        console.error('⚠️ Error updating milestone/project progress:', progressError);
+        console.error('⚠️ Error stack:', progressError.stack);
+        // Don't fail the approval if progress update fails, but log it
+      }
+      
+      // Auto-generate news article when milestone is approved
       try {
         const AutoNewsGenerator = require('../services/autoNewsGenerator');
         await AutoNewsGenerator.generateArticle('MILESTONE_APPROVED', updatedSubmission.project, {
@@ -1482,6 +1694,15 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
 
   } catch (error) {
     console.error('❌ Error updating milestone submission status:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update milestone submission status',

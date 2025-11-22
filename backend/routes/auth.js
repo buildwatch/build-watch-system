@@ -1,8 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { User, ActivityLog, Project, ProjectValidation, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -692,6 +694,294 @@ router.put('/profile', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update profile'
+    });
+  }
+});
+
+// Check user ID endpoint (for debugging)
+router.get('/check-user-id', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required'
+      });
+    }
+
+    // Find user by userId
+    const user = await User.findOne({
+      where: {
+        userId: userId.toUpperCase()
+      },
+      attributes: ['id', 'userId', 'email', 'name', 'username', 'status']
+    });
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: 'User ID not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        userId: user.userId,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        status: user.status
+      }
+    });
+
+  } catch (error) {
+    console.error('Check user ID error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Forgot password endpoint
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Unique User ID is required'
+      });
+    }
+
+    console.log('🔍 [FORGOT PASSWORD] Received userId:', userId);
+
+    // Find user by userId (case-insensitive)
+    const user = await User.findOne({
+      where: {
+        userId: userId.toUpperCase()
+      }
+    });
+
+    console.log('🔍 [FORGOT PASSWORD] User lookup result:', user ? 'Found' : 'Not found');
+
+    // Return error if user doesn't exist or is not active
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Unique User ID not found or does not exist'
+      });
+    }
+
+    if (user.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: 'Account is not active. Please contact administrator.'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    console.log('🔍 [FORGOT PASSWORD] Generated reset token, expiry:', resetTokenExpiry);
+
+    // Save token to user
+    await user.update({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: resetTokenExpiry
+    });
+
+    // Send password reset email
+    // Redirect all reset emails to buildwatch69@gmail.com for testing
+    const targetEmail = 'buildwatch69@gmail.com';
+    
+    // Determine frontend URL based on environment
+    // In production, use FRONTEND_URL from environment, otherwise default to localhost
+    const isProduction = process.env.NODE_ENV === 'production';
+    const frontendUrl = process.env.FRONTEND_URL || (isProduction ? 'https://build-watch.com' : 'http://localhost:4321');
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+    
+    console.log('🔍 [FORGOT PASSWORD] Original user email:', user.email);
+    console.log('🔍 [FORGOT PASSWORD] Sending email to:', targetEmail);
+    console.log('🔍 [FORGOT PASSWORD] Environment:', process.env.NODE_ENV || 'development');
+    console.log('🔍 [FORGOT PASSWORD] Frontend URL:', frontendUrl);
+    console.log('🔍 [FORGOT PASSWORD] Reset URL:', resetUrl);
+    console.log('🔍 [FORGOT PASSWORD] Checking email configuration...');
+    
+    let emailSent = false;
+    try {
+      emailSent = await sendPasswordResetEmail(
+        targetEmail, // Send to buildwatch69@gmail.com
+        resetUrl, 
+        user.name || user.username, 
+        user.userId,
+        user.email // Pass original email for display in email body
+      );
+      console.log('🔍 [FORGOT PASSWORD] Email sent result:', emailSent);
+    } catch (emailError) {
+      console.error('❌ [FORGOT PASSWORD] Email sending failed:', emailError.message);
+      // Still return success to user, but log the error
+      emailSent = false;
+    }
+
+    // Log activity
+    await ActivityLog.create({
+      userId: user.id,
+      action: 'PASSWORD_RESET_REQUESTED',
+      entityType: 'User',
+      entityId: user.id,
+      details: `Password reset requested for user ${user.userId} (${user.email})`,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      level: 'Info',
+      status: 'Success',
+      module: 'Authentication'
+    });
+
+    res.json({
+      success: true,
+      message: 'Password reset link has been sent.',
+      email: user.email // Return email for display in success message
+    });
+
+  } catch (error) {
+    console.error('❌ [FORGOT PASSWORD] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Reset password endpoint
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, userId, newPassword, confirmPassword } = req.body;
+
+    if (!token || !userId || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token, Unique User ID, new password, and confirm password are required'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 6 characters long'
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Passwords do not match'
+      });
+    }
+
+    // Find user by reset token and userId, check if token is valid and not expired
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        userId: userId.toUpperCase(),
+        resetPasswordExpires: {
+          [Op.gt]: new Date() // Token must not be expired
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid or expired reset token, or Unique User ID does not match'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear reset token
+    await user.update({
+      password: hashedPassword,
+      passwordChangedAt: new Date(),
+      resetPasswordToken: null,
+      resetPasswordExpires: null
+    });
+
+    // Log activity
+    await ActivityLog.create({
+      userId: user.id,
+      action: 'PASSWORD_RESET_COMPLETED',
+      entityType: 'User',
+      entityId: user.id,
+      details: `Password reset completed for user ${user.userId} (${user.email})`,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      level: 'Info',
+      status: 'Success',
+      module: 'Authentication'
+    });
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now login with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Verify reset token endpoint (for checking if token is valid before showing reset form)
+router.get('/verify-reset-token', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token is required'
+      });
+    }
+
+    // Find user by reset token and check if token is valid and not expired
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          [Op.gt]: new Date() // Token must not be expired
+        }
+      },
+      attributes: ['id', 'userId', 'email']
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid or expired reset token'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      userId: user.userId // Return userId for the form
+    });
+
+  } catch (error) {
+    console.error('Verify reset token error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
     });
   }
 });

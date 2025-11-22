@@ -38,6 +38,7 @@ const policyRoutes = require('./routes/policies');
 const profileRoutes = require('./routes/profile');
 const messageRoutes = require('./routes/messages');
 const projectCommentRoutes = require('./routes/project-comments');
+const testEmailRoutes = require('./routes/test-email');
 const { checkAndPublishScheduledAnnouncements, checkAndExpireAnnouncements } = require('./services/scheduledAnnouncements');
 
 const app = express();
@@ -557,6 +558,7 @@ app.get('/api/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/test', testEmailRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/rpmes', rpmesRoutes);

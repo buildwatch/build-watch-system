@@ -125,7 +125,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         url = `${API_URL}/projects?implementingOfficeId=${currentUser?.id}`;
       } else {
         // MPMEC/Secretariat/Executive - all projects
-        url = `${API_URL}/projects/all`;
+        url = `${API_URL}/projects`;
       }
       
       const response = await fetch(url, {
@@ -189,11 +189,25 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                   approvedSubmission.timelineProgress || 
                                   approvedSubmission.overallProgress || 
                                   milestone.progress || 0;
+                
+                // If milestone has approved submission, mark as completed
+                if (milestone.status !== 'completed' && milestone.status !== 'approved') {
+                  enhanced.status = 'completed';
+                }
               }
             }
             
-            // Check if milestone is delayed
-            if (milestone.dueDate && milestone.status !== 'completed' && milestone.status !== 'approved') {
+            // Also check if milestone status is already completed/approved
+            if (milestone.status === 'completed' || milestone.status === 'approved') {
+              enhanced.status = 'completed';
+              // If milestone is completed but progress is 0, set progress to 100
+              if (!enhanced.progress || enhanced.progress === 0) {
+                enhanced.progress = 100;
+              }
+            }
+            
+            // Check if milestone is delayed (only if not completed/approved)
+            if (enhanced.status !== 'completed' && milestone.dueDate) {
               const dueDate = new Date(milestone.dueDate);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
@@ -202,12 +216,6 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
               if (dueDate < today) {
                 enhanced.status = 'delayed';
               }
-            }
-            
-            // If milestone is completed but progress is 0, set progress to 100
-            if ((milestone.status === 'completed' || milestone.status === 'approved') && 
-                (!enhanced.progress || enhanced.progress === 0)) {
-              enhanced.progress = 100;
             }
             
             return enhanced;
@@ -287,6 +295,63 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         allActivities.push(...(activityResult.activities || []));
       }
       
+      // Fetch milestone submissions directly from API
+      try {
+        const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (submissionsResponse.ok) {
+          const submissionsResult = await submissionsResponse.json();
+          const submissions = submissionsResult.submissions || submissionsResult.data || [];
+          
+          console.log(`📋 Found ${submissions.length} milestone submissions for audit trail`);
+          
+          submissions.forEach(submission => {
+            // Add submission entry (from EIU)
+            if (submission.status !== 'rejected') {
+              allActivities.push({
+                id: `submission-${submission.id}`,
+                action: 'MILESTONE_SUBMITTED',
+                entityType: 'MilestoneSubmission',
+                entityId: submission.milestoneId,
+                details: `Submitted milestone update: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
+                createdAt: submission.submittedAt || submission.createdAt,
+                user: {
+                  name: submission.submitter?.name || submission.submitterInfo?.name || 'EIU Personnel',
+                  role: 'EIU',
+                  department: submission.submitter?.department || submission.submitterInfo?.department
+                },
+                module: 'Milestone Submission'
+              });
+            }
+            
+            // Add approval entry (from LGU-IU)
+            if (submission.status === 'approved' || submission.status === 'iu_approved') {
+              allActivities.push({
+                id: `approval-${submission.id}`,
+                action: 'MILESTONE_APPROVED',
+                entityType: 'MilestoneSubmission',
+                entityId: submission.milestoneId,
+                details: `Approved milestone submission: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
+                createdAt: submission.reviewedAt || submission.updatedAt || submission.createdAt,
+                user: {
+                  name: submission.reviewer?.name || 'LGU-IU Personnel',
+                  role: 'LGU-IU',
+                  department: submission.reviewer?.department
+                },
+                module: 'Milestone Approval'
+              });
+            }
+          });
+        }
+      } catch (submissionError) {
+        console.warn('⚠️ Could not fetch milestone submissions for audit trail:', submissionError);
+      }
+      
       // Fetch full project details to get milestone submissions and updates
       const projectResponse = await fetch(`${API_URL}/projects/${projectId}`, {
         headers: {
@@ -299,13 +364,15 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         const projectResult = await projectResponse.json();
         const project = projectResult.project || projectResult;
         
-        // Add milestone submissions as audit entries
+        // Add milestone submissions as audit entries (fallback if direct API call didn't work)
         if (project.milestones && Array.isArray(project.milestones)) {
           project.milestones.forEach(milestone => {
             // Check if milestone has submissions (from milestone data or project updates)
             if (milestone.submissions && Array.isArray(milestone.submissions)) {
               milestone.submissions.forEach(submission => {
-                if (submission.status === 'approved' || submission.status === 'iu_approved') {
+                // Only add if not already added from direct API call
+                const alreadyAdded = allActivities.some(a => a.id === `submission-${submission.id}`);
+                if (!alreadyAdded && (submission.status === 'approved' || submission.status === 'iu_approved' || submission.status === 'pending_review')) {
                   allActivities.push({
                     id: `submission-${submission.id}`,
                     action: 'MILESTONE_SUBMITTED',

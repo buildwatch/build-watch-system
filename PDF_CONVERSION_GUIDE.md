@@ -87,3 +87,4 @@ For booklet printing (double-sided):
 - Page breaks are automatically handled
 - The manual is designed for double-sided printing and booklet binding
 
+

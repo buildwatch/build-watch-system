@@ -81,14 +81,26 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
               <p id="modalProjectSubtitle" class="text-gray-600 mt-1">Comprehensive project details and progress tracking</p>
             </div>
           </div>
-          <button 
-            onclick="closeProjectDetailsModal()" 
-            class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
+          <div class="flex items-center gap-2">
+            <button 
+              onclick="showExportFormatModal()" 
+              class={`${theme.button} text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 hover:shadow-lg flex items-center gap-2`}
+              title="Export Project Data"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export
+            </button>
+            <button 
+              onclick="closeProjectDetailsModal()" 
+              class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -100,6 +112,95 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
           <div class="flex items-center space-x-3">
             <div class={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.primary}-600`}></div>
             <span class="text-gray-600 font-medium">Loading project details...</span>
+          </div>
+        </div>
+
+        <!-- Export Format Selection Modal -->
+        <div id="exportFormatModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[10000] hidden flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Export Project Data</h3>
+                <p class="text-sm text-gray-600 mt-1">Choose your preferred export format</p>
+              </div>
+              <button
+                onclick="closeExportFormatModal()"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all duration-200"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <button
+                onclick="exportProjectToPDF()"
+                class="w-full group relative overflow-hidden bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 border-2 border-red-200 hover:border-red-400 rounded-xl px-5 py-4 flex items-center gap-4 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <div class="bg-gradient-to-br from-red-500 to-rose-600 p-3 rounded-lg">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div class="flex-1 text-left">
+                  <h4 class="font-semibold text-gray-900 group-hover:text-red-700 transition-colors">Export to PDF</h4>
+                  <p class="text-xs text-gray-600 mt-1">Formatted PDF report</p>
+                </div>
+              </button>
+
+              <button
+                onclick="exportProjectToHTML()"
+                class="w-full group relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-200 hover:border-blue-400 rounded-xl px-5 py-4 flex items-center gap-4 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-lg">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <div class="flex-1 text-left">
+                  <h4 class="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Export to HTML Report</h4>
+                  <p class="text-xs text-gray-600 mt-1">Interactive HTML report</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Loading Modal -->
+        <div id="exportLoadingModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[10001] hidden flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div class="flex flex-col items-center justify-center">
+              <div class="relative w-20 h-20 mb-6">
+                <div class="absolute inset-0 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">Preparing Export</h3>
+              <p class="text-sm text-gray-600 text-center">Please wait...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Success Modal -->
+        <div id="exportSuccessModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[10001] hidden flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div class="flex flex-col items-center justify-center">
+              <div class="relative w-24 h-24 mb-6">
+                <div class="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-75"></div>
+                <div class="relative w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                  <svg class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-2">Export Successful!</h3>
+              <p class="text-sm text-gray-600 text-center mb-6">Your project data has been exported successfully.</p>
+              <button
+                onclick="document.getElementById('exportSuccessModal').classList.add('hidden')"
+                class="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-200 transform hover:scale-105 shadow-md"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
 
@@ -879,6 +980,36 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
         console.log('✅ Project data received, populating modal...');
         console.log('🔍 Project includes delayed status info:', !!data.project.delayInfo);
         
+        // Fetch milestone submissions if not already included
+        if (data.project.milestones && data.project.milestones.length > 0) {
+          try {
+            const submissionsResponse = await fetch(`${apiUrl}/milestones/milestone-submissions?projectId=${projectId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (submissionsResponse.ok) {
+              const submissionsData = await submissionsResponse.json();
+              const submissions = submissionsData.submissions || submissionsData.data || [];
+              
+              console.log(`📋 Found ${submissions.length} milestone submissions`);
+              
+              // Attach submissions to their respective milestones
+              data.project.milestones.forEach(milestone => {
+                milestone.submissions = submissions.filter(s => s.milestoneId === milestone.id);
+                if (milestone.submissions.length > 0) {
+                  console.log(`✅ Attached ${milestone.submissions.length} submissions to milestone "${milestone.title}"`);
+                }
+              });
+            }
+          } catch (submissionError) {
+            console.warn('⚠️ Could not fetch milestone submissions:', submissionError);
+            // Continue without submissions - not critical
+          }
+        }
+        
         populateModalData(data.project);
         
         // Check loading state before trying to hide it
@@ -1009,9 +1140,58 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
   }
 
   // Populate modal with comprehensive project data
+  // Store current project data globally for export
+  window.currentProjectForExport = null;
+
   function populateModalData(project) {
     console.log('🏗️ Populating modal with project data:', project);
     console.log('📊 COMPLETE Project Data Structure:', JSON.stringify(project, null, 2));
+    
+    // Check if all milestones are completed and update project status accordingly
+    if (project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0) {
+      const allMilestonesCompleted = project.milestones.every(milestone => {
+        const status = milestone.status || 'pending';
+        const hasApprovedSubmission = milestone.submissions?.some(s => 
+          s.status === 'approved' || s.status === 'iu_approved'
+        ) || false;
+        const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                     milestone.budgetStatus === 'approved' || 
+                                     milestone.physicalStatus === 'approved';
+        return status === 'completed' || status === 'approved' || hasApprovedSubmission || hasApprovedDivisions;
+      });
+      
+      if (allMilestonesCompleted && project.status !== 'completed' && project.status !== 'complete') {
+        project.status = 'completed';
+        // Set actual completion date if not already set
+        if (!project.actualCompletionDate && !project.completionDate) {
+          // Find the last completed milestone's completion date
+          const completedMilestones = project.milestones.filter(m => {
+            const status = m.status || 'pending';
+            const hasApprovedSubmission = m.submissions?.some(s => 
+              s.status === 'approved' || s.status === 'iu_approved'
+            ) || false;
+            return status === 'completed' || status === 'approved' || hasApprovedSubmission;
+          });
+          
+          if (completedMilestones.length > 0) {
+            const lastMilestone = completedMilestones.sort((a, b) => {
+              const dateA = new Date(a.completedDate || a.validationDate || a.updatedAt || 0);
+              const dateB = new Date(b.completedDate || b.validationDate || b.updatedAt || 0);
+              return dateB - dateA;
+            })[0];
+            project.actualCompletionDate = lastMilestone.completedDate || lastMilestone.validationDate || new Date().toISOString();
+            project.completionDate = project.actualCompletionDate;
+          } else {
+            project.actualCompletionDate = new Date().toISOString();
+            project.completionDate = project.actualCompletionDate;
+          }
+        }
+        console.log('✅ All milestones completed. Project status updated to completed with date:', project.actualCompletionDate);
+      }
+    }
+    
+    // Store project data globally for export functionality
+    window.currentProjectForExport = project;
     console.log('📊 Project structure analysis:', {
       id: project.id,
       name: project.name,
@@ -1400,16 +1580,48 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     
     // Calculate actual completion date based on project status and milestones
     let actualCompletionDate = '–';
-    if (project.status === 'completed' || project.status === 'complete') {
-      // If project is completed, use completionDate or calculate from milestones
-      if (project.completionDate) {
+    
+    // Check if all milestones are completed
+    const allMilestonesCompleted = project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0 &&
+      project.milestones.every(milestone => {
+        const status = milestone.status || 'pending';
+        const hasApprovedSubmission = milestone.submissions?.some(s => 
+          s.status === 'approved' || s.status === 'iu_approved'
+        ) || false;
+        const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                     milestone.budgetStatus === 'approved' || 
+                                     milestone.physicalStatus === 'approved';
+        return status === 'completed' || status === 'approved' || hasApprovedSubmission || hasApprovedDivisions;
+      });
+    
+    // If project is completed or all milestones are completed, show completion date
+    if (project.status === 'completed' || project.status === 'complete' || allMilestonesCompleted) {
+      // Priority: actualCompletionDate > completionDate > last milestone completion date
+      if (project.actualCompletionDate) {
+        actualCompletionDate = formatDate(project.actualCompletionDate);
+      } else if (project.completionDate) {
         actualCompletionDate = formatDate(project.completionDate);
       } else if (project.milestones && Array.isArray(project.milestones)) {
         // Find the last completed milestone
-        const completedMilestones = project.milestones.filter(m => m.status === 'completed' || m.status === 'complete');
+        const completedMilestones = project.milestones.filter(m => {
+          const status = m.status || 'pending';
+          const hasApprovedSubmission = m.submissions?.some(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          ) || false;
+          const hasApprovedDivisions = m.timelineStatus === 'approved' || 
+                                       m.budgetStatus === 'approved' || 
+                                       m.physicalStatus === 'approved';
+          return status === 'completed' || status === 'approved' || hasApprovedSubmission || hasApprovedDivisions;
+        });
+        
         if (completedMilestones.length > 0) {
-          const lastMilestone = completedMilestones.sort((a, b) => new Date(b.completionDate || b.updatedAt) - new Date(a.completionDate || a.updatedAt))[0];
-          actualCompletionDate = formatDate(lastMilestone.completionDate || lastMilestone.updatedAt);
+          // Sort by completion date, validation date, or updated date
+          const lastMilestone = completedMilestones.sort((a, b) => {
+            const dateA = new Date(a.completedDate || a.validationDate || a.updatedAt || 0);
+            const dateB = new Date(b.completedDate || b.validationDate || b.updatedAt || 0);
+            return dateB - dateA;
+          })[0];
+          actualCompletionDate = formatDate(lastMilestone.completedDate || lastMilestone.validationDate || lastMilestone.updatedAt);
         }
       }
     }
@@ -1961,7 +2173,14 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
 
   // Helper function to get status badge classes
   function getStatusBadgeClass(status) {
-    switch (status?.toLowerCase()) {
+    const statusLower = status?.toLowerCase() || '';
+    
+    // Check for "Delayed (Completed)" first
+    if (statusLower.includes('delayed') && statusLower.includes('completed')) {
+      return 'bg-orange-100 text-orange-800'; // Orange for delayed but completed
+    }
+    
+    switch (statusLower) {
       case 'completed':
         return 'bg-green-100 text-green-800';
       case 'ongoing':
@@ -2131,18 +2350,52 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       let status = milestone.status || 'pending';
       const priority = milestone.priority || 'medium';
       
-      // Check if milestone is overdue and should be marked as delayed
-      if (dueDate && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+      // Check if milestone has approved submission
+      const hasApprovedSubmission = milestone.submissions?.some(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      ) || false;
+      
+      // If milestone has approved submission, it's completed
+      if (hasApprovedSubmission && status !== 'completed') {
+        status = 'completed';
+        console.log(`✅ Milestone "${title}" has approved submission, marking as completed`);
+      }
+      
+      // Check if milestone is overdue
+      const isOverdue = dueDate && (() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const milestoneDate = new Date(dueDate);
         milestoneDate.setHours(0, 0, 0, 0);
-        
-        if (milestoneDate < today && status === 'pending') {
+        return milestoneDate < today;
+      })();
+      
+      // Check if milestone is overdue and should be marked as delayed
+      if (isOverdue && status !== 'completed' && status !== 'under_approval' && status !== 'revision_request') {
+        if (status === 'pending') {
           status = 'delayed';
-          console.log(`🚨 Milestone "${title}" is overdue (due: ${dueDate}, today: ${today.toDateString()}), marking as delayed`);
+          console.log(`🚨 Milestone "${title}" is overdue (due: ${dueDate}, today: ${new Date().toDateString()}), marking as delayed`);
         }
       }
+      
+      // Map status for display - check if completed but was delayed
+      let displayStatus = status;
+      if (status === 'completed' || status === 'approved' || hasApprovedSubmission) {
+        if (isOverdue || milestone.status === 'delayed') {
+          displayStatus = 'Delayed (Completed)';
+        } else {
+          displayStatus = 'Completed';
+        }
+      } else if (status === 'delayed' || isOverdue) {
+        displayStatus = 'Delayed';
+      } else if (status === 'in_progress' || status === 'ongoing') {
+        displayStatus = 'Ongoing';
+      } else {
+        displayStatus = 'Pending';
+      }
+      
+      // Use displayStatus for the badge, but keep status for logic
+      status = displayStatus;
       
       console.log(`🎯 Milestone ${index + 1} data extraction:`, {
         title, weight, plannedBudget, dueDate, description, status, priority,
@@ -2213,8 +2466,13 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       let budgetStatusUpdated = budgetStatus;
       let physicalStatusUpdated = physicalStatus;
       
-      if (status === 'delayed') {
-        // If milestone is delayed, mark divisions as delayed too (unless they have specific approval status)
+      // Check if status is completed (including "Delayed (Completed)")
+      const isCompleted = status === 'Completed' || status === 'completed' || status === 'approved' || 
+                         status === 'Delayed (Completed)' || hasApprovedSubmission;
+      const isDelayed = status === 'Delayed' || status === 'delayed' || (isOverdue && !isCompleted);
+      
+      if (isDelayed && !isCompleted) {
+        // If milestone is delayed (but not completed), mark divisions as delayed too (unless they have specific approval status)
         if (timelineStatus === 'pending') timelineStatusUpdated = 'delayed';
         if (budgetStatus === 'pending') budgetStatusUpdated = 'delayed';
         if (physicalStatus === 'pending') physicalStatusUpdated = 'delayed';
@@ -2223,7 +2481,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
           budget: `${budgetStatus} → ${budgetStatusUpdated}`,
           physical: `${physicalStatus} → ${physicalStatusUpdated}`
         });
-      } else if (status === 'completed' || status === 'approved') {
+      } else if (isCompleted) {
         // If milestone is completed/approved, mark all divisions as completed too
         timelineStatusUpdated = 'completed';
         budgetStatusUpdated = 'completed';
@@ -2627,9 +2885,21 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       // Check milestone status - prioritize approved/completed status
       let status = milestone.status || 'pending';
       
+      // Check if milestone has approved submission (from backend or milestone data)
+      const hasApprovedSubmission = milestone.submissions?.some(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      ) || false;
+      
+      // If milestone has approved submission, it's completed
+      if (hasApprovedSubmission && status !== 'completed') {
+        status = 'completed';
+        console.log(`✅ Milestone "${title}" has approved submission, marking as completed`);
+      }
+      
       console.log(`🔍 Status mapping for milestone "${title}":`, {
         originalStatus: milestone.status,
         mappedStatus: status,
+        hasApprovedSubmission: hasApprovedSubmission,
         statusType: typeof milestone.status,
         statusLength: milestone.status?.length,
         statusTrimmed: milestone.status?.trim(),
@@ -2647,31 +2917,32 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
         }
       });
       
-      // Map database status to display status based on lifecycle
-      if (status === 'completed' || status === 'approved' || status === 'compiled_for_secretariat' ||
-          status === 'Complete' || status === 'complete' || status === 'under_approval' ||
-          status === 'approved_by_secretariat') {
-        status = 'Completed'; // Approved by LGU-IU IOO
-      } else if (status === 'in_progress' || status === 'ongoing') {
-        status = 'Ongoing'; // Updated by EIU and submitted to LGU-IU IOO for approval
-      } else if (status === 'delayed') {
-        status = 'Delayed'; // Overdue based on due date
-      } else {
-        status = 'Pending'; // Not yet updated or submitted by the EIU to LGU IU IOO
-      }
-      
-      // Check if milestone is overdue and should be marked as delayed
+      // Check if milestone is overdue
       const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
-      if (dueDate && status !== 'under_approval' && status !== 'revision_request') {
+      const isOverdue = dueDate && (() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const milestoneDate = new Date(dueDate);
         milestoneDate.setHours(0, 0, 0, 0);
-        
-        if (milestoneDate < today && status === 'Pending') {
-          status = 'Delayed';
-          console.log(`🚨 Milestone Progress: "${title}" is overdue, marking as delayed`);
+        return milestoneDate < today;
+      })();
+      
+      // Map database status to display status based on lifecycle
+      if (status === 'completed' || status === 'approved' || status === 'compiled_for_secretariat' ||
+          status === 'Complete' || status === 'complete' || status === 'under_approval' ||
+          status === 'approved_by_secretariat' || hasApprovedSubmission) {
+        // If milestone is completed but was delayed, show "Delayed (Completed)"
+        if (isOverdue || milestone.status === 'delayed') {
+          status = 'Delayed (Completed)';
+        } else {
+          status = 'Completed'; // Approved by LGU-IU IOO
         }
+      } else if (status === 'in_progress' || status === 'ongoing') {
+        status = 'Ongoing'; // Updated by EIU and submitted to LGU-IU IOO for approval
+      } else if (status === 'delayed' || isOverdue) {
+        status = 'Delayed'; // Overdue based on due date
+      } else {
+        status = 'Pending'; // Not yet updated or submitted by the EIU to LGU IU IOO
       }
       
       progressDiv.innerHTML = `
@@ -3221,4 +3492,938 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
 
   // Make functions globally available
   window.showProjectModal = window.showProjectDetailsModal; // Backward compatibility
+
+  // ========== EXPORT FUNCTIONALITY ==========
+  
+  // Store current project data globally for export
+  if (!window.currentProjectForExport) {
+    window.currentProjectForExport = null;
+  }
+
+  // Show export format selection modal
+  function showExportFormatModal() {
+    if (!window.currentProjectForExport) {
+      alert('No project data available to export. Please wait for the project to load.');
+      return;
+    }
+    
+    const modal = document.getElementById('exportFormatModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
+  // Close export format modal
+  function closeExportFormatModal() {
+    const modal = document.getElementById('exportFormatModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  // Helper function to format date for export
+  function formatDateForExport(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${month}-${day}-${year}`;
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
+  // Load jsPDF library dynamically
+  async function loadJsPDFLibrary() {
+    if (window.jsPDF || window.jspdf) {
+      return true;
+    }
+
+    const scripts = [
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+
+    for (const src of scripts) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+          document.head.appendChild(script);
+        });
+        
+        if (window.jsPDF || window.jspdf) {
+          const autoTableScript = document.createElement('script');
+          autoTableScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js';
+          document.head.appendChild(autoTableScript);
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Failed to load jsPDF from ${src}:`, e);
+      }
+    }
+    return false;
+  }
+
+  // Export to PDF - Using same format as ProjectExportCenter
+  async function exportProjectToPDF() {
+    const project = window.currentProjectForExport;
+    if (!project) {
+      alert('No project data available to export.');
+      return;
+    }
+
+    closeExportFormatModal();
+    
+    // Show loading
+    const loadingModal = document.getElementById('exportLoadingModal');
+    if (loadingModal) {
+      loadingModal.classList.remove('hidden');
+    }
+
+    try {
+      const loaded = await loadJsPDFLibrary();
+      if (!loaded) {
+        alert('Failed to load PDF library. Please try HTML format.');
+        if (loadingModal) loadingModal.classList.add('hidden');
+        return;
+      }
+
+      let jsPDF = window.jsPDF?.jsPDF || window.jsPDF || window.jspdf?.jsPDF || window.jspdf;
+      if (!jsPDF || typeof jsPDF !== 'function') {
+        alert('PDF library failed to initialize. Please try HTML format.');
+        if (loadingModal) loadingModal.classList.add('hidden');
+        return;
+      }
+
+      // Use the same export logic as ProjectExportCenter but for single project
+      const exportData = [project]; // Wrap in array for compatibility
+      
+      // Import the export functions from ProjectExportCenter pattern
+      // We'll replicate the PDF export logic here
+      const doc = new jsPDF('l', 'mm', 'a4');
+      
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      const reportMonth = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }).toUpperCase();
+      
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const organizationName = userData.implementingOfficeName || userData.office || userData.department || 'MUNICIPAL ENGINEERING OFFICE';
+      
+      // Header (same as ProjectExportCenter)
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, 297, 40, 'F');
+      
+      const headerHeight = 40;
+      const pageWidth = 297;
+      const logoSize = 18;
+      const logoY = (headerHeight - logoSize) / 2;
+      
+      const baseUrl = window.location.origin;
+      const loadImageAsBase64 = (imagePath, timeout = 5000) => {
+        return new Promise((resolve) => {
+          let resolved = false;
+          const timeoutId = setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              resolve(null);
+            }
+          }, timeout);
+          
+          fetch(imagePath)
+            .then(response => {
+              if (!response.ok) throw new Error('Failed to fetch image');
+              return response.blob();
+            })
+            .then(blob => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                if (!resolved) {
+                  resolved = true;
+                  clearTimeout(timeoutId);
+                  resolve(reader.result);
+                }
+              };
+              reader.onerror = () => {
+                if (!resolved) {
+                  resolved = true;
+                  clearTimeout(timeoutId);
+                  resolve(null);
+                }
+              };
+              reader.readAsDataURL(blob);
+            })
+            .catch(() => resolve(null));
+        });
+      };
+      
+      const sealBase64 = await loadImageAsBase64(`${baseUrl}/santa-cruz-seal.png`).catch(() => null);
+      const mpdoBase64 = await loadImageAsBase64(`${baseUrl}/mpado_logo.png`).catch(() => null);
+      
+      if (sealBase64) {
+        try {
+          doc.addImage(sealBase64, 'PNG', 10, logoY, logoSize, logoSize);
+        } catch (e) {}
+      }
+      
+      if (mpdoBase64) {
+        try {
+          doc.addImage(mpdoBase64, 'PNG', pageWidth - 10 - logoSize, logoY, logoSize, logoSize);
+        } catch (e) {}
+      }
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('SANTA CRUZ PROJECT MONITORING SYSTEM', pageWidth / 2, 14, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.text('PROJECT INFORMATION', pageWidth / 2, 21, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.text(`As of ${reportMonth}`, pageWidth / 2, 28, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      
+      // Report Information Section
+      let yPos = 45;
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Implementing Agency: ${organizationName}`, 14, yPos);
+      
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      doc.text(`Report Generated: ${currentDate} at ${currentTime}`, 14, yPos);
+      
+      yPos += 10;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, yPos, 283, yPos);
+      
+      yPos += 8;
+      
+      // Project Header
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(37, 99, 235);
+      doc.text(`PROJECT: ${(project.name || 'N/A').substring(0, 60)}`, 14, yPos);
+      doc.setTextColor(0, 0, 0);
+      
+      yPos += 8;
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      
+      // Basic Project Information
+      doc.setFont(undefined, 'bold');
+      doc.text('BASIC PROJECT INFORMATION:', 14, yPos);
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      
+      const basicInfo = [
+        `Project Code: ${project.projectCode || 'N/A'}`,
+        `Implementing Office: ${project.implementingOfficeName || project.implementingOffice || organizationName}`,
+        `Category: ${project.category || 'N/A'}`,
+        `Location/Barangay: ${project.location || project.barangay || 'N/A'}`,
+        `Priority: ${project.priority || 'N/A'}`,
+        `Funding Source: ${project.fundingSource || 'Local Development Fund'}`,
+        `Created Date: ${formatDateForExport(project.createdAt || project.createdDate)}`,
+        `Status: ${project.status || 'N/A'}`
+      ];
+      
+      basicInfo.forEach(info => {
+        doc.text(info, 14, yPos);
+        yPos += 5;
+        if (yPos > 180) {
+          doc.addPage();
+          yPos = 20;
+        }
+      });
+      
+      yPos += 3;
+      
+      // Timeline Information
+      doc.setFont(undefined, 'bold');
+      doc.text('TIMELINE INFORMATION:', 14, yPos);
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      
+      let expectedDays = 'N/A';
+      if (project.startDate && project.endDate) {
+        try {
+          const start = new Date(project.startDate);
+          const end = new Date(project.endDate);
+          const diffTime = Math.abs(end - start);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          expectedDays = diffDays.toString();
+        } catch (e) {}
+      }
+      
+      const timelineInfo = [
+        `Start Date: ${formatDateForExport(project.startDate)}`,
+        `Target Completion Date: ${formatDateForExport(project.endDate || project.targetCompletionDate)}`,
+        `Expected Days of Completion: ${expectedDays}`,
+        `Actual Completion Date: ${formatDateForExport(project.actualCompletionDate || project.completedDate)}`
+      ];
+      
+      timelineInfo.forEach(info => {
+        doc.text(info, 14, yPos);
+        yPos += 5;
+        if (yPos > 180) {
+          doc.addPage();
+          yPos = 20;
+        }
+      });
+      
+      yPos += 3;
+      
+      // Budget Information
+      doc.setFont(undefined, 'bold');
+      doc.text('BUDGET INFORMATION:', 14, yPos);
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      
+      doc.text(`Total Budget Allocation: ₱${parseFloat(project.totalBudget || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, yPos);
+      yPos += 5;
+      if (yPos > 180) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      const budgetDesc = (project.budgetDescription || project.budgetBreakdown || 'N/A').substring(0, 100);
+      doc.text(`Budget Description: ${budgetDesc}`, 14, yPos);
+      yPos += 8;
+      if (yPos > 180) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      // Progress Information
+      doc.setFont(undefined, 'bold');
+      doc.text('PROGRESS INFORMATION:', 14, yPos);
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      
+      const progressInfo = [
+        `Overall Progress: ${parseFloat(project.overallProgress || project.progress?.overall || 0).toFixed(2)}%`,
+        `Timeline Progress: ${parseFloat(project.timelineProgress || project.progress?.internalTimeline || project.progress?.timeline || 0).toFixed(2)}%`,
+        `Budget Progress: ${parseFloat(project.budgetProgress || project.progress?.internalBudget || project.progress?.budget || 0).toFixed(2)}%`,
+        `Physical Progress: ${parseFloat(project.physicalProgress || project.progress?.internalPhysical || project.progress?.physical || 0).toFixed(2)}%`
+      ];
+      
+      progressInfo.forEach(info => {
+        doc.text(info, 14, yPos);
+        yPos += 5;
+        if (yPos > 180) {
+          doc.addPage();
+          yPos = 20;
+        }
+      });
+      
+      yPos += 3;
+      
+      // EIU/Contractor Information
+      const eiuInfo = project.assignedEIU || project.eiuPersonnel || project.contractor || {};
+      doc.setFont(undefined, 'bold');
+      doc.text('EIU/CONTRACTOR INFORMATION:', 14, yPos);
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      
+      const eiuInfoText = [
+        `Company Name: ${eiuInfo.fullName || eiuInfo.name || eiuInfo.companyName || 'N/A'}`,
+        `Email/Username: ${eiuInfo.email || eiuInfo.username || 'N/A'}`,
+        `Contact Number: ${eiuInfo.contactNumber || eiuInfo.phone || 'N/A'}`,
+        `Birthdate: ${formatDateForExport(eiuInfo.birthdate)}`,
+        `Group: ${eiuInfo.group || 'N/A'}`,
+        `Department: ${eiuInfo.department || 'N/A'}`,
+        `Subrole: ${eiuInfo.subRole || eiuInfo.subrole || 'N/A'}`,
+        `Company: ${eiuInfo.company || eiuInfo.companyName || 'N/A'}`
+      ];
+      
+      eiuInfoText.forEach(info => {
+        doc.text(info, 14, yPos);
+        yPos += 5;
+        if (yPos > 180) {
+          doc.addPage();
+          yPos = 20;
+        }
+      });
+      
+      yPos += 3;
+      
+      // Project Description
+      if (project.description || project.objectives) {
+        doc.setFont(undefined, 'bold');
+        doc.text('PROJECT DESCRIPTION:', 14, yPos);
+        yPos += 6;
+        doc.setFont(undefined, 'normal');
+        
+        const desc = (project.description || project.objectives || 'N/A').substring(0, 200);
+        const descLines = doc.splitTextToSize(desc, 260);
+        descLines.forEach(line => {
+          doc.text(line, 14, yPos);
+          yPos += 5;
+          if (yPos > 180) {
+            doc.addPage();
+            yPos = 20;
+          }
+        });
+        yPos += 3;
+      }
+      
+      // Milestones Section
+      if (project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.text('MILESTONES:', 14, yPos);
+        yPos += 6;
+        
+        project.milestones.forEach((milestone, mIdx) => {
+          if (yPos > 170) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setFont(undefined, 'bold');
+          doc.setFontSize(9);
+          doc.text(`Milestone ${mIdx + 1}: ${(milestone.title || milestone.name || 'N/A').substring(0, 50)}`, 14, yPos);
+          yPos += 5;
+          
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(8);
+          const milestoneInfo = [
+            `Status: ${milestone.status || 'N/A'}`,
+            `Weight: ${parseFloat(milestone.weight || 0).toFixed(2)}%`,
+            `Budget: ₱${parseFloat(milestone.budget || milestone.plannedBudget || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            `Due Date: ${formatDateForExport(milestone.dueDate || milestone.targetDate || milestone.deadline)}`,
+            `Priority: ${milestone.priority || 'N/A'}`,
+            `Description: ${(milestone.description || 'N/A').substring(0, 100)}`
+          ];
+          
+          milestoneInfo.forEach(info => {
+            doc.text(info, 20, yPos);
+            yPos += 4;
+            if (yPos > 180) {
+              doc.addPage();
+              yPos = 20;
+            }
+          });
+          
+          yPos += 2;
+          
+          // Timeline Division
+          doc.setFont(undefined, 'bold');
+          doc.setFontSize(8);
+          doc.text('Timeline Division:', 20, yPos);
+          yPos += 4;
+          doc.setFont(undefined, 'normal');
+          
+          const timelineDiv = milestone.timelineDivision || milestone.timeline || {};
+          const timelineDivInfo = [
+            `Weight: ${parseFloat(timelineDiv.weight || 0).toFixed(2)}%`,
+            `Start: ${formatDateForExport(timelineDiv.startDate || timelineDiv.start)}`,
+            `End: ${formatDateForExport(timelineDiv.endDate || timelineDiv.end)}`,
+            `Description: ${(timelineDiv.description || 'N/A').substring(0, 80)}`
+          ];
+          
+          timelineDivInfo.forEach(info => {
+            doc.text(info, 25, yPos);
+            yPos += 4;
+            if (yPos > 180) {
+              doc.addPage();
+              yPos = 20;
+            }
+          });
+          
+          yPos += 2;
+          
+          // Budget Division
+          doc.setFont(undefined, 'bold');
+          doc.text('Budget Division:', 20, yPos);
+          yPos += 4;
+          doc.setFont(undefined, 'normal');
+          
+          const budgetDiv = milestone.budgetDivision || milestone.budget || {};
+          const budgetDivInfo = [
+            `Weight: ${parseFloat(budgetDiv.weight || 0).toFixed(2)}%`,
+            `Budget: ₱${parseFloat(budgetDiv.budget || budgetDiv.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            `Breakdown: ${(budgetDiv.breakdown || budgetDiv.description || 'N/A').substring(0, 80)}`
+          ];
+          
+          budgetDivInfo.forEach(info => {
+            doc.text(info, 25, yPos);
+            yPos += 4;
+            if (yPos > 180) {
+              doc.addPage();
+              yPos = 20;
+            }
+          });
+          
+          yPos += 2;
+          
+          // Physical Division
+          doc.setFont(undefined, 'bold');
+          doc.text('Physical Division:', 20, yPos);
+          yPos += 4;
+          doc.setFont(undefined, 'normal');
+          
+          const physicalDiv = milestone.physicalDivision || milestone.physical || {};
+          const proofTypes = Array.isArray(physicalDiv.proofTypes) 
+            ? physicalDiv.proofTypes.join(', ') 
+            : (physicalDiv.proofTypes || 'N/A');
+          const physicalDivInfo = [
+            `Weight: ${parseFloat(physicalDiv.weight || 0).toFixed(2)}%`,
+            `Proof Types: ${proofTypes.substring(0, 80)}`,
+            `Description: ${(physicalDiv.description || 'N/A').substring(0, 80)}`
+          ];
+          
+          physicalDivInfo.forEach(info => {
+            doc.text(info, 25, yPos);
+            yPos += 4;
+            if (yPos > 180) {
+              doc.addPage();
+              yPos = 20;
+            }
+          });
+          
+          yPos += 3;
+        });
+      }
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${pageCount}`, 250, 200);
+        doc.text(`Generated by Build Watch - ${organizationName}`, 14, 200);
+        doc.text(`Generated on: ${currentDate} at ${currentTime}`, 14, 205);
+      }
+
+      const fileDate = new Date().toISOString().split('T')[0];
+      const fileName = `${(project.name || 'project').replace(/[^a-z0-9]/gi, '_').substring(0, 50)}-export-${fileDate}.pdf`;
+      doc.save(fileName);
+      
+      if (loadingModal) loadingModal.classList.add('hidden');
+      
+      // Show success message
+      const successModal = document.getElementById('exportSuccessModal');
+      if (successModal) {
+        successModal.classList.remove('hidden');
+        setTimeout(() => {
+          successModal.classList.add('hidden');
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      if (loadingModal) loadingModal.classList.add('hidden');
+      alert('Failed to export PDF: ' + error.message);
+    }
+  }
+
+  // Export to HTML - Using same format as ProjectExportCenter
+  function exportProjectToHTML() {
+    const project = window.currentProjectForExport;
+    if (!project) {
+      alert('No project data available to export.');
+      return;
+    }
+
+    closeExportFormatModal();
+    
+    const now = new Date();
+    const currentDate = now.toLocaleDateString('en-PH', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const currentTime = now.toLocaleTimeString('en-PH', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    const reportMonth = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }).toUpperCase();
+    
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const organizationName = userData.implementingOfficeName || userData.office || userData.department || 'MUNICIPAL ENGINEERING OFFICE';
+    
+    const escapeHtml = (text) => {
+      if (text === null || text === undefined) return 'N/A';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    };
+    
+    let expectedDays = 'N/A';
+    if (project.startDate && project.endDate) {
+      try {
+        const start = new Date(project.startDate);
+        const end = new Date(project.endDate);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        expectedDays = diffDays.toString();
+      } catch (e) {}
+    }
+    
+    const eiuInfo = project.assignedEIU || project.eiuPersonnel || project.contractor || {};
+    
+    let milestonesHTML = '<p><strong>No milestones available</strong></p>';
+    if (project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0) {
+      milestonesHTML = project.milestones.map((milestone, mIdx) => {
+        let divisionsHTML = '';
+        
+        const timelineDiv = milestone.timelineDivision || milestone.timeline || {};
+        divisionsHTML += `<div class="division-item">
+          <h5>Timeline Division</h5>
+          <div class="division-details">
+            <p><strong>Weight:</strong> ${parseFloat(timelineDiv.weight || 0).toFixed(2)}%</p>
+            <p><strong>Start:</strong> ${formatDateForExport(timelineDiv.startDate || timelineDiv.start)}</p>
+            <p><strong>End:</strong> ${formatDateForExport(timelineDiv.endDate || timelineDiv.end)}</p>
+            <p><strong>Description:</strong> ${escapeHtml(timelineDiv.description || 'N/A')}</p>
+          </div>
+        </div>`;
+        
+        const budgetDiv = milestone.budgetDivision || milestone.budget || {};
+        divisionsHTML += `<div class="division-item">
+          <h5>Budget Division</h5>
+          <div class="division-details">
+            <p><strong>Weight:</strong> ${parseFloat(budgetDiv.weight || 0).toFixed(2)}%</p>
+            <p><strong>Budget:</strong> ₱${parseFloat(budgetDiv.budget || budgetDiv.amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p><strong>Breakdown:</strong> ${escapeHtml(budgetDiv.breakdown || budgetDiv.description || 'N/A')}</p>
+          </div>
+        </div>`;
+        
+        const physicalDiv = milestone.physicalDivision || milestone.physical || {};
+        const proofTypes = Array.isArray(physicalDiv.proofTypes) ? physicalDiv.proofTypes.join(', ') : (physicalDiv.proofTypes || 'N/A');
+        divisionsHTML += `<div class="division-item">
+          <h5>Physical Division</h5>
+          <div class="division-details">
+            <p><strong>Weight:</strong> ${parseFloat(physicalDiv.weight || 0).toFixed(2)}%</p>
+            <p><strong>Proof Types:</strong> ${escapeHtml(proofTypes)}</p>
+            <p><strong>Description:</strong> ${escapeHtml(physicalDiv.description || 'N/A')}</p>
+          </div>
+        </div>`;
+        
+        return `
+          <div class="milestone-item">
+            <h4>Milestone ${mIdx + 1}: ${escapeHtml(milestone.title || milestone.name || 'N/A')}</h4>
+            <div class="milestone-details">
+              <p><strong>Status:</strong> ${escapeHtml(milestone.status || 'N/A')}</p>
+              <p><strong>Weight:</strong> ${parseFloat(milestone.weight || 0).toFixed(2)}%</p>
+              <p><strong>Budget:</strong> ₱${parseFloat(milestone.budget || milestone.plannedBudget || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p><strong>Due Date:</strong> ${formatDateForExport(milestone.dueDate || milestone.targetDate || milestone.deadline)}</p>
+              <p><strong>Priority:</strong> ${escapeHtml(milestone.priority || 'N/A')}</p>
+              <p><strong>Description:</strong> ${escapeHtml(milestone.description || 'N/A')}</p>
+              ${divisionsHTML}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Report - ${escapeHtml(project.name || 'N/A')}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            background: #f5f5f5; 
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .header h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .meta {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #2563eb;
+        }
+        .meta p {
+            margin: 5px 0;
+            color: #333;
+        }
+        .project-section {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .project-title {
+            color: #2563eb;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .info-section {
+            margin-bottom: 25px;
+        }
+        .info-section h3 {
+            color: #1e40af;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+        .info-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+        .info-item strong {
+            color: #2563eb;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .milestones-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .milestone-item {
+            background: #f8f9fa;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .milestone-item h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .milestone-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .milestone-details p {
+            margin: 5px 0;
+        }
+        .division-item {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .division-item h5 {
+            color: #1e40af;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .division-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+        .division-details p {
+            margin: 4px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 30px;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+            .project-section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <img src="/santa-cruz-seal.png" alt="Santa Cruz Seal" style="height: 70px; width: 70px; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none';">
+                <div style="flex: 1; text-align: center; min-width: 0;">
+                    <h1>SANTA CRUZ PROJECT MONITORING SYSTEM</h1>
+                    <h2>PROJECT INFORMATION</h2>
+                    <p>As of ${reportMonth}</p>
+                </div>
+                <img src="/mpado_logo.png" alt="MPDO Logo" style="height: 70px; width: 70px; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none';">
+            </div>
+        </div>
+        
+        <div class="meta">
+            <p><strong>Implementing Agency:</strong> ${escapeHtml(organizationName)}</p>
+            <p><strong>Report Generated:</strong> ${currentDate} at ${currentTime}</p>
+        </div>
+        
+        <div class="project-section">
+            <h2 class="project-title">PROJECT: ${escapeHtml(project.name || 'N/A')}</h2>
+            
+            <div class="info-section">
+                <h3>Basic Project Information</h3>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Project Code:</strong> ${escapeHtml(project.projectCode || 'N/A')}</div>
+                    <div class="info-item"><strong>Implementing Office:</strong> ${escapeHtml(project.implementingOfficeName || project.implementingOffice || organizationName)}</div>
+                    <div class="info-item"><strong>Category:</strong> ${escapeHtml(project.category || 'N/A')}</div>
+                    <div class="info-item"><strong>Location/Barangay:</strong> ${escapeHtml(project.location || project.barangay || 'N/A')}</div>
+                    <div class="info-item"><strong>Priority:</strong> ${escapeHtml(project.priority || 'N/A')}</div>
+                    <div class="info-item"><strong>Funding Source:</strong> ${escapeHtml(project.fundingSource || 'Local Development Fund')}</div>
+                    <div class="info-item"><strong>Created Date:</strong> ${formatDateForExport(project.createdAt || project.createdDate)}</div>
+                    <div class="info-item"><strong>Status:</strong> ${escapeHtml(project.status || 'N/A')}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Timeline Information</h3>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Start Date:</strong> ${formatDateForExport(project.startDate)}</div>
+                    <div class="info-item"><strong>Target Completion Date:</strong> ${formatDateForExport(project.endDate || project.targetCompletionDate)}</div>
+                    <div class="info-item"><strong>Expected Days of Completion:</strong> ${expectedDays}</div>
+                    <div class="info-item"><strong>Actual Completion Date:</strong> ${formatDateForExport(project.actualCompletionDate || project.completedDate)}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Budget Information</h3>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Total Budget Allocation:</strong> ₱${parseFloat(project.totalBudget || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div class="info-item full-width"><strong>Budget Description:</strong> ${escapeHtml(project.budgetDescription || project.budgetBreakdown || 'N/A')}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Progress Information</h3>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Overall Progress:</strong> ${parseFloat(project.overallProgress || project.progress?.overall || 0).toFixed(2)}%</div>
+                    <div class="info-item"><strong>Timeline Progress:</strong> ${parseFloat(project.timelineProgress || project.progress?.internalTimeline || project.progress?.timeline || 0).toFixed(2)}%</div>
+                    <div class="info-item"><strong>Budget Progress:</strong> ${parseFloat(project.budgetProgress || project.progress?.internalBudget || project.progress?.budget || 0).toFixed(2)}%</div>
+                    <div class="info-item"><strong>Physical Progress:</strong> ${parseFloat(project.physicalProgress || project.progress?.internalPhysical || project.progress?.physical || 0).toFixed(2)}%</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>EIU/Contractor Information</h3>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Company Name:</strong> ${escapeHtml(eiuInfo.fullName || eiuInfo.name || eiuInfo.companyName || 'N/A')}</div>
+                    <div class="info-item"><strong>Email/Username:</strong> ${escapeHtml(eiuInfo.email || eiuInfo.username || 'N/A')}</div>
+                    <div class="info-item"><strong>Contact Number:</strong> ${escapeHtml(eiuInfo.contactNumber || eiuInfo.phone || 'N/A')}</div>
+                    <div class="info-item"><strong>Birthdate:</strong> ${formatDateForExport(eiuInfo.birthdate)}</div>
+                    <div class="info-item"><strong>Group:</strong> ${escapeHtml(eiuInfo.group || 'N/A')}</div>
+                    <div class="info-item"><strong>Department:</strong> ${escapeHtml(eiuInfo.department || 'N/A')}</div>
+                    <div class="info-item"><strong>Subrole:</strong> ${escapeHtml(eiuInfo.subRole || eiuInfo.subrole || 'N/A')}</div>
+                    <div class="info-item"><strong>Company:</strong> ${escapeHtml(eiuInfo.company || eiuInfo.companyName || 'N/A')}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Project Description</h3>
+                <p>${escapeHtml(project.description || project.objectives || 'N/A')}</p>
+                <p><strong>Expected Outputs:</strong> ${escapeHtml(project.expectedOutputs || project.outputs || 'N/A')}</p>
+                <p><strong>Target Beneficiaries:</strong> ${escapeHtml(project.targetBeneficiaries || project.beneficiaries || 'N/A')}</p>
+            </div>
+            
+            <div class="info-section">
+                <h3>Physical Accomplishment Information</h3>
+                <div class="info-grid">
+                    <div class="info-item full-width"><strong>General Description:</strong> ${escapeHtml(project.generalDescription || project.description || 'N/A')}</div>
+                    <div class="info-item full-width"><strong>Initial Photo Uploading:</strong> ${escapeHtml(project.initialPhotoUploading || project.initialPhotos || 'N/A')}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Milestones Set</h3>
+                <div class="milestones-container">
+                    ${milestonesHTML}
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by Build Watch - ${escapeHtml(organizationName)}</p>
+            <p>Generated on: ${currentDate} at ${currentTime}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const fileDate = new Date().toISOString().split('T')[0];
+    const fileName = `${(project.name || 'project').replace(/[^a-z0-9]/gi, '_').substring(0, 50)}-export-${fileDate}.html`;
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show success message
+    const successModal = document.getElementById('exportSuccessModal');
+    if (successModal) {
+      successModal.classList.remove('hidden');
+      setTimeout(() => {
+        successModal.classList.add('hidden');
+      }, 3000);
+    }
+  }
+
+  // Make export functions globally available
+  window.showExportFormatModal = showExportFormatModal;
+  window.closeExportFormatModal = closeExportFormatModal;
+  window.exportProjectToPDF = exportProjectToPDF;
+  window.exportProjectToHTML = exportProjectToHTML;
 </script> 

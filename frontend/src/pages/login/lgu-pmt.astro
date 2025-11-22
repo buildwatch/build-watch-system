@@ -6,27 +6,20 @@ import Layout from "../../layouts/Layout.astro";
     <!-- Blue overlay to blend with the background image -->
     <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(10, 69, 224, 0.95) 0%, rgba(8, 52, 168, 0.9) 25%, rgba(10, 69, 224, 0.85) 50%, rgba(12, 86, 240, 0.8) 75%, rgba(15, 103, 255, 0.75) 100%);"></div>
     <!-- Left Side - Welcome Content -->
-    <div class="hidden lg:flex lg:w-1/2 text-white p-12 flex-col justify-center items-center rounded-[32px] shadow-2xl min-h-[600px] animate-slide-in-left relative z-10 border border-white/30"
+    <div class="hidden lg:flex lg:w-1/2 text-white p-12 flex-col justify-center items-center rounded-[32px] shadow-2xl min-h-[600px] animate-slide-in-left relative z-10 border border-white/30 overflow-hidden"
       style="background: transparent; backdrop-filter: blur(60px) saturate(200%) brightness(110%); box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.15), inset 0.06px 0 rgba(255, 255, 255, 0.2);">
-      <div class="max-w-md text-center animate-fade-in-up" style="animation-delay: 0.2s;">
-        <h1 class="text-5xl font-extrabold mb-6 animate-fade-in-up" style="animation-delay: 0.6s;">Build Watch Portal</h1>
-        <p class="text-2xl mb-8 text-white/90 animate-fade-in-up" style="animation-delay: 0.8s;">
-          Unified Access Portal for All User Types
-        </p>
-        <ul class="space-y-4 text-white/80 animate-fade-in-up text-left" style="animation-delay: 1s;">
-          <li class="flex items-center gap-3 justify-center animate-slide-in-left" style="animation-delay: 1.2s;">
-            <span class="w-2 h-2 bg-white rounded-full inline-block flex-shrink-0"></span>
-            <span>Single sign-on for all user types</span>
-          </li>
-          <li class="flex items-center gap-3 justify-center animate-slide-in-left" style="animation-delay: 1.4s;">
-            <span class="w-2 h-2 bg-white rounded-full inline-block flex-shrink-0"></span>
-            <span>Role-based dashboard access</span>
-          </li>
-          <li class="flex items-center gap-3 justify-center animate-slide-in-left" style="animation-delay: 1.6s;">
-            <span class="w-2 h-2 bg-white rounded-full inline-block flex-shrink-0"></span>
-            <span>Secure authentication system</span>
-          </li>
-        </ul>
+      <!-- Logo Background with Fading Effect -->
+      <img 
+        src="/build-watch-logo.png" 
+        alt="Build Watch Logo" 
+        class="absolute inset-0 w-full h-full object-contain opacity-10 animate-fade-in-up"
+        style="animation-delay: 0.2s; filter: blur(2px);"
+      />
+      <!-- Text Content -->
+      <div class="relative z-10 max-w-md text-center animate-fade-in-up" style="animation-delay: 0.6s;">
+        <h1 class="text-6xl font-extrabold mb-0 animate-fade-in-up drop-shadow-2xl" style="animation-delay: 0.8s; text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);">
+          Build Watch Portal
+        </h1>
       </div>
     </div>
     
@@ -85,12 +78,8 @@ import Layout from "../../layouts/Layout.astro";
               </div>
             </div>
             
-            <div class="flex items-center justify-between mt-2 animate-fade-in-up" style="animation-delay: 1.6s;">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded" />
-                <label for="remember" class="text-sm text-white whitespace-nowrap">Remember Me</label>
-              </div>
-              <a href="#" class="text-sm text-white/80 hover:text-white underline transition-colors duration-200 whitespace-nowrap">Forgot Password?</a>
+            <div class="flex items-center justify-end mt-2 animate-fade-in-up" style="animation-delay: 1.6s;">
+              <button type="button" id="forgotPasswordBtn" class="text-sm text-white/80 hover:text-white underline transition-colors duration-200 whitespace-nowrap">Forgot Password?</button>
             </div>
             
             <button 
@@ -120,6 +109,107 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
+  <!-- Forgot Password Modal -->
+  <div id="forgotPasswordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-extrabold text-blue-600">Reset Password</h3>
+        <button id="closeForgotPasswordModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div id="forgotPasswordMessage" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+      
+      <form id="forgotPasswordForm" class="space-y-4">
+        <div>
+          <label for="forgotUserId" class="block text-sm font-bold text-gray-700 mb-2">Unique User ID</label>
+          <input 
+            type="text" 
+            id="forgotUserId" 
+            name="userId" 
+            required 
+            class="w-full px-4 py-3 rounded-xl bg-white text-gray-800 font-semibold border-2 border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 placeholder:text-gray-400 transition-all duration-200 uppercase" 
+            placeholder="ENTER YOUR UNIQUE USER ID" 
+            style="text-transform: uppercase;"
+          />
+        </div>
+        
+        <p class="text-sm text-gray-600">
+          Enter your Unique User ID and we'll send you a link to reset your password.
+        </p>
+        
+        <button 
+          type="submit" 
+          id="forgotPasswordSubmitBtn"
+          class="w-full mt-6 py-3.5 rounded-xl bg-blue-600 text-white font-extrabold text-lg shadow-lg hover:bg-blue-800 transition-all duration-300 transform hover:scale-[1.02]"
+        >
+          Send Reset Link
+        </button>
+      </form>
+      
+      <div class="mt-4 text-center">
+        <button id="backToLoginBtn" class="text-sm text-blue-600 hover:text-blue-800 underline transition-colors">
+          Back to Login
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal with Check Animation -->
+  <div id="successModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
+      <div class="flex flex-col items-center">
+        <!-- Check Animation -->
+        <div class="relative mb-6">
+          <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+            <svg id="checkIcon" class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-dasharray: 100; stroke-dashoffset: 100; animation: drawCheck 0.6s ease-in-out forwards;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+        </div>
+        
+        <h3 class="text-2xl font-extrabold text-gray-800 mb-2">Success!</h3>
+        <p id="successMessage" class="text-center text-gray-600 mb-6"></p>
+        
+        <button 
+          id="closeSuccessModal"
+          class="w-full py-3.5 rounded-xl bg-blue-600 text-white font-extrabold text-lg shadow-lg hover:bg-blue-800 transition-all duration-300 transform hover:scale-[1.02]"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Validation Error Modal with X Animation -->
+  <div id="validationErrorModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
+      <div class="flex flex-col items-center">
+        <!-- X Animation -->
+        <div class="relative mb-6">
+          <div class="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
+            <svg id="xIcon" class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-dasharray: 100; stroke-dashoffset: 100; animation: drawX 0.6s ease-in-out forwards;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </div>
+        </div>
+        
+        <h3 class="text-2xl font-extrabold text-gray-800 mb-2">Validation Error</h3>
+        <p id="validationErrorMessage" class="text-center text-gray-600 mb-6"></p>
+        
+        <button 
+          id="closeValidationErrorModal"
+          class="w-full py-3.5 rounded-xl bg-red-600 text-white font-extrabold text-lg shadow-lg hover:bg-red-800 transition-all duration-300 transform hover:scale-[1.02]"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const loginForm = document.getElementById('loginForm');
@@ -129,6 +219,239 @@ import Layout from "../../layouts/Layout.astro";
       const passwordInput = document.getElementById('password');
       const eyeIcon = document.getElementById('eyeIcon');
       const eyeSlashIcon = document.getElementById('eyeSlashIcon');
+      const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+      const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+      const closeForgotPasswordModal = document.getElementById('closeForgotPasswordModal');
+      const backToLoginBtn = document.getElementById('backToLoginBtn');
+      const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+      const forgotPasswordMessage = document.getElementById('forgotPasswordMessage');
+      const forgotPasswordSubmitBtn = document.getElementById('forgotPasswordSubmitBtn');
+      const successModal = document.getElementById('successModal');
+      const validationErrorModal = document.getElementById('validationErrorModal');
+      const successMessage = document.getElementById('successMessage');
+      const validationErrorMessage = document.getElementById('validationErrorMessage');
+      const closeSuccessModal = document.getElementById('closeSuccessModal');
+      const closeValidationErrorModal = document.getElementById('closeValidationErrorModal');
+      
+      // Forgot Password Modal functionality
+      forgotPasswordBtn.addEventListener('click', function() {
+        forgotPasswordModal.classList.remove('hidden');
+        forgotPasswordForm.reset();
+        forgotPasswordMessage.classList.add('hidden');
+      });
+      
+      closeForgotPasswordModal.addEventListener('click', function() {
+        forgotPasswordModal.classList.add('hidden');
+      });
+      
+      backToLoginBtn.addEventListener('click', function() {
+        forgotPasswordModal.classList.add('hidden');
+      });
+      
+      // Close modal when clicking outside
+      forgotPasswordModal.addEventListener('click', function(e) {
+        if (e.target === forgotPasswordModal) {
+          forgotPasswordModal.classList.add('hidden');
+        }
+      });
+      
+      // Success Modal handlers
+      closeSuccessModal.addEventListener('click', function() {
+        successModal.classList.add('hidden');
+        forgotPasswordModal.classList.add('hidden');
+      });
+      
+      // Validation Error Modal handlers
+      closeValidationErrorModal.addEventListener('click', function() {
+        validationErrorModal.classList.add('hidden');
+      });
+      
+      // Close modals when clicking outside
+      successModal.addEventListener('click', function(e) {
+        if (e.target === successModal) {
+          successModal.classList.add('hidden');
+          forgotPasswordModal.classList.add('hidden');
+        }
+      });
+      
+      validationErrorModal.addEventListener('click', function(e) {
+        if (e.target === validationErrorModal) {
+          validationErrorModal.classList.add('hidden');
+        }
+      });
+      
+      // Forgot Password Form submission
+      forgotPasswordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const userId = document.getElementById('forgotUserId').value.trim().toUpperCase();
+        
+        if (!userId) {
+          showValidationError('Please enter your Unique User ID.');
+          return;
+        }
+        
+        // Show loading state
+        forgotPasswordSubmitBtn.disabled = true;
+        forgotPasswordSubmitBtn.textContent = 'Sending...';
+        forgotPasswordMessage.classList.add('hidden');
+        
+        try {
+          // Get API URL dynamically
+          const getApiUrl = () => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              if (protocol === 'https:') {
+                return protocol + '//' + hostname + '/api';
+              } else {
+                return 'http://' + hostname + ':3000/api';
+              }
+            }
+            return 'http://localhost:3000/api';
+          };
+          const apiUrl = getApiUrl();
+          
+          // Debug logging
+          console.log('🔍 [FORGOT PASSWORD DEBUG] Starting password reset request...');
+          console.log('🔍 [FORGOT PASSWORD DEBUG] UserId:', userId);
+          console.log('🔍 [FORGOT PASSWORD DEBUG] API URL:', apiUrl);
+          
+          const response = await fetch(`${apiUrl}/auth/forgot-password`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId })
+          });
+          
+          console.log('🔍 [FORGOT PASSWORD DEBUG] Response status:', response.status);
+          
+          const data = await response.json();
+          console.log('🔍 [FORGOT PASSWORD DEBUG] Response data:', data);
+          
+          if (response.ok && data.success) {
+            // Show success modal with email
+            showSuccess(`Password reset link has been sent to ${data.email || 'your email'}.`);
+            forgotPasswordForm.reset();
+          } else {
+            // Show validation error modal
+            showValidationError(data.error || 'Unique User ID not found or does not exist. Please check and try again.');
+          }
+        } catch (error) {
+          console.error('❌ [FORGOT PASSWORD DEBUG] Error:', error);
+          showValidationError('An error occurred. Please try again later.');
+        } finally {
+          forgotPasswordSubmitBtn.disabled = false;
+          forgotPasswordSubmitBtn.textContent = 'Send Reset Link';
+        }
+      });
+      
+      function showSuccess(message) {
+        successMessage.textContent = message;
+        successModal.classList.remove('hidden');
+        // Reset animation
+        const checkIcon = document.getElementById('checkIcon');
+        checkIcon.style.animation = 'none';
+        setTimeout(() => {
+          checkIcon.style.animation = 'drawCheck 0.6s ease-in-out forwards';
+        }, 10);
+      }
+      
+      function showValidationError(message) {
+        validationErrorMessage.textContent = message;
+        validationErrorModal.classList.remove('hidden');
+        // Reset animation
+        const xIcon = document.getElementById('xIcon');
+        xIcon.style.animation = 'none';
+        setTimeout(() => {
+          xIcon.style.animation = 'drawX 0.6s ease-in-out forwards';
+        }, 10);
+      }
+      
+      function showForgotPasswordMessage(message, type) {
+        forgotPasswordMessage.textContent = message;
+        forgotPasswordMessage.classList.remove('hidden');
+        if (type === 'success') {
+          forgotPasswordMessage.className = 'mb-4 p-3 rounded-lg text-sm bg-green-100 border border-green-400 text-green-700';
+        } else {
+          forgotPasswordMessage.className = 'mb-4 p-3 rounded-lg text-sm bg-red-100 border border-red-400 text-red-700';
+        }
+      }
+      
+      // Debug function for email sending issues
+      window.debugEmailSending = async function(userId) {
+        console.log('🔧 [EMAIL DEBUG] Starting email sending diagnostic...');
+        console.log('🔧 [EMAIL DEBUG] UserId:', userId);
+        
+        const getApiUrl = () => {
+          const hostname = window.location.hostname;
+          const protocol = window.location.protocol;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3000/api';
+          }
+          if (hostname.includes('build-watch.com')) {
+            if (protocol === 'https:') {
+              return protocol + '//' + hostname + '/api';
+            } else {
+              return 'http://' + hostname + ':3000/api';
+            }
+          }
+          return 'http://localhost:3000/api';
+        };
+        const apiUrl = getApiUrl();
+        
+        try {
+          // Check if user exists
+          const checkResponse = await fetch(`${apiUrl}/auth/check-user-id?userId=${encodeURIComponent(userId)}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const checkData = await checkResponse.json();
+          console.log('🔧 [EMAIL DEBUG] User check response:', checkData);
+          
+          if (checkData.success && checkData.user) {
+            console.log('🔧 [EMAIL DEBUG] User found:', checkData.user);
+            console.log('🔧 [EMAIL DEBUG] User email:', checkData.user.email);
+            console.log('🔧 [EMAIL DEBUG] User status:', checkData.user.status);
+            
+            // Try to send reset email
+            const resetResponse = await fetch(`${apiUrl}/auth/forgot-password`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ userId })
+            });
+            
+            const resetData = await resetResponse.json();
+            console.log('🔧 [EMAIL DEBUG] Reset email response:', resetData);
+            
+            if (resetData.success) {
+              console.log('✅ [EMAIL DEBUG] Reset email sent successfully!');
+              console.log('📧 [EMAIL DEBUG] Check backend console for email sending details');
+              console.log('📧 [EMAIL DEBUG] If email not received, check:');
+              console.log('   1. GMAIL_USER and GMAIL_APP_PASSWORD in backend .env file');
+              console.log('   2. Backend server console for email sending logs');
+              console.log('   3. Spam/junk folder in email');
+            } else {
+              console.error('❌ [EMAIL DEBUG] Failed to send reset email:', resetData.error);
+            }
+          } else {
+            console.error('❌ [EMAIL DEBUG] User not found with userId:', userId);
+          }
+        } catch (error) {
+          console.error('❌ [EMAIL DEBUG] Error:', error);
+        }
+      };
+      
+      console.log('💡 [FORGOT PASSWORD] Debug function available: window.debugEmailSending(userId)');
       
       // Password visibility toggle functionality
       passwordToggle.addEventListener('click', function() {
@@ -363,6 +686,24 @@ import Layout from "../../layouts/Layout.astro";
 
     .animate-pulse-slow {
       animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes drawCheck {
+      from {
+        stroke-dashoffset: 100;
+      }
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes drawX {
+      from {
+        stroke-dashoffset: 100;
+      }
+      to {
+        stroke-dashoffset: 0;
+      }
     }
   </style>
 </Layout> 

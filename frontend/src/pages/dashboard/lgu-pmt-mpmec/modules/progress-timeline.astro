@@ -1516,7 +1516,31 @@ const formatCurrency = (amount) => {
       
       const project = progressData.data.project;
       const progress = progressData.data.progress;
-      const milestones = progressData.data.projectMilestones || [];
+      let milestones = progressData.data.projectMilestones || [];
+      
+      // Fetch milestone submissions and attach to milestones
+      try {
+        const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (submissionsResponse.ok) {
+          const submissionsData = await submissionsResponse.json();
+          if (submissionsData.success && submissionsData.submissions) {
+            console.log(`✅ Found ${submissionsData.submissions.length} milestone submissions`);
+            
+            // Attach submissions to their milestones
+            milestones.forEach(milestone => {
+              milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+              if (milestone.submissions.length > 0) {
+                console.log(`✅ Attached ${milestone.submissions.length} submissions to milestone "${milestone.title}"`);
+              }
+            });
+          }
+        }
+      } catch (submissionError) {
+        console.warn('⚠️ Could not fetch milestone submissions:', submissionError);
+      }
       
       // Update timeline header
       document.getElementById('timelineProjectTitle').textContent = project.name;
@@ -1659,12 +1683,39 @@ const formatCurrency = (amount) => {
       const milestoneUpdates = updatesByMilestone[milestone.id] || [];
       const latestUpdate = milestoneUpdates.length > 0 ? milestoneUpdates[0] : null;
       
-      // Determine milestone status
+      // Check if milestone has approved submission
+      const hasApprovedSubmission = milestone.submissions?.some(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      ) || false;
+      
+      // Check if milestone has approved divisions
+      const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                   milestone.budgetStatus === 'approved' || 
+                                   milestone.physicalStatus === 'approved';
+      
+      // Check milestone status from backend
+      const milestoneStatus = milestone.status || 'pending';
+      
+      // Determine milestone status - prioritize approved submissions/divisions
       let statusColor = 'gray';
       let statusText = 'Not Started';
       let statusBgColor = 'bg-gray-100';
       
-      if (latestUpdate) {
+      // First check for approved submissions or divisions
+      if (hasApprovedSubmission || hasApprovedDivisions || milestoneStatus === 'completed' || milestoneStatus === 'approved') {
+        statusColor = 'green';
+        statusText = 'Completed';
+        statusBgColor = 'bg-green-100';
+      } else if (milestoneStatus === 'delayed') {
+        statusColor = 'red';
+        statusText = 'Delayed';
+        statusBgColor = 'bg-red-100';
+      } else if (milestoneStatus === 'in_progress' || milestoneStatus === 'ongoing') {
+        statusColor = 'blue';
+        statusText = 'Ongoing';
+        statusBgColor = 'bg-blue-100';
+      } else if (latestUpdate) {
+        // Check project updates for status
         if (latestUpdate.secretariatVerdict) {
           switch (latestUpdate.secretariatVerdict.toLowerCase()) {
             case 'approved':
@@ -1692,7 +1743,83 @@ const formatCurrency = (amount) => {
           statusText = 'Submitted';
           statusBgColor = 'bg-blue-100';
         }
+      } else if (milestoneStatus === 'pending') {
+        statusColor = 'yellow';
+        statusText = 'Pending';
+        statusBgColor = 'bg-yellow-100';
       }
+      
+      console.log(`🔍 [${milestone.title}] Status determination:`, {
+        milestoneStatus,
+        hasApprovedSubmission,
+        hasApprovedDivisions,
+        finalStatus: statusText
+      });
+      
+      // Calculate milestone's actual progress percentage (not contribution to project)
+      // First, check if milestone is completed/approved - if so, show 100% for all divisions
+      const isCompleted = hasApprovedSubmission || hasApprovedDivisions || 
+                         milestoneStatus === 'completed' || milestoneStatus === 'approved';
+      
+      let timelineProgress = 0;
+      let budgetProgress = 0;
+      let physicalProgress = 0;
+      
+      if (isCompleted) {
+        // Milestone is completed - show 100% for all divisions
+        timelineProgress = 100;
+        budgetProgress = 100;
+        physicalProgress = 100;
+        
+        console.log(`✅ [${milestone.title}] Milestone is completed/approved, showing 100% for all divisions`);
+      } else {
+        // Milestone is not completed - try to get actual progress values
+        timelineProgress = parseFloat(milestone.timelineProgress) || 0;
+        budgetProgress = parseFloat(milestone.budgetProgress) || 0;
+        physicalProgress = parseFloat(milestone.physicalProgress) || 0;
+        
+        // Try to get progress from approved milestone submission
+        if (milestone.submissions && Array.isArray(milestone.submissions)) {
+          const approvedSubmission = milestone.submissions.find(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          );
+          
+          if (approvedSubmission) {
+            // Use actual progress values from submission if available
+            if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
+              timelineProgress = parseFloat(approvedSubmission.timelineProgress);
+            }
+            if (approvedSubmission.budgetProgress !== undefined && approvedSubmission.budgetProgress !== null) {
+              budgetProgress = parseFloat(approvedSubmission.budgetProgress);
+            }
+            if (approvedSubmission.physicalProgress !== undefined && approvedSubmission.physicalProgress !== null) {
+              physicalProgress = parseFloat(approvedSubmission.physicalProgress);
+            }
+            
+            console.log(`✅ [${milestone.title}] Using progress from approved submission:`, {
+              timeline: timelineProgress,
+              budget: budgetProgress,
+              physical: physicalProgress
+            });
+          }
+        }
+        
+        // Check individual division statuses for partial completion
+        if (milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'completed') {
+          timelineProgress = 100;
+        }
+        if (milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'completed') {
+          budgetProgress = 100;
+        }
+        if (milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'completed') {
+          physicalProgress = 100;
+        }
+      }
+      
+      // Ensure progress values are valid numbers
+      timelineProgress = isNaN(timelineProgress) ? 0 : Math.max(0, Math.min(100, timelineProgress));
+      budgetProgress = isNaN(budgetProgress) ? 0 : Math.max(0, Math.min(100, budgetProgress));
+      physicalProgress = isNaN(physicalProgress) ? 0 : Math.max(0, Math.min(100, physicalProgress));
       
       return `
         <!-- Individual Milestone Collapsible Card - Matching submit-update.astro -->
@@ -1790,28 +1917,28 @@ const formatCurrency = (amount) => {
                 <div class="bg-gray-50 rounded-lg p-4">
                   <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">Timeline Progress</span>
-                    <span class="text-sm font-bold text-blue-600">${(milestone.timelineProgress || 0).toFixed(1)}%</span>
+                    <span class="text-sm font-bold text-blue-600">${timelineProgress.toFixed(1)}%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-blue-500 h-3 rounded-full transition-all duration-1000" style="width: ${milestone.timelineProgress || 0}%"></div>
+                    <div class="bg-blue-500 h-3 rounded-full transition-all duration-1000" style="width: ${timelineProgress}%"></div>
                   </div>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4">
                   <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">Budget Progress</span>
-                    <span class="text-sm font-bold text-green-600">${(milestone.budgetProgress || 0).toFixed(1)}%</span>
+                    <span class="text-sm font-bold text-green-600">${budgetProgress.toFixed(1)}%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: ${milestone.budgetProgress || 0}%"></div>
+                    <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: ${budgetProgress}%"></div>
                   </div>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4">
                   <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">Physical Progress</span>
-                    <span class="text-sm font-bold text-purple-600">${(milestone.physicalProgress || 0).toFixed(1)}%</span>
+                    <span class="text-sm font-bold text-purple-600">${physicalProgress.toFixed(1)}%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-purple-500 h-3 rounded-full transition-all duration-1000" style="width: ${milestone.physicalProgress || 0}%"></div>
+                    <div class="bg-purple-500 h-3 rounded-full transition-all duration-1000" style="width: ${physicalProgress}%"></div>
                   </div>
                 </div>
               </div>
@@ -1897,17 +2024,7 @@ const formatCurrency = (amount) => {
                 `).join('')}
               </div>
             </div>
-          ` : `
-            <div class="border-t border-gray-200 pt-6 text-center">
-              <div class="bg-gray-50 rounded-lg p-6">
-                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <p class="text-gray-500 font-medium">No updates submitted for this milestone</p>
-                <p class="text-gray-400 text-sm mt-1">Updates will appear here once EIU submits milestone progress</p>
-              </div>
-            </div>
-          `}
+          ` : ''}
             </div>
           </div>
         </div>

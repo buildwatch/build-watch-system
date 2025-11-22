@@ -822,6 +822,16 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       milestones // New field for milestone data
     } = req.body;
 
+    // Truncate fields that might exceed database column limits
+    // targetBeneficiaries is VARCHAR(255) in database, truncate to 255 characters
+    const truncatedTargetBeneficiaries = targetBeneficiaries 
+      ? (targetBeneficiaries.length > 255 ? targetBeneficiaries.substring(0, 252) + '...' : targetBeneficiaries)
+      : null;
+    
+    if (targetBeneficiaries && targetBeneficiaries.length > 255) {
+      console.warn('⚠️ targetBeneficiaries truncated from', targetBeneficiaries.length, 'to 255 characters');
+    }
+
     // Validate required fields
     const targetDate = targetCompletionDate || targetDateOfCompletion || endDate; // Use new field if available, fallback to old fields
     
@@ -977,7 +987,24 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
     });
 
     // Create project with automatic forwarding to all relevant users
-    const project = await Project.create({
+    console.log('🔍 About to create project with data:', {
+      projectCode,
+      name,
+      implementingOfficeName,
+      implementingOfficeId: req.user.id,
+      hasExternalPartner: hasExternalPartner || false,
+      eiuPersonnelId: hasExternalPartner && validatedEiuPersonnelId ? validatedEiuPersonnelId : null,
+      startDate,
+      endDate: targetDate,
+      targetCompletionDate: targetCompletionDate || targetDateOfCompletion || endDate,
+      totalBudget,
+      status: 'pending',
+      workflowStatus: 'submitted'
+    });
+    
+    let project;
+    try {
+      project = await Project.create({
       projectCode,
       name,
       implementingOfficeName,
@@ -990,7 +1017,7 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       status: 'pending', // Starts as pending until approved
       workflowStatus: 'submitted', // Automatically submitted to Secretariat
       expectedOutputs,
-      targetBeneficiaries,
+      targetBeneficiaries: truncatedTargetBeneficiaries,
       hasExternalPartner: hasExternalPartner || false,
       eiuPersonnelId: hasExternalPartner && validatedEiuPersonnelId ? validatedEiuPersonnelId : null,
       startDate,
@@ -1036,7 +1063,43 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       secretariatApprovalDate: null,
       secretariatApprovedBy: null,
       lastProgressUpdate: null
-    });
+      });
+      console.log('✅ Project created successfully:', {
+        id: project.id,
+        projectCode: project.projectCode,
+        name: project.name
+      });
+    } catch (createError) {
+      console.error('❌ Error during Project.create():', createError);
+      console.error('❌ Create error message:', createError.message);
+      console.error('❌ Create error stack:', createError.stack);
+      console.error('❌ Create error name:', createError.name);
+      console.error('❌ Create error code:', createError.code);
+      
+      // Check for specific database errors
+      if (createError.message && createError.message.includes('Unknown column')) {
+        console.error('🚨 DATABASE COLUMN ERROR: A column in the CREATE statement does not exist in the database');
+        console.error('   Error:', createError.message);
+        throw new Error(`Database schema error: ${createError.message}`);
+      }
+      
+      // Check for data too long errors
+      if (createError.message && createError.message.includes('Data too long for column')) {
+        const columnMatch = createError.message.match(/column '(\w+)'/);
+        const columnName = columnMatch ? columnMatch[1] : 'unknown';
+        console.error(`🚨 DATA TOO LONG ERROR: The '${columnName}' field exceeds the database column size limit`);
+        console.error('   Error:', createError.message);
+        console.error('   Solution: The field needs to be truncated or the database column needs to be enlarged');
+        throw new Error(`Data too long for field '${columnName}'. Please reduce the length or contact support to update the database schema.`);
+      }
+      
+      if (createError.name === 'SequelizeDatabaseError') {
+        console.error('🚨 DATABASE ERROR: There is an issue with the database query');
+        throw createError;
+      }
+      
+      throw createError;
+    }
 
     // Create milestones if provided
     if (milestones && milestones.length > 0) {
@@ -1179,37 +1242,82 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
     // Don't fail the project creation if notifications fail
   }
 
-  // Check policy compliance for the new project
+    // Check policy compliance for the new project (wrapped in try-catch to prevent failures)
   try {
     console.log('🔍 Checking policy compliance for new project...');
-    await checkProjectPolicyCompliance(project);
-    console.log('✅ Policy compliance check completed');
+    // Check if Policy model exists and is available
+    if (Policy && typeof Policy.findAll === 'function') {
+      await checkProjectPolicyCompliance(project);
+      console.log('✅ Policy compliance check completed');
+    } else {
+      console.log('⚠️ Policy model not available, skipping compliance check');
+    }
   } catch (complianceError) {
     console.error('❌ Error checking policy compliance:', complianceError);
+    console.error('❌ Compliance error details:', {
+      message: complianceError.message,
+      stack: complianceError.stack,
+      name: complianceError.name
+    });
     // Don't fail the project creation if compliance check fails
   }
 
-  res.status(201).json({
-    success: true,
-    message: 'Project created successfully',
-    project: {
-      ...project.toJSON(),
-      progress: calculateProjectProgress(project)
+    // Calculate progress for the response (with error handling)
+    let progressData = {
+      timelineProgress: 0,
+      budgetProgress: 0,
+      physicalProgress: 0,
+      overallProgress: 0
+    };
+    
+    try {
+      progressData = await calculateProjectProgress(project, req.user.role);
+    } catch (progressError) {
+      console.error('⚠️ Error calculating progress for new project (non-fatal):', progressError);
+      // Use default progress values if calculation fails
     }
-  });
+
+    res.status(201).json({
+      success: true,
+      message: 'Project created successfully',
+      project: {
+        ...project.toJSON(),
+        progress: progressData
+      }
+    });
 
   } catch (error) {
     console.error('❌ Create project error:', error);
+    console.error('❌ Error message:', error.message);
     console.error('❌ Error stack:', error.stack);
-    console.error('❌ Error details:', {
-      message: error.message,
-      name: error.name,
-      code: error.code
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Request body keys:', Object.keys(req.body || {}));
+    console.error('❌ User info:', {
+      id: req.user?.id,
+      role: req.user?.role,
+      name: req.user?.name
     });
+    
+    // Check if it's a database column error
+    if (error.message && error.message.includes('Unknown column')) {
+      console.error('❌ DATABASE COLUMN ERROR DETECTED:', error.message);
+      return res.status(500).json({
+        success: false,
+        error: 'Database schema error',
+        details: error.message,
+        message: 'A database column does not exist. Please check the database schema.'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create project',
-      details: error.message
+      details: error.message,
+      debug: {
+        errorName: error.name,
+        errorCode: error.code
+      }
     });
   }
 });
@@ -2245,6 +2353,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
     const offset = (page - 1) * limit;
     const whereClause = {};
+    const roleBasedFilters = {}; // Separate role-based filters to merge later
 
     // Add filters
     if (status) whereClause.status = status;
@@ -2266,13 +2375,46 @@ router.get('/', authenticateToken, async (req, res) => {
       case 'eiu':
       case 'EIU':
         // EIU sees projects assigned to them as external partner
-        whereClause.hasExternalPartner = true;
-        whereClause.eiuPersonnelId = req.user.id;
+        roleBasedFilters.hasExternalPartner = true;
+        roleBasedFilters.eiuPersonnelId = req.user.id;
         break;
       case 'iu':
       case 'LGU-IU':
-        // IU sees their own projects
-        whereClause.implementingOfficeId = req.user.id;
+        // IU sees their own projects - check both implementingOfficeId and implementingOfficeName
+        // This handles cases where implementingOfficeId might not be set or doesn't match
+        const userImplementingOffice = req.user.implementingOfficeName || req.user.office || req.user.department || req.user.officeName;
+        console.log('🔍 LGU-IU filtering:', {
+          userId: req.user.id,
+          userRole: req.user.role,
+          implementingOfficeId: req.user.id,
+          implementingOfficeName: userImplementingOffice,
+          userFields: {
+            implementingOfficeName: req.user.implementingOfficeName,
+            office: req.user.office,
+            department: req.user.department,
+            officeName: req.user.officeName
+          }
+        });
+        
+        // Build the OR condition for LGU-IU
+        const lguIuConditions = [{ implementingOfficeId: req.user.id }];
+        if (userImplementingOffice) {
+          lguIuConditions.push({ implementingOfficeName: userImplementingOffice });
+        }
+        
+        // If there's already an Op.or in whereClause (from search), we need to combine them
+        if (whereClause[Op.or] && Array.isArray(whereClause[Op.or])) {
+          // Combine search Op.or with LGU-IU conditions using Op.and
+          const existingOr = whereClause[Op.or];
+          delete whereClause[Op.or];
+          whereClause[Op.and] = [
+            { [Op.or]: existingOr },
+            { [Op.or]: lguIuConditions }
+          ];
+        } else {
+          // No existing Op.or, just add our conditions
+          whereClause[Op.or] = lguIuConditions;
+        }
         break;
       case 'secretariat':
         // Secretariat sees projects submitted for approval and approved projects
@@ -2289,6 +2431,12 @@ router.get('/', authenticateToken, async (req, res) => {
         break;
       case 'LGU-PMT':
         // LGU-PMT with Secretariat subrole sees projects submitted for approval
+        console.log('🔍 LGU-PMT filtering:', {
+          userId: req.user.id,
+          userRole: req.user.role,
+          subRole: req.user.subRole,
+          hasSecretariatSubrole: req.user.subRole && req.user.subRole.toLowerCase().includes('secretariat')
+        });
         if (req.user.subRole && req.user.subRole.toLowerCase().includes('secretariat')) {
           if (!workflowStatus) {
             whereClause[Op.or] = [
@@ -2299,6 +2447,7 @@ router.get('/', authenticateToken, async (req, res) => {
               { workflowStatus: 'compiled_for_secretariat' },
               { workflowStatus: 'validated_by_secretariat' }
             ];
+            console.log('🔍 LGU-PMT Secretariat: Using workflowStatus filter');
           }
         } else {
           // Regular MPMEC sees approved projects and projects submitted to Secretariat
@@ -2307,6 +2456,7 @@ router.get('/', authenticateToken, async (req, res) => {
               { approvedBySecretariat: true },
               { submittedToSecretariat: true }
             ];
+            console.log('🔍 LGU-PMT Regular: Using approval filter');
           }
         }
         break;
@@ -2324,7 +2474,18 @@ router.get('/', authenticateToken, async (req, res) => {
         break;
     }
 
-    const { count, rows: projects } = await Project.findAndCountAll({
+    console.log('🔍 Final whereClause for projects query:', JSON.stringify(whereClause, null, 2));
+    console.log('🔍 Query parameters:', {
+      page,
+      limit,
+      offset,
+      userRole: req.user.role,
+      userId: req.user.id
+    });
+
+    let count, projects;
+    try {
+      const result = await Project.findAndCountAll({
       where: whereClause,
       attributes: [
         'id', 'projectCode', 'name', 'description', 'category', 'location', 'priority', 
@@ -2356,20 +2517,98 @@ router.get('/', authenticateToken, async (req, res) => {
           model: User,
           as: 'approvedByUser',
           attributes: ['id', 'name', 'username', 'role']
+        },
+        {
+          model: ProjectMilestone,
+          as: 'milestones',
+          attributes: ['id', 'title', 'status', 'weight', 'timelineStatus', 'budgetStatus', 'physicalStatus', 'completedDate', 'validationDate'],
+          required: false
         }
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['createdAt', 'DESC']]
-    });
+      });
+      count = result.count;
+      projects = result.rows;
+      console.log(`✅ Found ${count} projects for ${req.user.role} (user ${req.user.id})`);
+    } catch (queryError) {
+      console.error('❌ Database query error:', queryError);
+      console.error('❌ Query error message:', queryError.message);
+      console.error('❌ Query error stack:', queryError.stack);
+      throw queryError;
+    }
 
-    // Calculate progress for each project
-    const projectsWithProgress = await Promise.all(projects.map(async (project) => ({
-      ...project.toJSON(),
-      implementingOfficeName: project.implementingOfficeName || project.implementingOffice?.name,
-      eiuPersonnelName: project.eiuPersonnel?.name,
-      progress: await calculateProjectProgress(project, req.user.role)
-    })));
+    // Calculate progress for each project and attach milestones with submissions
+    const projectsWithProgress = await Promise.all(projects.map(async (project) => {
+      try {
+        const projectData = project.toJSON();
+        
+        // Ensure milestones are included with submissions
+        if (!projectData.milestones || projectData.milestones.length === 0) {
+          // Fetch milestones if not included
+          const milestones = await ProjectMilestone.findAll({
+            where: { projectId: project.id },
+            attributes: ['id', 'title', 'status', 'weight', 'timelineStatus', 'budgetStatus', 'physicalStatus', 'completedDate', 'validationDate'],
+            required: false
+          });
+          
+          // Fetch submissions separately and attach to milestones
+          if (milestones.length > 0) {
+            const milestoneIds = milestones.map(m => m.id);
+            const submissions = await MilestoneSubmission.findAll({
+              where: { milestoneId: milestoneIds },
+              attributes: ['id', 'milestoneId', 'status', 'submissionDate'],
+              required: false
+            });
+            
+            // Attach submissions to their milestones
+            milestones.forEach(milestone => {
+              milestone.submissions = submissions.filter(s => s.milestoneId === milestone.id);
+            });
+          }
+          projectData.milestones = milestones;
+        }
+        
+        // Calculate progress with error handling
+        let progress;
+        try {
+          progress = await calculateProjectProgress(project, req.user.role);
+        } catch (progressError) {
+          console.error(`❌ Error calculating progress for project ${project.id} (${project.projectCode}):`, progressError);
+          // Use fallback progress values
+          progress = {
+            timelineProgress: parseFloat(project.timelineProgress) || 0,
+            budgetProgress: parseFloat(project.budgetProgress) || 0,
+            physicalProgress: parseFloat(project.physicalProgress) || 0,
+            overallProgress: parseFloat(project.overallProgress) || 0
+          };
+        }
+        
+        return {
+          ...projectData,
+          implementingOfficeName: project.implementingOfficeName || project.implementingOffice?.name,
+          eiuPersonnelName: project.eiuPersonnel?.name,
+          progress: progress
+        };
+      } catch (projectError) {
+        console.error(`❌ Error processing project ${project.id} (${project.projectCode || 'unknown'}):`, projectError);
+        console.error('Project error stack:', projectError.stack);
+        // Return project with minimal data if processing fails
+        return {
+          ...project.toJSON(),
+          implementingOfficeName: project.implementingOfficeName || project.implementingOffice?.name,
+          eiuPersonnelName: project.eiuPersonnel?.name,
+          progress: {
+            timelineProgress: parseFloat(project.timelineProgress) || 0,
+            budgetProgress: parseFloat(project.budgetProgress) || 0,
+            physicalProgress: parseFloat(project.physicalProgress) || 0,
+            overallProgress: parseFloat(project.overallProgress) || 0
+          },
+          _error: 'Error processing project data'
+        };
+      }
+    }));
 
     res.json({
       success: true,
@@ -2383,10 +2622,25 @@ router.get('/', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get projects error:', error);
+    console.error('❌ Get projects error:', error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ User role:', req.user?.role);
+    console.error('❌ User ID:', req.user?.id);
+    if (typeof whereClause !== 'undefined') {
+      console.error('❌ Where clause:', JSON.stringify(whereClause, null, 2));
+    } else {
+      console.error('❌ Where clause: Not defined (error occurred before query construction)');
+    }
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch projects'
+      error: 'Failed to fetch projects',
+      message: error.message,
+      debug: {
+        userRole: req.user?.role,
+        userId: req.user?.id,
+        whereClause: typeof whereClause !== 'undefined' ? whereClause : 'Not defined'
+      }
     });
   }
 });
@@ -5298,20 +5552,48 @@ router.post('/:projectId/milestones/:milestoneId/approve-progress', authenticate
       lastProgressUpdate: new Date()
     });
 
-    // Update milestone status to approved
+    // Update milestone status to completed
     await milestone.update({
-      status: 'approved',
-      completedDate: new Date()
+      status: 'completed',
+      timelineStatus: 'approved',
+      budgetStatus: 'approved',
+      physicalStatus: 'approved',
+      completedDate: new Date(),
+      validationDate: new Date(),
+      validatedBy: req.user.id
     });
 
-    // Log activity
-    await logActivity(
-      req.user.id,
-      'MILESTONE_APPROVED',
-      'ProjectMilestone',
-      milestoneId,
-      `Approved milestone: ${milestone.title} for project: ${project.name}. Progress updated: Timeline: ${newTimelineProgress}%, Budget: ${newBudgetProgress}%, Physical: ${newPhysicalProgress}%, Overall: ${newOverallProgress}%`
-    );
+    // Check if all milestones are completed
+    const allMilestones = await ProjectMilestone.findAll({
+      where: { projectId: projectId },
+      attributes: ['id', 'status']
+    });
+
+    const allMilestonesCompleted = allMilestones.length > 0 && 
+      allMilestones.every(m => m.status === 'completed' || m.status === 'approved');
+
+    // If all milestones are completed, mark project as completed
+    if (allMilestonesCompleted) {
+      const completionDate = new Date();
+      await project.update({
+        status: 'completed',
+        completionDate: completionDate
+      });
+      console.log('✅ All milestones completed. Project marked as completed with date:', completionDate);
+    }
+
+    // Log activity (don't fail if logging fails)
+    try {
+      await logActivity(
+        req.user.id,
+        'MILESTONE_APPROVED',
+        'ProjectMilestone',
+        milestoneId,
+        `Approved milestone: ${milestone.title} for project: ${project.name}. Progress updated: Timeline: ${newTimelineProgress}%, Budget: ${newBudgetProgress}%, Physical: ${newPhysicalProgress}%, Overall: ${newOverallProgress}%`
+      );
+    } catch (logError) {
+      console.warn('⚠️ Failed to log activity (non-critical):', logError);
+    }
 
     res.json({
       success: true,
@@ -5321,14 +5603,25 @@ router.post('/:projectId/milestones/:milestoneId/approve-progress', authenticate
         budget: newBudgetProgress,
         physical: newPhysicalProgress,
         overall: newOverallProgress
-      }
+      },
+      projectCompleted: allMilestonesCompleted
     });
 
   } catch (error) {
-    console.error('Error approving milestone progress:', error);
+    console.error('❌ Error approving milestone progress:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage
+    });
     res.status(500).json({
       success: false,
-      error: 'Failed to approve milestone and update progress'
+      error: 'Failed to approve milestone and update progress',
+      details: error.message
     });
   }
 });
@@ -5710,6 +6003,15 @@ router.get('/:id/milestones', authenticateToken, async (req, res) => {
       ]
     });
 
+    // Get approved milestone submissions
+    const approvedSubmissions = await MilestoneSubmission.findAll({
+      where: {
+        projectId: id,
+        status: 'approved'
+      },
+      attributes: ['milestoneId', 'status', 'reviewedAt']
+    });
+
     // Get the latest project update to check Secretariat verdict
     const latestUpdate = await ProjectUpdate.findOne({
       where: { 
@@ -5719,9 +6021,23 @@ router.get('/:id/milestones', authenticateToken, async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    // Update milestone statuses based on latest Secretariat verdict
+    // Update milestone statuses based on latest Secretariat verdict and approved submissions
     const updatedMilestones = milestones.map(milestone => {
       let updatedMilestone = { ...milestone.toJSON() };
+      
+      // Check if milestone has an approved submission
+      const hasApprovedSubmission = approvedSubmissions.some(
+        sub => sub.milestoneId === milestone.id
+      );
+      
+      // If milestone has approved submission, set status to completed
+      if (hasApprovedSubmission && milestone.status !== 'completed') {
+        updatedMilestone.status = 'completed';
+        if (!updatedMilestone.completedDate) {
+          const approvedSubmission = approvedSubmissions.find(s => s.milestoneId === milestone.id);
+          updatedMilestone.completedDate = approvedSubmission?.reviewedAt || new Date();
+        }
+      }
       
       if (latestUpdate && latestUpdate.milestoneUpdates) {
         try {

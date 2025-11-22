@@ -59,16 +59,39 @@ try {
     const projectsRes = await fetch(`${API_URL}/projects`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
+    
     if (projectsRes.ok) {
       const data = await projectsRes.json();
       if (data.success) {
-        projects = data.projects;
+        projects = data.projects || [];
+        console.log(`✅ Loaded ${projects.length} projects for LGU-IU`);
+      } else {
+        console.error('Projects API returned success=false:', data);
+        error = data.error || 'Failed to fetch projects data.';
+      }
+    } else {
+      // Handle non-200 responses
+      const errorText = await projectsRes.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { error: errorText };
+      }
+      
+      console.error(`❌ Projects API error (${projectsRes.status}):`, errorData);
+      error = errorData.error || errorData.message || `Failed to fetch projects: ${projectsRes.status}`;
+      
+      // Log debug info if available
+      if (errorData.debug) {
+        console.error('Debug info:', errorData.debug);
       }
     }
   }
 } catch (err) {
-  console.error('Error fetching projects data:', err);
-  error = 'Failed to fetch projects data.';
+  console.error('❌ Error fetching projects data:', err);
+  console.error('Error stack:', err.stack);
+  error = `Failed to fetch projects data: ${err.message}`;
 }
 
 loading = false;

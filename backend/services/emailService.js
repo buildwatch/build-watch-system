@@ -6,18 +6,43 @@ const createGmailTransporter = () => {
   // In production, use a proper email service like SendGrid, Mailgun, etc.
   
   // Check if Gmail credentials are configured
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    return nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+  
+  if (!gmailUser || !gmailPassword) {
+    console.log('⚠️  [EMAIL CONFIG] Gmail credentials not configured:');
+    console.log('   GMAIL_USER:', gmailUser ? '✅ Set' : '❌ Missing');
+    console.log('   GMAIL_APP_PASSWORD:', gmailPassword ? '✅ Set' : '❌ Missing');
+    console.log('   Email sending will be logged to console only (development mode)');
+    return null;
   }
   
-  // If no Gmail credentials, return null to use development mode
-  return null;
+  console.log('✅ [EMAIL CONFIG] Gmail credentials configured');
+  console.log('   GMAIL_USER:', gmailUser);
+  
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailPassword
+      }
+    });
+    
+    // Verify transporter configuration
+    transporter.verify((error, success) => {
+      if (error) {
+        console.error('❌ [EMAIL CONFIG] Gmail transporter verification failed:', error.message);
+      } else {
+        console.log('✅ [EMAIL CONFIG] Gmail transporter verified and ready');
+      }
+    });
+    
+    return transporter;
+  } catch (error) {
+    console.error('❌ [EMAIL CONFIG] Failed to create Gmail transporter:', error.message);
+    return null;
+  }
 };
 
 // Send User ID email
@@ -265,7 +290,138 @@ const sendAnnouncementEmail = async (email, announcement, attachments = []) => {
   }
 };
 
+// Send password reset email
+const sendPasswordResetEmail = async (email, resetUrl, userName, userUserId, originalUserEmail = null) => {
+  try {
+    const transporter = createGmailTransporter();
+    
+    // Format current time
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    const dateString = now.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    // If originalUserEmail is provided, show it in the email body
+    const emailInfo = originalUserEmail && originalUserEmail !== email 
+      ? `<p style="color: #666; line-height: 1.6; margin-bottom: 10px; font-size: 12px; background-color: #f0f0f0; padding: 10px; border-radius: 4px;">
+          <strong>Password Reset Request For:</strong><br/>
+          User: ${userName || 'User'}<br/>
+          Email: ${originalUserEmail}
+        </p>`
+      : '';
+    
+    if (transporter) {
+      // Real email sending
+      const mailOptions = {
+        from: '"Build Watch System" <buildwatch69@gmail.com>',
+        to: email,
+        subject: originalUserEmail && originalUserEmail !== email 
+          ? `Password Reset Link for ${originalUserEmail}`
+          : 'Your Build Watch Account Recovery Link',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
+              <p style="color: #666; font-size: 12px; margin: 0;">Do Not Reply &lt;buildwatch69@gmail.com&gt;</p>
+              <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">${timeString} (${dateString})</p>
+              <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">to me</p>
+            </div>
+            
+            <div style="padding: 20px 0;">
+              <p style="color: #333; line-height: 1.6; margin-bottom: 20px; font-size: 14px;">
+                Hi, ${userName || 'User'}
+              </p>
+              
+              ${emailInfo}
+              
+              <p style="color: #333; line-height: 1.6; margin-bottom: 20px; font-size: 14px;">
+                Your Build Watch Account Recovery Link is:
+              </p>
+              
+              <div style="background-color: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin: 20px 0; word-break: break-all;">
+                <a href="${resetUrl}" style="color: #0A45E0; text-decoration: none; font-size: 14px; word-break: break-all;">${resetUrl}</a>
+              </div>
+              
+              <p style="color: #666; line-height: 1.6; margin-top: 30px; font-size: 12px;">
+                This link will expire in 1 hour. If you didn't request this password reset, please ignore this email.
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('✅ [EMAIL] Password reset email sent successfully!');
+        console.log('📧 [EMAIL] To:', email);
+        if (originalUserEmail && originalUserEmail !== email) {
+          console.log('📧 [EMAIL] Original user email:', originalUserEmail);
+        }
+        console.log('📧 [EMAIL] Message ID:', info.messageId);
+        console.log('📧 [EMAIL] Reset URL:', resetUrl);
+        console.log('📧 [EMAIL] Response:', info.response);
+        return true;
+      } catch (sendError) {
+        console.error('❌ [EMAIL] Failed to send email:', sendError.message);
+        console.error('❌ [EMAIL] Error code:', sendError.code);
+        if (sendError.response) {
+          console.error('❌ [EMAIL] SMTP response:', sendError.response);
+        }
+        throw sendError; // Re-throw to be caught by outer catch
+      }
+    } else {
+      // Development mode - show reset link in console
+      console.log('\n📧 ===== PASSWORD RESET EMAIL (DEVELOPMENT MODE) =====');
+      console.log('📧 From: Do Not Reply <buildwatch69@gmail.com>');
+      console.log('📧 To:', email);
+      if (originalUserEmail && originalUserEmail !== email) {
+        console.log('📧 Original User Email:', originalUserEmail);
+      }
+      console.log('📧 Subject: Your Build Watch Account Recovery Link');
+      console.log('📧 User:', userName || 'N/A');
+      console.log('📧 User ID:', userUserId || 'N/A');
+      console.log('📧 Reset URL:', resetUrl);
+      console.log('📧 ================================================\n');
+      
+      console.log('💡 To enable real email sending:');
+      console.log('1. Enable 2FA on your Gmail account');
+      console.log('2. Generate an App Password');
+      console.log('3. Add to your .env file:');
+      console.log('   GMAIL_USER=buildwatch69@gmail.com');
+      console.log('   GMAIL_APP_PASSWORD=your-app-password');
+      console.log('4. Restart the backend server\n');
+      
+      return true; // Return true to allow testing
+    }
+  } catch (error) {
+    console.error('❌ [EMAIL] Error sending password reset email:', error);
+    console.error('❌ [EMAIL] Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response
+    });
+    
+    // Fallback to development mode
+    console.log('\n📧 ===== PASSWORD RESET EMAIL (FALLBACK MODE) =====');
+    console.log('📧 To:', email);
+    if (originalUserEmail && originalUserEmail !== email) {
+      console.log('📧 Original User Email:', originalUserEmail);
+    }
+    console.log('📧 Reset URL:', resetUrl);
+    console.log('📧 ================================================\n');
+    
+    return false; // Return false on error
+  }
+};
+
 module.exports = {
   sendUserIdEmail,
-  sendAnnouncementEmail
+  sendAnnouncementEmail,
+  sendPasswordResetEmail
 }; 

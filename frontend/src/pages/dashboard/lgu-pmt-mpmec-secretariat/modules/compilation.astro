@@ -727,20 +727,6 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
                 <span>Compilation Summary</span>
               </div>
             </button>
-            <button 
-              id="tab-compiled" 
-              class="group flex-1 py-4 px-8 text-sm font-semibold rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 bg-transparent text-gray-600 hover:text-gray-800 hover:bg-white/80 relative overflow-hidden" 
-              onclick="showTab('compiled')"
-            >
-              <div class="absolute inset-0 bg-gradient-to-r from-sky-50 to-sky-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div class="flex items-center justify-center gap-3 relative z-10">
-                <svg class="w-6 h-6 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span>Compiled Reports</span>
-                <span id="compiled-count" class="bg-sky-100 text-sky-800 text-xs font-medium px-2 py-1 rounded-full hidden group-hover:scale-110 transition-transform duration-300">0</span>
-              </div>
-            </button>
           </div>
         </div>
 
@@ -752,244 +738,6 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <!-- Project View Container (hidden by default) -->
         <div id="project-view-container" class="hidden">
           <!-- Project content will be loaded here -->
-        </div>
-      </div>
-      
-      <div id="tab-content-compiled" class="hidden">
-        <!-- Enhanced Compiled Reports Overview -->
-        <div class="space-y-8">
-          <!-- Compiled Reports Header -->
-          <div class="profile-card p-8">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="icon-container bg-gradient-to-br from-blue-500 to-blue-600">
-                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  </div>
-                <div>
-                  <h2 class="text-3xl font-bold text-gray-900">Compiled Reports Archive</h2>
-                  <p class="text-gray-600">Official records of milestone reports with Secretariat verdicts</p>
-                  </div>
-                  </div>
-              <div class="flex items-center gap-3">
-                <button onclick="refreshCompiledReports()" class="btn-primary btn-sm inline-flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                  </svg>
-                  Refresh Archive
-                </button>
-                <button onclick="exportCompiledReports()" class="btn-success btn-sm inline-flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  Export Reports
-                </button>
-                </div>
-              </div>
-          </div>
-
-          <!-- Compiled Reports Statistics -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Total Compiled Reports -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Total Reports</p>
-                  <p class="text-2xl font-bold text-black" id="totalCompiledReports">0</p>
-                  <p class="text-xs text-blue-600 mt-1">Compiled reports</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-blue-500 to-blue-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Approved Reports -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Approved</p>
-                  <p class="text-2xl font-bold text-black" id="approvedReports">0</p>
-                  <p class="text-xs text-green-600 mt-1">Successfully approved</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-green-500 to-green-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pending Review -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Under Review</p>
-                  <p class="text-2xl font-bold text-black" id="underReviewReports">0</p>
-                  <p class="text-xs text-amber-600 mt-1">Awaiting decision</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Rejected Reports -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Rejected</p>
-                  <p class="text-2xl font-bold text-black" id="rejectedReports">0</p>
-                  <p class="text-xs text-red-600 mt-1">Requires revision</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-red-500 to-red-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Search & Filter Section for Compiled Reports -->
-          <div class="profile-card p-8">
-            <div class="mb-6">
-              <div class="flex items-center gap-3 mb-6">
-                <div class="icon-container-small bg-gradient-to-br from-sky-500 to-sky-600">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                  </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900">Search & Filter Reports</h3>
-              </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Search Input -->
-                <div class="lg:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Search Reports</label>
-                  <div class="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Search by project name, department..." 
-                      class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-300"
-                      id="compiledSearchInput"
-                    >
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                  </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Status Filter -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-300" id="compiledStatusFilter">
-                    <option value="">All Status</option>
-                    <option value="approved">Approved</option>
-                    <option value="under_review">Under Review</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                </div>
-                
-                <!-- Department Filter -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                  <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-300" id="compiledDepartmentFilter">
-                    <option value="">All Departments</option>
-                    <option value="mdrrmo">MDRRMO</option>
-                    <option value="meo">MEO</option>
-                    <option value="mao">MAO</option>
-                  </select>
-                </div>
-              </div>
-              
-              <!-- Filter Action Buttons -->
-              <div class="flex items-center gap-4 mt-6">
-                <button class="btn-primary inline-flex items-center gap-2" onclick="applyCompiledFilters()">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                  </svg>
-                  Apply Filters
-                </button>
-                <button class="btn-secondary inline-flex items-center gap-2" onclick="clearCompiledFilters()">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                  Clear Filters
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Compiled Reports Timeline -->
-          <div id="compiledReportsTimeline" class="space-y-6">
-            <!-- Enhanced Loading state -->
-            <div id="compiled-reports-loading" class="hidden">
-              <div class="flex flex-col items-center justify-center py-16 space-y-6">
-                <div class="relative">
-                  <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
-                  <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-400 animate-ping"></div>
-                </div>
-                <div class="text-center space-y-2">
-                  <p class="text-lg font-semibold text-gray-700">Loading compiled reports...</p>
-                  <p class="text-sm text-gray-500">Please wait while we gather the latest data</p>
-                </div>
-                <div class="flex space-x-2">
-                  <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                  <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Reports will be populated here dynamically -->
-            <div id="compiledReportsList" class="space-y-4">
-              <!-- Sample compiled report card -->
-              <div class="profile-card p-6 compiled-report-card">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-3">
-                      <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span class="text-sm font-medium text-green-600">Approved</span>
-                      <span class="text-xs text-gray-500">•</span>
-                      <span class="text-xs text-gray-500">Dec 15, 2024</span>
-          </div>
-                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Sample Project Report</h4>
-                    <p class="text-sm text-gray-600 mb-3">Municipal Disaster And Risk Reduction Management Office</p>
-                    <div class="flex items-center gap-4 text-sm text-gray-500">
-                      <span>Project ID: PRJ-2024-001</span>
-                      <span>•</span>
-                      <span>Budget: ₱1,500,000</span>
-                      <span>•</span>
-                      <span>Progress: 85%</span>
-        </div>
-      </div>
-                  <div class="flex items-center gap-2">
-                    <button class="btn-primary btn-sm inline-flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                      </svg>
-                      View
-                    </button>
-                    <button class="btn-success btn-sm inline-flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                      Export
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </main>
@@ -1375,34 +1123,18 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     
     // Hide all tab contents
     const summaryContent = document.getElementById('tab-content-summary');
-    const compiledContent = document.getElementById('tab-content-compiled');
     const summaryTab = document.getElementById('tab-summary');
-    const compiledTab = document.getElementById('tab-compiled');
     
     if (summaryContent) summaryContent.classList.add('hidden');
-    if (compiledContent) compiledContent.classList.add('hidden');
     
     // Remove active classes from all tabs
     if (summaryTab) {
       summaryTab.classList.remove('bg-white', 'text-sky-600', 'shadow-lg');
       summaryTab.classList.add('bg-transparent', 'text-gray-600');
     }
-    if (compiledTab) {
-      compiledTab.classList.remove('bg-white', 'text-sky-600', 'shadow-lg');
-      compiledTab.classList.add('bg-transparent', 'text-gray-600');
-    }
     
     // Show selected tab content and activate tab
-    if (tabName === 'compiled') {
-      if (compiledContent) compiledContent.classList.remove('hidden');
-      if (compiledTab) {
-        compiledTab.classList.add('bg-white', 'text-sky-600', 'shadow-lg');
-        compiledTab.classList.remove('bg-transparent', 'text-gray-600');
-      }
-      if (typeof loadCompiledReports === 'function') {
-        loadCompiledReports();
-      }
-    } else {
+    if (tabName === 'summary') {
       if (summaryContent) summaryContent.classList.remove('hidden');
       if (summaryTab) {
         summaryTab.classList.add('bg-white', 'text-sky-600', 'shadow-lg');
@@ -3654,6 +3386,25 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
             const milestonesData = await milestonesResponse.json();
             project.milestones = milestonesData.milestones || [];
             console.log(`📊 Loaded ${project.milestones.length} milestones for project ${project.title}`);
+            
+            // Fetch milestone submissions and attach to milestones
+            try {
+              const submissionsResponse = await fetch(`http://localhost:3000/api/milestones/milestone-submissions?projectId=${project.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              
+              if (submissionsResponse.ok) {
+                const submissionsData = await submissionsResponse.json();
+                if (submissionsData.success && submissionsData.submissions) {
+                  // Attach submissions to their milestones
+                  project.milestones.forEach(milestone => {
+                    milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+                  });
+                }
+              }
+            } catch (submissionError) {
+              console.warn(`⚠️ Could not fetch milestone submissions for project ${project.id}:`, submissionError);
+            }
           } else {
             console.warn(`❌ Failed to load milestones for project ${project.id}: ${milestonesResponse.status}`);
             project.milestones = [];
@@ -3811,6 +3562,30 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         const milestonesData = await milestonesResponse.json();
         project.milestones = milestonesData.milestones || [];
         console.log('📊 Fetched milestones data:', project.milestones);
+        
+        // Fetch milestone submissions and attach to milestones
+        try {
+          const submissionsResponse = await fetch(`http://localhost:3000/api/milestones/milestone-submissions?projectId=${projectId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (submissionsResponse.ok) {
+            const submissionsData = await submissionsResponse.json();
+            if (submissionsData.success && submissionsData.submissions) {
+              console.log(`✅ Found ${submissionsData.submissions.length} milestone submissions`);
+              
+              // Attach submissions to their milestones
+              project.milestones.forEach(milestone => {
+                milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+                if (milestone.submissions.length > 0) {
+                  console.log(`✅ Attached ${milestone.submissions.length} submissions to milestone "${milestone.title}"`);
+                }
+              });
+            }
+          }
+        } catch (submissionError) {
+          console.warn('⚠️ Could not fetch milestone submissions:', submissionError);
+        }
       } else {
         project.milestones = [];
         console.log('❌ Failed to fetch milestones:', milestonesResponse.status);
@@ -3953,10 +3728,88 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 
     return milestones.map(milestone => {
       console.log('🔍 Rendering milestone card:', milestone.id, milestone.title);
-      const status = milestone.status || 'pending';
-      const statusColor = getMilestoneStatusColor(status, milestone);
-      const statusText = getMilestoneStatusText(status, milestone);
-      const progress = milestone.progress || 0;
+      
+      // DEBUGGING: Log milestone data
+      console.log(`🔍 [${milestone.title}] Milestone Debug Info:`, {
+        id: milestone.id,
+        originalStatus: milestone.status,
+        submissions: milestone.submissions,
+        submissionsCount: milestone.submissions?.length || 0,
+        timelineStatus: milestone.timelineStatus,
+        budgetStatus: milestone.budgetStatus,
+        physicalStatus: milestone.physicalStatus,
+        progress: milestone.progress,
+        timelineEndDate: milestone.timelineEndDate
+      });
+      
+      // Check if milestone has approved submission
+      const hasApprovedSubmission = milestone.submissions?.some(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      ) || false;
+      
+      // Check if milestone has approved divisions
+      const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                   milestone.budgetStatus === 'approved' || 
+                                   milestone.physicalStatus === 'approved';
+      
+      // Determine status - prioritize approved submissions/divisions
+      let status = milestone.status || 'pending';
+      if ((hasApprovedSubmission || hasApprovedDivisions) && status !== 'completed') {
+        status = 'completed';
+        console.log(`✅ [${milestone.title}] Status updated to completed`);
+      }
+      
+      const statusColor = getMilestoneStatusColor(status, milestone, hasApprovedSubmission, hasApprovedDivisions);
+      const statusText = getMilestoneStatusText(status, milestone, hasApprovedSubmission, hasApprovedDivisions);
+      
+      // Calculate milestone's actual progress percentage (not contribution to project)
+      // For completed milestones, show 100% progress
+      let progress = 0;
+      
+      if (hasApprovedSubmission || hasApprovedDivisions || status === 'completed' || status === 'approved') {
+        // Milestone is completed - show 100% progress
+        progress = 100;
+        console.log(`✅ [${milestone.title}] Milestone is completed, showing 100% progress`);
+      } else {
+        // Try to get actual progress from milestone data or submissions
+        progress = parseFloat(milestone.progress) || 0;
+        
+        // Try to get progress from approved submission if available
+        if (milestone.submissions && Array.isArray(milestone.submissions)) {
+          const approvedSubmission = milestone.submissions.find(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          );
+          
+          if (approvedSubmission) {
+            // Try to get actual progress values from submission
+            if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
+              const timelineProgress = parseFloat(approvedSubmission.timelineProgress);
+              const budgetProgress = parseFloat(approvedSubmission.budgetProgress || approvedSubmission.timelineProgress);
+              const physicalProgress = parseFloat(approvedSubmission.physicalProgress || approvedSubmission.timelineProgress);
+              
+              // Average of three divisions
+              progress = (timelineProgress + budgetProgress + physicalProgress) / 3;
+            }
+          }
+        }
+        
+        // If still 0, check individual division statuses for partial completion
+        if (progress === 0) {
+          let completedDivisions = 0;
+          if (milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'completed') completedDivisions++;
+          if (milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'completed') completedDivisions++;
+          if (milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'completed') completedDivisions++;
+          
+          if (completedDivisions > 0) {
+            progress = (completedDivisions / 3) * 100;
+          }
+        }
+      }
+      
+      // Ensure progress is valid
+      progress = isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress));
+      
+      console.log(`📊 [${milestone.title}] Final progress:`, progress);
       const startDate = milestone.timelineStartDate ? new Date(milestone.timelineStartDate).toLocaleDateString() : 'N/A';
       const endDate = milestone.timelineEndDate ? new Date(milestone.timelineEndDate).toLocaleDateString() : 'N/A';
       
@@ -4030,7 +3883,17 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   }
 
   // Helper function to get milestone status color based on lifecycle
-  function getMilestoneStatusColor(status, milestone) {
+  function getMilestoneStatusColor(status, milestone, hasApprovedSubmission = false, hasApprovedDivisions = false) {
+    // If milestone has approved submission or divisions, it's completed (even if delayed)
+    if (hasApprovedSubmission || hasApprovedDivisions || status === 'completed' || status === 'approved') {
+      // Check if it was delayed but now completed
+      const isDelayed = milestone.timelineEndDate && new Date(milestone.timelineEndDate) < new Date();
+      if (isDelayed) {
+        return 'bg-orange-100 text-orange-800 border border-orange-200'; // Delayed but completed
+      }
+      return 'bg-green-100 text-green-800 border border-green-200';
+    }
+    
     // Check if milestone is delayed (due date has passed)
     const isDelayed = milestone.timelineEndDate && new Date(milestone.timelineEndDate) < new Date();
     
@@ -4057,7 +3920,17 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   }
 
   // Helper function to get milestone status text based on lifecycle
-  function getMilestoneStatusText(status, milestone) {
+  function getMilestoneStatusText(status, milestone, hasApprovedSubmission = false, hasApprovedDivisions = false) {
+    // If milestone has approved submission or divisions, it's completed
+    if (hasApprovedSubmission || hasApprovedDivisions || status === 'completed' || status === 'approved') {
+      // Check if it was delayed but now completed
+      const isDelayed = milestone.timelineEndDate && new Date(milestone.timelineEndDate) < new Date();
+      if (isDelayed) {
+        return 'Delayed (Completed)';
+      }
+      return 'Approved (Complete)';
+    }
+    
     // Check if milestone is delayed (due date has passed)
     const isDelayed = milestone.timelineEndDate && new Date(milestone.timelineEndDate) < new Date();
     
@@ -4112,9 +3985,26 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     console.log('🔍 Opening MilestoneSubmissionModal for milestone:', milestone);
     
     // Check if milestone has approved submissions
+    const hasApprovedSubmission = milestone.submissions?.some(s => 
+      s.status === 'approved' || s.status === 'iu_approved'
+    ) || false;
+    
+    const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                 milestone.budgetStatus === 'approved' || 
+                                 milestone.physicalStatus === 'approved';
+    
     const hasApprovedSubmissions = milestone.status === 'completed' || 
                                   milestone.status === 'approved' || 
-                                  milestone.status === 'compiled_for_secretariat';
+                                  milestone.status === 'compiled_for_secretariat' ||
+                                  hasApprovedSubmission ||
+                                  hasApprovedDivisions;
+    
+    console.log('🔍 Milestone approval status:', {
+      status: milestone.status,
+      hasApprovedSubmission,
+      hasApprovedDivisions,
+      hasApprovedSubmissions
+    });
     
     // Check if milestone is delayed
     const isDelayed = milestone.timelineEndDate && new Date(milestone.timelineEndDate) < new Date();
@@ -4161,6 +4051,80 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
 
   // Function to render approved submission content
   function renderApprovedSubmissionContent(milestone) {
+    // Calculate milestone's actual progress percentage (not contribution to project)
+    // For completed milestones, show 100% progress
+    let progress = 0;
+    
+    // Check if milestone is completed/approved
+    const hasApprovedSubmission = milestone.submissions?.some(s => 
+      s.status === 'approved' || s.status === 'iu_approved'
+    ) || false;
+    
+    const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
+                                 milestone.budgetStatus === 'approved' || 
+                                 milestone.physicalStatus === 'approved';
+    
+    const isCompleted = hasApprovedSubmission || hasApprovedDivisions || 
+                       milestone.status === 'completed' || milestone.status === 'approved';
+    
+    if (isCompleted) {
+      // Milestone is completed - show 100% progress
+      progress = 100;
+      console.log(`✅ [${milestone.title}] Modal: Milestone is completed, showing 100% progress`);
+    } else {
+      // Try to get actual progress from milestone data or submissions
+      progress = parseFloat(milestone.progress) || 0;
+      
+      // Try to get progress from approved submission if available
+      if (milestone.submissions && Array.isArray(milestone.submissions)) {
+        const approvedSubmission = milestone.submissions.find(s => 
+          s.status === 'approved' || s.status === 'iu_approved'
+        );
+        
+        if (approvedSubmission) {
+          // Try to get actual progress values from submission
+          if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
+            const timelineProgress = parseFloat(approvedSubmission.timelineProgress) || 0;
+            const budgetProgress = parseFloat(approvedSubmission.budgetProgress || approvedSubmission.timelineProgress) || 0;
+            const physicalProgress = parseFloat(approvedSubmission.physicalProgress || approvedSubmission.timelineProgress) || 0;
+            
+            // Average of three divisions
+            progress = (timelineProgress + budgetProgress + physicalProgress) / 3;
+            console.log(`📊 [${milestone.title}] Modal: Using progress from submission:`, {
+              timeline: timelineProgress,
+              budget: budgetProgress,
+              physical: physicalProgress,
+              average: progress
+            });
+          }
+        }
+      }
+      
+      // If still 0, check individual division statuses for partial completion
+      if (progress === 0) {
+        let completedDivisions = 0;
+        if (milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'completed') completedDivisions++;
+        if (milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'completed') completedDivisions++;
+        if (milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'completed') completedDivisions++;
+        
+        if (completedDivisions > 0) {
+          progress = (completedDivisions / 3) * 100;
+        }
+      }
+    }
+    
+    // Ensure progress is a valid number
+    progress = isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress));
+    
+    console.log(`📊 [${milestone.title}] Modal progress calculation:`, {
+      milestoneWeight: milestone.weight,
+      timelineWeight: milestone.timelineWeight,
+      budgetWeight: milestone.budgetWeight,
+      physicalWeight: milestone.physicalWeight,
+      calculatedProgress: progress,
+      progressType: typeof progress
+    });
+    
     return `
       <div class="space-y-6">
         <!-- Milestone Status -->
@@ -4218,9 +4182,9 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
               <label class="block text-sm font-medium text-gray-700 mb-1">Progress</label>
               <div class="flex items-center gap-2">
                 <div class="flex-1 bg-gray-200 rounded-full h-2">
-                  <div class="bg-green-500 h-2 rounded-full" style="width: ${milestone.progress || 0}%"></div>
+                  <div class="bg-green-500 h-2 rounded-full" style="width: ${progress.toFixed(2)}%"></div>
                 </div>
-                <span class="text-sm font-medium text-gray-700">${milestone.progress || 0}%</span>
+                <span class="text-sm font-medium text-gray-700">${progress.toFixed(2)}%</span>
               </div>
             </div>
           </div>
