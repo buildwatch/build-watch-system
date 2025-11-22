@@ -616,6 +616,7 @@ app.options('/uploads/profile-pictures/:filename', (req, res) => {
 app.get('/uploads/profile-pictures/:filename', (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, 'uploads', 'profile-pictures', filename);
+  const defaultProfilePath = path.join(__dirname, 'uploads', 'profile-pictures', 'default-profile.png');
   
   // Set CORS headers specifically for profile pictures - more permissive
   res.header('Access-Control-Allow-Origin', '*');
@@ -624,11 +625,6 @@ app.get('/uploads/profile-pictures/:filename', (req, res) => {
   res.header('Access-Control-Allow-Credentials', 'false'); // Changed to false for wildcard origin
   res.header('Cache-Control', 'public, max-age=31536000');
   res.header('Vary', 'Origin');
-  
-  // Check if file exists
-  if (!require('fs').existsSync(filePath)) {
-    return res.status(404).json({ error: 'Profile picture not found' });
-  }
   
   // Determine content type
   let contentType = 'image/jpeg'; // default
@@ -639,7 +635,24 @@ app.get('/uploads/profile-pictures/:filename', (req, res) => {
   else if (filename.endsWith('.webp')) contentType = 'image/webp';
   
   res.setHeader('Content-Type', contentType);
-  res.sendFile(filePath);
+  
+  // Check if file exists, otherwise serve default
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    // File not found - try to serve default profile picture
+    if (fs.existsSync(defaultProfilePath)) {
+      console.log(`⚠️  Profile picture not found: ${filename}, serving default`);
+      res.sendFile(defaultProfilePath);
+    } else {
+      // No default either - return 404 with a helpful message
+      console.log(`❌ Profile picture not found: ${filename} (no default available)`);
+      res.status(404).json({ 
+        error: 'Profile picture not found',
+        message: 'The requested profile picture does not exist. Please upload a new profile picture.'
+      });
+    }
+  }
 });
 
 // 404 handler
