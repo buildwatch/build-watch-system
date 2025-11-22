@@ -7,7 +7,8 @@ import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astr
 import MilestoneSubmissionCard from '../../../../components/MilestoneSubmissionCard.astro';
 import MilestoneSubmissionModal from '../../../../components/MilestoneSubmissionModal.astro';
 
-const API_URL = 'http://localhost:3000/api';
+// API URL will be set dynamically in client-side script
+let API_URL = 'http://localhost:3000/api'; // Default for SSR, will be overridden client-side
 let userData = null;
 let projects = [];
 let selectedProject = null;

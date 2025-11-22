@@ -933,9 +933,19 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       }
 
       // Use dynamic API URL based on environment
-      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3000/api' 
-        : 'http://148.230.96.155:3000/api';
+      const getApiUrl = () => {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3000/api';
+        }
+        if (hostname.includes('build-watch.com')) {
+          // For production, use same protocol and domain without port (reverse proxy)
+          return `${protocol}//${hostname}/api`;
+        }
+        return 'http://localhost:3000/api';
+      };
+      const apiUrl = getApiUrl();
       const requestUrl = `${apiUrl}/projects/${projectId}`;
       
       console.log('🌐 Making API request to:', requestUrl);

@@ -1,9 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const API_URL = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : `${window.location.protocol}//${window.location.hostname}:3000/api`)
+  ? (() => {
+      const hostname = window.location.hostname;
+      const protocol = window.location.protocol;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:3000/api';
+      }
+      if (hostname.includes('build-watch.com')) {
+        // For production, use same protocol and domain without port (reverse proxy)
+        return `${protocol}//${hostname}/api`;
+      }
+      return 'http://localhost:3000/api';
+    })()
   : 'http://localhost:3000/api';
 
 // Get token from localStorage

@@ -4,7 +4,20 @@ import Layout from '../../../../layouts/Layout.astro';
 import LGUPMTLayout from '../../../../components/LGUPMTLayout.astro';
 import DocumentCenter from '../../../../islands/DocumentCenter.jsx';
 
-const API_URL = 'http://localhost:3000/api';
+// Dynamic API URL based on request
+const getApiUrl = () => {
+  const url = Astro.url;
+  const hostname = url.hostname;
+  const protocol = url.protocol;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000/api';
+  }
+  if (hostname.includes('build-watch.com')) {
+    return `${protocol}//${hostname}/api`;
+  }
+  return 'http://localhost:3000/api';
+};
+const API_URL = getApiUrl();
 let userData = null;
 let token = '';
 
