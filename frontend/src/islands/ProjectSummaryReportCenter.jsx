@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { io } from 'socket.io-client';
 
 const API_URL = typeof window !== 'undefined' 
   ? (() => {
@@ -498,7 +499,6 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     // WebSocket connection for real-time notifications (using Socket.IO)
     try {
       // Use Socket.IO instead of raw WebSocket
-      const { io } = await import('socket.io-client');
       const socketUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:3000'
         : `${window.location.protocol}//${window.location.hostname}`;
