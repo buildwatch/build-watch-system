@@ -308,7 +308,20 @@
       // ✅ FIXED: Always fetch fresh data from API first
       console.log('🌐 LGU-PMT Sidebar: Fetching fresh user data from API...');
       try {
-        const response = await fetch('http://localhost:3000/api/auth/profile', {
+        // Dynamic API URL based on environment
+        const getApiUrl = () => {
+          const hostname = window.location.hostname;
+          const protocol = window.location.protocol;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3000/api';
+          }
+          if (hostname.includes('build-watch.com')) {
+            return `${protocol}//${hostname}/api`;
+          }
+          return 'http://localhost:3000/api';
+        };
+        const API_URL = getApiUrl();
+        const response = await fetch(`${API_URL}/auth/profile`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Cache-Control': 'no-cache',
