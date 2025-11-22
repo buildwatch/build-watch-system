@@ -664,6 +664,42 @@ app.get('/uploads/profile-pictures/:filename', (req, res) => {
   }
 });
 
+// Special route for project comment images with enhanced CORS
+app.get('/uploads/project-comments/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', 'project-comments', filename);
+  
+  // Set CORS headers specifically for comment images
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  res.header('Cache-Control', 'public, max-age=31536000');
+  res.header('Vary', 'Origin');
+  
+  // Determine content type
+  let contentType = 'image/jpeg'; // default
+  if (filename.endsWith('.png')) contentType = 'image/png';
+  else if (filename.endsWith('.gif')) contentType = 'image/gif';
+  else if (filename.endsWith('.svg')) contentType = 'image/svg+xml';
+  else if (filename.endsWith('.jfif')) contentType = 'image/jpeg';
+  else if (filename.endsWith('.webp')) contentType = 'image/webp';
+  
+  res.setHeader('Content-Type', contentType);
+  
+  // Check if file exists
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    // File not found - return 404 with helpful message
+    console.log(`❌ Project comment image not found: ${filename}`);
+    res.status(404).json({ 
+      error: 'Comment image not found',
+      message: 'The requested comment image does not exist.'
+    });
+  }
+});
+
 // 404 handler
 app.use('/api/*', (req, res) => {
   res.status(404).json({
