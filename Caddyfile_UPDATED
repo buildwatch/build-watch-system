@@ -12,14 +12,11 @@ build-watch.com {
             header_up X-Forwarded-For {remote}
             header_up X-Forwarded-Proto {scheme}
             
-            # CRITICAL: Forward WebSocket upgrade headers
-            # {>Connection} and {>Upgrade} forward the client's headers
-            header_up Connection {>Connection}
-            header_up Upgrade {>Upgrade}
-            
-            # Ensure WebSocket transport is enabled
+            # CRITICAL: Forward WebSocket upgrade headers properly
+            # Don't use {>Connection} or {>Upgrade} - Caddy forwards these automatically
+            # Just ensure we're using HTTP/1.1 for WebSocket support
             transport http {
-                versions h2c 1.1
+                versions 1.1
             }
         }
     }

@@ -96,7 +96,12 @@ router.post('/upload-picture', authenticateToken, upload.single('profilePicture'
     const fileName = req.file.filename;
     
     // Generate the URL for the uploaded file
-    const profilePictureUrl = `http://localhost:3000/uploads/profile-pictures/${fileName}`;
+    // Use FRONTEND_URL or construct from request for production
+    const baseUrl = process.env.FRONTEND_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://www.build-watch.com' 
+        : 'http://localhost:3000');
+    const profilePictureUrl = `${baseUrl}/uploads/profile-pictures/${fileName}`;
     
     console.log('✅ File uploaded successfully:', {
       userId: authenticatedUser.id,
@@ -396,6 +401,14 @@ router.get('/picture/:userId', async (req, res) => {
       } catch (conversionError) {
         console.log(`⚠️ Failed to convert profile picture to base64:`, conversionError.message);
       }
+    }
+    
+    // Normalize profile picture URL - convert localhost:3000 to production URL if needed
+    if (profilePictureUrl && process.env.NODE_ENV === 'production') {
+      const baseUrl = process.env.FRONTEND_URL || 'https://www.build-watch.com';
+      // Replace localhost:3000 URLs with production URL
+      profilePictureUrl = profilePictureUrl.replace(/http:\/\/localhost:3000/g, baseUrl);
+      profilePictureUrl = profilePictureUrl.replace(/https?:\/\/[^/]+:3000/g, baseUrl);
     }
     
     // If still no URL, return null instead of default to prevent CORS issues
