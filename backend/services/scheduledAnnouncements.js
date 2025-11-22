@@ -11,6 +11,7 @@ const checkAndPublishScheduledAnnouncements = async () => {
     const Op = require('sequelize').Op;
     
     // Find all scheduled announcements that should be published now
+    // Explicitly specify attributes to avoid selecting non-existent columns
     const scheduledAnnouncements = await Announcement.findAll({
       where: {
         status: 'scheduled',
@@ -18,6 +19,13 @@ const checkAndPublishScheduledAnnouncements = async () => {
           [Op.lte]: now
         }
       },
+      attributes: [
+        'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
+        'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
+        'publishDate', 'expiryDate', 'views', 'isPinned', 'approvalStatus', 
+        'requiresApproval', 'createdAt', 'updatedAt'
+        // Excluded: createdBy, announcementType (may not exist in database)
+      ],
       include: [
         {
           model: AnnouncementAttachment,
@@ -150,7 +158,7 @@ const checkAndExpireAnnouncements = async () => {
     const Op = require('sequelize').Op;
     
     // Find all active announcements that have expired
-    // Exclude createdBy from attributes since column may not exist in database
+    // Explicitly specify attributes to avoid selecting non-existent columns
     const expiredAnnouncements = await Announcement.findAll({
       where: {
         status: 'active',
@@ -159,9 +167,13 @@ const checkAndExpireAnnouncements = async () => {
           [Op.ne]: null
         }
       },
-      attributes: {
-        exclude: ['createdBy'] // Exclude createdBy if column doesn't exist
-      }
+      attributes: [
+        'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
+        'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
+        'publishDate', 'expiryDate', 'views', 'isPinned', 'approvalStatus', 
+        'requiresApproval', 'createdAt', 'updatedAt'
+        // Excluded: createdBy, announcementType (may not exist in database)
+      ]
     });
     
     if (expiredAnnouncements.length === 0) {

@@ -2873,12 +2873,16 @@ router.get('/public/announcements/unread-count', authenticateToken, async (req, 
     };
 
     // Get all relevant announcements
-    // Exclude createdBy from attributes since column may not exist in database
+    // Explicitly specify attributes to avoid selecting non-existent columns
     const announcements = await Announcement.findAll({
       where: whereConditions,
-      attributes: {
-        exclude: ['createdBy'] // Exclude createdBy if column doesn't exist
-      },
+      attributes: [
+        'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
+        'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
+        'publishDate', 'expiryDate', 'views', 'isPinned', 'approvalStatus', 
+        'requiresApproval', 'createdAt', 'updatedAt'
+        // Excluded: createdBy, announcementType (may not exist in database)
+      ],
       include: [{
         model: ReadReceipt,
         as: 'readReceipts',
