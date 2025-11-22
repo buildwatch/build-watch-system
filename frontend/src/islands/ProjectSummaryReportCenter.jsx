@@ -116,7 +116,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
   
   const currentUser = getCurrentUser();
   const theme = getThemeColors(userRole || currentUser?.role);
-  const wsRef = useRef(null);
+  const socketRef = useRef(null);
   const notificationCheckInterval = useRef(null);
 
   // Fetch projects based on access level
@@ -495,36 +495,41 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     const token = getToken();
     if (!token) return;
     
-    // WebSocket connection for real-time notifications
+    // WebSocket connection for real-time notifications (using Socket.IO)
     try {
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'localhost:3000'
-        : window.location.hostname;
-      const wsUrl = `${wsProtocol}//${wsHost}/ws?token=${token}`;
+      // Use Socket.IO instead of raw WebSocket
+      const { io } = await import('socket.io-client');
+      const socketUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : `${window.location.protocol}//${window.location.hostname}`;
       
-      const ws = new WebSocket(wsUrl);
+      const socket = io(socketUrl, {
+        path: '/socket.io',
+        transports: ['websocket', 'polling'],
+        auth: { token },
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+      });
       
-      ws.onopen = () => {
-        console.log('WebSocket connected for Project Summary');
-      };
+      socket.on('connect', () => {
+        console.log('Socket.IO connected for Project Summary');
+      });
       
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'project_update' || data.type === 'milestone_update' || data.type === 'approval') {
-            // Add to notifications
-            setNotifications(prev => [{
-              id: Date.now(),
-              type: data.type,
-              message: data.message || 'Project update received',
-              timestamp: new Date(),
-              projectId: data.projectId
-            }, ...prev.slice(0, 49)]); // Keep last 50
-            
-            // Refresh data if it's for current project
-            if (selectedProject && data.projectId === selectedProject.id) {
-              fetchMilestones(data.projectId);
+      socket.on('project_update', (data) => {
+        if (data.type === 'project_update' || data.type === 'milestone_update' || data.type === 'approval') {
+          // Add to notifications
+          setNotifications(prev => [{
+            id: Date.now(),
+            type: data.type,
+            message: data.message || 'Project update received',
+            timestamp: new Date(),
+            projectId: data.projectId
+          }, ...prev.slice(0, 49)]); // Keep last 50
+          
+          // Refresh data if it's for current project
+          if (selectedProject && data.projectId === selectedProject.id) {
+            fetchMilestones(data.projectId);
               fetchAuditTrail(data.projectId);
             }
             
@@ -532,25 +537,19 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             fetchProjects();
           }
         } catch (e) {
-          console.error('Error parsing WebSocket message:', e);
+          console.error('Error parsing Socket.IO message:', e);
         }
-      };
+      });
       
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+      socket.on('error', (error) => {
+        console.error('Socket.IO error:', error);
+      });
       
-      ws.onclose = () => {
-        console.log('WebSocket disconnected, reconnecting...');
-        setTimeout(() => {
-          if (wsRef.current) {
-            wsRef.current = null;
-            // Reconnect will happen on next render
-          }
-        }, 5000);
-      };
+      socket.on('disconnect', () => {
+        console.log('Socket.IO disconnected, will reconnect automatically');
+      });
       
-      wsRef.current = ws;
+      socketRef.current = socket;
     } catch (e) {
       console.warn('WebSocket not available, using polling instead');
     }
@@ -565,9 +564,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     }, 30000);
     
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
       if (notificationCheckInterval.current) {
         clearInterval(notificationCheckInterval.current);

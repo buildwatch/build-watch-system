@@ -7,7 +7,21 @@ import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astr
 import ProjectFilterCenter from '../../../../islands/ProjectFilterCenter.jsx';
 import ProjectExportCenter from '../../../../islands/ProjectExportCenter.jsx';
 
-const API_URL = 'http://localhost:3000/api';
+// Dynamic API URL based on request
+const getApiUrlForSSR = () => {
+  const url = Astro.url;
+  const hostname = url.hostname;
+  const protocol = url.protocol;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000/api';
+  }
+  if (hostname.includes('build-watch.com')) {
+    return `${protocol}//${hostname}/api`;
+  }
+  return 'http://localhost:3000/api';
+};
+
+const API_URL = getApiUrlForSSR();
 let userData = null;
 let submissions = [];
 let stats = {
@@ -1176,7 +1190,20 @@ loading = false;
               const token = localStorage.getItem('token') || sessionStorage.getItem('token');
               if (!token) return;
               
-              const API_URL = 'http://localhost:3000/api';
+              // Use dynamic API URL
+              const API_URL = typeof window !== 'undefined' 
+                ? (() => {
+                    const hostname = window.location.hostname;
+                    const protocol = window.location.protocol;
+                    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                      return 'http://localhost:3000/api';
+                    }
+                    if (hostname.includes('build-watch.com')) {
+                      return `${protocol}//${hostname}/api`;
+                    }
+                    return 'http://localhost:3000/api';
+                  })()
+                : 'http://localhost:3000/api';
               const response = await fetch(`${API_URL}/home/stats`, {
                 headers: {
                   'Authorization': `Bearer ${token}`,
@@ -1846,7 +1873,20 @@ loading = false;
 
 <script>
   // API Configuration
-  const API_URL = 'http://localhost:3000/api';
+  // Use dynamic API URL
+  const API_URL = typeof window !== 'undefined' 
+    ? (() => {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3000/api';
+        }
+        if (hostname.includes('build-watch.com')) {
+          return `${protocol}//${hostname}/api`;
+        }
+        return 'http://localhost:3000/api';
+      })()
+    : 'http://localhost:3000/api';
   
   // Global variables
   let submissions = [];

@@ -1160,7 +1160,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) return;
       
-      const API_URL = 'http://localhost:3000/api';
+      // Use dynamic API URL
+      const API_URL = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}/api`;
+            }
+            return 'http://localhost:3000/api';
+          })()
+        : 'http://localhost:3000/api';
       const response = await fetch(`${API_URL}/home/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1249,7 +1262,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       console.log('🌐 Making API request to compilation summary...');
-      const response = await fetch('http://localhost:3000/api/projects/compilation/summary', {
+      const API_URL = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}/api`;
+            }
+            return 'http://localhost:3000/api';
+          })()
+        : 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/projects/compilation/summary`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1590,7 +1616,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   // Global helper functions
   function getProjectImage(project) {
     if (project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None') {
-      return project.initialPhoto.startsWith('http') ? project.initialPhoto : `http://localhost:3000${project.initialPhoto}`;
+      const baseUrl = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}`;
+            }
+            return 'http://localhost:3000';
+          })()
+        : 'http://localhost:3000';
+      return project.initialPhoto.startsWith('http') ? project.initialPhoto : `${baseUrl}${project.initialPhoto}`;
     }
     return '/projects-page-header-bg.png';
   }
@@ -3332,7 +3371,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       }
       
       // Fetch all projects and filter by implementing office
-      const response = await fetch('http://localhost:3000/api/projects', {
+      const API_URL = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}/api`;
+            }
+            return 'http://localhost:3000/api';
+          })()
+        : 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/projects`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3374,7 +3426,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       // Fetch milestone data for each project
       const projectsWithMilestones = await Promise.all(departmentProjects.map(async (project) => {
         try {
-          const milestonesResponse = await fetch(`http://localhost:3000/api/projects/${project.id}/milestones`, {
+          const milestonesResponse = await fetch(`${API_URL}/projects/${project.id}/milestones`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -3389,7 +3441,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
             
             // Fetch milestone submissions and attach to milestones
             try {
-              const submissionsResponse = await fetch(`http://localhost:3000/api/milestones/milestone-submissions?projectId=${project.id}`, {
+              const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${project.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
               });
               
@@ -3529,7 +3581,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       }
 
       // Fetch project details
-      const projectResponse = await fetch(`http://localhost:3000/api/projects/${projectId}`, {
+      const projectResponse = await fetch(`${API_URL}/projects/${projectId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3550,7 +3602,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       console.log('📊 Extracted project data:', project);
 
       // Fetch milestones for the project
-      const milestonesResponse = await fetch(`http://localhost:3000/api/projects/${projectId}/milestones`, {
+      const milestonesResponse = await fetch(`${API_URL}/projects/${projectId}/milestones`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3565,7 +3617,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         
         // Fetch milestone submissions and attach to milestones
         try {
-          const submissionsResponse = await fetch(`http://localhost:3000/api/milestones/milestone-submissions?projectId=${projectId}`, {
+          const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           
@@ -4497,7 +4549,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   async function loadDepartmentProjects(departmentId, departmentName) {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/projects/compilation/summary', {
+      const API_URL = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}/api`;
+            }
+            return 'http://localhost:3000/api';
+          })()
+        : 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/projects/compilation/summary`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -4553,7 +4618,20 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const response = await fetch('http://localhost:3000/api/projects/compilation/summary', {
+      const API_URL = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}/api`;
+            }
+            return 'http://localhost:3000/api';
+          })()
+        : 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/projects/compilation/summary`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
