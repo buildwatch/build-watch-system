@@ -7,7 +7,16 @@
  */
 
 const http = require('http');
-const { io } = require('socket.io-client');
+const https = require('https');
+
+// Try to load socket.io-client, but make it optional
+let io = null;
+try {
+  io = require('socket.io-client').io;
+} catch (e) {
+  console.log('⚠️  socket.io-client not installed - Socket.IO connection test will be skipped');
+  console.log('   Install it with: npm install socket.io-client\n');
+}
 
 // Configuration
 const SOCKET_URL = process.env.SOCKET_URL || 'http://localhost:3000';
@@ -20,7 +29,10 @@ console.log('==========================================\n');
 console.log('📡 Test 1: Checking if backend is accessible...');
 const testBackend = () => {
   return new Promise((resolve, reject) => {
-    const req = http.get(`${SOCKET_URL}/api/health`, (res) => {
+    const url = new URL(SOCKET_URL);
+    const client = url.protocol === 'https:' ? https : http;
+    
+    const req = client.get(`${SOCKET_URL}/api/health`, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -54,7 +66,10 @@ const testBackend = () => {
 console.log('📡 Test 2: Checking Socket.IO endpoint...');
 const testSocketIOEndpoint = () => {
   return new Promise((resolve, reject) => {
-    const req = http.get(`${SOCKET_URL}/socket.io/?EIO=4&transport=polling`, (res) => {
+    const url = new URL(SOCKET_URL);
+    const client = url.protocol === 'https:' ? https : http;
+    
+    const req = client.get(`${SOCKET_URL}/socket.io/?EIO=4&transport=polling`, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -88,6 +103,14 @@ const testSocketIOEndpoint = () => {
 console.log('📡 Test 3: Attempting Socket.IO connection...');
 const testSocketIOConnection = () => {
   return new Promise((resolve, reject) => {
+    if (!io) {
+      console.log('   ⚠️  Skipping Socket.IO connection test (socket.io-client not available)');
+      console.log('   💡 Install socket.io-client to test full connection:');
+      console.log('      npm install socket.io-client\n');
+      resolve(true);
+      return;
+    }
+
     console.log(`   Connecting to: ${SOCKET_URL}`);
     console.log(`   Path: /socket.io`);
     console.log(`   Transport: websocket, polling\n`);
@@ -166,13 +189,18 @@ async function runTests() {
     await testSocketIOEndpoint();
     await testReverseProxy();
     
-    // Only test connection if we have a valid token
-    if (TEST_TOKEN && TEST_TOKEN !== 'test-token') {
+    // Only test connection if we have socket.io-client and a valid token
+    if (io && TEST_TOKEN && TEST_TOKEN !== 'test-token') {
       await testSocketIOConnection();
     } else {
-      console.log('⚠️  Skipping Socket.IO connection test (no valid token)');
-      console.log('   💡 To test connection, set TEST_TOKEN environment variable:');
-      console.log('      TEST_TOKEN=your-jwt-token node scripts/debug-websocket.js\n');
+      if (!io) {
+        console.log('⚠️  Skipping Socket.IO connection test (socket.io-client not installed)');
+      } else {
+        console.log('⚠️  Skipping Socket.IO connection test (no valid token)');
+        console.log('   💡 To test connection, set TEST_TOKEN environment variable:');
+        console.log('      TEST_TOKEN=your-jwt-token node scripts/debug-websocket.js');
+      }
+      console.log('');
     }
 
     console.log('✅ All tests completed!\n');
