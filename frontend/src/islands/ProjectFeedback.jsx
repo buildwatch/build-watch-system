@@ -1171,8 +1171,8 @@ export default function ProjectFeedback({ projectId }) {
                     // Ensure full URL for images
                     let fullImageUrl = imageUrl;
                     if (!imageUrl.startsWith('http')) {
-                      // Handle relative paths
-                      const baseUrl = API_URL.replace('/api/project-comments', '');
+                      // Handle relative paths - remove /api from API_URL to get base URL
+                      const baseUrl = API_URL.replace('/api', '');
                       if (imageUrl.startsWith('/')) {
                         fullImageUrl = `${baseUrl}${imageUrl}`;
                       } else {
