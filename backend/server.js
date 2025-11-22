@@ -45,8 +45,9 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Initialize Socket.IO
+// Initialize Socket.IO with production-ready configuration
 const io = new Server(server, {
+  path: '/socket.io',
   cors: {
     origin: [
       'http://localhost:4321',
@@ -58,6 +59,24 @@ const io = new Server(server, {
     ],
     methods: ['GET', 'POST'],
     credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true, // Allow Engine.IO v3 clients for compatibility
+  pingTimeout: 60000, // Increased for reverse proxy
+  pingInterval: 25000, // Standard ping interval
+  upgradeTimeout: 30000, // Timeout for upgrade to websocket
+  maxHttpBufferSize: 1e8, // 100MB max buffer size
+  // Enable compression for better performance
+  perMessageDeflate: {
+    zlibDeflateOptions: {
+      chunkSize: 1024,
+      memLevel: 7,
+      level: 3
+    },
+    zlibInflateOptions: {
+      chunkSize: 10 * 1024
+    },
+    threshold: 1024 // Only compress messages larger than 1KB
   }
 });
 
