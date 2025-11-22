@@ -1,0 +1,214 @@
+---
+// Debug Profile API Page
+// Access at: https://www.build-watch.com/debug-profile
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile API Debugger</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #4ec9b0;
+    }
+    .test-section {
+      background: #252526;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border-left: 3px solid #007acc;
+    }
+    .success {
+      border-left-color: #4ec9b0;
+      color: #4ec9b0;
+    }
+    .error {
+      border-left-color: #f48771;
+      color: #f48771;
+    }
+    .warning {
+      border-left-color: #dcdcaa;
+      color: #dcdcaa;
+    }
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #005a9e;
+    }
+    pre {
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    #results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Profile API Debugger</h1>
+    
+    <div class="test-section">
+      <h3>Environment Info</h3>
+      <div id="envInfo">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+      <h3>Actions</h3>
+      <button onclick="runAllTests()">Run All Tests</button>
+      <button onclick="testHealth()">Test Health</button>
+      <button onclick="testProfile()">Test Profile</button>
+      <button onclick="testProfilePicture()">Test Profile Picture</button>
+      <button onclick="testUploads()">Test Uploads Route</button>
+      <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const isProd = hostname !== 'localhost' && hostname !== '127.0.0.1';
+    const API_URL = isProd 
+      ? `${protocol}//${hostname}/api`
+      : 'http://localhost:3000/api';
+    
+    // Display environment info
+    document.getElementById('envInfo').innerHTML = `
+      <pre>Hostname: ${hostname}
+Protocol: ${protocol}
+Is Production: ${isProd}
+API URL: ${API_URL}
+Token: ${localStorage.getItem('token') ? 'Found' : 'Not found'}</pre>
+    `;
+    
+    function addResult(message, type = 'info') {
+      const results = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = `test-section ${type}`;
+      div.innerHTML = `<pre>${message}</pre>`;
+      results.appendChild(div);
+    }
+    
+    function clearResults() {
+      document.getElementById('results').innerHTML = '';
+    }
+    
+    async function testHealth() {
+      addResult('Testing health endpoint...', 'warning');
+      try {
+        const response = await fetch(`${API_URL}/health`);
+        const data = await response.json();
+        if (response.ok) {
+          addResult(`✅ Health Check: SUCCESS\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 'success');
+        } else {
+          addResult(`❌ Health Check: FAILED\nStatus: ${response.status}`, 'error');
+        }
+      } catch (error) {
+        addResult(`❌ Health Check: ERROR\n${error.message}`, 'error');
+      }
+    }
+    
+    async function testProfile() {
+      addResult('Testing profile endpoint...', 'warning');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        addResult('❌ No token found in localStorage', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          addResult(`✅ Profile: SUCCESS\nUser: ${data.user.fullName || data.user.name}\nEmail: ${data.user.email}\nProfile Picture: ${data.user.profilePictureUrl ? data.user.profilePictureUrl.substring(0, 80) + '...' : 'None'}`, 'success');
+        } else {
+          addResult(`❌ Profile: FAILED\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`, 'error');
+        }
+      } catch (error) {
+        addResult(`❌ Profile: ERROR\n${error.message}\n${error.message.includes('3000') ? '⚠️ URL contains port 3000!' : ''}`, 'error');
+      }
+    }
+    
+    async function testProfilePicture() {
+      addResult('Testing profile picture endpoint...', 'warning');
+      const user = localStorage.getItem('user');
+      if (!user) {
+        addResult('❌ No user data found', 'error');
+        return;
+      }
+      
+      try {
+        const userObj = JSON.parse(user);
+        const userId = userObj.userId || userObj.id || userObj.employeeId;
+        if (!userId) {
+          addResult('❌ No user ID found', 'error');
+          return;
+        }
+        
+        const response = await fetch(`${API_URL}/profile/picture/${userId}`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          addResult(`✅ Profile Picture: SUCCESS\nHas Picture: ${data.profilePictureUrl ? 'Yes' : 'No'}\nURL: ${data.profilePictureUrl ? data.profilePictureUrl.substring(0, 100) + '...' : 'None'}`, 'success');
+        } else {
+          addResult(`❌ Profile Picture: FAILED\nStatus: ${response.status}`, 'error');
+        }
+      } catch (error) {
+        addResult(`❌ Profile Picture: ERROR\n${error.message}`, 'error');
+      }
+    }
+    
+    async function testUploads() {
+      addResult('Testing uploads route...', 'warning');
+      // Try to access a known file or test the route
+      const testUrl = `${protocol}//${hostname}/uploads/profile-pictures/test.jpg`;
+      try {
+        const response = await fetch(testUrl);
+        if (response.status === 404) {
+          addResult(`⚠️ Uploads route accessible but file not found (expected)\nStatus: ${response.status}\nThis means Caddy is routing correctly`, 'warning');
+        } else if (response.status === 200) {
+          addResult(`✅ Uploads route: SUCCESS\nStatus: ${response.status}`, 'success');
+        } else {
+          addResult(`❌ Uploads route: FAILED\nStatus: ${response.status}`, 'error');
+        }
+      } catch (error) {
+        addResult(`❌ Uploads route: ERROR\n${error.message}`, 'error');
+      }
+    }
+    
+    async function runAllTests() {
+      clearResults();
+      addResult('🚀 Running all tests...\n', 'warning');
+      await testHealth();
+      await testProfile();
+      await testProfilePicture();
+      await testUploads();
+      addResult('✅ All tests completed!', 'success');
+    }
+  </script>
+</body>
+</html>
+
