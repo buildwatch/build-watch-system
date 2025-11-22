@@ -184,7 +184,41 @@ CREATE TABLE IF NOT EXISTS announcement_templates (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 10. Create deleted_project_comments table
+-- 10. Create Departments table (case-sensitive: capital D)
+-- ============================================
+CREATE TABLE IF NOT EXISTS Departments (
+  id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  code VARCHAR(255) NOT NULL UNIQUE,
+  description TEXT DEFAULT NULL,
+  head VARCHAR(255) DEFAULT NULL,
+  contact_number VARCHAR(255) DEFAULT NULL,
+  email VARCHAR(255) DEFAULT NULL,
+  status ENUM('active', 'inactive') DEFAULT 'active',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 11. Create Groups table (case-sensitive: capital G)
+-- ============================================
+CREATE TABLE IF NOT EXISTS Groups (
+  id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  code VARCHAR(255) NOT NULL UNIQUE,
+  description TEXT DEFAULT NULL,
+  department_id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  leader VARCHAR(255) DEFAULT NULL,
+  member_count INT DEFAULT 0,
+  status ENUM('active', 'inactive') DEFAULT 'active',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (department_id) REFERENCES Departments(id) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 12. Create deleted_project_comments table
 -- ============================================
 CREATE TABLE IF NOT EXISTS deleted_project_comments (
   id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
@@ -228,7 +262,9 @@ AND TABLE_NAME IN (
   'announcement_tag_mappings',
   'announcement_notification_preferences',
   'announcement_templates',
-  'deleted_project_comments'
+  'deleted_project_comments',
+  'Groups',
+  'Departments'
 )
 ORDER BY TABLE_NAME;
 
