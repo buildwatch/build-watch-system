@@ -158,7 +158,33 @@ CREATE TABLE IF NOT EXISTS announcement_notification_preferences (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 9. Create deleted_project_comments table
+-- 9. Create announcement_templates table
+-- ============================================
+CREATE TABLE IF NOT EXISTS announcement_templates (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT DEFAULT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  contentHtml TEXT DEFAULT NULL,
+  priority ENUM('urgent', 'high', 'normal', 'low') NOT NULL DEFAULT 'normal',
+  announcementType ENUM('system_maintenance', 'system_update', 'general', 'project_related', 'policy_related', 'administration', 'project_update') NOT NULL DEFAULT 'general',
+  targetAudience VARCHAR(50) NOT NULL DEFAULT 'all',
+  requiresAcknowledgment BOOLEAN NOT NULL DEFAULT FALSE,
+  isSystemTemplate BOOLEAN NOT NULL DEFAULT FALSE,
+  createdBy CHAR(36) BINARY DEFAULT NULL,
+  createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (createdBy) REFERENCES users(id) ON UPDATE CASCADE ON DELETE SET NULL,
+  
+  INDEX idx_templates_createdBy (createdBy),
+  INDEX idx_templates_type (announcementType),
+  INDEX idx_templates_system (isSystemTemplate)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 10. Create deleted_project_comments table
 -- ============================================
 CREATE TABLE IF NOT EXISTS deleted_project_comments (
   id CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
@@ -201,6 +227,7 @@ AND TABLE_NAME IN (
   'announcement_category_mappings',
   'announcement_tag_mappings',
   'announcement_notification_preferences',
+  'announcement_templates',
   'deleted_project_comments'
 )
 ORDER BY TABLE_NAME;
