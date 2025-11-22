@@ -517,19 +517,20 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       });
       
       socket.on('project_update', (data) => {
-        if (data.type === 'project_update' || data.type === 'milestone_update' || data.type === 'approval') {
-          // Add to notifications
-          setNotifications(prev => [{
-            id: Date.now(),
-            type: data.type,
-            message: data.message || 'Project update received',
-            timestamp: new Date(),
-            projectId: data.projectId
-          }, ...prev.slice(0, 49)]); // Keep last 50
-          
-          // Refresh data if it's for current project
-          if (selectedProject && data.projectId === selectedProject.id) {
-            fetchMilestones(data.projectId);
+        try {
+          if (data.type === 'project_update' || data.type === 'milestone_update' || data.type === 'approval') {
+            // Add to notifications
+            setNotifications(prev => [{
+              id: Date.now(),
+              type: data.type,
+              message: data.message || 'Project update received',
+              timestamp: new Date(),
+              projectId: data.projectId
+            }, ...prev.slice(0, 49)]); // Keep last 50
+            
+            // Refresh data if it's for current project
+            if (selectedProject && data.projectId === selectedProject.id) {
+              fetchMilestones(data.projectId);
               fetchAuditTrail(data.projectId);
             }
             
