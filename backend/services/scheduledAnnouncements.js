@@ -22,9 +22,9 @@ const checkAndPublishScheduledAnnouncements = async () => {
       attributes: [
         'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
         'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
-        'publishDate', 'expiryDate', 'views', 'isPinned', 'approvalStatus', 
-        'requiresApproval', 'createdAt', 'updatedAt'
-        // Excluded: createdBy, announcementType (may not exist in database)
+        'publishDate', 'expiryDate', 'views', 'createdAt', 'updatedAt',
+        'isPinned', 'approvalStatus', 'requiresApproval', 'createdBy', 'announcementType'
+        // All columns now exist after migration
       ],
       include: [
         {
@@ -170,9 +170,9 @@ const checkAndExpireAnnouncements = async () => {
       attributes: [
         'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
         'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
-        'publishDate', 'expiryDate', 'views', 'isPinned', 'approvalStatus', 
-        'requiresApproval', 'createdAt', 'updatedAt'
-        // Excluded: createdBy, announcementType (may not exist in database)
+        'publishDate', 'expiryDate', 'views', 'createdAt', 'updatedAt',
+        'isPinned', 'approvalStatus', 'requiresApproval', 'createdBy', 'announcementType'
+        // All columns now exist after migration
       ]
     });
     

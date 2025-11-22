@@ -579,10 +579,17 @@ router.get('/announcements', authenticateToken, requireSystemAdmin, async (req, 
     const { count, rows: announcements } = await Announcement.findAndCountAll({
       where: whereClause,
       include: includeOptions,
+      attributes: [
+        'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
+        'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
+        'publishDate', 'expiryDate', 'views', 'createdAt', 'updatedAt'
+        // Excluded: createdBy, announcementType, isPinned, approvalStatus, requiresApproval
+        // These will be available after running migrations
+      ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [
-        ['isPinned', 'DESC'], // Pinned announcements first
+        // Note: isPinned ordering removed temporarily - will be restored after migration
         [require('sequelize').literal("FIELD(priority, 'urgent', 'high', 'normal', 'low')"), 'ASC'],
         ['createdAt', 'DESC']
       ],
@@ -2800,10 +2807,17 @@ router.get('/public/announcements', authenticateToken, async (req, res) => {
     const { count, rows: announcements } = await Announcement.findAndCountAll({
       where: whereClause,
       include: includeOptions,
+      attributes: [
+        'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
+        'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
+        'publishDate', 'expiryDate', 'views', 'createdAt', 'updatedAt'
+        // Excluded: createdBy, announcementType, isPinned, approvalStatus, requiresApproval
+        // These will be available after running migrations
+      ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [
-        ['isPinned', 'DESC'], // Pinned announcements first
+        // Note: isPinned ordering removed temporarily - will be restored after migration
         [require('sequelize').literal("FIELD(priority, 'urgent', 'high', 'normal', 'low')"), 'ASC'],
         ['createdAt', 'DESC']
       ],
@@ -3563,6 +3577,13 @@ async function fetchAnnouncementsForExport(req) {
   
   const announcements = await Announcement.findAll({
     where: whereClause,
+    attributes: [
+      'id', 'title', 'content', 'contentHtml', 'requiresAcknowledgment', 
+      'acknowledgmentDeadline', 'priority', 'status', 'targetAudience', 
+      'publishDate', 'expiryDate', 'views', 'createdAt', 'updatedAt'
+      // Excluded: createdBy, announcementType, isPinned, approvalStatus, requiresApproval
+      // These will be available after running migrations
+    ],
     include: [
       {
         model: User,
@@ -3576,7 +3597,7 @@ async function fetchAnnouncementsForExport(req) {
       }
     ],
     order: [
-      ['isPinned', 'DESC'],
+      // Note: isPinned ordering removed temporarily - will be restored after migration
       [require('sequelize').literal("FIELD(priority, 'urgent', 'high', 'normal', 'low')"), 'ASC'],
       ['createdAt', 'DESC']
     ]
