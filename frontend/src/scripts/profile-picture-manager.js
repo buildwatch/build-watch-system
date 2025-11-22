@@ -75,8 +75,20 @@ class ProfilePictureManager {
         const data = await response.json();
         if (data.success && data.profilePictureUrl) {
           this.profilePictureUrl = data.profilePictureUrl;
-          localStorage.setItem('sysadmin_profile_picture', data.profilePictureUrl);
-          localStorage.setItem('profilePictureUrl', data.profilePictureUrl);
+          
+          // CRITICAL: Don't store base64 data URLs in localStorage (they're too large)
+          // Only store HTTP URLs or API endpoints
+          if (!data.profilePictureUrl.startsWith('data:')) {
+            localStorage.setItem('sysadmin_profile_picture', data.profilePictureUrl);
+            localStorage.setItem('profilePictureUrl', data.profilePictureUrl);
+          } else {
+            // If server returns data URL, store API endpoint instead
+            const apiUrl = `${API_URL}/profile/picture/SA-001`;
+            localStorage.setItem('sysadmin_profile_picture', apiUrl);
+            localStorage.setItem('profilePictureUrl', apiUrl);
+            console.log('⚠️ Server returned data URL, storing API endpoint instead');
+          }
+          
           console.log('✅ System Admin profile picture loaded from server:', this.profilePictureUrl);
           this.updateAllProfilePictures();
           return;
@@ -89,9 +101,17 @@ class ProfilePictureManager {
     // Fallback to localStorage - check both keys
     const storedUrl = localStorage.getItem('sysadmin_profile_picture') || localStorage.getItem('profilePictureUrl');
     if (storedUrl) {
+      // CRITICAL: If stored URL is a data URL, don't use it (it's too large)
+      if (storedUrl.startsWith('data:')) {
+        console.warn('⚠️ Found data URL in localStorage (too large), clearing it');
+        localStorage.removeItem('sysadmin_profile_picture');
+        localStorage.removeItem('profilePictureUrl');
+        console.log('⚠️ No System Admin profile picture found (data URL removed)');
+        return;
+      }
+      
       this.profilePictureUrl = storedUrl;
-      localStorage.setItem('sysadmin_profile_picture', storedUrl);
-      localStorage.setItem('profilePictureUrl', storedUrl);
+      // Don't re-store if it's already there (avoid unnecessary writes)
       console.log('✅ System Admin profile picture loaded from localStorage:', this.profilePictureUrl);
       this.updateAllProfilePictures();
     } else {
@@ -105,8 +125,11 @@ class ProfilePictureManager {
       console.log('🌍 System Admin Global Manager received profilePictureUpdated event:', e.detail);
       if (e.detail.profilePictureUrl && this.shouldRunForCurrentUser()) {
         this.profilePictureUrl = e.detail.profilePictureUrl;
-        localStorage.setItem('sysadmin_profile_picture', this.profilePictureUrl);
-        localStorage.setItem('profilePictureUrl', this.profilePictureUrl);
+        // CRITICAL: Don't store base64 data URLs in localStorage
+        if (!this.profilePictureUrl.startsWith('data:')) {
+          localStorage.setItem('sysadmin_profile_picture', this.profilePictureUrl);
+          localStorage.setItem('profilePictureUrl', this.profilePictureUrl);
+        }
         this.updateAllProfilePictures();
       }
     });
@@ -116,8 +139,11 @@ class ProfilePictureManager {
       console.log('🌍 System Admin Global Manager received sysadminProfilePictureUpdated event:', e.detail);
       if (e.detail.profilePictureUrl && this.shouldRunForCurrentUser()) {
         this.profilePictureUrl = e.detail.profilePictureUrl;
-        localStorage.setItem('sysadmin_profile_picture', this.profilePictureUrl);
-        localStorage.setItem('profilePictureUrl', this.profilePictureUrl);
+        // CRITICAL: Don't store base64 data URLs in localStorage
+        if (!this.profilePictureUrl.startsWith('data:')) {
+          localStorage.setItem('sysadmin_profile_picture', this.profilePictureUrl);
+          localStorage.setItem('profilePictureUrl', this.profilePictureUrl);
+        }
         this.updateAllProfilePictures();
         
         // Also dispatch the generic event for backward compatibility
@@ -256,8 +282,25 @@ class ProfilePictureManager {
     if (this.shouldRunForCurrentUser()) {
       console.log('🔄 Setting new System Admin profile picture globally:', url);
       this.profilePictureUrl = url;
-      localStorage.setItem('sysadmin_profile_picture', url);
-      localStorage.setItem('profilePictureUrl', url);
+      
+      // CRITICAL: Don't store base64 data URLs in localStorage (they're too large)
+      // Only store HTTP URLs or API endpoints
+      if (url && !url.startsWith('data:')) {
+        localStorage.setItem('sysadmin_profile_picture', url);
+        localStorage.setItem('profilePictureUrl', url);
+      } else if (url && url.startsWith('data:')) {
+        // If it's a data URL, convert to API endpoint URL for storage
+        const userId = this.getCurrentUserId();
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const API_URL = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+        const apiUrl = `${API_URL}/profile/picture/${encodeURIComponent(userId || 'SA-001')}`;
+        localStorage.setItem('sysadmin_profile_picture', apiUrl);
+        localStorage.setItem('profilePictureUrl', apiUrl);
+        console.log('⚠️ Converted data URL to API endpoint for localStorage storage');
+      }
+      
       this.updateAllProfilePictures();
       
       // Dispatch events for other components
