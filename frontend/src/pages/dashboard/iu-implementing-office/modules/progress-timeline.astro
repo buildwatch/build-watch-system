@@ -6,9 +6,24 @@ import ProjectCard from '../../../../components/ProjectCard.astro';
 import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
 import MilestoneSubmissionCard from '../../../../components/MilestoneSubmissionCard.astro';
 import MilestoneSubmissionModal from '../../../../components/MilestoneSubmissionModal.astro';
+import { getApiUrl } from '../../../../config/api.js';
+
+// Dynamic API URL based on request
+const getApiUrlForSSR = () => {
+  const url = Astro.url;
+  const hostname = url.hostname;
+  const protocol = url.protocol;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000/api';
+  }
+  if (hostname.includes('build-watch.com')) {
+    return `${protocol}//${hostname}/api`;
+  }
+  return 'http://localhost:3000/api';
+};
 
 // API URL will be set dynamically in client-side script
-let API_URL = 'http://localhost:3000/api'; // Default for SSR, will be overridden client-side
+let API_URL = getApiUrlForSSR(); // Dynamic for SSR
 let userData = null;
 let projects = [];
 let selectedProject = null;
@@ -2175,11 +2190,19 @@ loading = false;
 </div>
 
 <script>
-  // Make API_URL available to client-side JavaScript
+  // Make API_URL available to client-side JavaScript - use centralized config
   const API_URL = typeof window !== 'undefined' 
-    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000/api'
-        : `${window.location.protocol}//${window.location.hostname}/api`)
+    ? (() => {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3000/api';
+        }
+        if (hostname.includes('build-watch.com')) {
+          return `${protocol}//${hostname}/api`;
+        }
+        return 'http://localhost:3000/api';
+      })()
     : 'http://localhost:3000/api';
   let selectedProject = null;
   let projectUpdates = [];
@@ -2255,7 +2278,9 @@ loading = false;
       // Get project image with proper fallback
       const getProjectImage = (proj) => {
         if (proj.initialPhoto && proj.initialPhoto !== '' && proj.initialPhoto !== 'None') {
-          return proj.initialPhoto.startsWith('http') ? proj.initialPhoto : `http://localhost:3000${proj.initialPhoto}`;
+          // Use dynamic API URL for images
+          const baseUrl = API_URL.replace('/api', '');
+          return proj.initialPhoto.startsWith('http') ? proj.initialPhoto : `${baseUrl}${proj.initialPhoto}`;
         }
         return '/projects-page-header-bg.png';
       };
@@ -2635,7 +2660,7 @@ loading = false;
       console.log('selectProject called with ID:', projectId);
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
       const timestamp = new Date().getTime();
-      const response = await fetch(`http://localhost:3000/api/projects/${projectId}?_t=${timestamp}`, {
+      const response = await fetch(`${API_URL}/projects/${projectId}?_t=${timestamp}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -2652,7 +2677,7 @@ loading = false;
           
           // Fetch progress data and merge it with the project
           try {
-            const progressResponse = await fetch(`http://localhost:3000/api/projects/progress/${projectId}?_t=${timestamp}`, {
+            const progressResponse = await fetch(`${API_URL}/projects/progress/${projectId}?_t=${timestamp}`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -2711,7 +2736,7 @@ loading = false;
       const timestamp = new Date().getTime();
       
       // Fetch project progress data using the new ProgressCalculationService
-      const progressResponse = await fetch(`http://localhost:3000/api/projects/progress/${projectId}?_t=${timestamp}`, {
+      const progressResponse = await fetch(`${API_URL}/projects/progress/${projectId}?_t=${timestamp}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -2725,10 +2750,10 @@ loading = false;
       
       // Fetch project updates and milestones as fallback
       const [updatesResponse, milestonesResponse] = await Promise.all([
-        fetch(`http://localhost:3000/api/projects/${projectId}/updates?_t=${timestamp}`, {
+        fetch(`${API_URL}/projects/${projectId}/updates?_t=${timestamp}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`http://localhost:3000/api/projects/${projectId}/milestones?_t=${timestamp}`, {
+        fetch(`${API_URL}/projects/${projectId}/milestones?_t=${timestamp}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -2988,7 +3013,7 @@ loading = false;
       console.log('Fetching milestones separately for project:', projectId);
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
       const timestamp = new Date().getTime();
-      const response = await fetch(`http://localhost:3000/api/projects/${projectId}/milestones?_t=${timestamp}`, {
+      const response = await fetch(`${API_URL}/projects/${projectId}/milestones?_t=${timestamp}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -3002,7 +3027,7 @@ loading = false;
           
           // Fetch milestone submissions and attach to milestones
           try {
-            const submissionsResponse = await fetch(`http://localhost:3000/api/milestones/milestone-submissions?projectId=${projectId}`, {
+            const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -3740,7 +3765,7 @@ loading = false;
   function downloadFile(filename, originalName) {
     try {
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-      const downloadUrl = `http://localhost:3000/api/uploads/download/${filename}`;
+      const downloadUrl = `${API_URL}/uploads/download/${filename}`;
       
       // Create a temporary link element
       const link = document.createElement('a');
@@ -3801,7 +3826,7 @@ loading = false;
       // Get Secretariat note if provided
       const secretariatNote = document.getElementById(`secretariat-note-text-${updateId}`)?.value || '';
       
-      const response = await fetch(`http://localhost:3000/api/projects/project-updates/${updateId}/approve`, {
+      const response = await fetch(`${API_URL}/projects/project-updates/${updateId}/approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3845,7 +3870,7 @@ loading = false;
 
     try {
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-      const response = await fetch(`http://localhost:3000/api/projects/project-updates/${updateId}/reject`, {
+      const response = await fetch(`${API_URL}/projects/project-updates/${updateId}/reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -3910,7 +3935,7 @@ loading = false;
 
     try {
       const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-      const response = await fetch(`http://localhost:3000/api/projects/${selectedProject.id}/compile-and-submit`, {
+      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/compile-and-submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -4373,7 +4398,7 @@ This compilation report has been generated automatically based on approved EIU m
       try {
         const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
         const timestamp = new Date().getTime();
-        const progressResponse = await fetch(`http://localhost:3000/api/projects/progress/${project.id}?_t=${timestamp}`, {
+        const progressResponse = await fetch(`${API_URL}/projects/progress/${project.id}?_t=${timestamp}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -5401,9 +5426,11 @@ This compilation report has been generated automatically based on approved EIU m
                       // Handle different URL formats
                       if (imageUrl && !imageUrl.startsWith('http')) {
                         if (imageUrl.startsWith('/')) {
-                          imageUrl = `http://localhost:3000${imageUrl}`;
+                          const baseUrl = API_URL.replace('/api', '');
+                          imageUrl = `${baseUrl}${imageUrl}`;
                         } else {
-                          imageUrl = `http://localhost:3000/uploads/${imageUrl}`;
+                          const baseUrl = API_URL.replace('/api', '');
+                          imageUrl = `${baseUrl}/uploads/${imageUrl}`;
                         }
                       }
                       
@@ -6491,9 +6518,11 @@ This compilation report has been generated automatically based on approved EIU m
                   // Ensure URL is properly formatted
                   if (docUrl && !docUrl.startsWith('http')) {
                     if (!docUrl.includes('/')) {
-                    docUrl = `http://localhost:3000/uploads/${docUrl}`;
-                    } else {
-                      docUrl = `http://localhost:3000/${docUrl}`;
+                    const baseUrl = API_URL.replace('/api', '');
+                    docUrl = `${baseUrl}/uploads/${docUrl}`;
+                  } else {
+                      const baseUrl = API_URL.replace('/api', '');
+                      docUrl = `${baseUrl}/${docUrl}`;
                     }
                   }
                   
@@ -6748,7 +6777,7 @@ This compilation report has been generated automatically based on approved EIU m
             
             // Handle URLs that might need the backend server origin
             if (profileUrl.startsWith('/uploads/') || profileUrl.startsWith('uploads/')) {
-              const backendOrigin = 'http://localhost:3000'; // Backend server URL
+              const backendOrigin = API_URL.replace('/api', ''); // Backend server URL
               normalizedUrl = profileUrl.startsWith('/') ? 
                 backendOrigin + profileUrl : 
                 backendOrigin + '/' + profileUrl;
@@ -10915,7 +10944,7 @@ This compilation report has been generated automatically based on approved EIU m
         return;
       }
       
-      const API_URL = 'http://localhost:3000/api';
+      // Use the global API_URL already defined above
       const response = await fetch(`${API_URL}/home/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
