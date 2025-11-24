@@ -16,7 +16,8 @@ const requireSystemAdmin = async (req, res, next) => {
 };
 
 // Helper function to log admin activities
-const logAdminActivity = async (userId, action, entityType, entityId, details, ipAddress, userAgent, level = 'Info', status = 'Success', module = null, metadata = null) => {
+// Note: ipAddress is no longer collected for privacy reasons
+const logAdminActivity = async (userId, action, entityType, entityId, details, ipAddress = null, userAgent, level = 'Info', status = 'Success', module = null, metadata = null) => {
   try {
     await ActivityLog.create({
       userId,
@@ -24,7 +25,7 @@ const logAdminActivity = async (userId, action, entityType, entityId, details, i
       entityType,
       entityId,
       details,
-      ipAddress,
+      ipAddress: null, // IP addresses are no longer collected
       userAgent,
       level,
       status,
@@ -46,7 +47,7 @@ router.get('/', authenticateToken, requireSystemAdmin, async (req, res) => {
       'ActivityLog',
       null,
       'Viewed activity logs with filters',
-      req.ip,
+      null, // IP address no longer collected
       req.get('User-Agent'),
       'Info',
       'Success',
@@ -91,7 +92,6 @@ router.get('/', authenticateToken, requireSystemAdmin, async (req, res) => {
         { details: { [require('sequelize').Op.like]: `%${search}%` } },
         { action: { [require('sequelize').Op.like]: `%${search}%` } },
         { entityType: { [require('sequelize').Op.like]: `%${search}%` } },
-        { ipAddress: { [require('sequelize').Op.like]: `%${search}%` } },
         { module: { [require('sequelize').Op.like]: `%${search}%` } }
       ];
     }
@@ -143,7 +143,7 @@ router.get('/', authenticateToken, requireSystemAdmin, async (req, res) => {
         'ActivityLog',
         null,
         'Exported activity logs to CSV',
-        req.ip,
+        null, // IP address no longer collected
         req.get('User-Agent'),
         'Info',
         'Success',
@@ -191,7 +191,7 @@ router.get('/', authenticateToken, requireSystemAdmin, async (req, res) => {
       'ActivityLog',
       null,
       'Failed to view activity logs',
-      req.ip,
+      null, // IP address no longer collected
       req.get('User-Agent'),
       'Error',
       'Failed',
@@ -216,7 +216,7 @@ router.get('/summary', authenticateToken, requireSystemAdmin, async (req, res) =
       'ActivityLog',
       null,
       'Viewed activity logs summary',
-      req.ip,
+      null, // IP address no longer collected
       req.get('User-Agent'),
       'Info',
       'Success',
@@ -353,7 +353,7 @@ router.get('/summary', authenticateToken, requireSystemAdmin, async (req, res) =
       'ActivityLog',
       null,
       'Failed to view activity logs summary',
-      req.ip,
+      null, // IP address no longer collected
       req.get('User-Agent'),
       'Error',
       'Failed',
@@ -382,7 +382,7 @@ router.get('/user/:userId', authenticateToken, requireSystemAdmin, async (req, r
       'User',
       userId,
       `Viewed activity logs for user ${userId}`,
-      req.ip,
+      null, // IP address no longer collected
       req.get('User-Agent'),
       'Info',
       'Success',
@@ -443,7 +443,7 @@ router.get('/user/:userId', authenticateToken, requireSystemAdmin, async (req, r
       'User',
       req.params.userId,
       'Failed to view user activity logs',
-      req.ip,
+      null, // IP address no longer collected
       req.get('User-Agent'),
       'Error',
       'Failed',
