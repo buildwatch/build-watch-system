@@ -383,6 +383,14 @@
 <div id="iu-notification-overlay" class="fixed inset-0 bg-black/50 z-[1198] hidden"></div>
 
 <script>
+  // Global API URL helper function - works for both localhost and production
+  window.getApiUrl = function() {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  };
+
   import notificationService from '../services/notifications.js';
   
   // Make notification service available globally
@@ -422,7 +430,13 @@
 
   async function fetchUserProfile() {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/profile', {
+      const apiUrl = window.getApiUrl ? window.getApiUrl() : (() => {
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        return isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+      })();
+      const response = await fetch(`${apiUrl}/auth/profile`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -545,11 +559,13 @@
       // This ensures the backend can authenticate and update lastLogoutAt
       if (token) {
         try {
-          // Determine API URL
-          const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-          const API_URL = isProd 
-            ? `${window.location.protocol}//${window.location.hostname}/api`
-            : 'http://localhost:3000/api';
+          // Use global API URL helper
+          const API_URL = window.getApiUrl ? window.getApiUrl() : (() => {
+            const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            return isProd 
+              ? `${window.location.protocol}//${window.location.hostname}/api`
+              : 'http://localhost:3000/api';
+          })();
           
           const logoutUrl = `${API_URL}/auth/logout`;
           console.log('🔓 Calling logout endpoint:', logoutUrl);
@@ -674,11 +690,13 @@
       
       // First try to get from server (server is source of truth)
       console.log('IU Topbar: Fetching profile picture from server for userId:', userId);
-      // Determine API URL based on environment
-      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      const API_URL = isProd 
-        ? `${window.location.protocol}//${window.location.hostname}/api`
-        : 'http://localhost:3000/api';
+      // Use global API URL helper
+      const API_URL = window.getApiUrl ? window.getApiUrl() : (() => {
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        return isProd 
+          ? `${window.location.protocol}//${window.location.hostname}/api`
+          : 'http://localhost:3000/api';
+      })();
       const response = await fetch(`${API_URL}/profile/picture/${userId}?t=${Date.now()}`);
       
       if (response.ok) {

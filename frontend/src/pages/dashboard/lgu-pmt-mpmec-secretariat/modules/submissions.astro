@@ -16,10 +16,8 @@ const getApiUrlForSSR = () => {
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3000/api';
   }
-  if (hostname.includes('build-watch.com')) {
-    return `${protocol}//${hostname}/api`;
-  }
-  return 'http://localhost:3000/api';
+  // For production, use same protocol and domain without port (reverse proxy)
+  return `${protocol}//${hostname}/api`;
 };
 
 const API_URL = getApiUrlForSSR();
@@ -1198,19 +1196,12 @@ loading = false;
               if (!token) return;
               
               // Use dynamic API URL
-              const API_URL = typeof window !== 'undefined' 
-                ? (() => {
-                    const hostname = window.location.hostname;
-                    const protocol = window.location.protocol;
-                    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-                      return 'http://localhost:3000/api';
-                    }
-                    if (hostname.includes('build-watch.com')) {
-                      return `${protocol}//${hostname}/api`;
-                    }
-                    return 'http://localhost:3000/api';
-                  })()
-                : 'http://localhost:3000/api';
+              const API_URL = window.getApiUrl ? window.getApiUrl() : (() => {
+                const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+                return isProd 
+                  ? `${window.location.protocol}//${window.location.hostname}/api`
+                  : 'http://localhost:3000/api';
+              })();
               const response = await fetch(`${API_URL}/home/stats`, {
                 headers: {
                   'Authorization': `Bearer ${token}`,
@@ -1893,21 +1884,17 @@ loading = false;
 </Layout>
 
 <script>
+  // Global API URL helper function - works for both localhost and production
+  window.getApiUrl = function() {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  };
+
   // API Configuration
   // Use dynamic API URL
-  const API_URL = typeof window !== 'undefined' 
-    ? (() => {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:3000/api';
-        }
-        if (hostname.includes('build-watch.com')) {
-          return `${protocol}//${hostname}/api`;
-        }
-        return 'http://localhost:3000/api';
-      })()
-    : 'http://localhost:3000/api';
+  const API_URL = window.getApiUrl();
   
   // Global variables
   let submissions = [];

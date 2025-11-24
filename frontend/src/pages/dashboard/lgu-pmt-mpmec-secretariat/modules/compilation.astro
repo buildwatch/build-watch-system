@@ -1165,6 +1165,14 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
 </Layout>
 
 <script data-cache-bust="v27-6-cards-2x3-grid">
+  // Global API URL helper function - works for both localhost and production
+  window.getApiUrl = function() {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  };
+
   // Define switchTab function immediately for global access
   function switchTab(tabName) {
     console.log('🔄 switchTab called with:', tabName);
@@ -1209,19 +1217,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       if (!token) return;
       
       // Use dynamic API URL
-      const API_URL = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}/api`;
-            }
-            return 'http://localhost:3000/api';
-          })()
-        : 'http://localhost:3000/api';
+      const API_URL = window.getApiUrl();
       const response = await fetch(`${API_URL}/home/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1310,19 +1306,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       console.log('🌐 Making API request to compilation summary...');
-      const API_URL = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}/api`;
-            }
-            return 'http://localhost:3000/api';
-          })()
-        : 'http://localhost:3000/api';
+      const API_URL = window.getApiUrl();
       const response = await fetch(`${API_URL}/projects/compilation/summary`, {
         method: 'GET',
         headers: {
@@ -1664,20 +1648,12 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
   // Global helper functions
   function getProjectImage(project) {
     if (project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None') {
-      const baseUrl = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}`;
-            }
-            return 'http://localhost:3000';
-          })()
-        : 'http://localhost:3000';
-      return project.initialPhoto.startsWith('http') ? project.initialPhoto : `${baseUrl}${project.initialPhoto}`;
+      if (project.initialPhoto.startsWith('http')) {
+        return project.initialPhoto;
+      }
+      const apiUrl = window.getApiUrl();
+      const baseUrl = apiUrl.replace('/api', '');
+      return `${baseUrl}${project.initialPhoto.startsWith('/') ? project.initialPhoto : '/' + project.initialPhoto}`;
     }
     return '/projects-page-header-bg.png';
   }
@@ -3419,19 +3395,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       }
       
       // Fetch all projects and filter by implementing office
-      const API_URL = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}/api`;
-            }
-            return 'http://localhost:3000/api';
-          })()
-        : 'http://localhost:3000/api';
+      const API_URL = window.getApiUrl();
       const response = await fetch(`${API_URL}/projects`, {
         method: 'GET',
         headers: {
@@ -3629,19 +3593,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       }
 
       // Define API_URL for this function
-      const API_URL = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}/api`;
-            }
-            return 'http://localhost:3000/api';
-          })()
-        : 'http://localhost:3000/api';
+      const API_URL = window.getApiUrl();
 
       // Fetch project details
       const projectResponse = await fetch(`${API_URL}/projects/${projectId}`, {
@@ -3829,17 +3781,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
     
     // Set global variables for the component
     const API_URL = typeof window !== 'undefined' 
-      ? (() => {
-          const hostname = window.location.hostname;
-          const protocol = window.location.protocol;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3000/api';
-          }
-          if (hostname.includes('build-watch.com')) {
-            return `${protocol}//${hostname}/api`;
-          }
-          return 'http://localhost:3000/api';
-        })()
+      ? window.getApiUrl()
       : 'http://localhost:3000/api';
     
     window.selectedProject = { id: project.id };
@@ -4228,19 +4170,12 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
     // If no submission in milestone data, try to fetch it
     if (!approvedSubmission && milestone.id) {
       try {
-        const API_URL = typeof window !== 'undefined' 
-          ? (() => {
-              const hostname = window.location.hostname;
-              const protocol = window.location.protocol;
-              if (hostname === 'localhost' || hostname === '127.0.0.1') {
-                return 'http://localhost:3000/api';
-              }
-              if (hostname.includes('build-watch.com')) {
-                return `${protocol}//${hostname}/api`;
-              }
-              return 'http://localhost:3000/api';
-            })()
-          : 'http://localhost:3000/api';
+            const API_URL = window.getApiUrl ? window.getApiUrl() : (() => {
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              return isProd 
+                ? `${window.location.protocol}//${window.location.hostname}/api`
+                : 'http://localhost:3000/api';
+            })();
         
         const token = localStorage.getItem('token');
         if (token && currentProject?.id) {
@@ -4531,17 +4466,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
   function renderSubmissionDetails(submission, milestone, isDelayed, delayReason) {
     // Get API URL for file paths
     const API_URL = typeof window !== 'undefined' 
-      ? (() => {
-          const hostname = window.location.hostname;
-          const protocol = window.location.protocol;
-          if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return 'http://localhost:3000/api';
-          }
-          if (hostname.includes('build-watch.com')) {
-            return `${protocol}//${hostname}/api`;
-          }
-          return 'http://localhost:3000/api';
-        })()
+      ? window.getApiUrl()
       : 'http://localhost:3000/api';
     
     const baseUrl = API_URL.replace('/api', '');
@@ -5177,19 +5102,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
   async function loadDepartmentProjects(departmentId, departmentName) {
     try {
       const token = localStorage.getItem('token');
-      const API_URL = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}/api`;
-            }
-            return 'http://localhost:3000/api';
-          })()
-        : 'http://localhost:3000/api';
+      const API_URL = window.getApiUrl();
       const response = await fetch(`${API_URL}/projects/compilation/summary`, {
         method: 'GET',
         headers: {
@@ -5246,19 +5159,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const API_URL = typeof window !== 'undefined' 
-        ? (() => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
-            }
-            if (hostname.includes('build-watch.com')) {
-              return `${protocol}//${hostname}/api`;
-            }
-            return 'http://localhost:3000/api';
-          })()
-        : 'http://localhost:3000/api';
+      const API_URL = window.getApiUrl();
       const response = await fetch(`${API_URL}/projects/compilation/summary`, {
         method: 'GET',
         headers: {
