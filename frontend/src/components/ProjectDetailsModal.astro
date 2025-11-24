@@ -649,6 +649,13 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
 </div>
 
 <script>
+  // Global API URL helper function - works for both localhost and production
+  window.getApiUrl = function() {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  };
   // Global functions for modal control
   window.showProjectDetailsModal = function(projectId) {
     console.log('🚀 Opening project details modal for project:', projectId);
@@ -775,24 +782,8 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
       if (!token) return;
       
-      // Use dynamic API URL (same logic as config/api.js)
-      const getApiUrl = () => {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:3000/api';
-        }
-        if (hostname.includes('build-watch.com')) {
-          // For HTTPS, use same domain without port (Nginx reverse proxy expected)
-          if (protocol === 'https:') {
-            return protocol + '//' + hostname + '/api';
-          } else {
-            return 'http://' + hostname + ':3000/api';
-          }
-        }
-        return 'http://localhost:3000/api';
-      };
-      const apiUrl = getApiUrl();
+      // Use dynamic API URL
+      const apiUrl = window.getApiUrl();
       
       // Check delayed status via API
       const delayedStatusResponse = await fetch(`${apiUrl}/projects/${project.id}/delayed-status`, {
@@ -937,19 +928,8 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       }
 
       // Use dynamic API URL based on environment
-      const getApiUrl = () => {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:3000/api';
-        }
-        if (hostname.includes('build-watch.com')) {
-          // For production, use same protocol and domain without port (reverse proxy)
-          return `${protocol}//${hostname}/api`;
-        }
-        return 'http://localhost:3000/api';
-      };
-      const apiUrl = getApiUrl();
+      // Use dynamic API URL
+      const apiUrl = window.getApiUrl();
       const requestUrl = `${apiUrl}/projects/${projectId}`;
       
       console.log('🌐 Making API request to:', requestUrl);
@@ -1463,7 +1443,8 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
           
           // Handle URLs that might need the backend server origin
           if (profileUrl.startsWith('/uploads/') || profileUrl.startsWith('uploads/')) {
-            const backendOrigin = 'http://localhost:3000'; // Backend server URL
+            const apiUrl = window.getApiUrl();
+            const backendOrigin = apiUrl.replace('/api', ''); // Get base URL without /api
             normalizedUrl = profileUrl.startsWith('/') ? 
               backendOrigin + profileUrl : 
               backendOrigin + '/' + profileUrl;
@@ -1961,7 +1942,9 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     if (project.initialPhoto && project.initialPhoto !== 'None' && project.initialPhoto !== '' && project.initialPhoto !== 'null') {
       let photoUrl = project.initialPhoto;
       if (!photoUrl.startsWith('http')) {
-        photoUrl = photoUrl.startsWith('/') ? `http://localhost:3000${photoUrl}` : `http://localhost:3000/uploads/${photoUrl}`;
+        const apiUrl = window.getApiUrl();
+        const baseUrl = apiUrl.replace('/api', '');
+        photoUrl = photoUrl.startsWith('/') ? `${baseUrl}${photoUrl}` : `${baseUrl}/uploads/${photoUrl}`;
       }
       photo.src = photoUrl;
       photo.classList.remove('hidden');
@@ -2049,7 +2032,8 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       try {
         const token = localStorage.getItem('token') || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         if (token && project.id) {
-          fetch(`http://localhost:3000/api/milestones/project/${project.id}`, {
+          const apiUrl = window.getApiUrl();
+          fetch(`${apiUrl}/milestones/project/${project.id}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -3148,9 +3132,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) return null;
       
-      const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? 'http://localhost:3000/api'
-        : `${window.location.protocol}//${window.location.hostname}/api`;
+      const API_URL = window.getApiUrl();
       
       const allActivities = [];
       

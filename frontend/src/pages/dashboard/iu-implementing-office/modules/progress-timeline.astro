@@ -17,10 +17,8 @@ const getApiUrlForSSR = () => {
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3000/api';
   }
-  if (hostname.includes('build-watch.com')) {
-    return `${protocol}//${hostname}/api`;
-  }
-  return 'http://localhost:3000/api';
+  // For production, use same protocol and domain without port (reverse proxy)
+  return `${protocol}//${hostname}/api`;
 };
 
 // API URL will be set dynamically in client-side script
@@ -1963,20 +1961,16 @@ loading = false;
 </div>
 
 <script>
-  // Make API_URL available to client-side JavaScript - use centralized config
-  const API_URL = typeof window !== 'undefined' 
-    ? (() => {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:3000/api';
-        }
-        if (hostname.includes('build-watch.com')) {
-          return `${protocol}//${hostname}/api`;
-        }
-        return 'http://localhost:3000/api';
-      })()
-    : 'http://localhost:3000/api';
+  // Global API URL helper function - works for both localhost and production
+  window.getApiUrl = function() {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  };
+
+  // Make API_URL available to client-side JavaScript
+  const API_URL = window.getApiUrl();
   let selectedProject = null;
   // Initialize window.selectedProject and API_URL for React components
   window.selectedProject = null;
@@ -10972,20 +10966,13 @@ This compilation report has been generated automatically based on approved EIU m
   window.initialProjectsData = serverProjects;
   console.log('Server-side projects loaded:', serverProjects ? serverProjects.length : 0);
   
-  // Define API_URL in this scope (same as the main script block)
-  const API_URL = typeof window !== 'undefined' 
-    ? (() => {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:3000/api';
-        }
-        if (hostname.includes('build-watch.com')) {
-          return `${protocol}//${hostname}/api`;
-        }
-        return 'http://localhost:3000/api';
-      })()
-    : 'http://localhost:3000/api';
+  // Define API_URL in this scope using global helper
+  const API_URL = window.getApiUrl ? window.getApiUrl() : (() => {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  })();
   
   // Calculate and update Total Budget Monitored (Utilized Budget) from /api/home/stats endpoint
   async function updateTotalBudgetMonitored() {

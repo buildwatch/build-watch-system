@@ -137,7 +137,19 @@ const getStatusColor = (status) => {
 // Get project image - use correct default image path
 const getProjectImage = (proj) => {
   if (proj.initialPhoto && proj.initialPhoto !== '' && proj.initialPhoto !== 'None') {
-    return proj.initialPhoto.startsWith('http') ? proj.initialPhoto : `http://localhost:3000${proj.initialPhoto}`;
+    if (proj.initialPhoto.startsWith('http')) {
+      return proj.initialPhoto;
+    }
+    // Use dynamic base URL
+    if (typeof window !== 'undefined' && window.getApiUrl) {
+      const apiUrl = window.getApiUrl();
+      const baseUrl = apiUrl.replace('/api', '');
+      return proj.initialPhoto.startsWith('/') ? `${baseUrl}${proj.initialPhoto}` : `${baseUrl}${proj.initialPhoto}`;
+    }
+    // Fallback for server-side rendering
+    const isProd = typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
+    const baseUrl = isProd ? 'https://www.build-watch.com' : 'http://localhost:3000';
+    return proj.initialPhoto.startsWith('/') ? `${baseUrl}${proj.initialPhoto}` : `${baseUrl}${proj.initialPhoto}`;
   }
   // Use the correct default image path that exists in the public folder
   return '/projects-page-header-bg.png';
