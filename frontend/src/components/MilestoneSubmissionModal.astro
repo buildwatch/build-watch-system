@@ -272,63 +272,6 @@ const { submissionId } = Astro.props;
           </div>
         </div>
 
-        <!-- Attached Files Section -->
-        <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg border border-indigo-100 hover:shadow-xl transition-shadow duration-300">
-          <h3 class="text-xl font-bold text-indigo-800 mb-6 flex items-center gap-3">
-            <div class="icon-container-small bg-gradient-to-br from-indigo-500 to-indigo-600">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-              </svg>
-            </div>
-            Attached Files
-          </h3>
-          <div id="attachedFiles">
-            <!-- Will be populated by JavaScript -->
-          </div>
-        </div>
-
-        <!-- Admin Actions Section -->
-        <div id="adminActionsSection" class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-lg border-2 border-yellow-200">
-          <h3 class="text-xl font-bold text-yellow-800 mb-6 flex items-center gap-3">
-            <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              </svg>
-            </div>
-            Action Buttons
-          </h3>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- RPMES Form Upload -->
-            <div class="bg-white/80 rounded-xl p-4 border border-yellow-200">
-              <label class="block text-sm font-semibold text-yellow-800 mb-2">Attach RPMES Form *</label>
-              <input type="file" id="rpmesFormUpload" accept=".pdf,.doc,.docx,.xlsx,.xls" 
-                     class="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white">
-              <p class="text-xs text-yellow-600 mt-1">Required: Upload the completed RPMES form for this milestone</p>
-            </div>
-
-            <!-- Additional Document Upload -->
-            <div class="bg-white/80 rounded-xl p-4 border border-yellow-200">
-              <label class="block text-sm font-semibold text-yellow-800 mb-2">Additional Document (Optional)</label>
-              <input type="file" id="additionalDocUpload" accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.png" 
-                     class="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white">
-              <p class="text-xs text-yellow-600 mt-1">Optional: Any supporting documents</p>
-            </div>
-          </div>
-
-          <!-- Additional Notes -->
-          <div class="bg-white/80 rounded-xl p-4 border border-yellow-200">
-            <label class="block text-sm font-semibold text-yellow-800 mb-2">Additional Notes (Optional)</label>
-            <textarea id="adminNotes" rows="3" maxlength="500"
-                      class="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
-                      placeholder="Any additional notes or comments for this submission..."></textarea>
-            <div class="flex justify-between mt-1">
-              <span class="text-xs text-yellow-600">Optional: Notes for the secretariat</span>
-              <span class="text-xs text-yellow-500" id="notesCharCount">0/500</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Enhanced Modal Footer -->

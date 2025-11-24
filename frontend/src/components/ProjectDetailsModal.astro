@@ -433,6 +433,10 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                   <p id="totalBudget" class="text-gray-800 font-bold text-xl bg-white p-3 rounded-lg border" style="position: relative;">₱0</p>
                 </div>
                 <div>
+                  <label class="text-sm font-semibold text-gray-700 mb-1 block">Used Budget (₱)</label>
+                  <p id="usedBudget" class="text-gray-800 font-bold text-xl bg-white p-3 rounded-lg border">₱0</p>
+                </div>
+                <div class="lg:col-span-2">
                   <label class="text-sm font-semibold text-gray-700 mb-1 block">Budget Description</label>
                   <div id="budgetDescription" class="text-gray-800 text-sm bg-white p-3 rounded-lg border min-h-[60px]">-</div>
                 </div>
@@ -698,11 +702,11 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     } else {
       console.log('📡 No cached project data found, fetching from API...');
       console.log('🔍 Available cached projects:', {
-        assignedProjectsCount: window.assignedProjects?.length || 0,
-        projectsCount: window.projects?.length || 0,
+        assignedProjectsCount: Array.isArray(window.assignedProjects) ? window.assignedProjects.length : 0,
+        projectsCount: Array.isArray(window.projects) ? window.projects.length : 0,
         searchingForId: projectId,
-        assignedProjectsIds: window.assignedProjects?.map(p => p.id) || [],
-        projectsIds: window.projects?.map(p => p.id) || []
+        assignedProjectsIds: Array.isArray(window.assignedProjects) ? window.assignedProjects.map(p => p.id) : [],
+        projectsIds: Array.isArray(window.projects) ? window.projects.map(p => p.id) : []
       });
       // Load project data from API
     loadProjectData(projectId);
@@ -1765,6 +1769,14 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     // Try setting via safeSetTextContent first
     safeSetTextContent('totalBudget', formattedBudget);
     
+    // Set used budget (amountSpent) - calculate from progress or use direct field
+    const usedBudget = project.amountSpent || project.usedBudget || project.budgetUsed || 
+                      (project.progress?.amountSpent) || 0;
+    const formattedUsedBudget = usedBudget > 0 
+      ? `₱${parseFloat(usedBudget).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : '₱0.00';
+    safeSetTextContent('usedBudget', formattedUsedBudget);
+    
     // Then use direct manipulation
     setBudgetValueDirectly();
     
@@ -2106,7 +2118,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       physicalProgress: physicalProgress
     });
 
-    // Recent Updates - Enhanced fetching from multiple sources
+    // Recent Updates - Enhanced fetching from multiple sources including Audit Trail
     const updatesArray = project.updates || project.ProjectUpdates || project.recentUpdates || [];
     const activityLogsArray = project.activityLogs || [];
     
@@ -2126,7 +2138,13 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       }))
     });
     
-    populateRecentUpdates(updatesArray, project, activityLogsArray);
+    // Fetch audit trail data for timeline display
+    fetchAuditTrailForModal(project.id).then(auditTrailData => {
+      populateRecentUpdates(updatesArray, project, activityLogsArray, auditTrailData);
+    }).catch(err => {
+      console.warn('⚠️ Could not fetch audit trail, using available data:', err);
+      populateRecentUpdates(updatesArray, project, activityLogsArray, null);
+    });
 
     // Last updated - Enhanced with multiple fallbacks
     safeSetTextContent('lastUpdated', formatDate(project.updatedAt || project.lastProgressUpdate || project.lastModified || project.lastUpdate?.createdAt));
@@ -2955,59 +2973,74 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
         status = 'Pending'; // Not yet updated or submitted by the EIU to LGU IU IOO
       }
       
+      // Enhanced milestone progress card with modern design
+      progressDiv.className = 'bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 p-6 shadow-md hover:shadow-lg transition-all duration-300';
+      
       progressDiv.innerHTML = `
-        <div class="flex justify-between items-center mb-3">
-          <div class="flex items-center gap-2">
-            <h6 class="font-medium text-gray-800">${title}</h6>
-            <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(status)}">${status}</span>
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2">
+              <h6 class="text-lg font-bold text-gray-900">${title}</h6>
+              <span class="px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(status)} shadow-sm">${status}</span>
+            </div>
           </div>
-          <span class="text-sm font-semibold text-gray-600">${overallProgress.toFixed(2)}% Complete</span>
+          <div class="text-right">
+            <div class="text-xs text-gray-500 mb-1">Overall Progress</div>
+            <div class="text-xl font-bold ${overallProgress >= 100 ? 'text-green-600' : overallProgress >= 50 ? 'text-blue-600' : 'text-orange-600'}">${overallProgress.toFixed(2)}%</div>
+            <div class="text-xs text-gray-500 mt-1">Complete</div>
+          </div>
         </div>
-        <div class="grid grid-cols-3 gap-4 text-sm">
-          <div class="text-center">
-            <div class="text-xs text-gray-500 mb-1">Timeline</div>
-            <div class="text-sm font-semibold text-blue-600">${timelineLoaded.toFixed(1)}%</div>
-            <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
-              <div class="h-1 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${timelineColor}" style="width: 0%" data-target-width="${timelineBarWidth}%"></div>
+        <div class="grid grid-cols-3 gap-4 mt-4">
+          <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Timeline</div>
+              <div class="text-lg font-bold text-blue-600">${timelineLoaded.toFixed(1)}%</div>
+            </div>
+            <div class="w-full bg-blue-100 rounded-full h-2.5 mb-2">
+              <div class="h-2.5 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${timelineColor} shadow-sm" style="width: 0%" data-target-width="${timelineBarWidth}%"></div>
             </div>
             ${timelineProgress > 0 ? `
-              <div class="text-xs text-gray-500 mt-1">
-                <div>${timelineProgress.toFixed(1)}% capacity</div>
-                <div>${timelineProgress > 0 ? ((timelineLoaded / timelineProgress) * 100).toFixed(1) : 0}% raw</div>
-                <div>${Math.max(0, timelineProgress - timelineLoaded).toFixed(1)}% remaining of ${timelineProgress.toFixed(1)}%</div>
-                <div>${timelineLoaded.toFixed(1)}% loaded</div>
+              <div class="space-y-1 text-xs text-blue-600 mt-2">
+                <div class="flex justify-between"><span class="text-gray-600">Capacity:</span> <span class="font-medium">${timelineProgress.toFixed(1)}%</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Raw:</span> <span class="font-medium">${timelineProgress > 0 ? ((timelineLoaded / timelineProgress) * 100).toFixed(1) : 0}%</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Remaining:</span> <span class="font-medium">${Math.max(0, timelineProgress - timelineLoaded).toFixed(1)}%</span></div>
+                <div class="flex justify-between border-t border-blue-200 pt-1 mt-1"><span class="text-gray-700 font-semibold">Loaded:</span> <span class="font-bold text-blue-700">${timelineLoaded.toFixed(1)}%</span></div>
               </div>
-            ` : ''}
+            ` : '<div class="text-xs text-gray-400 text-center py-2">No data</div>'}
           </div>
-          <div class="text-center">
-            <div class="text-xs text-gray-500 mb-1">Budget</div>
-            <div class="text-sm font-semibold text-green-600">${budgetLoaded.toFixed(1)}%</div>
-            <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
-              <div class="h-1 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${budgetColor}" style="width: 0%" data-target-width="${budgetBarWidth}%"></div>
+          <div class="bg-green-50 rounded-lg p-4 border border-green-100">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-xs font-semibold text-green-700 uppercase tracking-wide">Budget</div>
+              <div class="text-lg font-bold text-green-600">${budgetLoaded.toFixed(1)}%</div>
+            </div>
+            <div class="w-full bg-green-100 rounded-full h-2.5 mb-2">
+              <div class="h-2.5 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${budgetColor} shadow-sm" style="width: 0%" data-target-width="${budgetBarWidth}%"></div>
             </div>
             ${budgetProgress > 0 ? `
-              <div class="text-xs text-gray-500 mt-1">
-                <div>${budgetProgress.toFixed(1)}% capacity</div>
-                <div>${budgetProgress > 0 ? ((budgetLoaded / budgetProgress) * 100).toFixed(1) : 0}% raw</div>
-                <div>${Math.max(0, budgetProgress - budgetLoaded).toFixed(1)}% remaining of ${budgetProgress.toFixed(1)}%</div>
-                <div>${budgetLoaded.toFixed(1)}% loaded</div>
+              <div class="space-y-1 text-xs text-green-600 mt-2">
+                <div class="flex justify-between"><span class="text-gray-600">Capacity:</span> <span class="font-medium">${budgetProgress.toFixed(1)}%</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Raw:</span> <span class="font-medium">${budgetProgress > 0 ? ((budgetLoaded / budgetProgress) * 100).toFixed(1) : 0}%</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Remaining:</span> <span class="font-medium">${Math.max(0, budgetProgress - budgetLoaded).toFixed(1)}%</span></div>
+                <div class="flex justify-between border-t border-green-200 pt-1 mt-1"><span class="text-gray-700 font-semibold">Loaded:</span> <span class="font-bold text-green-700">${budgetLoaded.toFixed(1)}%</span></div>
               </div>
-            ` : ''}
+            ` : '<div class="text-xs text-gray-400 text-center py-2">No data</div>'}
           </div>
-          <div class="text-center">
-            <div class="text-xs text-gray-500 mb-1">Physical</div>
-            <div class="text-sm font-semibold text-purple-600">${physicalLoaded.toFixed(1)}%</div>
-            <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
-              <div class="h-1 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${physicalColor}" style="width: 0%" data-target-width="${physicalBarWidth}%"></div>
+          <div class="bg-purple-50 rounded-lg p-4 border border-purple-100">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-xs font-semibold text-purple-700 uppercase tracking-wide">Physical</div>
+              <div class="text-lg font-bold text-purple-600">${physicalLoaded.toFixed(1)}%</div>
+            </div>
+            <div class="w-full bg-purple-100 rounded-full h-2.5 mb-2">
+              <div class="h-2.5 rounded-full transition-all duration-2000 ease-out milestone-progress-bar ${physicalColor} shadow-sm" style="width: 0%" data-target-width="${physicalBarWidth}%"></div>
             </div>
             ${physicalProgress > 0 ? `
-              <div class="text-xs text-gray-500 mt-1">
-                <div>${physicalProgress.toFixed(1)}% capacity</div>
-                <div>${physicalProgress > 0 ? ((physicalLoaded / physicalProgress) * 100).toFixed(1) : 0}% raw</div>
-                <div>${Math.max(0, physicalProgress - physicalLoaded).toFixed(1)}% remaining of ${physicalProgress.toFixed(1)}%</div>
-                <div>${physicalLoaded.toFixed(1)}% loaded</div>
+              <div class="space-y-1 text-xs text-purple-600 mt-2">
+                <div class="flex justify-between"><span class="text-gray-600">Capacity:</span> <span class="font-medium">${physicalProgress.toFixed(1)}%</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Raw:</span> <span class="font-medium">${physicalProgress > 0 ? ((physicalLoaded / physicalProgress) * 100).toFixed(1) : 0}%</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Remaining:</span> <span class="font-medium">${Math.max(0, physicalProgress - physicalLoaded).toFixed(1)}%</span></div>
+                <div class="flex justify-between border-t border-purple-200 pt-1 mt-1"><span class="text-gray-700 font-semibold">Loaded:</span> <span class="font-bold text-purple-700">${physicalLoaded.toFixed(1)}%</span></div>
               </div>
-            ` : ''}
+            ` : '<div class="text-xs text-gray-400 text-center py-2">No data</div>'}
           </div>
         </div>
       `;
@@ -3107,7 +3140,160 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     return actionTitles[action] || action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   }
 
-  function populateRecentUpdates(updates, projectData, activityLogs = []) {
+  // Fetch audit trail data for the modal
+  async function fetchAuditTrailForModal(projectId) {
+    if (!projectId) return null;
+    
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return null;
+      
+      const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/api'
+        : `${window.location.protocol}//${window.location.hostname}/api`;
+      
+      const allActivities = [];
+      
+      // Fetch activity history
+      try {
+        const activityResponse = await fetch(`${API_URL}/projects/${projectId}/activity-history`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (activityResponse.ok) {
+          const activityResult = await activityResponse.json();
+          const activities = activityResult.activities || [];
+          
+          activities.forEach(activity => {
+            allActivities.push({
+              id: activity.id || `activity-${activity.entityId}-${activity.createdAt}`,
+              action: activity.action || 'UNKNOWN_ACTION',
+              entityType: activity.entityType || 'Unknown',
+              entityId: activity.entityId || projectId,
+              details: typeof activity.details === 'string' 
+                ? activity.details 
+                : (activity.details?.message || JSON.stringify(activity.details) || 'No details available'),
+              createdAt: activity.createdAt || activity.timestamp || new Date().toISOString(),
+              user: activity.user || {
+                name: activity.userName || 'System',
+                role: activity.userRole || 'System',
+                department: activity.department || 'System'
+              },
+              module: activity.module || 'Project Management'
+            });
+          });
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not fetch activity history:', err);
+      }
+      
+      // Fetch milestone submissions
+      try {
+        const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (submissionsResponse.ok) {
+          const submissionsResult = await submissionsResponse.json();
+          const submissions = submissionsResult.submissions || submissionsResult.data || [];
+          
+          submissions.forEach(submission => {
+            if (submission.status !== 'rejected') {
+              allActivities.push({
+                id: `submission-${submission.id}`,
+                action: 'MILESTONE_SUBMITTED',
+                entityType: 'MilestoneSubmission',
+                entityId: submission.milestoneId,
+                details: `Submitted milestone update: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
+                createdAt: submission.submittedAt || submission.createdAt,
+                user: {
+                  name: submission.submitter?.name || submission.submitterInfo?.name || 'EIU Personnel',
+                  role: 'EIU',
+                  department: submission.submitter?.department || submission.submitterInfo?.department
+                },
+                module: 'Milestone Submission'
+              });
+            }
+            
+            if (submission.status === 'approved' || submission.status === 'iu_approved') {
+              allActivities.push({
+                id: `approval-${submission.id}`,
+                action: 'MILESTONE_APPROVED',
+                entityType: 'MilestoneSubmission',
+                entityId: submission.milestoneId,
+                details: `Approved milestone submission: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
+                createdAt: submission.reviewedAt || submission.updatedAt || submission.createdAt,
+                user: {
+                  name: submission.reviewer?.name || 'LGU-IU Personnel',
+                  role: 'LGU-IU',
+                  department: submission.reviewer?.department
+                },
+                module: 'Milestone Approval'
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not fetch milestone submissions:', err);
+      }
+      
+      // Sort by date (newest first)
+      allActivities.sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.timestamp || 0);
+        const dateB = new Date(b.createdAt || b.timestamp || 0);
+        return dateB - dateA;
+      });
+      
+      // Group by department/organization
+      const grouped = {};
+      allActivities.forEach(activity => {
+        const dept = activity.user?.role || 'System';
+        if (!grouped[dept]) {
+          grouped[dept] = [];
+        }
+        grouped[dept].push(activity);
+      });
+      
+      return grouped;
+    } catch (err) {
+      console.error('❌ Error fetching audit trail:', err);
+      return null;
+    }
+  }
+
+  // Helper function to get action color
+  function getActionColor(action) {
+    const colorMap = {
+      'PROJECT_COMPLETED': 'bg-green-100 text-green-700',
+      'MILESTONE_APPROVED': 'bg-purple-100 text-purple-700',
+      'MILESTONE_SUBMITTED': 'bg-blue-100 text-blue-700',
+      'PROJECT_CREATED': 'bg-indigo-100 text-indigo-700',
+      'PROJECT_UPDATED': 'bg-yellow-100 text-yellow-700',
+      'MILESTONE_OVERDUE': 'bg-red-100 text-red-700'
+    };
+    return colorMap[action] || 'bg-gray-100 text-gray-700';
+  }
+
+  // Helper function to get action icon
+  function getActionIcon(action) {
+    const iconMap = {
+      'PROJECT_COMPLETED': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      'MILESTONE_APPROVED': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      'MILESTONE_SUBMITTED': 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+      'PROJECT_CREATED': 'M12 4v16m8-8H4',
+      'PROJECT_UPDATED': 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+      'MILESTONE_OVERDUE': 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+    };
+    return iconMap[action] || 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z';
+  }
+
+  function populateRecentUpdates(updates, projectData, activityLogs = [], auditTrailData = null) {
     console.log('📋 Populating recent updates:', { 
       updates, 
       type: typeof updates, 
@@ -3129,13 +3315,12 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     const hasDelayedMilestones = checkForDelayedMilestones(projectData);
     const shouldShowDelayCard = (projectData && projectData.status === 'delayed' && projectData.delayInfo && projectData.delayInfo.isDelayed) || hasDelayedMilestones;
     
+    // Calculate overdue milestones info (needed for both delay card and timeline)
+    let overdueMilestones = [];
+    let maxDaysOverdue = 0;
+    let overdueMilestoneCount = 0;
+    
     if (shouldShowDelayCard) {
-      const delayCard = document.createElement('div');
-      delayCard.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
-      
-      // Use backend delay info if available, otherwise calculate from frontend
-      let overdueMilestones, maxDaysOverdue, overdueMilestoneCount;
-      
       if (projectData.delayInfo && projectData.delayInfo.isDelayed) {
         // Use backend delay info
         overdueMilestones = projectData.delayInfo.overdueMilestones || [];
@@ -3173,20 +3358,22 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
         maxDaysOverdue = overdueMilestones.length > 0 ? Math.max(...overdueMilestones.map(m => m.daysOverdue)) : 0;
       }
       
-      // Only show delay card if there are actually overdue milestones
+      // Show delay card if there are actually overdue milestones
       if (overdueMilestoneCount > 0) {
+        const delayCard = document.createElement('div');
+        delayCard.className = 'bg-red-50 border-2 border-red-300 rounded-xl p-4 mb-4 shadow-md';
         delayCard.innerHTML = `
           <div class="flex items-start gap-3">
             <div class="flex-shrink-0">
-              <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <svg class="w-4 h-4 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center animate-pulse">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
               </div>
             </div>
             <div class="flex-1">
-              <h6 class="font-semibold text-red-800 mb-1">🚨 Milestone Overdue</h6>
-              <p class="text-red-700 text-sm mb-2">
+              <h6 class="font-bold text-red-800 mb-1 text-lg">🚨 Milestone Overdue</h6>
+              <p class="text-red-700 text-sm mb-2 font-medium">
                 ${overdueMilestoneCount} milestone${overdueMilestoneCount > 1 ? 's are' : ' is'} overdue by ${maxDaysOverdue} day${maxDaysOverdue > 1 ? 's' : ''}.
               </p>
               <div class="text-xs text-red-600">
@@ -3196,7 +3383,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                   <p class="mt-1"><strong>Overdue Milestone${overdueMilestones.length > 1 ? 's' : ''}:</strong></p>
                   <ul class="ml-4 mt-1">
                     ${overdueMilestones.slice(0, 3).map(milestone => 
-                      `<li>• ${milestone.title} (Due: ${formatDate(milestone.dueDate)}, ${milestone.daysOverdue} days overdue)</li>`
+                      `<li>• ${milestone.title || milestone.name} (Due: ${formatDate(milestone.dueDate)}, ${milestone.daysOverdue} days overdue)</li>`
                     ).join('')}
                     ${overdueMilestones.length > 3 ? `<li class="text-red-500">• ... and ${overdueMilestones.length - 3} more</li>` : ''}
                   </ul>
@@ -3210,58 +3397,98 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       }
     }
 
-    // Combine updates and activity logs into a single array
-    const allUpdates = [];
+    // Combine updates, activity logs, and audit trail into a single timeline array
+    const allTimelineItems = [];
+    
+    // Add Milestone Overdue entries (preserve them - they're important markers)
+    if (shouldShowDelayCard && overdueMilestoneCount > 0) {
+      overdueMilestones.forEach(milestone => {
+        allTimelineItems.push({
+          id: `overdue-${milestone.id}`,
+          action: 'MILESTONE_OVERDUE',
+          type: 'overdue',
+          displayDate: milestone.dueDate || new Date().toISOString(),
+          title: 'Milestone Overdue',
+          description: `${milestone.title || milestone.name || 'Milestone'} is overdue by ${milestone.daysOverdue || 0} day${milestone.daysOverdue > 1 ? 's' : ''}`,
+          user: {
+            name: 'System',
+            role: 'System',
+            department: 'System'
+          },
+          milestone: milestone
+        });
+      });
+    }
     
     // Add project updates
     if (updates && Array.isArray(updates)) {
       updates.forEach(update => {
-        allUpdates.push({
-          ...update,
-          type: 'update',
-          displayDate: update.createdAt || update.submissionDate
-        });
+        // Preserve system delay notifications
+        if (update.updateType === 'system_delay_notification') {
+          allTimelineItems.push({
+            ...update,
+            type: 'delay_notification',
+            displayDate: update.createdAt || update.submissionDate,
+            action: 'MILESTONE_OVERDUE'
+          });
+        } else {
+          allTimelineItems.push({
+            ...update,
+            type: 'update',
+            displayDate: update.createdAt || update.submissionDate
+          });
+        }
       });
     }
     
     // Add activity logs
     if (activityLogs && Array.isArray(activityLogs)) {
-      console.log('🔍 Processing activity logs:', activityLogs);
       activityLogs.forEach(activity => {
-        console.log('🔍 Processing individual activity:', {
-          id: activity.id,
-          action: activity.action,
-          details: activity.details,
-          createdAt: activity.createdAt,
-          user: activity.user
-        });
-        allUpdates.push({
+        allTimelineItems.push({
           ...activity,
           type: 'activity',
           displayDate: activity.createdAt,
           title: getActivityTitle(activity.action),
           description: activity.details,
-          updateType: 'activity',
-          status: 'completed'
+          action: activity.action
+        });
+      });
+    }
+    
+    // Add audit trail data (grouped by department)
+    if (auditTrailData && typeof auditTrailData === 'object') {
+      Object.entries(auditTrailData).forEach(([department, activities]) => {
+        activities.forEach(activity => {
+          allTimelineItems.push({
+            ...activity,
+            type: 'audit_trail',
+            displayDate: activity.createdAt || activity.timestamp,
+            title: getActivityTitle(activity.action),
+            description: activity.details,
+            department: department
+          });
         });
       });
     }
     
     // Sort by date (newest first)
-    allUpdates.sort((a, b) => new Date(b.displayDate) - new Date(a.displayDate));
+    allTimelineItems.sort((a, b) => {
+      const dateA = new Date(a.displayDate || a.createdAt || 0);
+      const dateB = new Date(b.displayDate || b.createdAt || 0);
+      return dateB - dateA;
+    });
     
-    console.log('🔍 Final allUpdates array:', {
-      totalCount: allUpdates.length,
-      updates: allUpdates.map(update => ({
-        type: update.type,
-        title: update.title,
-        action: update.action,
-        displayDate: update.displayDate,
-        description: update.description
+    console.log('🔍 Final timeline items:', {
+      totalCount: allTimelineItems.length,
+      items: allTimelineItems.slice(0, 10).map(item => ({
+        type: item.type,
+        action: item.action,
+        title: item.title,
+        displayDate: item.displayDate
       }))
     });
     
-    if (allUpdates.length === 0) {
+    if (allTimelineItems.length === 0) {
       const emptyState = document.createElement('div');
       emptyState.className = 'bg-white p-4 rounded-lg border text-center text-gray-500';
       emptyState.innerHTML = `
@@ -3275,92 +3502,108 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       return;
     }
 
-    allUpdates.slice(0, 5).forEach((update, index) => {
-      const updateDiv = document.createElement('div');
-      
-      // Special styling for system delay notifications
-      if (update.updateType === 'system_delay_notification') {
-        updateDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4';
-        
-        // Parse delay information from milestoneUpdates
-        let delayDetails = {};
-        try {
-          if (update.milestoneUpdates) {
-            delayDetails = typeof update.milestoneUpdates === 'string' 
-              ? JSON.parse(update.milestoneUpdates) 
-              : update.milestoneUpdates;
-          }
-        } catch (e) {
-          console.error('Error parsing delay details:', e);
-        }
-        
-        updateDiv.innerHTML = `
-          <div class="flex items-start gap-3">
-            <div class="flex-shrink-0">
-              <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-                <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="flex-1">
-              <div class="flex justify-between items-start mb-1">
-                <h6 class="font-medium text-red-800">🚨 System Alert: Milestone Overdue</h6>
-                <span class="text-xs text-red-500">${formatDate(update.createdAt || update.submissionDate)}</span>
-              </div>
-              <p class="text-red-700 text-sm mb-2">${update.description || 'Project automatically marked as delayed'}</p>
-              <div class="text-xs text-red-600">
-                <span>Reason: ${delayDetails.reason || 'milestone_overdue'}</span>
-                <span class="ml-4">Type: System Generated</span>
-              </div>
-            </div>
-          </div>
-        `;
-      } else if (update.type === 'activity') {
-        // Activity log styling
-        updateDiv.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4';
-        
-        updateDiv.innerHTML = `
-          <div class="flex items-start gap-3">
-            <div class="flex-shrink-0">
-              <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="flex-1">
-              <div class="flex justify-between items-start mb-1">
-                <h6 class="font-medium text-blue-800">${update.title || 'Activity'}</h6>
-                <span class="text-xs text-blue-500">${formatDate(update.displayDate)}</span>
-              </div>
-              <p class="text-blue-700 text-sm mb-2">${update.description || 'No details available'}</p>
-              <div class="text-xs text-blue-600">
-                <span>Action: ${update.action}</span>
-                ${update.user ? `<span class="ml-4">By: ${update.user.name}</span>` : ''}
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        // Regular update styling
-        updateDiv.className = 'bg-white rounded-lg border border-gray-200 p-4';
-        
-        updateDiv.innerHTML = `
-          <div class="flex justify-between items-start mb-2">
-            <h6 class="font-medium text-gray-800">${update.title || `Update ${index + 1}`}</h6>
-            <span class="text-xs text-gray-500">${formatDate(update.displayDate)}</span>
-          </div>
-          <p class="text-gray-600 text-sm mb-2">${update.description || update.content || 'No description available'}</p>
-          <div class="flex justify-between items-center text-xs text-gray-500">
-            <span>Type: ${update.updateType || update.type || 'General'}</span>
-            <span>Status: ${update.status || 'Submitted'}</span>
-          </div>
-        `;
+    // Display timeline items (limit to 20 most recent)
+    const timelineWrapper = document.createElement('div');
+    timelineWrapper.className = 'space-y-4';
+    
+    // Group by department for better organization
+    const groupedByDept = {};
+    allTimelineItems.slice(0, 20).forEach(item => {
+      const dept = item.department || item.user?.role || 'System';
+      if (!groupedByDept[dept]) {
+        groupedByDept[dept] = [];
       }
-      
-      container.appendChild(updateDiv);
+      groupedByDept[dept].push(item);
     });
+    
+    // Display timeline with department grouping
+    Object.entries(groupedByDept).forEach(([department, items]) => {
+      const deptSection = document.createElement('div');
+      deptSection.className = 'mb-6';
+      
+      const deptHeader = document.createElement('div');
+      deptHeader.className = 'mb-3 pb-2 border-b border-gray-200';
+      deptHeader.innerHTML = `
+        <h5 class="text-sm font-bold text-gray-700 uppercase tracking-wide">${department} Department</h5>
+      `;
+      deptSection.appendChild(deptHeader);
+      
+      const timelineContainer = document.createElement('div');
+      timelineContainer.className = 'relative pl-8 space-y-4';
+      
+      // Timeline line
+      const timelineLine = document.createElement('div');
+      timelineLine.className = 'absolute left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 to-gray-200';
+      timelineContainer.appendChild(timelineLine);
+      
+      items.forEach((item, itemIndex) => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'relative flex items-start gap-4';
+        
+        // Timeline dot
+        const dot = document.createElement('div');
+        const dotColor = item.action === 'PROJECT_COMPLETED' 
+          ? 'bg-green-500 border-green-700' 
+          : item.action === 'MILESTONE_OVERDUE' || item.type === 'overdue' || item.type === 'delay_notification'
+          ? 'bg-red-500 border-red-700 animate-pulse'
+          : item.action === 'MILESTONE_APPROVED'
+          ? 'bg-purple-500 border-purple-700'
+          : item.action === 'MILESTONE_SUBMITTED'
+          ? 'bg-blue-500 border-blue-700'
+          : 'bg-gray-500 border-gray-700';
+        dot.className = `absolute left-0 w-6 h-6 rounded-full border-2 ${dotColor} -ml-8 z-10 flex items-center justify-center`;
+        dot.innerHTML = `
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${getActionIcon(item.action || 'PROJECT_UPDATED')}"></path>
+          </svg>
+        `;
+        timelineItem.appendChild(dot);
+        
+        // Timeline content
+        const content = document.createElement('div');
+        content.className = `flex-1 bg-white rounded-lg border-2 p-4 shadow-sm hover:shadow-md transition-all ${
+          item.action === 'PROJECT_COMPLETED' 
+            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+            : item.action === 'MILESTONE_OVERDUE' || item.type === 'overdue' || item.type === 'delay_notification'
+            ? 'bg-red-50 border-red-200'
+            : item.action === 'MILESTONE_APPROVED'
+            ? 'bg-purple-50 border-purple-200'
+            : item.action === 'MILESTONE_SUBMITTED'
+            ? 'bg-blue-50 border-blue-200'
+            : 'border-gray-200'
+        }`;
+        
+        const actionBadge = document.createElement('span');
+        actionBadge.className = `inline-block px-2 py-1 text-xs font-semibold rounded ${getActionColor(item.action || 'PROJECT_UPDATED')} mb-2`;
+        actionBadge.textContent = item.action || 'ACTIVITY';
+        
+        content.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              ${actionBadge.outerHTML}
+              <span class="text-xs text-gray-500">by ${item.user?.name || 'System'}</span>
+            </div>
+            <span class="text-xs text-gray-500">${formatDate(item.displayDate || item.createdAt)}</span>
+          </div>
+          <h6 class="font-semibold text-gray-800 mb-1">${item.title || getActivityTitle(item.action) || 'Activity'}</h6>
+          <p class="text-sm text-gray-700">${item.description || item.details || 'No details available'}</p>
+          ${item.milestone ? `
+            <div class="mt-2 text-xs text-gray-600">
+              <strong>Milestone:</strong> ${item.milestone.title || item.milestone.name || 'Unknown'}
+              ${item.milestone.daysOverdue ? ` (${item.milestone.daysOverdue} days overdue)` : ''}
+            </div>
+          ` : ''}
+        `;
+        
+        timelineItem.appendChild(content);
+        timelineContainer.appendChild(timelineItem);
+      });
+      
+      deptSection.appendChild(timelineContainer);
+      timelineWrapper.appendChild(deptSection);
+    });
+    
+    container.appendChild(timelineWrapper);
   }
 
   // Close modal when clicking outside

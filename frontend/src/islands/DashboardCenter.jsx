@@ -3,6 +3,7 @@ import axios from 'axios';
 
 // Import centralized API config
 import { getApiUrl } from '../config/api.js';
+import CentralizedProjectMap from '../components/CentralizedProjectMap.jsx';
 
 const API_URL = typeof window !== 'undefined' ? getApiUrl() : 'http://localhost:3000/api';
 
@@ -342,10 +343,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
   });
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
   const [showFullMapModal, setShowFullMapModal] = useState(false);
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const fullMapRef = useRef(null);
-  const fullMapInstance = useRef(null);
+  // Map refs removed - using CentralizedProjectMap component instead
   
   // Refs
   const calendarRef = useRef(null);
@@ -354,33 +352,78 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
   // Inject Astro-rendered project cards into React component
   useEffect(() => {
     if (typeof window !== 'undefined' && !isSystemAdmin) {
+      let injectionAttempts = 0;
+      const maxAttempts = 20; // Try for up to 10 seconds
+      
       const injectProjectCards = () => {
+        injectionAttempts++;
         const astroCardsContainer = document.getElementById('dashboard-project-cards-astro');
         const reactCardsContainer = document.getElementById('dashboard-project-cards');
         
         if (astroCardsContainer && reactCardsContainer) {
-          // Clear existing cards first
-          reactCardsContainer.innerHTML = '';
+          const cardCount = astroCardsContainer.children.length;
           
-          // Move all project cards from Astro container to React container
-          while (astroCardsContainer.firstChild) {
-            reactCardsContainer.appendChild(astroCardsContainer.firstChild);
+          if (cardCount > 0) {
+            // Only inject if React container is empty (avoid duplicate injections)
+            if (reactCardsContainer.children.length === 0) {
+              console.log(`🔄 [DashboardCenter] Injecting ${cardCount} project cards from Astro to React container (attempt ${injectionAttempts})`);
+              
+              // Move all project cards from Astro container to React container
+              while (astroCardsContainer.firstChild) {
+                reactCardsContainer.appendChild(astroCardsContainer.firstChild);
+              }
+              
+              // Remove the now-empty Astro container
+              astroCardsContainer.remove();
+              
+              console.log(`✅ [DashboardCenter] Successfully injected ${cardCount} project cards`);
+              return true; // Success - stop trying
+            } else {
+              // Already injected, remove Astro container if it still exists
+              if (astroCardsContainer.parentNode) {
+                astroCardsContainer.remove();
+              }
+              return true; // Already done - stop trying
+            }
+          } else {
+            if (injectionAttempts <= 3) {
+              console.log(`⏳ [DashboardCenter] Waiting for Astro cards to render... (attempt ${injectionAttempts})`);
+            }
           }
-          
-          // Remove the now-empty Astro container
-          astroCardsContainer.remove();
+        } else {
+          if (injectionAttempts <= 3) {
+            if (!astroCardsContainer) {
+              console.log(`⏳ [DashboardCenter] Waiting for Astro container... (attempt ${injectionAttempts})`);
+            }
+            if (!reactCardsContainer) {
+              console.log(`⏳ [DashboardCenter] Waiting for React container... (attempt ${injectionAttempts})`);
+            }
+          }
         }
+        
+        return false; // Not ready yet
       };
       
       // Try immediately
-      injectProjectCards();
+      if (injectProjectCards()) {
+        return; // Success on first try
+      }
       
-      // Also try after a short delay to ensure DOM is ready
-      const timeoutId = setTimeout(injectProjectCards, 100);
+      // Set up interval to keep trying
+      const intervalId = setInterval(() => {
+        if (injectProjectCards() || injectionAttempts >= maxAttempts) {
+          clearInterval(intervalId);
+          if (injectionAttempts >= maxAttempts) {
+            console.warn('⚠️ [DashboardCenter] Max injection attempts reached. Cards may not be available.');
+          }
+        }
+      }, 500); // Check every 500ms
       
-      return () => clearTimeout(timeoutId);
+      return () => {
+        clearInterval(intervalId);
+      };
     }
-  }, [projects, isSystemAdmin]);
+  }, [isSystemAdmin]); // Removed 'projects' dependency since Astro cards are independent
 
   // Fetch user data
   useEffect(() => {
@@ -443,45 +486,98 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             
             const totalBudget = projectsList.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
             
-            // Fetch utilized budget from /api/home/stats endpoint (most accurate - uses approved milestone submissions)
-            // This is more reliable than calculating from project data which may not include milestone details
+            // Calculate utilized budget - role-specific logic
             let utilizedBudget = 0;
-            try {
-              const statsResponse = await fetch(`${API_URL}/home/stats`, {
-                headers: getAuthHeaders()
-              });
-              if (statsResponse.ok) {
-                const statsData = await statsResponse.json();
-                if (statsData.success && statsData.utilizedBudget !== undefined) {
-                  utilizedBudget = parseFloat(statsData.utilizedBudget) || 0;
-                  console.log('💰 Utilized budget from /api/home/stats:', utilizedBudget);
-                }
-              }
-            } catch (statsError) {
-              console.warn('⚠️ Failed to fetch utilized budget from /api/home/stats, using fallback calculation:', statsError);
-            }
             
-            // Fallback: Calculate from milestone data if available in projects
-            if (utilizedBudget === 0) {
-              for (const project of projectsList) {
-                if (project.milestones && Array.isArray(project.milestones)) {
-                  project.milestones.forEach(milestone => {
-                    const usedBudget = parseFloat(milestone.usedBudget || 0);
-                    if (usedBudget > 0) {
-                      utilizedBudget += usedBudget;
+            if (currentRole === 'EIU' && projectsList.length > 0) {
+              // For EIU, calculate utilized budget from their own projects only
+              // Fetch amountSpent for each EIU project in parallel (ProgressCalculationService calculates this accurately)
+              try {
+                const projectBudgetPromises = projectsList.map(async (project) => {
+                  try {
+                    const projectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                      headers: getAuthHeaders()
+                    });
+                    if (projectResponse.ok) {
+                      const projectData = await projectResponse.json();
+                      if (projectData.success && projectData.progress?.amountSpent !== undefined) {
+                        // amountSpent is calculated by ProgressCalculationService from approved milestone submissions
+                        return parseFloat(projectData.progress.amountSpent || 0);
+                      } else if (projectData.success && projectData.project?.amountSpent !== undefined) {
+                        return parseFloat(projectData.project.amountSpent || 0);
+                      }
                     }
-                  });
+                  } catch (err) {
+                    console.warn(`⚠️ Failed to fetch budget for project ${project.id}:`, err);
+                  }
+                  return 0;
+                });
+                
+                const projectBudgets = await Promise.all(projectBudgetPromises);
+                utilizedBudget = projectBudgets.reduce((sum, budget) => sum + budget, 0);
+                console.log('💰 Utilized budget calculated from EIU projects only:', utilizedBudget);
+              } catch (budgetError) {
+                console.warn('⚠️ Failed to calculate utilized budget from EIU projects, using fallback:', budgetError);
+                // Fallback: Calculate from milestone data if available in projects
+                for (const project of projectsList) {
+                  if (project.milestones && Array.isArray(project.milestones)) {
+                    project.milestones.forEach(milestone => {
+                      const usedBudget = parseFloat(milestone.usedBudget || 0);
+                      if (usedBudget > 0) {
+                        utilizedBudget += usedBudget;
+                      }
+                    });
+                  }
+                }
+                
+                // Final fallback: Calculate from budget progress percentage (least accurate)
+                if (utilizedBudget === 0) {
+                  utilizedBudget = projectsList.reduce((sum, p) => {
+                    const budget = parseFloat(p.totalBudget || 0);
+                    const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+                    return sum + (budget * budgetProgress / 100);
+                  }, 0);
                 }
               }
-            }
-            
-            // Final fallback: Calculate from budget progress percentage (least accurate)
-            if (utilizedBudget === 0) {
-              utilizedBudget = projectsList.reduce((sum, p) => {
-                const budget = parseFloat(p.totalBudget || 0);
-                const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
-                return sum + (budget * budgetProgress / 100);
-              }, 0);
+            } else {
+              // For other roles, use the original logic (fetch from /api/home/stats)
+              try {
+                const statsResponse = await fetch(`${API_URL}/home/stats`, {
+                  headers: getAuthHeaders()
+                });
+                if (statsResponse.ok) {
+                  const statsData = await statsResponse.json();
+                  if (statsData.success && statsData.utilizedBudget !== undefined) {
+                    utilizedBudget = parseFloat(statsData.utilizedBudget) || 0;
+                    console.log('💰 Utilized budget from /api/home/stats:', utilizedBudget);
+                  }
+                }
+              } catch (statsError) {
+                console.warn('⚠️ Failed to fetch utilized budget from /api/home/stats, using fallback calculation:', statsError);
+              }
+              
+              // Fallback: Calculate from milestone data if available in projects
+              if (utilizedBudget === 0) {
+                for (const project of projectsList) {
+                  if (project.milestones && Array.isArray(project.milestones)) {
+                    project.milestones.forEach(milestone => {
+                      const usedBudget = parseFloat(milestone.usedBudget || 0);
+                      if (usedBudget > 0) {
+                        utilizedBudget += usedBudget;
+                      }
+                    });
+                  }
+                }
+              }
+              
+              // Final fallback: Calculate from budget progress percentage (least accurate)
+              if (utilizedBudget === 0) {
+                utilizedBudget = projectsList.reduce((sum, p) => {
+                  const budget = parseFloat(p.totalBudget || 0);
+                  const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+                  return sum + (budget * budgetProgress / 100);
+                }, 0);
+              }
             }
             
             const avgProgress = totalProjects > 0 
@@ -924,354 +1020,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
     fetchCalendarEvents();
   }, [currentDate, projects, announcements, isSystemAdmin, userData]);
 
-  // Initialize map
-  useEffect(() => {
-    if (!mapRef.current || typeof window === 'undefined' || showFullMapModal) return;
-
-    // Dynamically import Leaflet only on client side
-    const initMap = async () => {
-      try {
-        // Dynamic import to avoid SSR issues
-        const leafletModule = await import('leaflet');
-        const L = leafletModule.default || leafletModule;
-        
-        if (!L || typeof L.map !== 'function') {
-          console.error('Leaflet not loaded correctly:', L);
-          return;
-        }
-        
-        // Import CSS
-        await import('leaflet/dist/leaflet.css');
-        
-        // Fix for default markers
-        if (L.Icon && L.Icon.Default) {
-          delete L.Icon.Default.prototype._getIconUrl;
-          L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-          });
-        }
-
-        // Initialize map
-        if (!mapInstance.current) {
-          mapInstance.current = L.map(mapRef.current, {
-            center: [14.281, 121.419],
-            zoom: 12,
-            scrollWheelZoom: false,
-          });
-
-          // Add tile layer
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; OpenStreetMap contributors',
-          }).addTo(mapInstance.current);
-        }
-
-        // Clear existing markers
-        if (mapInstance.current) {
-          mapInstance.current.eachLayer((layer) => {
-            if (layer instanceof L.Marker) {
-              mapInstance.current.removeLayer(layer);
-            }
-          });
-        }
-
-        // Add markers for all projects (use generated coordinates if lat/lng not available)
-        projects.forEach((project) => {
-          let lat, lng;
-          
-          // Use actual coordinates if available, otherwise generate based on location
-          if (project.latitude && project.longitude) {
-            lat = parseFloat(project.latitude);
-            lng = parseFloat(project.longitude);
-          } else {
-            // Generate coordinates based on location
-            const coords = generateProjectCoordinates(project.id, project.location);
-            lat = coords[0];
-            lng = coords[1];
-          }
-          
-          if (isNaN(lat) || isNaN(lng)) return;
-
-          // Get status color
-          const getStatusColor = (status) => {
-            switch (status?.toLowerCase()) {
-              case 'ongoing': return '#3B82F6';
-              case 'completed': return '#10B981';
-              case 'delayed': return '#EF4444';
-              case 'pending': return '#F59E0B';
-              case 'on hold': return '#F97316';
-              default: return '#6B7280';
-            }
-          };
-
-          const customIcon = L.divIcon({
-            className: 'custom-marker',
-            html: `<div style="
-              width: 20px; 
-              height: 20px; 
-              background-color: ${getStatusColor(project.status)}; 
-              border: 3px solid white; 
-              border-radius: 50%; 
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            "></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-          });
-
-          const marker = L.marker([lat, lng], { icon: customIcon }).addTo(mapInstance.current);
-          
-          // Format budget
-          const formatBudget = (amount) => {
-            if (!amount) return 'N/A';
-            if (amount >= 1000000) {
-              return `₱${(amount / 1000000).toFixed(1)}M`;
-            } else if (amount >= 1000) {
-              return `₱${(amount / 1000).toFixed(0)}K`;
-            }
-            return `₱${amount.toLocaleString()}`;
-          };
-
-          // Get progress value - prefer overallProgress, fallback to progress
-          const progressValue = parseFloat(project.overallProgress) || parseFloat(project.progress) || 0;
-          
-          marker.bindPopup(`
-            <div style="min-width: 200px;">
-              <h3 style="font-weight: bold; margin-bottom: 8px; color: #2563eb;">${project.name || project.projectName || 'Project'}</h3>
-              <p><strong>Status:</strong> <span style="color: ${getStatusColor(project.status)}; font-weight: bold;">${project.status || 'N/A'}</span></p>
-              <p><strong>Budget:</strong> ${formatBudget(project.budget || project.totalBudget)}</p>
-              <p><strong>Progress:</strong> ${progressValue.toFixed(1)}%</p>
-            </div>
-          `);
-        });
-
-        // Fit map to bounds if there are markers
-        if (projects.length > 0 && mapInstance.current) {
-          const markers = projects.map(p => {
-            let lat, lng;
-            if (p.latitude && p.longitude) {
-              lat = parseFloat(p.latitude);
-              lng = parseFloat(p.longitude);
-            } else {
-              const coords = generateProjectCoordinates(p.id, p.location);
-              lat = coords[0];
-              lng = coords[1];
-            }
-            if (isNaN(lat) || isNaN(lng)) return null;
-            return L.marker([lat, lng]);
-          }).filter(Boolean);
-          
-          if (markers.length > 0) {
-            const group = new L.featureGroup(markers);
-            mapInstance.current.fitBounds(group.getBounds().pad(0.1));
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    };
-
-    initMap();
-
-    // Cleanup
-    return () => {
-      if (mapInstance.current) {
-        try {
-          mapInstance.current.eachLayer((layer) => {
-            // Check if it's a marker by checking for bindPopup method (markers have this)
-            if (layer && typeof layer.bindPopup === 'function') {
-              mapInstance.current.removeLayer(layer);
-            }
-          });
-        } catch (error) {
-          // If map is already destroyed, ignore
-          console.error('Error during map cleanup:', error);
-        }
-      }
-    };
-  }, [projects, showFullMapModal]);
-
-  // Initialize full map modal
-  useEffect(() => {
-    if (!showFullMapModal || !fullMapRef.current || typeof window === 'undefined') {
-      // Clean up map instance when modal closes
-      if (fullMapInstance.current) {
-        fullMapInstance.current.remove();
-        fullMapInstance.current = null;
-      }
-      return;
-    }
-
-    // Dynamically import Leaflet only on client side
-    const initFullMap = async () => {
-      try {
-        // Dynamic import to avoid SSR issues
-        const leafletModule = await import('leaflet');
-        const L = leafletModule.default || leafletModule;
-        
-        if (!L || typeof L.map !== 'function') {
-          console.error('Leaflet not loaded correctly:', L);
-          return;
-        }
-        
-        // Import CSS
-        await import('leaflet/dist/leaflet.css');
-        
-        // Fix for default markers
-        if (L.Icon && L.Icon.Default) {
-          delete L.Icon.Default.prototype._getIconUrl;
-          L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-          });
-        }
-
-        // Destroy existing map instance if it exists
-        if (fullMapInstance.current) {
-          fullMapInstance.current.remove();
-          fullMapInstance.current = null;
-        }
-
-        // Small delay to ensure DOM is ready and small map is hidden
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-        // Ensure the full map container is completely empty before initializing
-        if (fullMapRef.current) {
-          // Remove all child elements and reset innerHTML
-          fullMapRef.current.innerHTML = '';
-          
-          // Also remove any Leaflet-specific classes that might interfere
-          fullMapRef.current.className = 'w-full h-full';
-        }
-
-        // Initialize fresh full map with canvas renderer to avoid conflicts
-        fullMapInstance.current = L.map(fullMapRef.current, {
-          center: [14.281, 121.419],
-          zoom: 11,
-          scrollWheelZoom: true,
-          preferCanvas: true, // Use canvas renderer to avoid conflicts
-        });
-
-        // Add tile layer
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '&copy; OpenStreetMap contributors',
-        }).addTo(fullMapInstance.current);
-
-        // Clear existing markers
-        if (fullMapInstance.current) {
-          fullMapInstance.current.eachLayer((layer) => {
-            if (layer instanceof L.Marker) {
-              fullMapInstance.current.removeLayer(layer);
-            }
-          });
-        }
-
-        // Add markers for all projects (use generated coordinates if lat/lng not available)
-        projects.forEach((project) => {
-          let lat, lng;
-          
-          // Use actual coordinates if available, otherwise generate based on location
-          if (project.latitude && project.longitude) {
-            lat = parseFloat(project.latitude);
-            lng = parseFloat(project.longitude);
-          } else {
-            // Generate coordinates based on location
-            const coords = generateProjectCoordinates(project.id, project.location);
-            lat = coords[0];
-            lng = coords[1];
-          }
-          
-          if (isNaN(lat) || isNaN(lng)) return;
-
-          const getStatusColor = (status) => {
-            switch (status?.toLowerCase()) {
-              case 'ongoing': return '#3B82F6';
-              case 'completed': return '#10B981';
-              case 'delayed': return '#EF4444';
-              case 'pending': return '#F59E0B';
-              case 'on hold': return '#F97316';
-              default: return '#6B7280';
-            }
-          };
-
-          const customIcon = L.divIcon({
-            className: 'custom-marker',
-            html: `<div style="
-              width: 24px; 
-              height: 24px; 
-              background-color: ${getStatusColor(project.status)}; 
-              border: 3px solid white; 
-              border-radius: 50%; 
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            "></div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-          });
-
-          const marker = L.marker([lat, lng], { icon: customIcon }).addTo(fullMapInstance.current);
-          
-          const formatBudget = (amount) => {
-            if (!amount) return 'N/A';
-            if (amount >= 1000000) {
-              return `₱${(amount / 1000000).toFixed(1)}M`;
-            } else if (amount >= 1000) {
-              return `₱${(amount / 1000).toFixed(0)}K`;
-            }
-            return `₱${amount.toLocaleString()}`;
-          };
-
-          // Get progress value - prefer overallProgress, fallback to progress
-          const progressValue = parseFloat(project.overallProgress) || parseFloat(project.progress) || 0;
-          
-          marker.bindPopup(`
-            <div style="min-width: 250px;">
-              <h3 style="font-weight: bold; margin-bottom: 8px; color: #2563eb;">${project.name || project.projectName || 'Project'}</h3>
-              <p><strong>Location:</strong> ${project.location || 'Santa Cruz, Laguna'}</p>
-              <p><strong>Status:</strong> <span style="color: ${getStatusColor(project.status)}; font-weight: bold;">${project.status || 'N/A'}</span></p>
-              <p><strong>Budget:</strong> ${formatBudget(project.budget || project.totalBudget)}</p>
-              <p><strong>Progress:</strong> ${progressValue.toFixed(1)}%</p>
-              <p><strong>Category:</strong> ${project.category || 'Infrastructure'}</p>
-            </div>
-          `);
-        });
-
-        // Fit map to bounds
-        if (projects.length > 0 && fullMapInstance.current) {
-          const markers = projects.map(p => {
-            let lat, lng;
-            if (p.latitude && p.longitude) {
-              lat = parseFloat(p.latitude);
-              lng = parseFloat(p.longitude);
-            } else {
-              const coords = generateProjectCoordinates(p.id, p.location);
-              lat = coords[0];
-              lng = coords[1];
-            }
-            if (isNaN(lat) || isNaN(lng)) return null;
-            return L.marker([lat, lng]);
-          }).filter(Boolean);
-          
-          if (markers.length > 0) {
-            const group = new L.featureGroup(markers);
-            fullMapInstance.current.fitBounds(group.getBounds().pad(0.1));
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing full map:', error);
-      }
-    };
-
-    initFullMap();
-
-    // Cleanup when modal closes
-    return () => {
-      if (fullMapInstance.current && !showFullMapModal) {
-        fullMapInstance.current.remove();
-        fullMapInstance.current = null;
-      }
-    };
-  }, [showFullMapModal, projects]);
+  // Map initialization removed - using CentralizedProjectMap component instead
 
   // Calendar navigation
   const navigateMonth = (direction) => {
@@ -1576,7 +1325,8 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
       )}
 
       {/* Project Cards Section - Only for non-System Admin */}
-      {!isSystemAdmin && projects.length > 0 && (
+      {/* Always render the section if not System Admin - cards will be injected from Astro */}
+      {!isSystemAdmin && (
         <div className={`bg-white rounded-2xl shadow-lg border ${currentTheme.border} overflow-hidden mb-8`}>
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <h3 className="text-xl font-semibold text-gray-800">Recent Projects</h3>
@@ -1597,7 +1347,12 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
           
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="dashboard-project-cards">
-              {/* Project cards will be injected here by script */}
+              {/* Project cards will be injected here by script from #dashboard-project-cards-astro */}
+              {typeof window !== 'undefined' && document.getElementById('dashboard-project-cards-astro')?.children.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  <p>No recent projects to display</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2299,13 +2054,18 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
 
         {/* Heatmap + Municipality Map - Only for non-System Admin */}
         {!isSystemAdmin && (
-          <div className={`bg-white rounded-2xl shadow-lg border ${currentTheme.border} p-6 ${currentTheme.cardHover} transition-all duration-300`}>
+          <div className={`bg-white rounded-2xl shadow-lg border ${currentTheme.border} p-6 ${currentTheme.cardHover} transition-all duration-300 relative z-0`}>
             <h3 className="text-xl font-semibold text-gray-800 mb-6">Project Map - Santa Cruz, Laguna</h3>
-            <div className={`map-container h-80 rounded-lg relative overflow-hidden border-2 border-gray-200 ${showFullMapModal ? 'hidden' : ''}`}>
-              <div 
-                ref={mapRef} 
-                className="w-full h-full rounded-lg"
-                style={{ minHeight: '320px' }}
+            <div className={`map-container rounded-lg relative overflow-hidden border-2 border-gray-200 ${showFullMapModal ? 'hidden' : ''}`} style={{ position: 'relative', zIndex: 1, isolation: 'isolate' }}>
+              <CentralizedProjectMap
+                projects={projects}
+                mapId="dashboard-mini-map"
+                height={320}
+                zoom={12}
+                showLegend={false}
+                showViewSelector={false}
+                fitBounds={true}
+                scrollWheelZoom={false}
               />
             </div>
             <div className="mt-4 flex items-center justify-between text-sm mb-4">
@@ -2979,46 +2739,18 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             </div>
 
             {/* Map Container */}
-            <div className="flex-1 relative overflow-hidden" style={{ position: 'relative', zIndex: 1, isolation: 'isolate' }}>
-              <div 
-                ref={fullMapRef} 
-                className="w-full h-full"
-                style={{ 
-                  minHeight: '600px', 
-                  position: 'relative', 
-                  zIndex: 1,
-                  backgroundColor: '#f0f0f0'
-                }}
-                id="full-map-container"
+            <div className="flex-1 relative overflow-hidden" style={{ position: 'relative', zIndex: 1, isolation: 'isolate', overflow: 'hidden' }}>
+              <CentralizedProjectMap
+                projects={projects}
+                mapId="dashboard-full-map"
+                height={600}
+                zoom={11}
+                showLegend={true}
+                showViewSelector={true}
+                fitBounds={true}
+                scrollWheelZoom={true}
               />
               
-              {/* Map Legend */}
-              <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-lg z-20">
-                <h4 className="text-sm font-semibold text-gray-800 mb-3">Project Status</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
-                    <span className="text-gray-700">Ongoing</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
-                    <span className="text-gray-700">Completed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-sm"></div>
-                    <span className="text-gray-700">Delayed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-yellow-500 rounded-full border-2 border-white shadow-sm"></div>
-                    <span className="text-gray-700">Pending</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-sm"></div>
-                    <span className="text-gray-700">On Hold</span>
-                  </div>
-                </div>
-              </div>
-
               {/* Project Stats */}
               <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-gray-200 shadow-lg z-10">
                 <div className="space-y-2 text-sm">

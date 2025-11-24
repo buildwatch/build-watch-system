@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { getApiUrl } from '../config/api.js';
+import CentralizedProjectMap from '../components/CentralizedProjectMap.jsx';
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -125,8 +126,8 @@ function StatusAnalytics({ projects }) {
         <div className="group bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 group-hover:text-green-600 transition-colors">Ongoing</p>
-              <p className="text-3xl font-bold text-green-600 group-hover:text-green-700 transition-colors">{statusCounts.ongoing || 0}</p>
+              <p className="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">Ongoing</p>
+              <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700 transition-colors">{(statusCounts.ongoing || 0) + (statusCounts.delayed || 0)}</p>
             </div>
             <div className="p-3 bg-green-200 rounded-full group-hover:bg-green-300 transition-all duration-300">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,14 +137,14 @@ function StatusAnalytics({ projects }) {
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div className="group bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">Completed</p>
-              <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700 transition-colors">{statusCounts.completed || 0}</p>
+              <p className="text-sm font-medium text-gray-600 group-hover:text-green-600 transition-colors">Completed</p>
+              <p className="text-3xl font-bold text-green-600 group-hover:text-green-700 transition-colors">{statusCounts.completed || 0}</p>
             </div>
-            <div className="p-3 bg-blue-200 rounded-full group-hover:bg-blue-300 transition-all duration-300">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-3 bg-green-200 rounded-full group-hover:bg-green-300 transition-all duration-300">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
               </svg>
             </div>
@@ -585,155 +586,22 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Real Leaflet Map Component (like home page)
-function LeafletMap({ projects, isFullMap = false }) {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    // Initialize map
-    mapInstance.current = L.map(mapRef.current, {
-      center: [14.281, 121.419],
-      zoom: isFullMap ? 11 : 12,
-      scrollWheelZoom: isFullMap,
-    });
-
-    // Add tile layer
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(mapInstance.current);
-
-    // Add markers for projects
-    projects.forEach((project) => {
-      const coordinates = generateProjectCoordinates(project.id, project.location);
-      
-      // Create custom icon based on project status
-      const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-          case 'ongoing': return '#10B981'; // green
-          case 'completed': return '#3B82F6'; // blue
-          case 'delayed': return '#EF4444'; // red
-          case 'planning': return '#F59E0B'; // yellow
-          case 'on hold': return '#F97316'; // orange
-          default: return '#6B7280'; // gray
-        }
-      };
-
-      const customIcon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div style="
-          width: 20px; 
-          height: 20px; 
-          background-color: ${getStatusColor(project.status)}; 
-          border: 3px solid white; 
-          border-radius: 50%; 
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        "></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-
-      const marker = L.marker(coordinates, { icon: customIcon }).addTo(mapInstance.current);
-      
-      // Format budget
-      const formatBudget = (amount) => {
-        if (!amount) return 'N/A';
-        if (amount >= 1000000) {
-          return `₱${(amount / 1000000).toFixed(1)}M`;
-        } else if (amount >= 1000) {
-          return `₱${(amount / 1000).toFixed(0)}K`;
-        }
-        return `₱${amount.toLocaleString()}`;
-      };
-
-      // Format date
-      const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'N/A';
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-    });
-  };
-
-      marker.bindPopup(`
-        <div style="min-width: 250px;">
-          <h3 style="font-weight: bold; margin-bottom: 8px; color: #2563eb;">${project.name}</h3>
-          <p><strong>Location:</strong> ${project.location || 'Santa Cruz, Laguna'}</p>
-          <p><strong>Status:</strong> <span style="color: ${getStatusColor(project.status)}; font-weight: bold;">${project.status}</span></p>
-          <p><strong>Budget:</strong> ${formatBudget(project.budget)}</p>
-          <p><strong>Progress:</strong> ${(parseFloat(project.progress) || 0).toFixed(2)}%</p>
-          <p><strong>Start Date:</strong> ${formatDate(project.startDate)}</p>
-          <p><strong>Category:</strong> ${project.category || 'Infrastructure'}</p>
-        </div>
-      `);
-    });
-
-    // Add legend
-    if (isFullMap) {
-      const legend = L.control({ position: 'bottomright' });
-      legend.onAdd = function() {
-        const div = L.DomUtil.create('div', 'info legend');
-        div.style.backgroundColor = 'white';
-        div.style.padding = '10px';
-        div.style.borderRadius = '5px';
-        div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-        div.style.fontSize = '12px';
-        
-        div.innerHTML = `
-          <h4 style="margin: 0 0 8px 0; color: #333;">Project Status</h4>
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <div style="width: 12px; height: 12px; background-color: #10B981; border-radius: 50%; margin-right: 8px;"></div>
-            <span>Ongoing</span>
-                  </div>
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <div style="width: 12px; height: 12px; background-color: #3B82F6; border-radius: 50%; margin-right: 8px;"></div>
-            <span>Completed</span>
-                    </div>
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <div style="width: 12px; height: 12px; background-color: #F59E0B; border-radius: 50%; margin-right: 8px;"></div>
-            <span>Planning</span>
-                    </div>
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <div style="width: 12px; height: 12px; background-color: #EF4444; border-radius: 50%; margin-right: 8px;"></div>
-            <span>Delayed</span>
-          </div>
-          <div style="display: flex; align-items: center;">
-            <div style="width: 12px; height: 12px; background-color: #6B7280; border-radius: 50%; margin-right: 8px;"></div>
-            <span>Other</span>
-          </div>
-        `;
-        return div;
-      };
-      legend.addTo(mapInstance.current);
-    }
-
-    // Cleanup
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [projects, isFullMap]);
-
-  return (
-    <div 
-      ref={mapRef} 
-      className="w-full h-full rounded-xl overflow-hidden"
-      style={{ minHeight: isFullMap ? '700px' : '500px' }}
-    />
-  );
-}
-
+// MiniMap wrapper using CentralizedProjectMap
 function MiniMap({ projects, isFullMap = false }) {
+  const mapId = `projects-map-${isFullMap ? 'full' : 'mini'}-${Math.random().toString(36).substr(2, 9)}`;
+  
   return (
     <ErrorBoundary>
-      <LeafletMap projects={projects} isFullMap={isFullMap} />
+      <CentralizedProjectMap
+        projects={projects}
+        mapId={mapId}
+        height={isFullMap ? 700 : 500}
+        zoom={isFullMap ? 11 : 12}
+        showLegend={isFullMap}
+        showViewSelector={isFullMap}
+        fitBounds={true}
+        scrollWheelZoom={isFullMap}
+      />
     </ErrorBoundary>
   );
 }
@@ -769,7 +637,7 @@ export default function ProjectsIsland() {
       
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '10',
+        limit: '100', // Increased limit to get all projects for map display
         _t: Date.now().toString() // Cache-busting parameter
       });
 
@@ -1021,7 +889,7 @@ export default function ProjectsIsland() {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'ongoing': return 'bg-green-200 text-green-800';
-      case 'completed': return 'bg-blue-200 text-blue-800';
+      case 'completed': return 'bg-green-200 text-green-800';
       case 'delayed': return 'bg-red-200 text-red-800';
       case 'planning': return 'bg-yellow-200 text-yellow-800';
       case 'on hold': return 'bg-orange-200 text-orange-800';
@@ -1203,17 +1071,24 @@ export default function ProjectsIsland() {
                     {/* Enhanced Project Statistics */}
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                        <div className="w-3 h-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full animate-pulse"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-green-600 rounded-full animate-pulse"></div>
                         <div className="text-center">
-                          <div className="text-2xl font-black text-emerald-700">{projects.filter(p => p.status?.toLowerCase() === 'completed').length}</div>
-                          <div className="text-xs font-bold text-emerald-600/80">Completed</div>
+                          <div className="text-2xl font-black text-green-700">{projects.filter(p => p.status?.toLowerCase() === 'completed' || p.status?.toLowerCase() === 'complete').length}</div>
+                          <div className="text-xs font-bold text-green-600/80">Completed</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                        <div className="w-3 h-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full animate-pulse"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full animate-pulse"></div>
                         <div className="text-center">
-                          <div className="text-2xl font-black text-orange-700">{projects.filter(p => p.status?.toLowerCase() === 'ongoing').length}</div>
-                          <div className="text-xs font-bold text-orange-600/80">Ongoing</div>
+                          <div className="text-2xl font-black text-blue-700">{projects.filter(p => p.status?.toLowerCase() === 'ongoing' || p.status?.toLowerCase() === 'delayed').length}</div>
+                          <div className="text-xs font-bold text-blue-600/80">Ongoing</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
+                        <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-red-600 rounded-full animate-pulse"></div>
+                        <div className="text-center">
+                          <div className="text-2xl font-black text-red-700">{projects.filter(p => p.status?.toLowerCase() === 'delayed').length}</div>
+                          <div className="text-xs font-bold text-red-600/80">Delayed</div>
                         </div>
                       </div>
                     </div>
@@ -1411,7 +1286,7 @@ export default function ProjectsIsland() {
                           </td>
                           <td className="px-6 py-6">
                             <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold shadow-sm ${getStatusColor(proj.status)}`}>
-                              <div className={`w-3 h-3 rounded-full mr-3 ${proj.status?.toLowerCase() === 'ongoing' ? 'bg-green-500' : proj.status?.toLowerCase() === 'completed' ? 'bg-blue-500' : proj.status?.toLowerCase() === 'delayed' ? 'bg-red-500' : 'bg-gray-500'} animate-pulse`}></div>
+                              <div className={`w-3 h-3 rounded-full mr-3 ${proj.status?.toLowerCase() === 'ongoing' ? 'bg-blue-500' : proj.status?.toLowerCase() === 'completed' ? 'bg-green-500' : proj.status?.toLowerCase() === 'delayed' ? 'bg-red-500' : 'bg-gray-500'} animate-pulse`}></div>
                               {proj.status || 'Not Started'}
                             </span>
                           </td>
@@ -1522,24 +1397,24 @@ export default function ProjectsIsland() {
                     {/* Enhanced Project Statistics */}
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                        <div className="w-3 h-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full animate-pulse"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-green-600 rounded-full animate-pulse"></div>
                         <div className="text-center">
-                          <div className="text-2xl font-black text-emerald-700">{projects.filter(p => p.status?.toLowerCase() === 'completed').length}</div>
-                          <div className="text-xs font-bold text-emerald-600/80">Completed</div>
+                          <div className="text-2xl font-black text-green-700">{projects.filter(p => p.status?.toLowerCase() === 'completed' || p.status?.toLowerCase() === 'complete').length}</div>
+                          <div className="text-xs font-bold text-green-600/80">Completed</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                        <div className="w-3 h-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full animate-pulse"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full animate-pulse"></div>
                         <div className="text-center">
-                          <div className="text-2xl font-black text-orange-700">{projects.filter(p => p.status?.toLowerCase() === 'ongoing').length}</div>
-                          <div className="text-xs font-bold text-orange-600/80">Ongoing</div>
+                          <div className="text-2xl font-black text-blue-700">{projects.filter(p => p.status?.toLowerCase() === 'ongoing' || p.status?.toLowerCase() === 'delayed').length}</div>
+                          <div className="text-xs font-bold text-blue-600/80">Ongoing</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                        <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full animate-pulse"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-red-600 rounded-full animate-pulse"></div>
                         <div className="text-center">
-                          <div className="text-2xl font-black text-blue-700">{projects.filter(p => p.status?.toLowerCase() === 'planning').length}</div>
-                          <div className="text-xs font-bold text-blue-600/80">Planning</div>
+                          <div className="text-2xl font-black text-red-700">{projects.filter(p => p.status?.toLowerCase() === 'delayed').length}</div>
+                          <div className="text-xs font-bold text-red-600/80">Delayed</div>
                         </div>
                       </div>
                     </div>
@@ -1649,13 +1524,13 @@ export default function ProjectsIsland() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200/50">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                            <span className="text-emerald-700 font-bold text-sm">{projects.filter(p => p.status?.toLowerCase() === 'completed').length} Completed</span>
+                          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border border-green-200/50">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-green-700 font-bold text-sm">{projects.filter(p => p.status?.toLowerCase() === 'completed' || p.status?.toLowerCase() === 'complete').length} Completed</span>
                           </div>
-                          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                            <span className="text-orange-700 font-bold text-sm">{projects.filter(p => p.status?.toLowerCase() === 'ongoing').length} Ongoing</span>
+                          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl border border-blue-200/50">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span className="text-blue-700 font-bold text-sm">{projects.filter(p => p.status?.toLowerCase() === 'ongoing' || p.status?.toLowerCase() === 'delayed').length} Ongoing</span>
                           </div>
                         </div>
                       </div>
@@ -1800,25 +1675,25 @@ export default function ProjectsIsland() {
                           Project Status
                         </h4>
                         <div className="space-y-3">
-                          <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200/50 hover:scale-105 transition-transform duration-300">
-                            <div className="w-3 h-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full shadow-md ring-2 ring-emerald-300/30"></div>
-                            <span className="text-emerald-800 font-bold text-sm">Completed</span>
-                            <div className="ml-auto bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold">
-                              {projects.filter(p => p.status?.toLowerCase() === 'completed').length}
+                          <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border border-green-200/50 hover:scale-105 transition-transform duration-300">
+                            <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-green-600 rounded-full shadow-md ring-2 ring-green-300/30"></div>
+                            <span className="text-green-800 font-bold text-sm">Completed</span>
+                            <div className="ml-auto bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-bold">
+                              {projects.filter(p => p.status?.toLowerCase() === 'completed' || p.status?.toLowerCase() === 'complete').length}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50 hover:scale-105 transition-transform duration-300">
-                            <div className="w-3 h-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full shadow-md ring-2 ring-yellow-300/30"></div>
-                            <span className="text-orange-800 font-bold text-sm">Ongoing</span>
-                            <div className="ml-auto bg-orange-100 text-orange-700 px-2 py-1 rounded-lg text-xs font-bold">
-                              {projects.filter(p => p.status?.toLowerCase() === 'ongoing').length}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50 hover:scale-105 transition-transform duration-300">
-                            <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full shadow-md ring-2 ring-blue-300/30"></div>
-                            <span className="text-blue-800 font-bold text-sm">Planning</span>
+                          <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl border border-blue-200/50 hover:scale-105 transition-transform duration-300">
+                            <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-md ring-2 ring-blue-300/30"></div>
+                            <span className="text-blue-800 font-bold text-sm">Ongoing</span>
                             <div className="ml-auto bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
-                              {projects.filter(p => p.status?.toLowerCase() === 'planning').length}
+                              {projects.filter(p => p.status?.toLowerCase() === 'ongoing' || p.status?.toLowerCase() === 'delayed').length}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-red-50 to-red-50 rounded-xl border border-red-200/50 hover:scale-105 transition-transform duration-300">
+                            <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-md ring-2 ring-red-300/30"></div>
+                            <span className="text-red-800 font-bold text-sm">Delayed</span>
+                            <div className="ml-auto bg-red-100 text-red-700 px-2 py-1 rounded-lg text-xs font-bold">
+                              {projects.filter(p => p.status?.toLowerCase() === 'delayed').length}
                             </div>
                           </div>
                         </div>
@@ -1885,17 +1760,24 @@ export default function ProjectsIsland() {
                       {/* Enhanced Project Statistics */}
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                          <div className="w-3 h-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full animate-pulse"></div>
+                          <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-green-600 rounded-full animate-pulse"></div>
                           <div className="text-center">
-                            <div className="text-2xl font-black text-emerald-700">{projects.filter(p => p.status?.toLowerCase() === 'completed').length}</div>
-                            <div className="text-xs font-bold text-emerald-600/80">Completed</div>
+                            <div className="text-2xl font-black text-green-700">{projects.filter(p => p.status?.toLowerCase() === 'completed' || p.status?.toLowerCase() === 'complete').length}</div>
+                            <div className="text-xs font-bold text-green-600/80">Completed</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
-                          <div className="w-3 h-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full animate-pulse"></div>
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full animate-pulse"></div>
                           <div className="text-center">
-                            <div className="text-2xl font-black text-orange-700">{projects.filter(p => p.status?.toLowerCase() === 'ongoing').length}</div>
-                            <div className="text-xs font-bold text-orange-600/80">Ongoing</div>
+                            <div className="text-2xl font-black text-blue-700">{projects.filter(p => p.status?.toLowerCase() === 'ongoing' || p.status?.toLowerCase() === 'delayed').length}</div>
+                            <div className="text-xs font-bold text-blue-600/80">Ongoing</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 px-6 py-4 bg-white/60 backdrop-blur-lg rounded-2xl border border-white/50 shadow-lg">
+                          <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-red-600 rounded-full animate-pulse"></div>
+                          <div className="text-center">
+                            <div className="text-2xl font-black text-red-700">{projects.filter(p => p.status?.toLowerCase() === 'delayed').length}</div>
+                            <div className="text-xs font-bold text-red-600/80">Delayed</div>
                           </div>
                         </div>
                       </div>
@@ -1943,21 +1825,13 @@ export default function ProjectsIsland() {
                         Status Legend
                       </h4>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200/50">
-                          <div className="w-4 h-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full shadow-md ring-2 ring-emerald-300/30"></div>
-                          <span className="text-emerald-800 font-bold text-sm">Completed</span>
+                        <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-green-50 to-green-50 rounded-xl border border-green-200/50">
+                          <div className="w-4 h-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full shadow-md ring-2 ring-green-300/30"></div>
+                          <span className="text-green-800 font-bold text-sm">Completed</span>
                         </div>
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50">
-                          <div className="w-4 h-4 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full shadow-md ring-2 ring-yellow-300/30"></div>
-                          <span className="text-orange-800 font-bold text-sm">Ongoing</span>
-                        </div>
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border border-red-200/50">
-                          <div className="w-4 h-4 bg-gradient-to-br from-red-500 to-rose-600 rounded-full shadow-md ring-2 ring-red-300/30"></div>
-                          <span className="text-red-800 font-bold text-sm">Delayed</span>
-                        </div>
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50">
-                          <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full shadow-md ring-2 ring-blue-300/30"></div>
-                          <span className="text-blue-800 font-bold text-sm">Planning</span>
+                        <div className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl border border-blue-200/50">
+                          <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-md ring-2 ring-blue-300/30"></div>
+                          <span className="text-blue-800 font-bold text-sm">Ongoing</span>
                         </div>
                       </div>
                     </div>

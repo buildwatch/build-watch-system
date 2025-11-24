@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import TopBar from "../components/TopBar.astro";
 import LGUFooter from "../components/LGUFooter.astro";
 import ProjectsIsland from "../islands/ProjectsIsland.jsx";
+import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx";
 ---
 <Layout title="Projects | Build Watch LGU" description="View and monitor all LGU projects in Santa Cruz, Laguna.">
   <TopBar />
@@ -246,6 +247,15 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
     
     <!-- Main content area -->
     <div class="w-full max-w-7xl mx-auto mt-8">
+      <!-- Analytics Button -->
+      <div class="flex justify-end mb-4">
+        <button onclick="window.openProjectAnalytics?.()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          Analytics & Statistics
+        </button>
+      </div>
       <ProjectsIsland client:only="react" />
     </div>
 
@@ -290,9 +300,9 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
               <div class="text-sm font-semibold text-sky-700 mb-1">Ongoing</div>
               <div class="text-2xl font-bold text-sky-900" id="stat-ongoing-projects">0</div>
             </div>
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-              <div class="text-sm font-semibold text-green-700 mb-1">Completed</div>
-              <div class="text-2xl font-bold text-green-900" id="stat-completed-projects">0</div>
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+              <div class="text-sm font-semibold text-blue-700 mb-1">Completed</div>
+              <div class="text-2xl font-bold text-blue-900" id="stat-completed-projects">0</div>
             </div>
           </div>
 
@@ -385,6 +395,22 @@ import ProjectsIsland from "../islands/ProjectsIsland.jsx";
         </div>
       </div>
     </div>
+    <!-- Project Analytics Dashboard -->
+    <ProjectAnalyticsDashboard 
+      client:load
+      userRole="public"
+      isPublic={true}
+      apiUrl={typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/api'
+        : `${window.location.protocol}//${window.location.hostname}/api`}
+      theme={{
+        headerBg: 'from-blue-50 to-indigo-100',
+        headerIconBg: 'from-blue-500 to-indigo-600',
+        primaryColor: 'blue',
+        accentColor: 'indigo',
+        buttonClass: 'btn-primary'
+      }}
+    />
   </main>
   <LGUFooter />
 </Layout>

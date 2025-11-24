@@ -1340,8 +1340,11 @@ router.get('/public', async (req, res) => {
 
     const offset = (page - 1) * limit;
     const whereClause = {
-      // Only show approved projects to the public
-      approvedBySecretariat: true,
+      // Only show approved projects to the public (approved by MPMEC or Secretariat)
+      [Op.or]: [
+        { approvedBySecretariat: true },
+        { approvedByMPMEC: true }
+      ],
       status: { [Op.ne]: 'pending' } // Exclude pending projects
     };
 
@@ -1375,9 +1378,20 @@ router.get('/public', async (req, res) => {
 
     console.log(`✅ Found ${count} public projects, returning ${projects.length} on page ${page}`);
 
+    // Check and update project completion status based on milestones
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    await Promise.all(projects.map(async (project) => {
+      await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+    }));
+
+    // Reload projects to get updated statuses
+    const updatedProjects = await Promise.all(
+      projects.map(p => Project.findByPk(p.id))
+    );
+
     // Calculate progress for each project - use stored values or calculate if available
     // For public endpoints, prefer stored progress values for performance
-    const projectsWithProgress = await Promise.all(projects.map(async (project) => {
+    const projectsWithProgress = await Promise.all(updatedProjects.map(async (project) => {
       const projectData = project.toJSON();
       
       // Use stored progress values as primary source (faster and more reliable for public)
@@ -1425,7 +1439,7 @@ router.get('/public', async (req, res) => {
         location: projectData.location,
         priority: projectData.priority,
         fundingSource: projectData.fundingSource,
-        status: projectData.status,
+        status: projectData.status === 'complete' ? 'completed' : projectData.status, // Normalize status
         startDate: projectData.startDate,
         endDate: projectData.endDate,
         completionDate: projectData.completionDate,
@@ -1440,6 +1454,8 @@ router.get('/public', async (req, res) => {
         initialPhoto: projectData.initialPhoto,
         latitude: projectData.latitude,
         longitude: projectData.longitude,
+        approvedByMPMEC: projectData.approvedByMPMEC || false, // Include approval status
+        approvedBySecretariat: projectData.approvedBySecretariat || false, // Include approval status
         createdAt: projectData.createdAt,
         updatedAt: projectData.updatedAt
         // Note: budgetBreakdown is excluded for public display
@@ -1947,6 +1963,13 @@ router.get('/public/:id', async (req, res) => {
       });
     }
 
+    // Check and update project completion status based on milestones
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+    
+    // Reload project to get updated status
+    await project.reload();
+
     // Calculate progress for the project using ProgressCalculationService
     const ProgressCalculationService = require('../services/progressCalculationService');
     const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
@@ -1963,7 +1986,7 @@ router.get('/public/:id', async (req, res) => {
       priority: project.priority,
       fundingSource: project.fundingSource,
       createdDate: project.createdDate,
-      status: project.status,
+      status: project.status === 'complete' ? 'completed' : project.status, // Normalize status
       expectedOutputs: project.expectedOutputs,
       targetBeneficiaries: project.targetBeneficiaries,
       hasExternalPartner: project.hasExternalPartner,
@@ -2542,8 +2565,43 @@ router.get('/', authenticateToken, async (req, res) => {
       throw queryError;
     }
 
+    // Check and update project completion status based on milestones
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    await Promise.all(projects.map(async (project) => {
+      await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+    }));
+
+    // Reload projects to get updated statuses
+    const updatedProjects = await Promise.all(
+      projects.map(p => Project.findByPk(p.id, {
+        include: [
+          {
+            model: User,
+            as: 'implementingOffice',
+            attributes: ['id', 'name', 'username', 'role', 'subRole']
+          },
+          {
+            model: User,
+            as: 'eiuPersonnel',
+            attributes: ['id', 'name', 'username', 'role', 'subRole']
+          },
+          {
+            model: User,
+            as: 'approvedByUser',
+            attributes: ['id', 'name', 'username', 'role']
+          },
+          {
+            model: ProjectMilestone,
+            as: 'milestones',
+            attributes: ['id', 'title', 'status', 'weight', 'timelineStatus', 'budgetStatus', 'physicalStatus', 'completedDate', 'validationDate'],
+            required: false
+          }
+        ]
+      }))
+    );
+
     // Calculate progress for each project and attach milestones with submissions
-    const projectsWithProgress = await Promise.all(projects.map(async (project) => {
+    const projectsWithProgress = await Promise.all(updatedProjects.map(async (project) => {
       try {
         const projectData = project.toJSON();
         
@@ -2592,16 +2650,19 @@ router.get('/', authenticateToken, async (req, res) => {
           ...projectData,
           implementingOfficeName: project.implementingOfficeName || project.implementingOffice?.name,
           eiuPersonnelName: project.eiuPersonnel?.name,
+          status: projectData.status === 'complete' ? 'completed' : projectData.status, // Normalize status
           progress: progress
         };
       } catch (projectError) {
         console.error(`❌ Error processing project ${project.id} (${project.projectCode || 'unknown'}):`, projectError);
         console.error('Project error stack:', projectError.stack);
         // Return project with minimal data if processing fails
+        const projectJson = project.toJSON();
         return {
-          ...project.toJSON(),
+          ...projectJson,
           implementingOfficeName: project.implementingOfficeName || project.implementingOffice?.name,
           eiuPersonnelName: project.eiuPersonnel?.name,
+          status: projectJson.status === 'complete' ? 'completed' : projectJson.status, // Normalize status
           progress: {
             timelineProgress: parseFloat(project.timelineProgress) || 0,
             budgetProgress: parseFloat(project.budgetProgress) || 0,
@@ -2952,6 +3013,13 @@ router.get('/all-milestones', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Check and update project completion status based on milestones
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    const project = await Project.findByPk(id);
+    if (project) {
+      await ProjectCompletionService.checkAndUpdateProjectCompletion(id, project);
+    }
     
     const progressData = await ProgressCalculationService.calculateProjectProgress(id, req.user.role);
     
@@ -5566,23 +5634,15 @@ router.post('/:projectId/milestones/:milestoneId/approve-progress', authenticate
       validatedBy: req.user.id
     });
 
-    // Check if all milestones are completed
-    const allMilestones = await ProjectMilestone.findAll({
-      where: { projectId: projectId },
-      attributes: ['id', 'status']
-    });
-
-    const allMilestonesCompleted = allMilestones.length > 0 && 
-      allMilestones.every(m => m.status === 'completed' || m.status === 'approved');
-
-    // If all milestones are completed, mark project as completed
-    if (allMilestonesCompleted) {
-      const completionDate = new Date();
-      await project.update({
-        status: 'completed',
-        completionDate: completionDate
-      });
-      console.log('✅ All milestones completed. Project marked as completed with date:', completionDate);
+    // Check if all milestones are completed using the completion service
+    // This service checks milestone status, division approvals, and approved submissions
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    const completionResult = await ProjectCompletionService.checkAndUpdateProjectCompletion(projectId, project);
+    
+    if (completionResult.wasUpdated) {
+      console.log(`✅ Project ${project.projectCode} marked as completed - all milestones are completed/approved`);
+    } else if (completionResult.isCompleted) {
+      console.log(`✅ Project ${project.projectCode} is already marked as completed`);
     }
 
     // Log activity (don't fail if logging fails)
@@ -6861,6 +6921,55 @@ router.post('/:projectId/milestones/:updateId/divisions/:divisionType/approve', 
           milestoneUpdates: JSON.stringify(milestoneUpdates)
         });
 
+        // Also update the actual ProjectMilestone record with division statuses
+        // Find the milestone by milestoneId, title, or from projectUpdate
+        let actualMilestone = null;
+        const milestoneId = milestoneUpdate.milestoneId;
+        const milestoneTitle = milestoneUpdate.milestoneTitle || milestoneUpdate.title;
+        
+        if (milestoneId) {
+          actualMilestone = await ProjectMilestone.findByPk(milestoneId);
+        } else if (milestoneTitle) {
+          // Try to find by title
+          actualMilestone = await ProjectMilestone.findOne({
+            where: {
+              projectId: projectId,
+              title: milestoneTitle
+            }
+          });
+        }
+        
+        if (actualMilestone) {
+          const updateData = {};
+          if (divisionType === 'timeline') {
+            updateData.timelineStatus = approved ? 'approved' : 'rejected';
+          } else if (divisionType === 'budget') {
+            updateData.budgetStatus = approved ? 'approved' : 'rejected';
+          } else if (divisionType === 'physical') {
+            updateData.physicalStatus = approved ? 'approved' : 'rejected';
+          }
+          
+          // Get current statuses after update
+          const newTimelineStatus = updateData.timelineStatus || actualMilestone.timelineStatus;
+          const newBudgetStatus = updateData.budgetStatus || actualMilestone.budgetStatus;
+          const newPhysicalStatus = updateData.physicalStatus || actualMilestone.physicalStatus;
+          
+          // If all divisions are now approved, mark milestone as completed
+          if (newTimelineStatus === 'approved' && 
+              newBudgetStatus === 'approved' && 
+              newPhysicalStatus === 'approved') {
+            updateData.status = 'completed';
+            if (!actualMilestone.completedDate) {
+              updateData.completedDate = new Date();
+            }
+          }
+          
+          await actualMilestone.update(updateData);
+          console.log(`✅ Updated ProjectMilestone ${actualMilestone.id} (${actualMilestone.title}) with ${divisionType} division status: ${approved ? 'approved' : 'rejected'}`);
+        } else {
+          console.warn(`⚠️ Could not find ProjectMilestone for update - milestoneId: ${milestoneId}, title: ${milestoneTitle}`);
+        }
+
         // Check if all divisions have verdicts and calculate overall progress
         const timelineStatus = milestoneUpdate.timelineStatus || 'pending';
         const budgetStatus = milestoneUpdate.budgetStatus || 'pending';
@@ -6925,6 +7034,14 @@ router.post('/:projectId/milestones/:updateId/divisions/:divisionType/approve', 
               secretariatApprovalDate: new Date(), // Set the current date when all divisions have verdicts
               secretariatApprovedBy: req.user.id
             });
+            
+            // Check if all milestones are completed after division approval
+            const ProjectCompletionService = require('../services/projectCompletionService');
+            const completionResult = await ProjectCompletionService.checkAndUpdateProjectCompletion(projectId, project);
+            
+            if (completionResult.wasUpdated) {
+              console.log(`✅ Project ${project.projectCode} marked as completed after division approval`);
+            }
           }
         }
       }

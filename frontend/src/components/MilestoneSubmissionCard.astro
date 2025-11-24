@@ -154,7 +154,7 @@ const { submission } = Astro.props;
           </svg>
         </div>
         <h4 class="text-lg font-bold text-blue-800">Milestone Update Details</h4>
-        {(submission.isDelayed || submission.delayReason || submission.status === 'delayed') ? (
+        {((submission.submitterInfo?.delayInfo?.isDelayed) || submission.isDelayed || submission.delayReason || submission.status === 'delayed') ? (
           <span class="px-3 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium flex items-center gap-1 border border-red-200">
             <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
@@ -204,17 +204,17 @@ const { submission } = Astro.props;
         </div>
       </div>
       
-      {(submission.isDelayed || submission.delayReason) && (
-        <div class="mt-3 pt-3 border-t border-red-200 bg-red-50 rounded-lg p-4">
-          <div class="flex items-center gap-2 mb-2">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-            </svg>
-            <div class="text-sm font-semibold text-red-800">Reason of Delayed</div>
-            <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium">Late Submission</span>
+      {((submission.submitterInfo?.delayInfo?.isDelayed) || submission.isDelayed || submission.delayReason) && (
+          <div class="mt-3 pt-3 border-t border-red-200 bg-red-50 rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <div class="text-sm font-semibold text-red-800">Reason of Delayed</div>
+              <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium">Late Submission</span>
+            </div>
+            <div class="text-sm text-red-700">{submission.submitterInfo?.delayInfo?.delayReason || submission.delayReason || 'No reason provided'}</div>
           </div>
-          <div class="text-sm text-red-700">{submission.delayReason || 'No reason provided'}</div>
-        </div>
       )}
     </div>
 

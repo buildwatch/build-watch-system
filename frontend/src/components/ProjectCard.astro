@@ -79,32 +79,18 @@ const formatBudget = (amount) => {
 };
 
 // Check if project has delayed milestones and determine actual status
+// Note: Completion status is now determined by the backend API based on milestones
+// This function only handles delayed status detection
 const getActualStatus = (proj) => {
-  let actualStatus = proj.status;
+  // Use status from API (backend handles completion check)
+  let actualStatus = proj.status === 'complete' ? 'completed' : proj.status;
   
-  // First, check if all milestones are completed - if so, project should be completed
-  if (proj.milestones && Array.isArray(proj.milestones) && proj.milestones.length > 0) {
-    const allMilestonesCompleted = proj.milestones.every(milestone => {
-      const status = milestone.status || 'pending';
-      // Check if milestone has approved submission
-      const hasApprovedSubmission = milestone.submissions?.some(s => 
-        s.status === 'approved' || s.status === 'iu_approved'
-      ) || false;
-      
-      // Check if milestone divisions are approved
-      const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
-                                   milestone.budgetStatus === 'approved' || 
-                                   milestone.physicalStatus === 'approved';
-      
-      return status === 'completed' || status === 'approved' || hasApprovedSubmission || hasApprovedDivisions;
-    });
-    
-    if (allMilestonesCompleted) {
-      return 'completed';
-    }
+  // If project is already completed, return as is (backend has verified all milestones are done)
+  if (actualStatus === 'completed' || actualStatus === 'complete') {
+    return 'completed';
   }
   
-  // If not all milestones completed, check for delayed milestones
+  // If not completed, check for delayed milestones (only for ongoing/pending projects)
   if (actualStatus !== 'completed' && actualStatus !== 'complete' && actualStatus !== 'ongoing' && proj.milestones && Array.isArray(proj.milestones)) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

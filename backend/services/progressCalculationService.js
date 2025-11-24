@@ -184,10 +184,49 @@ class ProgressCalculationService {
       // Calculate milestone-based progress for milestone data (already calculated above, but need for response)
       const milestoneProgress = await this.calculateMilestoneProgress(projectId);
 
-      // Calculate amount spent from approved divisions only
-      // Only budget division contributes to utilized budget
-      const amountSpent = divisionProgress.budget > 0 ? 
-        (parseFloat(project.totalBudget) * divisionProgress.budget / 100) : 0;
+      // Calculate amount spent from actual usedBudget in approved milestone submissions
+      // This is more accurate than calculating from budget progress percentage
+      let amountSpent = 0;
+      try {
+        // Get all milestones for the project
+        const allMilestones = await ProjectMilestone.findAll({
+          where: { projectId: projectId },
+          attributes: ['id']
+        });
+        
+        const milestoneIds = allMilestones.map(m => m.id);
+        
+        if (milestoneIds.length > 0) {
+          // Get latest approved submission for each milestone (to avoid double counting)
+          const approvedSubmissions = await MilestoneSubmission.findAll({
+            where: {
+              milestoneId: { [Op.in]: milestoneIds },
+              status: {
+                [Op.in]: ['approved', 'iu_approved']
+              }
+            },
+            attributes: ['milestoneId', 'usedBudget', 'submittedAt'],
+            order: [['submittedAt', 'DESC']],
+            raw: true
+          });
+          
+          // Get latest approved submission for each milestone
+          const latestSubmissionMap = {};
+          approvedSubmissions.forEach(submission => {
+            if (!latestSubmissionMap[submission.milestoneId]) {
+              latestSubmissionMap[submission.milestoneId] = parseFloat(submission.usedBudget || 0);
+            }
+          });
+          
+          // Sum up all used budgets
+          amountSpent = Object.values(latestSubmissionMap).reduce((sum, budget) => sum + budget, 0);
+        }
+      } catch (budgetError) {
+        console.warn('⚠️ Error calculating amountSpent from submissions, falling back to percentage:', budgetError);
+        // Fallback to percentage-based calculation if submission-based calculation fails
+        amountSpent = divisionProgress.budget > 0 ? 
+          (parseFloat(project.totalBudget) * divisionProgress.budget / 100) : 0;
+      }
 
       // Prepare response based on user role
       const response = {
@@ -210,6 +249,10 @@ class ProgressCalculationService {
           budgetBreakdown: project.budgetBreakdown,
           physicalProgressRequirements: project.physicalProgressRequirements,
           amountSpent: amountSpent,
+          status: project.status === 'complete' ? 'completed' : project.status, // Normalize status for API
+          overallProgress: project.overallProgress || overallProgress, // Ensure progress is included
+          completionDate: project.completionDate,
+          actualCompletionDate: project.actualCompletionDate,
           workflowStatus: project.workflowStatus,
           approvedBySecretariat: project.approvedBySecretariat,
           implementingOffice: project.implementingOffice?.name || project.implementingOfficeName,

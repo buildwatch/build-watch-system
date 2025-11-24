@@ -1,5 +1,33 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+  ArcElement
+} from 'chart.js';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+  ArcElement
+);
 
 const API_URL = typeof window !== 'undefined' 
   ? (() => {
@@ -114,11 +142,15 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
   const [activeTab, setActiveTab] = useState('summary');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [budgetData, setBudgetData] = useState(null);
+  const [timelineData, setTimelineData] = useState(null);
   
   const currentUser = getCurrentUser();
   const theme = getThemeColors(userRole || currentUser?.role);
   const socketRef = useRef(null);
   const notificationCheckInterval = useRef(null);
+  const budgetChartRef = useRef(null);
+  const timelineChartRef = useRef(null);
 
   // Fetch projects based on access level
   const fetchProjects = useCallback(async () => {
@@ -302,7 +334,30 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       
       if (activityResponse.ok) {
         const activityResult = await activityResponse.json();
-        allActivities.push(...(activityResult.activities || []));
+        const activities = activityResult.activities || [];
+        
+        // Process activities and ensure proper formatting
+        activities.forEach(activity => {
+          // Format activity for display
+          const formattedActivity = {
+            id: activity.id || `activity-${activity.entityId}-${activity.createdAt}`,
+            action: activity.action || 'UNKNOWN_ACTION',
+            entityType: activity.entityType || 'Unknown',
+            entityId: activity.entityId || projectId,
+            details: typeof activity.details === 'string' 
+              ? activity.details 
+              : (activity.details?.message || JSON.stringify(activity.details) || 'No details available'),
+            createdAt: activity.createdAt || activity.timestamp || new Date().toISOString(),
+            user: activity.user || {
+              name: activity.userName || 'System',
+              role: activity.userRole || 'System',
+              department: activity.department || 'System'
+            },
+            module: activity.module || 'Project Management'
+          };
+          
+          allActivities.push(formattedActivity);
+        });
       }
       
       // Fetch milestone submissions directly from API
@@ -373,6 +428,62 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       if (projectResponse.ok) {
         const projectResult = await projectResponse.json();
         const project = projectResult.project || projectResult;
+        
+        // Store project data with amountSpent and targetCompletionDate for completion summary
+        // amountSpent can come from project.amountSpent or progress.amountSpent
+        if (project.amountSpent) {
+          // Already in project object
+        } else if (projectResult.progress?.amountSpent) {
+          project.amountSpent = projectResult.progress.amountSpent;
+        } else if (projectResult.project?.amountSpent) {
+          project.amountSpent = projectResult.project.amountSpent;
+        }
+        
+        // Ensure targetCompletionDate is set
+        if (!project.targetCompletionDate && project.endDate) {
+          project.targetCompletionDate = project.endDate;
+        }
+        
+        // Ensure status is normalized (database uses 'complete', API should return 'completed')
+        if (project.status === 'complete') {
+          project.status = 'completed';
+        }
+        
+        // Ensure overallProgress is set from project or progress data
+        if (!project.overallProgress || project.overallProgress === 0) {
+          if (projectResult.progress?.overall) {
+            project.overallProgress = projectResult.progress.overall;
+          } else if (projectResult.project?.overallProgress) {
+            project.overallProgress = projectResult.project.overallProgress;
+          }
+        }
+        
+        // Check if project is completed and add completion event
+        const isCompleted = project.status === 'complete' || project.status === 'completed' || project.status === 'COMPLETED';
+        if (isCompleted && project.completionDate) {
+          // Find project completion activity from activity log
+          const completionActivity = allActivities.find(a => 
+            a.action === 'PROJECT_COMPLETED' && a.entityId === project.id
+          );
+          
+          // If not found in activity log, create one from project data
+          if (!completionActivity) {
+            allActivities.push({
+              id: `completion-${project.id}`,
+              action: 'PROJECT_COMPLETED',
+              entityType: 'Project',
+              entityId: project.id,
+              details: `Project completed: ${project.name} (${project.projectCode}). All milestones have been approved and completed. Final completion date: ${new Date(project.completionDate).toLocaleString()}`,
+              createdAt: project.completionDate || project.actualCompletionDate || project.updatedAt,
+              user: {
+                name: project.implementingOfficeName || 'System',
+                role: 'LGU-IU',
+                department: 'Project Management'
+              },
+              module: 'Project Completion'
+            });
+          }
+        }
         
         // Add milestone submissions as audit entries (fallback if direct API call didn't work)
         if (project.milestones && Array.isArray(project.milestones)) {
@@ -532,6 +643,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             if (selectedProject && data.projectId === selectedProject.id) {
               fetchMilestones(data.projectId);
               fetchAuditTrail(data.projectId);
+              // Budget and timeline will be refreshed when milestones are loaded
             }
             
             // Refresh projects list
@@ -561,6 +673,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       if (selectedProject) {
         fetchMilestones(selectedProject.id);
         fetchAuditTrail(selectedProject.id);
+        // Budget and timeline will be refreshed when milestones are loaded
       }
     }, 30000);
     
@@ -580,13 +693,491 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     fetchProjects();
   }, [fetchProjects]);
 
-  // Load milestones and audit trail when project is selected
+  // Fetch budget data for Budgeting tab
+  const fetchBudgetData = useCallback(async (projectId, milestones = null) => {
+    if (!projectId) return;
+    
+    console.log('💰 [Budget Debug] Starting budget data fetch for project:', projectId);
+    
+    try {
+      const token = getToken();
+      
+      // Fetch project for budget totals
+      const projectResponse = await fetch(`${API_URL}/projects/${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!projectResponse.ok) {
+        console.error('💰 [Budget Debug] Project fetch failed:', projectResponse.status);
+        setBudgetData(null);
+        return;
+      }
+      
+      const projectResult = await projectResponse.json();
+      const project = projectResult.project || projectResult;
+      
+      console.log('💰 [Budget Debug] Project data:', {
+        totalBudget: project.totalBudget,
+        amountSpent: project.amountSpent,
+        usedBudget: project.usedBudget,
+        budgetUsed: project.budgetUsed
+      });
+      
+      // Use milestones from parameter or fetch them
+      let milestonesToUse = milestones;
+      if (!milestonesToUse || milestonesToUse.length === 0) {
+        // Fetch milestones if not provided
+        try {
+          const milestonesResponse = await fetch(`${API_URL}/projects/${projectId}/milestones`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (milestonesResponse.ok) {
+            const milestonesResult = await milestonesResponse.json();
+            milestonesToUse = milestonesResult.milestones || milestonesResult.data || [];
+            console.log('💰 [Budget Debug] Fetched milestones separately:', milestonesToUse.length);
+          }
+        } catch (milestoneErr) {
+          console.warn('💰 [Budget Debug] Error fetching milestones:', milestoneErr);
+        }
+      } else {
+        console.log('💰 [Budget Debug] Using provided milestones:', milestonesToUse.length);
+      }
+      
+      // Fetch milestone submissions separately
+      let submissions = [];
+      try {
+        const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (submissionsResponse.ok) {
+          const submissionsResult = await submissionsResponse.json();
+          submissions = submissionsResult.submissions || submissionsResult.data || [];
+          console.log('💰 [Budget Debug] Fetched submissions:', submissions.length);
+        } else {
+          console.warn('💰 [Budget Debug] Submissions fetch failed:', submissionsResponse.status);
+        }
+      } catch (subErr) {
+        console.warn('💰 [Budget Debug] Error fetching submissions:', subErr);
+      }
+      
+      // Calculate budget data from milestones and submissions
+      const totalBudget = parseFloat(project.totalBudget || 0);
+      let usedBudget = parseFloat(project.amountSpent || project.usedBudget || project.budgetUsed || 0);
+      
+      // Get milestone budget breakdown
+      const milestoneBudgets = [];
+      const budgetTrend = [];
+      
+      if (milestonesToUse && Array.isArray(milestonesToUse) && milestonesToUse.length > 0) {
+        console.log('💰 [Budget Debug] Processing milestones:', milestonesToUse.length);
+        
+        // Group submissions by milestone
+        const submissionsByMilestone = {};
+        submissions.forEach(sub => {
+          const milestoneId = sub.milestoneId;
+          if (!submissionsByMilestone[milestoneId]) {
+            submissionsByMilestone[milestoneId] = [];
+          }
+          submissionsByMilestone[milestoneId].push(sub);
+        });
+        
+        let cumulativeUsed = 0;
+        
+        // Sort milestones by order or due date
+        const sortedMilestones = [...milestonesToUse].sort((a, b) => {
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.dueDate && b.dueDate) {
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          }
+          return 0;
+        });
+        
+        sortedMilestones.forEach((milestone, index) => {
+          const milestoneId = milestone.id;
+          const milestoneBudget = parseFloat(milestone.budget || milestone.plannedBudget || 0);
+          
+          // Get used budget from approved submissions
+          const milestoneSubmissions = submissionsByMilestone[milestoneId] || [];
+          const approvedSubmissions = milestoneSubmissions.filter(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          );
+          
+          // Get the latest approved submission's used budget
+          let milestoneUsed = 0;
+          if (approvedSubmissions.length > 0) {
+            // Sort by submittedAt descending and take the latest
+            const latestSubmission = approvedSubmissions.sort((a, b) => 
+              new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0)
+            )[0];
+            milestoneUsed = parseFloat(latestSubmission.usedBudget || latestSubmission.budgetUsed || 0);
+          }
+          
+          cumulativeUsed += milestoneUsed;
+          
+          milestoneBudgets.push({
+            name: milestone.title || milestone.name || `Milestone ${index + 1}`,
+            planned: milestoneBudget,
+            used: milestoneUsed,
+            remaining: milestoneBudget - milestoneUsed,
+            utilization: milestoneBudget > 0 ? (milestoneUsed / milestoneBudget) * 100 : 0
+          });
+          
+          // Build trend data (cumulative)
+          budgetTrend.push({
+            milestone: milestone.title || milestone.name || `M${index + 1}`,
+            date: milestone.dueDate || new Date().toISOString(),
+            cumulative: cumulativeUsed,
+            percentage: totalBudget > 0 ? (cumulativeUsed / totalBudget) * 100 : 0
+          });
+        });
+        
+        // If we calculated from submissions, use that instead of project amountSpent
+        if (cumulativeUsed > 0) {
+          usedBudget = cumulativeUsed;
+        }
+        
+        console.log('💰 [Budget Debug] Budget calculation:', {
+          totalBudget,
+          usedBudget,
+          remainingBudget: totalBudget - usedBudget,
+          milestoneBudgetsCount: milestoneBudgets.length,
+          budgetTrendCount: budgetTrend.length
+        });
+      } else {
+        console.warn('💰 [Budget Debug] No milestones found');
+      }
+      
+      const utilizationPercentage = totalBudget > 0 ? (usedBudget / totalBudget) * 100 : 0;
+      
+      const budgetDataResult = {
+        total: totalBudget,
+        used: usedBudget,
+        remaining: totalBudget - usedBudget,
+        utilizationPercentage,
+        milestoneBudgets,
+        budgetTrend
+      };
+      
+      console.log('💰 [Budget Debug] Final budget data:', budgetDataResult);
+      setBudgetData(budgetDataResult);
+    } catch (err) {
+      console.error('💰 [Budget Debug] Error fetching budget data:', err);
+      setBudgetData(null);
+    }
+  }, []);
+
+  // Fetch timeline data for Time Table tab
+  const fetchTimelineData = useCallback(async (projectId, milestones = null) => {
+    if (!projectId) return;
+    
+    console.log('📅 [Timeline Debug] Starting timeline data fetch for project:', projectId);
+    
+    try {
+      const token = getToken();
+      
+      // Fetch project for dates and progress
+      const projectResponse = await fetch(`${API_URL}/projects/${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!projectResponse.ok) {
+        console.error('📅 [Timeline Debug] Project fetch failed:', projectResponse.status);
+        setTimelineData(null);
+        return;
+      }
+      
+      const projectResult = await projectResponse.json();
+      const project = projectResult.project || projectResult;
+      
+      console.log('📅 [Timeline Debug] Project data:', {
+        startDate: project.startDate,
+        endDate: project.endDate,
+        targetCompletionDate: project.targetCompletionDate,
+        overallProgress: project.overallProgress
+      });
+      
+      // Use milestones from parameter or fetch them
+      let milestonesToUse = milestones;
+      if (!milestonesToUse || milestonesToUse.length === 0) {
+        // Fetch milestones if not provided
+        try {
+          const milestonesResponse = await fetch(`${API_URL}/projects/${projectId}/milestones`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (milestonesResponse.ok) {
+            const milestonesResult = await milestonesResponse.json();
+            milestonesToUse = milestonesResult.milestones || milestonesResult.data || [];
+            console.log('📅 [Timeline Debug] Fetched milestones separately:', milestonesToUse.length);
+          }
+        } catch (milestoneErr) {
+          console.warn('📅 [Timeline Debug] Error fetching milestones:', milestoneErr);
+        }
+      } else {
+        console.log('📅 [Timeline Debug] Using provided milestones:', milestonesToUse.length);
+      }
+      
+      // Fetch milestone submissions separately
+      let submissions = [];
+      try {
+        const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (submissionsResponse.ok) {
+          const submissionsResult = await submissionsResponse.json();
+          submissions = submissionsResult.submissions || submissionsResult.data || [];
+          console.log('📅 [Timeline Debug] Fetched submissions:', submissions.length);
+        } else {
+          console.warn('📅 [Timeline Debug] Submissions fetch failed:', submissionsResponse.status);
+        }
+      } catch (subErr) {
+        console.warn('📅 [Timeline Debug] Error fetching submissions:', subErr);
+      }
+      
+      const startDate = new Date(project.startDate || project.createdAt);
+      const endDate = new Date(project.endDate || project.targetCompletionDate || new Date());
+      const today = new Date();
+      
+      // Build timeline data from milestones
+      const timelineItems = [];
+      const progressData = [];
+      
+      if (milestonesToUse && Array.isArray(milestonesToUse) && milestonesToUse.length > 0) {
+        console.log('📅 [Timeline Debug] Processing milestones:', milestonesToUse.length);
+        
+        // Group submissions by milestone
+        const submissionsByMilestone = {};
+        submissions.forEach(sub => {
+          const milestoneId = sub.milestoneId;
+          if (!submissionsByMilestone[milestoneId]) {
+            submissionsByMilestone[milestoneId] = [];
+          }
+          submissionsByMilestone[milestoneId].push(sub);
+        });
+        
+        let cumulativeProgress = 0;
+        
+        // Sort milestones by order or due date
+        const sortedMilestones = [...milestonesToUse].sort((a, b) => {
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          if (a.dueDate && b.dueDate) {
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          }
+          return 0;
+        });
+        
+        sortedMilestones.forEach((milestone, index) => {
+          const milestoneId = milestone.id;
+          const milestoneStart = milestone.startDate ? new Date(milestone.startDate) : startDate;
+          const milestoneDue = milestone.dueDate ? new Date(milestone.dueDate) : endDate;
+          
+          // Get progress from milestone or approved submissions
+          let milestoneProgress = parseFloat(milestone.progress || 0);
+          
+          // Check if milestone is completed
+          const isCompleted = milestone.status === 'completed' || milestone.status === 'approved';
+          
+          // Get actual end date from approved submissions
+          let actualEnd = null;
+          const milestoneSubmissions = submissionsByMilestone[milestoneId] || [];
+          const approvedSubmissions = milestoneSubmissions.filter(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          );
+          
+          if (approvedSubmissions.length > 0) {
+            // Get the latest approved submission
+            const latestSubmission = approvedSubmissions.sort((a, b) => 
+              new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0)
+            )[0];
+            actualEnd = new Date(latestSubmission.submittedAt || latestSubmission.createdAt);
+            
+            // Use progress from submission if available
+            if (latestSubmission.progress !== undefined && latestSubmission.progress !== null) {
+              milestoneProgress = parseFloat(latestSubmission.progress);
+            } else if (isCompleted && milestoneProgress === 0) {
+              milestoneProgress = 100;
+            }
+          } else if (isCompleted && milestoneProgress === 0) {
+            milestoneProgress = 100;
+          }
+          
+          const weight = parseFloat(milestone.weight || 0);
+          cumulativeProgress += milestoneProgress * (weight / 100);
+          
+          timelineItems.push({
+            id: milestone.id,
+            title: milestone.title || milestone.name || `Milestone ${index + 1}`,
+            startDate: milestoneStart,
+            dueDate: milestoneDue,
+            actualEndDate: actualEnd,
+            progress: milestoneProgress,
+            status: milestone.status || 'pending',
+            isCompleted,
+            isDelayed: !isCompleted && milestoneDue < today,
+            weight: weight
+          });
+          
+          // Build progress trend
+          progressData.push({
+            milestone: milestone.title || milestone.name || `M${index + 1}`,
+            date: milestoneDue.toISOString(),
+            progress: milestoneProgress,
+            cumulative: cumulativeProgress
+          });
+        });
+        
+        console.log('📅 [Timeline Debug] Timeline calculation:', {
+          timelineItemsCount: timelineItems.length,
+          progressDataCount: progressData.length,
+          cumulativeProgress
+        });
+      } else {
+        console.warn('📅 [Timeline Debug] No milestones found');
+      }
+      
+      // Sort by due date
+      timelineItems.sort((a, b) => a.dueDate - b.dueDate);
+      progressData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      const timelineDataResult = {
+        projectStart: startDate,
+        projectEnd: endDate,
+        today,
+        timelineItems,
+        progressData,
+        overallProgress: parseFloat(project.overallProgress || 0)
+      };
+      
+      console.log('📅 [Timeline Debug] Final timeline data:', timelineDataResult);
+      setTimelineData(timelineDataResult);
+    } catch (err) {
+      console.error('📅 [Timeline Debug] Error fetching timeline data:', err);
+      setTimelineData(null);
+    }
+  }, []);
+
+  // Load milestones, audit trail, budget, and timeline when project is selected
   useEffect(() => {
     if (selectedProject) {
       fetchMilestones(selectedProject.id);
       fetchAuditTrail(selectedProject.id);
     }
   }, [selectedProject, fetchMilestones, fetchAuditTrail]);
+
+  // Load budget and timeline data when milestones are available
+  useEffect(() => {
+    if (selectedProject && projectMilestones && projectMilestones.length > 0) {
+      fetchBudgetData(selectedProject.id, projectMilestones);
+      fetchTimelineData(selectedProject.id, projectMilestones);
+    }
+  }, [selectedProject, projectMilestones, fetchBudgetData, fetchTimelineData]);
+
+  // Expose debugging function to window
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.debugProjectSummaryReport = async () => {
+        console.log('🔍 [Project Summary Report Debug] === DEBUGGING ===');
+        
+        if (!selectedProject) {
+          console.log('❌ No project selected');
+          return;
+        }
+        
+        console.log('📊 Selected Project:', {
+          id: selectedProject.id,
+          name: selectedProject.name,
+          projectCode: selectedProject.projectCode,
+          totalBudget: selectedProject.totalBudget,
+          amountSpent: selectedProject.amountSpent
+        });
+        
+        console.log('💰 Budget Data:', budgetData);
+        console.log('📅 Timeline Data:', timelineData);
+        console.log('📋 Milestones:', projectMilestones);
+        
+        // Test API calls
+        const token = getToken();
+        console.log('🔑 Token available:', !!token);
+        
+        try {
+          // Test project fetch
+          const projectResponse = await fetch(`${API_URL}/projects/${selectedProject.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (projectResponse.ok) {
+            const projectResult = await projectResponse.json();
+            const project = projectResult.project || projectResult;
+            console.log('✅ Project API Response:', {
+              hasMilestones: !!project.milestones,
+              milestonesCount: project.milestones?.length || 0,
+              firstMilestone: project.milestones?.[0] || null
+            });
+          } else {
+            console.error('❌ Project API failed:', projectResponse.status);
+          }
+          
+          // Test submissions fetch
+          const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${selectedProject.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (submissionsResponse.ok) {
+            const submissionsResult = await submissionsResponse.json();
+            const submissions = submissionsResult.submissions || submissionsResult.data || [];
+            console.log('✅ Submissions API Response:', {
+              count: submissions.length,
+              firstSubmission: submissions[0] || null,
+              approvedCount: submissions.filter(s => s.status === 'approved' || s.status === 'iu_approved').length
+            });
+          } else {
+            console.error('❌ Submissions API failed:', submissionsResponse.status);
+          }
+        } catch (err) {
+          console.error('❌ API Error:', err);
+        }
+        
+        console.log('🔍 [Project Summary Report Debug] === END DEBUG ===');
+      };
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined' && window.debugProjectSummaryReport) {
+        delete window.debugProjectSummaryReport;
+      }
+    };
+  }, [selectedProject, budgetData, timelineData, projectMilestones]);
 
   // Format date
   const formatDate = (dateString) => {
@@ -703,17 +1294,62 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         {/* Project Selector */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Project
+            Select Project <span className="text-gray-400 text-xs font-normal">(Select a project from the dropdown)</span>
           </label>
           <select
             value={selectedProject?.id || ''}
-            onChange={(e) => {
+            onChange={async (e) => {
               const project = projects.find(p => p.id === e.target.value);
-              setSelectedProject(project);
+              if (!project) return;
+              
+              // Fetch full project details to get amountSpent and targetCompletionDate
+              try {
+                const fullProjectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                  headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+                
+                if (fullProjectResponse.ok) {
+                  const fullProjectResult = await fullProjectResponse.json();
+                  const fullProject = fullProjectResult.project || fullProjectResult;
+                  
+                  // Merge with amountSpent from progress if available
+                  if (fullProject.amountSpent) {
+                    // Already in project object
+                  } else if (fullProjectResult.progress?.amountSpent) {
+                    fullProject.amountSpent = fullProjectResult.progress.amountSpent;
+                  }
+                  
+                  // Normalize status (database uses 'complete', API should return 'completed')
+                  if (fullProject.status === 'complete') {
+                    fullProject.status = 'completed';
+                  }
+                  
+                  // Ensure overallProgress is set
+                  if (!fullProject.overallProgress || fullProject.overallProgress === 0) {
+                    if (fullProjectResult.progress?.overall) {
+                      fullProject.overallProgress = fullProjectResult.progress.overall;
+                    }
+                  }
+                  
+                  // Ensure targetCompletionDate is set
+                  if (!fullProject.targetCompletionDate && fullProject.endDate) {
+                    fullProject.targetCompletionDate = fullProject.endDate;
+                  }
+                  
+                  setSelectedProject(fullProject);
+                } else {
+                  setSelectedProject(project);
+                }
+              } catch (error) {
+                console.error('Error fetching full project details:', error);
+                setSelectedProject(project);
+              }
             }}
             className={`w-full px-4 py-3 border-2 ${theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-${theme.accent}-500`}
           >
-            <option value="">-- Select a project --</option>
             {projects.map(project => (
               <option key={project.id} value={project.id}>
                 {project.name || project.projectTitle} - {project.projectCode || 'N/A'}
@@ -752,6 +1388,26 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                   }`}
                 >
                   Milestones
+                </button>
+                <button
+                  onClick={() => setActiveTab('budget')}
+                  className={`px-6 py-4 font-medium transition-colors ${
+                    activeTab === 'budget'
+                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Budget Summary
+                </button>
+                <button
+                  onClick={() => setActiveTab('timeline')}
+                  className={`px-6 py-4 font-medium transition-colors ${
+                    activeTab === 'timeline'
+                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Time Table
                 </button>
                 <button
                   onClick={() => setActiveTab('audit')}
@@ -930,9 +1586,483 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                   </div>
                 )}
 
+                {/* Budget Summary Tab */}
+                {activeTab === 'budget' && (
+                  <div className="space-y-6">
+                    {budgetData ? (
+                      <>
+                        {/* Budget Overview Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Total Budget</h3>
+                            <p className="text-2xl font-bold">{formatCurrency(budgetData.total)}</p>
+                          </div>
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Used Budget</h3>
+                            <p className="text-2xl font-bold">{formatCurrency(budgetData.used)}</p>
+                          </div>
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Remaining Budget</h3>
+                            <p className="text-2xl font-bold">{formatCurrency(budgetData.remaining)}</p>
+                          </div>
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Utilization</h3>
+                            <p className="text-2xl font-bold">{budgetData.utilizationPercentage.toFixed(1)}%</p>
+                          </div>
+                        </div>
+
+                        {/* Budget Utilization Chart */}
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Budget Utilization Trend</h3>
+                          <div className="h-80">
+                            {budgetData.budgetTrend && budgetData.budgetTrend.length > 0 ? (
+                              <Line
+                                ref={budgetChartRef}
+                                data={{
+                                  labels: budgetData.budgetTrend.map(item => item.milestone),
+                                  datasets: [
+                                    {
+                                      label: 'Cumulative Budget Used',
+                                      data: budgetData.budgetTrend.map(item => item.cumulative),
+                                      borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
+                                                   theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
+                                                   theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
+                                                   theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.8)' :
+                                                   'rgba(99, 102, 241, 0.8)',
+                                      backgroundColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.2)' :
+                                                        theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.2)' :
+                                                        theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.2)' :
+                                                        theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
+                                                        'rgba(99, 102, 241, 0.2)',
+                                      fill: true,
+                                      tension: 0.4
+                                    },
+                                    {
+                                      label: 'Budget Utilization %',
+                                      data: budgetData.budgetTrend.map(item => (item.cumulative / budgetData.total) * 100),
+                                      borderColor: theme.accent === 'green' ? 'rgba(5, 150, 105, 0.8)' :
+                                                   theme.accent === 'orange' ? 'rgba(234, 88, 12, 0.8)' :
+                                                   theme.accent === 'blue' ? 'rgba(37, 99, 235, 0.8)' :
+                                                   theme.accent === 'sky' ? 'rgba(2, 132, 199, 0.8)' :
+                                                   'rgba(79, 70, 229, 0.8)',
+                                      backgroundColor: 'transparent',
+                                      yAxisID: 'y1',
+                                      borderDash: [5, 5],
+                                      tension: 0.4
+                                    }
+                                  ]
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  plugins: {
+                                    legend: {
+                                      position: 'top',
+                                    },
+                                    tooltip: {
+                                      callbacks: {
+                                        label: function(context) {
+                                          if (context.datasetIndex === 0) {
+                                            return `Cumulative: ${formatCurrency(context.parsed.y)}`;
+                                          } else {
+                                            return `Utilization: ${context.parsed.y.toFixed(1)}%`;
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  scales: {
+                                    y: {
+                                      beginAtZero: true,
+                                      ticks: {
+                                        callback: function(value) {
+                                          return formatCurrency(value);
+                                        }
+                                      }
+                                    },
+                                    y1: {
+                                      type: 'linear',
+                                      display: true,
+                                      position: 'right',
+                                      beginAtZero: true,
+                                      max: 100,
+                                      ticks: {
+                                        callback: function(value) {
+                                          return value + '%';
+                                        }
+                                      },
+                                      grid: {
+                                        drawOnChartArea: false
+                                      }
+                                    }
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-500">
+                                No budget trend data available
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Budget Utilization Curve */}
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Budget Utilization Curve</h3>
+                          <div className="h-80">
+                            {budgetData.budgetTrend && budgetData.budgetTrend.length > 0 ? (
+                              <Line
+                                data={{
+                                  labels: budgetData.budgetTrend.map(item => item.milestone),
+                                  datasets: [
+                                    {
+                                      label: 'Budget Utilization %',
+                                      data: budgetData.budgetTrend.map(item => item.percentage),
+                                      borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
+                                                   theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
+                                                   theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
+                                                   theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.8)' :
+                                                   'rgba(99, 102, 241, 0.8)',
+                                      backgroundColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.2)' :
+                                                        theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.2)' :
+                                                        theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.2)' :
+                                                        theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
+                                                        'rgba(99, 102, 241, 0.2)',
+                                      fill: true,
+                                      tension: 0.5
+                                    }
+                                  ]
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  plugins: {
+                                    legend: {
+                                      position: 'top',
+                                    },
+                                    tooltip: {
+                                      callbacks: {
+                                        label: function(context) {
+                                          return `Utilization: ${context.parsed.y.toFixed(1)}%`;
+                                        }
+                                      }
+                                    }
+                                  },
+                                  scales: {
+                                    y: {
+                                      beginAtZero: true,
+                                      max: 100,
+                                      ticks: {
+                                        callback: function(value) {
+                                          return value + '%';
+                                        }
+                                      }
+                                    }
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-500">
+                                No budget curve data available
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Milestone Budget Breakdown */}
+                        {budgetData.milestoneBudgets && budgetData.milestoneBudgets.length > 0 && (
+                          <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Milestone Budget Breakdown</h3>
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="border-b border-gray-200">
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Milestone</th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Planned Budget</th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Used Budget</th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Remaining</th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Utilization</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {budgetData.milestoneBudgets.map((milestone, idx) => (
+                                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                                      <td className="py-3 px-4 text-gray-900">{milestone.name}</td>
+                                      <td className="py-3 px-4 text-right text-gray-700">{formatCurrency(milestone.planned)}</td>
+                                      <td className="py-3 px-4 text-right text-gray-700">{formatCurrency(milestone.used)}</td>
+                                      <td className="py-3 px-4 text-right text-gray-700">{formatCurrency(milestone.remaining)}</td>
+                                      <td className="py-3 px-4 text-right">
+                                        <span className={`font-semibold ${
+                                          milestone.utilization > 100 ? 'text-red-600' :
+                                          milestone.utilization > 80 ? 'text-orange-600' :
+                                          'text-green-600'
+                                        }`}>
+                                          {milestone.utilization.toFixed(1)}%
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500">
+                        Loading budget data...
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Time Table Tab */}
+                {activeTab === 'timeline' && (
+                  <div className="space-y-6">
+                    {timelineData ? (
+                      <>
+                        {/* Timeline Overview */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Project Start</h3>
+                            <p className="text-lg font-bold">{formatDate(timelineData.projectStart.toISOString())}</p>
+                          </div>
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Target Completion</h3>
+                            <p className="text-lg font-bold">{formatDate(timelineData.projectEnd.toISOString())}</p>
+                          </div>
+                          <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
+                            <h3 className="text-sm font-medium opacity-90 mb-2">Overall Progress</h3>
+                            <p className="text-2xl font-bold">{timelineData.overallProgress.toFixed(1)}%</p>
+                          </div>
+                        </div>
+
+                        {/* Progress Completion Curve */}
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Completion Curve</h3>
+                          <div className="h-80">
+                            {timelineData.progressData && timelineData.progressData.length > 0 ? (
+                              <Line
+                                data={{
+                                  labels: timelineData.progressData.map(item => item.milestone),
+                                  datasets: [
+                                    {
+                                      label: 'Milestone Progress %',
+                                      data: timelineData.progressData.map(item => item.progress),
+                                      borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
+                                                   theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
+                                                   theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
+                                                   theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.8)' :
+                                                   'rgba(99, 102, 241, 0.8)',
+                                      backgroundColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.2)' :
+                                                        theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.2)' :
+                                                        theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.2)' :
+                                                        theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
+                                                        'rgba(99, 102, 241, 0.2)',
+                                      fill: true,
+                                      tension: 0.5
+                                    },
+                                    {
+                                      label: 'Cumulative Progress',
+                                      data: timelineData.progressData.map(item => item.cumulative),
+                                      borderColor: theme.accent === 'green' ? 'rgba(5, 150, 105, 0.8)' :
+                                                   theme.accent === 'orange' ? 'rgba(234, 88, 12, 0.8)' :
+                                                   theme.accent === 'blue' ? 'rgba(37, 99, 235, 0.8)' :
+                                                   theme.accent === 'sky' ? 'rgba(2, 132, 199, 0.8)' :
+                                                   'rgba(79, 70, 229, 0.8)',
+                                      backgroundColor: 'transparent',
+                                      borderDash: [5, 5],
+                                      tension: 0.5
+                                    }
+                                  ]
+                                }}
+                                options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  plugins: {
+                                    legend: {
+                                      position: 'top',
+                                    },
+                                    tooltip: {
+                                      callbacks: {
+                                        label: function(context) {
+                                          return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+                                        }
+                                      }
+                                    }
+                                  },
+                                  scales: {
+                                    y: {
+                                      beginAtZero: true,
+                                      max: 100,
+                                      ticks: {
+                                        callback: function(value) {
+                                          return value + '%';
+                                        }
+                                      }
+                                    }
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-500">
+                                No progress data available
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Timeline Visualization */}
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Timeline</h3>
+                          <div className="space-y-4">
+                            {timelineData.timelineItems.map((item, idx) => {
+                              const daysFromStart = Math.floor((item.dueDate - timelineData.projectStart) / (1000 * 60 * 60 * 24));
+                              const totalDays = Math.floor((timelineData.projectEnd - timelineData.projectStart) / (1000 * 60 * 60 * 24));
+                              const position = totalDays > 0 ? (daysFromStart / totalDays) * 100 : 0;
+                              
+                              return (
+                                <div key={item.id || idx} className="relative">
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center bg-white border-2 border-gray-300">
+                                      <span className="text-sm font-bold text-gray-700">{idx + 1}</span>
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-lg font-semibold text-gray-900">{item.title}</h4>
+                                        <div className="flex items-center gap-2">
+                                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                            item.isCompleted ? 'bg-green-100 text-green-800' :
+                                            item.isDelayed ? 'bg-red-100 text-red-800' :
+                                            'bg-blue-100 text-blue-800'
+                                          }`}>
+                                            {item.isCompleted ? 'Completed' : item.isDelayed ? 'Delayed' : item.status}
+                                          </span>
+                                          <span className="text-sm text-gray-600">{item.progress.toFixed(1)}%</span>
+                                        </div>
+                                      </div>
+                                      <div className="text-sm text-gray-600 mb-2">
+                                        <span>Due: {formatDate(item.dueDate.toISOString())}</span>
+                                        {item.actualEndDate && (
+                                          <span className="ml-4">Completed: {formatDate(item.actualEndDate.toISOString())}</span>
+                                        )}
+                                      </div>
+                                      <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div
+                                          className={`h-full rounded-full ${
+                                            item.isCompleted ? 'bg-green-500' :
+                                            item.isDelayed ? 'bg-red-500' :
+                                            'bg-blue-500'
+                                          }`}
+                                          style={{ width: `${item.progress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {idx < timelineData.timelineItems.length - 1 && (
+                                    <div className="absolute left-6 top-12 w-0.5 h-8 bg-gray-300" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500">
+                        Loading timeline data...
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Audit Trail Tab */}
                 {activeTab === 'audit' && (
                   <div className="space-y-6">
+                    {/* Project Completion Summary Section - Show if project is completed */}
+                    {selectedProject && (selectedProject.status === 'complete' || selectedProject.status === 'completed' || selectedProject.status === 'COMPLETED') && (
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 shadow-lg">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="px-3 py-1 rounded-full text-sm font-bold bg-green-500 text-white">
+                                PROJECT COMPLETED
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                Final Audit Summary
+                              </span>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">
+                              {selectedProject.name}
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Project Code</p>
+                                <p className="text-sm font-semibold text-gray-900">{selectedProject.projectCode}</p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Target Completion Date</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {selectedProject.targetCompletionDate || selectedProject.targetDateOfCompletion || selectedProject.endDate
+                                    ? formatDate(selectedProject.targetCompletionDate || selectedProject.targetDateOfCompletion || selectedProject.endDate)
+                                    : 'N/A'}
+                                </p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Actual Completion Date</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {selectedProject.completionDate || selectedProject.actualCompletionDate 
+                                    ? formatDate(selectedProject.completionDate || selectedProject.actualCompletionDate)
+                                    : 'N/A'}
+                                </p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Total Milestones</p>
+                                <p className="text-sm font-semibold text-gray-900">{projectMilestones.length} milestone(s)</p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Final Progress</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {selectedProject.overallProgress != null 
+                                    ? (typeof selectedProject.overallProgress === 'number' 
+                                        ? selectedProject.overallProgress.toFixed(1) 
+                                        : parseFloat(selectedProject.overallProgress || 0).toFixed(1))
+                                    : '100.0'}%
+                                </p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Total Budget</p>
+                                <p className="text-sm font-semibold text-gray-900">{formatCurrency(selectedProject.totalBudget)}</p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Used Budget</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {selectedProject.amountSpent || selectedProject.usedBudget || selectedProject.budgetUsed
+                                    ? formatCurrency(selectedProject.amountSpent || selectedProject.usedBudget || selectedProject.budgetUsed)
+                                    : formatCurrency(0)}
+                                </p>
+                              </div>
+                              <div className="bg-white/60 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 mb-1">Location</p>
+                                <p className="text-sm font-semibold text-gray-900">{selectedProject.location || 'N/A'}</p>
+                              </div>
+                            </div>
+                            <div className="bg-white/60 rounded-lg p-3">
+                              <p className="text-xs text-gray-600 mb-1">Completion Details</p>
+                              <p className="text-sm text-gray-900">
+                                All milestones have been successfully approved and completed. This project has met all requirements and is now marked as completed in the system.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {Object.keys(auditTrail).length === 0 ? (
                       <div className="text-center py-12 text-gray-500">
                         No audit trail data available for this project.
@@ -945,7 +2075,11 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                           </h3>
                           <div className="space-y-4">
                             {activities.map((activity) => (
-                              <div key={activity.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                              <div key={activity.id} className={`flex items-start gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors ${
+                                activity.action === 'PROJECT_COMPLETED' 
+                                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200' 
+                                  : 'bg-gray-50'
+                              }`}>
                                 <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getActionColor(activity.action)}`}>
                                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={getActionIcon(activity.action)} />

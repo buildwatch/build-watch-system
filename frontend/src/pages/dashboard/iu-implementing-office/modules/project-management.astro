@@ -1493,7 +1493,13 @@ loading = false;
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm text-gray-600">Completed Projects</p>
-                <p class="text-2xl font-bold text-black" id="completedProjectsCount">{projects.filter(p => p.status === 'complete').length}</p>
+                <p class="text-2xl font-bold text-black" id="completedProjectsCount">{projects.filter(p => 
+                  p.status === 'complete' || 
+                  p.status === 'completed' || 
+                  p.status === 'COMPLETED' ||
+                  (p.status && p.status.toLowerCase() === 'complete') ||
+                  (p.status && p.status.toLowerCase() === 'completed')
+                ).length}</p>
                 <p class="text-xs text-green-600 mt-1">Successfully completed</p>
               </div>
               <div class="icon-container bg-gradient-to-br from-green-500 to-green-600">
@@ -10843,20 +10849,78 @@ loading = false;
       });
     }
 
+    // Fetch accurate utilized budget from /api/home/stats (uses approved milestone submissions)
+    let accurateUtilizedBudget = 0;
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (token) {
+        const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+          ? 'http://localhost:3000/api'
+          : `${window.location.protocol}//${window.location.hostname}/api`;
+        
+        const statsResponse = await fetch(`${API_URL}/home/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          if (statsData.success && statsData.utilizedBudget !== undefined) {
+            accurateUtilizedBudget = parseFloat(statsData.utilizedBudget) || 0;
+            console.log('💰 Analytics: Using accurate utilized budget from /api/home/stats:', accurateUtilizedBudget);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Analytics: Failed to fetch accurate utilized budget, using fallback calculation:', error);
+    }
+    
+    // Fallback: Calculate from project data if API fails
+    let calculatedUtilizedBudget = 0;
+    if (accurateUtilizedBudget === 0) {
+      // Try to calculate from milestone submissions in project data
+      filteredProjects.forEach(p => {
+        if (p.milestones && Array.isArray(p.milestones)) {
+          p.milestones.forEach(milestone => {
+            if (milestone.submissions && Array.isArray(milestone.submissions)) {
+              const approvedSubmission = milestone.submissions
+                .filter(s => s.status === 'approved' || s.status === 'iu_approved')
+                .sort((a, b) => new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0))[0];
+              
+              if (approvedSubmission) {
+                calculatedUtilizedBudget += parseFloat(approvedSubmission.usedBudget || approvedSubmission.budgetUsed || 0);
+              }
+            }
+          });
+        }
+      });
+      
+      // Final fallback: Use amountSpent if available
+      if (calculatedUtilizedBudget === 0) {
+        calculatedUtilizedBudget = filteredProjects.reduce((sum, p) => {
+          return sum + parseFloat(p.amountSpent || p.usedBudget || p.budgetUsed || 0);
+        }, 0);
+      }
+    }
+
     // Calculate statistics
     const stats = {
       total: filteredProjects.length,
       ongoing: filteredProjects.filter(p => p.status === 'ongoing' || p.status === 'delayed').length,
-      completed: filteredProjects.filter(p => p.status === 'complete').length,
+      completed: filteredProjects.filter(p => 
+        p.status === 'complete' || 
+        p.status === 'completed' || 
+        p.status === 'COMPLETED' ||
+        p.status?.toLowerCase() === 'complete' ||
+        p.status?.toLowerCase() === 'completed'
+      ).length,
       pending: filteredProjects.filter(p => p.status === 'pending').length,
       delayed: filteredProjects.filter(p => p.status === 'delayed').length,
       notStarted: filteredProjects.filter(p => !p.status || p.status === 'not_started').length,
       totalBudget: filteredProjects.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0),
-      utilizedBudget: filteredProjects.reduce((sum, p) => {
-        const budget = parseFloat(p.totalBudget || 0);
-        const progress = parseFloat(p.budgetProgress || 0) / 100;
-        return sum + (budget * progress);
-      }, 0),
+      utilizedBudget: accurateUtilizedBudget > 0 ? accurateUtilizedBudget : calculatedUtilizedBudget,
       avgProgress: filteredProjects.length > 0 
         ? filteredProjects.reduce((sum, p) => sum + parseFloat(p.overallProgress || 0), 0) / filteredProjects.length 
         : 0
@@ -10894,12 +10958,27 @@ loading = false;
       window.projectAnalyticsCharts.statusDistribution.destroy();
     }
     
+    // Group projects by status for tooltip display
+    const statusGroups = {
+      'Not Started': projects.filter(p => !p.status || p.status === 'not_started'),
+      'Pending': projects.filter(p => p.status === 'pending'),
+      'Ongoing': projects.filter(p => p.status === 'ongoing'),
+      'Delayed': projects.filter(p => p.status === 'delayed'),
+      'Complete': projects.filter(p => 
+        p.status === 'complete' || 
+        p.status === 'completed' || 
+        p.status === 'COMPLETED' ||
+        p.status?.toLowerCase() === 'complete' ||
+        p.status?.toLowerCase() === 'completed'
+      )
+    };
+    
     const statusCounts = {
-      'Not Started': projects.filter(p => !p.status || p.status === 'not_started').length,
-      'Pending': projects.filter(p => p.status === 'pending').length,
-      'Ongoing': projects.filter(p => p.status === 'ongoing').length,
-      'Delayed': projects.filter(p => p.status === 'delayed').length,
-      'Complete': projects.filter(p => p.status === 'complete').length
+      'Not Started': statusGroups['Not Started'].length,
+      'Pending': statusGroups['Pending'].length,
+      'Ongoing': statusGroups['Ongoing'].length,
+      'Delayed': statusGroups['Delayed'].length,
+      'Complete': statusGroups['Complete'].length
     };
     
     window.projectAnalyticsCharts.statusDistribution = new Chart(ctx, {
@@ -10932,12 +11011,43 @@ loading = false;
           legend: { display: true, position: 'right' },
           tooltip: {
             callbacks: {
+              title: function(context) {
+                const label = context[0].label || '';
+                const value = context[0].parsed || 0;
+                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+              },
               label: function(context) {
                 const label = context.label || '';
-                const value = context.parsed || 0;
+                const statusProjects = statusGroups[label] || [];
                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                return `${label}: ${value} (${percentage}%)`;
+                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                
+                if (statusProjects.length === 0) {
+                  return `${percentage}%`;
+                }
+                
+                // Show first few projects in tooltip
+                const maxProjects = 5;
+                const displayProjects = statusProjects.slice(0, maxProjects);
+                const projectList = displayProjects.map(p => {
+                  const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                  const code = p.projectCode || '';
+                  return code ? `${name} (${code})` : name;
+                }).join(', ');
+                
+                const moreText = statusProjects.length > maxProjects 
+                  ? ` and ${statusProjects.length - maxProjects} more...` 
+                  : '';
+                
+                return [
+                  `${percentage}%`,
+                  ...displayProjects.map(p => {
+                    const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                    const code = p.projectCode || '';
+                    return code ? `• ${name} (${code})` : `• ${name}`;
+                  }),
+                  moreText ? moreText : ''
+                ].filter(Boolean);
               }
             }
           }
@@ -10954,10 +11064,19 @@ loading = false;
       window.projectAnalyticsCharts.categoryDistribution.destroy();
     }
     
-    const categoryCounts = {};
+    // Group projects by category for tooltip display
+    const categoryGroups = {};
     projects.forEach(p => {
       const cat = p.category || 'Uncategorized';
-      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      if (!categoryGroups[cat]) {
+        categoryGroups[cat] = [];
+      }
+      categoryGroups[cat].push(p);
+    });
+    
+    const categoryCounts = {};
+    Object.keys(categoryGroups).forEach(cat => {
+      categoryCounts[cat] = categoryGroups[cat].length;
     });
     
     const sorted = Object.entries(categoryCounts)
@@ -10987,7 +11106,36 @@ loading = false;
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'right' }
+          legend: { display: true, position: 'right' },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                const label = context[0].label || '';
+                const value = context[0].parsed || 0;
+                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+              },
+              label: function(context) {
+                const label = context.label || '';
+                const categoryProjects = categoryGroups[label] || [];
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                
+                if (categoryProjects.length === 0) {
+                  return `${percentage}%`;
+                }
+                
+                // Show all projects in this category
+                return [
+                  `${percentage}%`,
+                  ...categoryProjects.map(p => {
+                    const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                    const code = p.projectCode || '';
+                    return code ? `• ${name} (${code})` : `• ${name}`;
+                  })
+                ];
+              }
+            }
+          }
         }
       }
     });
@@ -11001,22 +11149,29 @@ loading = false;
       window.projectAnalyticsCharts.projectGrowth.destroy();
     }
     
-    // Group by creation date (last 6 months)
+    // Group by creation date (last 6 months) with project details
     const growthData = {};
+    const growthProjects = {}; // Store projects by month
     projects.forEach(p => {
       if (p.createdAt || p.createdDate) {
         const date = new Date(p.createdAt || p.createdDate);
         const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         growthData[monthKey] = (growthData[monthKey] || 0) + 1;
+        if (!growthProjects[monthKey]) {
+          growthProjects[monthKey] = [];
+        }
+        growthProjects[monthKey].push(p);
       }
     });
     
     const sortedDates = Object.keys(growthData).sort((a, b) => new Date(a) - new Date(b));
     const cumulative = [];
+    const cumulativeProjects = []; // Track cumulative projects
     let total = 0;
     sortedDates.forEach(date => {
       total += growthData[date];
       cumulative.push(total);
+      cumulativeProjects.push([...growthProjects[date] || []]);
     });
     
     window.projectAnalyticsCharts.projectGrowth = new Chart(ctx, {
@@ -11038,7 +11193,41 @@ loading = false;
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'top' }
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                const label = context[0].label || '';
+                const value = context[0].parsed.y || 0;
+                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+              },
+              label: function(context) {
+                const index = context.dataIndex;
+                const monthProjects = cumulativeProjects[index] || [];
+                
+                if (monthProjects.length === 0) {
+                  return 'No projects';
+                }
+                
+                // Show all projects created in this month
+                const maxProjects = 5;
+                const displayProjects = monthProjects.slice(0, maxProjects);
+                const moreText = monthProjects.length > maxProjects 
+                  ? ` and ${monthProjects.length - maxProjects} more...` 
+                  : '';
+                
+                return [
+                  ...displayProjects.map(p => {
+                    const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                    const code = p.projectCode || '';
+                    return code ? `• ${name} (${code})` : `• ${name}`;
+                  }),
+                  moreText ? moreText : ''
+                ].filter(Boolean);
+              }
+            }
+          }
         },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -11089,8 +11278,28 @@ loading = false;
           legend: { display: true, position: 'top' },
           tooltip: {
             callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                const project = topProjects[index];
+                if (project) {
+                  const name = project.name || project.projectName || project.title || 'Unnamed Project';
+                  const code = project.projectCode || '';
+                  return code ? `${name} (${code})` : name;
+                }
+                return '';
+              },
               label: function(context) {
-                return `${context.dataset.label}: ₱${parseFloat(context.parsed.x).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                const index = context.dataIndex;
+                const project = topProjects[index];
+                const value = parseFloat(context.parsed.x);
+                const budget = parseFloat(project?.totalBudget || 0);
+                const utilized = context.datasetIndex === 1 ? value : (budget * (parseFloat(project?.budgetProgress || 0) / 100));
+                const percentage = budget > 0 ? ((utilized / budget) * 100).toFixed(1) : 0;
+                
+                return [
+                  `${context.dataset.label}: ₱${value.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  `Utilization: ${percentage}%`
+                ];
               }
             }
           }
@@ -11110,28 +11319,36 @@ loading = false;
       window.projectAnalyticsCharts.progressDistribution.destroy();
     }
     
+    // Group projects by progress range
     const progressRanges = {
-      '0-25%': 0,
-      '26-50%': 0,
-      '51-75%': 0,
-      '76-100%': 0
+      '0-25%': [],
+      '26-50%': [],
+      '51-75%': [],
+      '76-100%': []
     };
     
     projects.forEach(p => {
       const progress = parseFloat(p.overallProgress || 0);
-      if (progress <= 25) progressRanges['0-25%']++;
-      else if (progress <= 50) progressRanges['26-50%']++;
-      else if (progress <= 75) progressRanges['51-75%']++;
-      else progressRanges['76-100%']++;
+      if (progress <= 25) progressRanges['0-25%'].push(p);
+      else if (progress <= 50) progressRanges['26-50%'].push(p);
+      else if (progress <= 75) progressRanges['51-75%'].push(p);
+      else progressRanges['76-100%'].push(p);
     });
+    
+    const progressCounts = {
+      '0-25%': progressRanges['0-25%'].length,
+      '26-50%': progressRanges['26-50%'].length,
+      '51-75%': progressRanges['51-75%'].length,
+      '76-100%': progressRanges['76-100%'].length
+    };
     
     window.projectAnalyticsCharts.progressDistribution = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: Object.keys(progressRanges),
+        labels: Object.keys(progressCounts),
         datasets: [{
           label: 'Projects',
-          data: Object.values(progressRanges),
+          data: Object.values(progressCounts),
           backgroundColor: [
             'rgba(239, 68, 68, 0.8)',
             'rgba(245, 158, 11, 0.8)',
@@ -11145,7 +11362,41 @@ loading = false;
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false }
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                const label = context[0].label || '';
+                const value = context[0].parsed.y || 0;
+                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+              },
+              label: function(context) {
+                const label = context.label || '';
+                const rangeProjects = progressRanges[label] || [];
+                
+                if (rangeProjects.length === 0) {
+                  return 'No projects';
+                }
+                
+                // Show all projects in this range
+                const maxProjects = 5;
+                const displayProjects = rangeProjects.slice(0, maxProjects);
+                const moreText = rangeProjects.length > maxProjects 
+                  ? ` and ${rangeProjects.length - maxProjects} more...` 
+                  : '';
+                
+                return [
+                  ...displayProjects.map(p => {
+                    const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                    const code = p.projectCode || '';
+                    const progress = parseFloat(p.overallProgress || 0).toFixed(1);
+                    return code ? `• ${name} (${code}) - ${progress}%` : `• ${name} - ${progress}%`;
+                  }),
+                  moreText ? moreText : ''
+                ].filter(Boolean);
+              }
+            }
+          }
         },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -11162,10 +11413,17 @@ loading = false;
       window.projectAnalyticsCharts.priorityDistribution.destroy();
     }
     
+    // Group projects by priority
+    const priorityGroups = {
+      'High': projects.filter(p => p.priority === 'high'),
+      'Medium': projects.filter(p => p.priority === 'medium'),
+      'Low': projects.filter(p => p.priority === 'low')
+    };
+    
     const priorityCounts = {
-      'High': projects.filter(p => p.priority === 'high').length,
-      'Medium': projects.filter(p => p.priority === 'medium').length,
-      'Low': projects.filter(p => p.priority === 'low').length
+      'High': priorityGroups['High'].length,
+      'Medium': priorityGroups['Medium'].length,
+      'Low': priorityGroups['Low'].length
     };
     
     window.projectAnalyticsCharts.priorityDistribution = new Chart(ctx, {
@@ -11187,7 +11445,40 @@ loading = false;
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false }
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                const label = context[0].label || '';
+                const value = context[0].parsed.y || 0;
+                return `${label} Priority: ${value} project${value !== 1 ? 's' : ''}`;
+              },
+              label: function(context) {
+                const label = context.label || '';
+                const priorityProjects = priorityGroups[label] || [];
+                
+                if (priorityProjects.length === 0) {
+                  return 'No projects';
+                }
+                
+                // Show all projects in this priority
+                const maxProjects = 5;
+                const displayProjects = priorityProjects.slice(0, maxProjects);
+                const moreText = priorityProjects.length > maxProjects 
+                  ? ` and ${priorityProjects.length - maxProjects} more...` 
+                  : '';
+                
+                return [
+                  ...displayProjects.map(p => {
+                    const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                    const code = p.projectCode || '';
+                    return code ? `• ${name} (${code})` : `• ${name}`;
+                  }),
+                  moreText ? moreText : ''
+                ].filter(Boolean);
+              }
+            }
+          }
         },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -11204,8 +11495,9 @@ loading = false;
       window.projectAnalyticsCharts.monthlyTrends.destroy();
     }
     
-    // Last 6 months
+    // Last 6 months with project details
     const monthlyData = [];
+    const monthlyProjects = []; // Store projects by month and status
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -11217,11 +11509,28 @@ loading = false;
         return createdDate >= monthStart && createdDate <= monthEnd;
       });
       
+      const completedProjects = monthProjects.filter(p => 
+        p.status === 'complete' || 
+        p.status === 'completed' || 
+        p.status?.toLowerCase() === 'complete' ||
+        p.status?.toLowerCase() === 'completed'
+      );
+      const ongoingProjects = monthProjects.filter(p => 
+        p.status === 'ongoing' || p.status === 'delayed'
+      );
+      
       monthlyData.push({
         month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         total: monthProjects.length,
-        completed: monthProjects.filter(p => p.status === 'complete').length,
-        ongoing: monthProjects.filter(p => p.status === 'ongoing' || p.status === 'delayed').length
+        completed: completedProjects.length,
+        ongoing: ongoingProjects.length
+      });
+      
+      monthlyProjects.push({
+        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        total: monthProjects,
+        completed: completedProjects,
+        ongoing: ongoingProjects
       });
     }
     
@@ -11256,7 +11565,56 @@ loading = false;
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'top' }
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                const monthInfo = monthlyProjects[index];
+                const datasetLabel = context[0].dataset.label || '';
+                const value = context[0].parsed.y || 0;
+                return `${monthInfo?.month || ''}: ${datasetLabel} - ${value} project${value !== 1 ? 's' : ''}`;
+              },
+              label: function(context) {
+                const index = context.dataIndex;
+                const datasetLabel = context.dataset.label || '';
+                const monthInfo = monthlyProjects[index];
+                
+                if (!monthInfo) {
+                  return 'No data';
+                }
+                
+                let relevantProjects = [];
+                if (datasetLabel === 'Total Projects') {
+                  relevantProjects = monthInfo.total || [];
+                } else if (datasetLabel === 'Completed') {
+                  relevantProjects = monthInfo.completed || [];
+                } else if (datasetLabel === 'Ongoing') {
+                  relevantProjects = monthInfo.ongoing || [];
+                }
+                
+                if (relevantProjects.length === 0) {
+                  return 'No projects';
+                }
+                
+                // Show all projects for this month and status
+                const maxProjects = 5;
+                const displayProjects = relevantProjects.slice(0, maxProjects);
+                const moreText = relevantProjects.length > maxProjects 
+                  ? ` and ${relevantProjects.length - maxProjects} more...` 
+                  : '';
+                
+                return [
+                  ...displayProjects.map(p => {
+                    const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                    const code = p.projectCode || '';
+                    return code ? `• ${name} (${code})` : `• ${name}`;
+                  }),
+                  moreText ? moreText : ''
+                ].filter(Boolean);
+              }
+            }
+          }
         },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1 } }

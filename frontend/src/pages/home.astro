@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import TopBar from "../components/TopBar.astro";
-import ProjectMap from "../components/ProjectMap.jsx";
+import CentralizedProjectMap from "../components/CentralizedProjectMap.jsx";
 import LGUFooter from "../components/LGUFooter.astro";
 import FacebookPostsIsland from "../islands/FacebookPostsIsland.jsx";
 import ProjectCard from "../components/ProjectCard.astro";
@@ -885,8 +885,8 @@ try {
               const statusColor = status === 'active' ? 'bg-green-400' : status === 'completed' ? 'bg-blue-400' : 'bg-gray-400';
               const statusText = status === 'active' ? 'Active' : status === 'completed' ? 'Completed' : 'No Projects';
               
-              // Progress logic aligned with ProjectCard.astro
-              const progressPercentage = Math.round((bgy.completedProjects / bgy.totalProjects) * 100) || 0;
+              // Calculate overall progress from barangay's overallProgress field (average of all projects)
+              const progressPercentage = Math.round(bgy.overallProgress || 0);
               let progressColor = 'bg-gray-500';
               if (progressPercentage >= 0 && progressPercentage <= 25) progressColor = 'bg-red-500';
               else if (progressPercentage >= 26 && progressPercentage <= 50) progressColor = 'bg-yellow-500';
@@ -1123,8 +1123,8 @@ try {
           </div>
         </div>
 
-        {/* Enhanced Summary Stats - Centered */}
-        {barangayStats && barangayStats.length > 0 && (
+        {/* Enhanced Summary Stats - Centered - Using Actual API Data */}
+        {stats && (
           <div class="flex justify-center mt-12 w-full">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl">
               <div class="group relative bg-gradient-to-br from-white/80 to-blue-50/60 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg hover:shadow-2xl transition-all duration-500 border border-blue-100/50 hover:border-blue-200 transform hover:-translate-y-2">
@@ -1135,7 +1135,7 @@ try {
                       <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                     </svg>
             </div>
-                  <div class="text-3xl font-black text-blue-600 mb-2">{barangayStats.length}</div>
+                  <div class="text-3xl font-black text-blue-600 mb-2">26</div>
                   <div class="text-blue-800 font-semibold text-sm">Total Barangays</div>
                   <div class="w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-3 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
             </div>
@@ -1149,7 +1149,7 @@ try {
                       <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                     </svg>
                   </div>
-                  <div class="text-3xl font-black text-green-600 mb-2">{barangayStats.reduce((sum, bgy) => sum + bgy.totalProjects, 0)}</div>
+                  <div class="text-3xl font-black text-green-600 mb-2">{stats.totalProjects || 0}</div>
                   <div class="text-green-800 font-semibold text-sm">Total Projects</div>
                   <div class="w-full h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full mt-3 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                 </div>
@@ -1163,7 +1163,7 @@ try {
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     </svg>
                   </div>
-                  <div class="text-3xl font-black text-orange-600 mb-2">{barangayStats.reduce((sum, bgy) => sum + bgy.ongoingProjects, 0)}</div>
+                  <div class="text-3xl font-black text-orange-600 mb-2">{stats.ongoingProjects || 0}</div>
                   <div class="text-orange-800 font-semibold text-sm">Active Projects</div>
                   <div class="w-full h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full mt-3 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                 </div>
@@ -1178,7 +1178,7 @@ try {
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
                     </svg>
                   </div>
-                  <div class="text-3xl font-black text-purple-600 mb-2">{homeService.formatBudget(barangayStats.reduce((sum, bgy) => sum + bgy.totalBudget, 0))}</div>
+                  <div class="text-3xl font-black text-purple-600 mb-2">{homeService.formatBudget(stats.totalBudget || 0)}</div>
                   <div class="text-purple-800 font-semibold text-sm">Total Budget</div>
                   <div class="w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full mt-3 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
                 </div>
@@ -2034,7 +2034,15 @@ try {
           {/* Main Map Container - Clean */}
           <div class="relative bg-white/95 backdrop-blur-sm"
                style="background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,252,250,0.98) 100%); min-height: 80vh;">
-          <ProjectMap client:only="react" />
+          <CentralizedProjectMap 
+            client:only="react" 
+            mapId="home-project-map"
+            height={700}
+            zoom={12}
+            showLegend={true}
+            showViewSelector={true}
+            fetchProjects={true}
+          />
           </div>
         </div>
         

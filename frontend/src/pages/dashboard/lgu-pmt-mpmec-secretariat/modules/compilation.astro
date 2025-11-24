@@ -2,6 +2,7 @@ export const prerender = false;
 ---
 import Layout from '../../../../layouts/Layout.astro';
 import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
+import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAnalytics.jsx';
 ---
 
 <Layout title="Compilation Summary | MPMEC Secretariat">
@@ -739,7 +740,54 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         <div id="project-view-container" class="hidden">
           <!-- Project content will be loaded here -->
         </div>
-      </div>
+        
+        <!-- Submission History & Analytics Component (hidden by default, shown when project is selected) -->
+        <!-- Placed outside project-view-container so it's not removed when innerHTML is set -->
+        <div id="submission-history-analytics-container" class="hidden" style="display: none;">
+          <SubmissionHistoryAnalytics
+            client:load
+            mode="lgu-iu"
+            projectId={null}
+            apiUrl="/api"
+            theme={{
+              primary: 'blue',
+              primaryLight: 'indigo',
+              headerBg: 'from-blue-50 to-blue-100',
+              headerBorder: 'border-blue-200',
+              headerHover: 'hover:from-blue-100 hover:to-blue-200',
+              iconBg: 'from-blue-500 to-blue-600',
+              iconHover: 'hover:from-blue-600 hover:to-blue-700',
+              titleHover: 'group-hover:text-blue-800',
+              btnPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
+              btnSecondary: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+              chartBg1: 'from-blue-50 to-indigo-50',
+              chartBg2: 'from-green-50 to-emerald-50',
+              chartBorder1: 'border-blue-200',
+              chartBorder2: 'border-green-200',
+              chartIcon1: 'text-blue-400',
+              chartIcon2: 'text-green-400',
+              chartText1: 'text-blue-600',
+              chartText2: 'text-green-600',
+              chartColors: {
+                primary: 'rgba(37, 99, 235, 0.8)',
+                secondary: 'rgba(29, 78, 216, 0.6)',
+                gradient: ['rgba(37, 99, 235, 0.8)', 'rgba(29, 78, 216, 0.4)']
+              },
+              timelineColor: 'from-blue-200 via-blue-300 to-blue-400',
+              timelineDot: 'bg-blue-500',
+              emptyStateBg: 'from-blue-100 to-blue-200',
+              emptyStateIcon: 'text-blue-400',
+              statCard1: 'text-blue-600',
+              statCard2: 'text-orange-600',
+              statCard3: 'text-green-600',
+              statCard4: 'text-red-600',
+              statIcon1: 'from-blue-500 to-blue-600',
+              statIcon2: 'from-orange-500 to-orange-600',
+              statIcon3: 'from-green-500 to-green-600',
+              statIcon4: 'from-red-500 to-red-600'
+            }}
+          />
+        </div>
     </main>
 
     <!-- Project Report Modal -->
@@ -3580,6 +3628,21 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
         return null;
       }
 
+      // Define API_URL for this function
+      const API_URL = typeof window !== 'undefined' 
+        ? (() => {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:3000/api';
+            }
+            if (hostname.includes('build-watch.com')) {
+              return `${protocol}//${hostname}/api`;
+            }
+            return 'http://localhost:3000/api';
+          })()
+        : 'http://localhost:3000/api';
+
       // Fetch project details
       const projectResponse = await fetch(`${API_URL}/projects/${projectId}`, {
         method: 'GET',
@@ -3744,7 +3807,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       </div>
 
       <!-- Milestones Section -->
-      <div class="space-y-6">
+      <div class="space-y-6 mb-8">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-gray-900">Project Milestones</h2>
           <div class="flex items-center gap-2">
@@ -3757,9 +3820,127 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           ${renderMilestoneCards(project.milestones || [])}
         </div>
       </div>
+
+      <!-- Submission History & Analytics Component Placeholder -->
+      <div id="submission-history-analytics-placeholder"></div>
     `;
 
     projectContainer.innerHTML = html;
+    
+    // Set global variables for the component
+    const API_URL = typeof window !== 'undefined' 
+      ? (() => {
+          const hostname = window.location.hostname;
+          const protocol = window.location.protocol;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3000/api';
+          }
+          if (hostname.includes('build-watch.com')) {
+            return `${protocol}//${hostname}/api`;
+          }
+          return 'http://localhost:3000/api';
+        })()
+      : 'http://localhost:3000/api';
+    
+    window.selectedProject = { id: project.id };
+    window.API_URL = API_URL;
+    
+    // Move and show the Submission History & Analytics component
+    setTimeout(() => {
+      const placeholder = document.getElementById('submission-history-analytics-placeholder');
+      const analyticsContainer = document.getElementById('submission-history-analytics-container');
+      
+      console.log('🔍 [SubmissionHistoryAnalytics] Looking for container...');
+      console.log('🔍 [SubmissionHistoryAnalytics] Placeholder:', placeholder);
+      console.log('🔍 [SubmissionHistoryAnalytics] Container:', analyticsContainer);
+      
+      if (!placeholder) {
+        console.error('❌ [SubmissionHistoryAnalytics] Placeholder not found!');
+        return;
+      }
+      
+      if (!analyticsContainer) {
+        console.error('❌ [SubmissionHistoryAnalytics] Container not found in DOM!');
+        console.log('💡 [SubmissionHistoryAnalytics] Container should be outside project-view-container');
+        // Wait a bit more for Astro to hydrate the component
+        setTimeout(() => {
+          const retryContainer = document.getElementById('submission-history-analytics-container');
+          if (retryContainer && placeholder) {
+            placeholder.appendChild(retryContainer);
+            retryContainer.classList.remove('hidden');
+            retryContainer.style.display = 'block';
+            window.dispatchEvent(new CustomEvent('projectSelected', {
+              detail: { projectId: project.id }
+            }));
+            console.log('✅ [SubmissionHistoryAnalytics] Container found and moved after retry');
+          }
+        }, 500);
+        return;
+      }
+      
+      // Move container to placeholder and show it
+      console.log('🔍 [SubmissionHistoryAnalytics] Moving container to placeholder...');
+      placeholder.appendChild(analyticsContainer);
+      analyticsContainer.classList.remove('hidden');
+      analyticsContainer.style.display = 'block';
+      analyticsContainer.style.visibility = 'visible';
+      analyticsContainer.style.opacity = '1';
+      
+      // Update the component's projectId by dispatching an event
+      window.dispatchEvent(new CustomEvent('projectSelected', {
+        detail: { projectId: project.id }
+      }));
+      console.log('✅ [SubmissionHistoryAnalytics] Container moved and shown, event dispatched');
+    }, 300);
+    
+    // Add global debugging function
+    window.debugSubmissionHistoryAnalytics = function() {
+      console.log('🔍 [SubmissionHistoryAnalytics Debug] === DEBUGGING COMPONENT ===');
+      const analyticsContainer = document.getElementById('submission-history-analytics-container');
+      const placeholder = document.getElementById('submission-history-analytics-placeholder');
+      const projectContainer = document.getElementById('project-view-container');
+      
+      console.log('1. Container element:', analyticsContainer);
+      console.log('2. Placeholder element:', placeholder);
+      console.log('3. Project container:', projectContainer);
+      
+      if (analyticsContainer) {
+        console.log('4. Container exists:', true);
+        console.log('5. Container classes:', analyticsContainer.className);
+        console.log('6. Container style.display:', analyticsContainer.style.display);
+        console.log('7. Container computed display:', window.getComputedStyle(analyticsContainer).display);
+        console.log('8. Container computed visibility:', window.getComputedStyle(analyticsContainer).visibility);
+        console.log('9. Container computed opacity:', window.getComputedStyle(analyticsContainer).opacity);
+        console.log('10. Container offsetHeight:', analyticsContainer.offsetHeight);
+        console.log('11. Container offsetWidth:', analyticsContainer.offsetWidth);
+        console.log('12. Container parent:', analyticsContainer.parentElement);
+        console.log('13. Container parent classes:', analyticsContainer.parentElement?.className);
+        console.log('14. Container children count:', analyticsContainer.children.length);
+        console.log('15. Container innerHTML length:', analyticsContainer.innerHTML.length);
+        
+        // Check for React
+        const reactElements = analyticsContainer.querySelectorAll('[data-reactroot], [data-react-root], [data-react-component]');
+        console.log('16. React elements found:', reactElements.length);
+        
+        // Check for component structure
+        const componentElements = analyticsContainer.querySelectorAll('.profile-card, [class*="Submission"], [class*="submission"]');
+        console.log('17. Component elements found:', componentElements.length);
+      } else {
+        console.error('❌ Container not found in DOM!');
+      }
+      
+      console.log('18. window.selectedProject:', window.selectedProject);
+      console.log('19. window.API_URL:', window.API_URL);
+      console.log('20. Current project ID:', project?.id);
+      
+      // Check if project container is visible
+      if (projectContainer) {
+        console.log('21. Project container display:', window.getComputedStyle(projectContainer).display);
+        console.log('22. Project container classes:', projectContainer.className);
+      }
+      
+      console.log('🔍 [SubmissionHistoryAnalytics Debug] === END DEBUG ===');
+    };
   }
 
   // Function to render milestone cards
@@ -4033,13 +4214,56 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   };
 
   // Function to open MilestoneSubmissionModal
-  function openMilestoneSubmissionModal(milestone) {
+  async function openMilestoneSubmissionModal(milestone) {
     console.log('🔍 Opening MilestoneSubmissionModal for milestone:', milestone);
     
+    // Fetch the approved submission if available
+    let approvedSubmission = null;
+    if (milestone.submissions && Array.isArray(milestone.submissions)) {
+      approvedSubmission = milestone.submissions.find(s => 
+        s.status === 'approved' || s.status === 'iu_approved'
+      );
+    }
+    
+    // If no submission in milestone data, try to fetch it
+    if (!approvedSubmission && milestone.id) {
+      try {
+        const API_URL = typeof window !== 'undefined' 
+          ? (() => {
+              const hostname = window.location.hostname;
+              const protocol = window.location.protocol;
+              if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'http://localhost:3000/api';
+              }
+              if (hostname.includes('build-watch.com')) {
+                return `${protocol}//${hostname}/api`;
+              }
+              return 'http://localhost:3000/api';
+            })()
+          : 'http://localhost:3000/api';
+        
+        const token = localStorage.getItem('token');
+        if (token && currentProject?.id) {
+          const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${currentProject.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (submissionsResponse.ok) {
+            const submissionsData = await submissionsResponse.json();
+            if (submissionsData.success && submissionsData.submissions) {
+              approvedSubmission = submissionsData.submissions.find(s => 
+                s.milestoneId === milestone.id && (s.status === 'approved' || s.status === 'iu_approved')
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not fetch submission:', error);
+      }
+    }
+    
     // Check if milestone has approved submissions
-    const hasApprovedSubmission = milestone.submissions?.some(s => 
-      s.status === 'approved' || s.status === 'iu_approved'
-    ) || false;
+    const hasApprovedSubmission = !!approvedSubmission;
     
     const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
                                  milestone.budgetStatus === 'approved' || 
@@ -4055,7 +4279,8 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       status: milestone.status,
       hasApprovedSubmission,
       hasApprovedDivisions,
-      hasApprovedSubmissions
+      hasApprovedSubmissions,
+      approvedSubmission: approvedSubmission ? approvedSubmission.id : null
     });
     
     // Check if milestone is delayed
@@ -4082,7 +4307,7 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           
           <!-- Modal Content -->
           <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            ${hasApprovedSubmissions ? renderApprovedSubmissionContent(milestone) : 
+            ${hasApprovedSubmissions ? renderApprovedSubmissionContent(milestone, approvedSubmission, currentProject) : 
               isDelayed ? renderDelayedSubmissionContent(milestone) : renderNoSubmissionContent(milestone)}
           </div>
         </div>
@@ -4101,16 +4326,69 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     });
   }
 
+  // Helper functions for formatting
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch (e) {
+      return dateString;
+    }
+  }
+  
+  function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateString;
+    }
+  }
+  
+  function formatCurrency(amount) {
+    if (!amount && amount !== 0) return '0.00';
+    const num = typeof amount === 'string' ? parseFloat(amount.replace(/[^\d.-]/g, '')) : parseFloat(amount);
+    return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   // Function to render approved submission content
-  function renderApprovedSubmissionContent(milestone) {
+  function renderApprovedSubmissionContent(milestone, submission = null, project = null) {
+    // Get approved submission data
+    const approvedSubmission = submission || (milestone.submissions?.find(s => 
+      s.status === 'approved' || s.status === 'iu_approved'
+    ));
+    
+    // Get project data for Actual Completion Date and Expected Days
+    const projectData = project || currentProject;
+    
+    // Calculate Actual Completion Date from project or milestone
+    const actualCompletionDate = projectData?.completionDate || 
+                                 projectData?.actualCompletionDate || 
+                                 milestone.completionDate || 
+                                 milestone.actualCompletionDate || 
+                                 (approvedSubmission?.submittedAt ? formatDate(approvedSubmission.submittedAt) : null);
+    
+    // Calculate Expected Days from project
+    const expectedDays = projectData?.expectedDaysOfCompletion || 
+                        milestone.expectedDaysOfCompletion || 
+                        (projectData?.startDate && projectData?.targetCompletionDate ? 
+                          Math.ceil((new Date(projectData.targetCompletionDate) - new Date(projectData.startDate)) / (1000 * 60 * 60 * 24)) : 
+                          null);
+    
     // Calculate milestone's actual progress percentage (not contribution to project)
     // For completed milestones, show 100% progress
     let progress = 0;
     
     // Check if milestone is completed/approved
-    const hasApprovedSubmission = milestone.submissions?.some(s => 
-      s.status === 'approved' || s.status === 'iu_approved'
-    ) || false;
+    const hasApprovedSubmission = !!approvedSubmission;
     
     const hasApprovedDivisions = milestone.timelineStatus === 'approved' || 
                                  milestone.budgetStatus === 'approved' || 
@@ -4128,27 +4406,21 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
       progress = parseFloat(milestone.progress) || 0;
       
       // Try to get progress from approved submission if available
-      if (milestone.submissions && Array.isArray(milestone.submissions)) {
-        const approvedSubmission = milestone.submissions.find(s => 
-          s.status === 'approved' || s.status === 'iu_approved'
-        );
-        
-        if (approvedSubmission) {
-          // Try to get actual progress values from submission
-          if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
-            const timelineProgress = parseFloat(approvedSubmission.timelineProgress) || 0;
-            const budgetProgress = parseFloat(approvedSubmission.budgetProgress || approvedSubmission.timelineProgress) || 0;
-            const physicalProgress = parseFloat(approvedSubmission.physicalProgress || approvedSubmission.timelineProgress) || 0;
-            
-            // Average of three divisions
-            progress = (timelineProgress + budgetProgress + physicalProgress) / 3;
-            console.log(`📊 [${milestone.title}] Modal: Using progress from submission:`, {
-              timeline: timelineProgress,
-              budget: budgetProgress,
-              physical: physicalProgress,
-              average: progress
-            });
-          }
+      if (approvedSubmission) {
+        // Try to get actual progress values from submission
+        if (approvedSubmission.timelineProgress !== undefined && approvedSubmission.timelineProgress !== null) {
+          const timelineProgress = parseFloat(approvedSubmission.timelineProgress) || 0;
+          const budgetProgress = parseFloat(approvedSubmission.budgetProgress || approvedSubmission.timelineProgress) || 0;
+          const physicalProgress = parseFloat(approvedSubmission.physicalProgress || approvedSubmission.timelineProgress) || 0;
+          
+          // Average of three divisions
+          progress = (timelineProgress + budgetProgress + physicalProgress) / 3;
+          console.log(`📊 [${milestone.title}] Modal: Using progress from submission:`, {
+            timeline: timelineProgress,
+            budget: budgetProgress,
+            physical: physicalProgress,
+            average: progress
+          });
         }
       }
       
@@ -4168,13 +4440,21 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     // Ensure progress is a valid number
     progress = isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress));
     
+    // Check for delay information
+    const delayInfo = approvedSubmission?.submitterInfo?.delayInfo || null;
+    const isDelayed = delayInfo?.isDelayed || approvedSubmission?.isDelayed || false;
+    const delayReason = delayInfo?.delayReason || approvedSubmission?.delayReason || null;
+    
     console.log(`📊 [${milestone.title}] Modal progress calculation:`, {
       milestoneWeight: milestone.weight,
       timelineWeight: milestone.timelineWeight,
       budgetWeight: milestone.budgetWeight,
       physicalWeight: milestone.physicalWeight,
       calculatedProgress: progress,
-      progressType: typeof progress
+      progressType: typeof progress,
+      hasSubmission: !!approvedSubmission,
+      isDelayed: isDelayed,
+      hasDelayReason: !!delayReason
     });
     
     return `
@@ -4224,11 +4504,11 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Actual Completion Date</label>
-              <p class="text-gray-900">${milestone.completionDate || milestone.actualCompletionDate || '–'}</p>
+              <p class="text-gray-900">${actualCompletionDate ? formatDate(actualCompletionDate) : '–'}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Expected Days</label>
-              <p class="text-gray-900">${milestone.expectedDaysOfCompletion ? milestone.expectedDaysOfCompletion + ' days' : '–'}</p>
+              <p class="text-gray-900">${expectedDays ? expectedDays + ' days' : '–'}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Progress</label>
@@ -4242,14 +4522,340 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
           </div>
         </div>
         
-        <!-- Submission Details -->
-        <div class="border-t pt-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Submission Details</h3>
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-gray-600">Submission details and evidence files would be displayed here.</p>
-            <p class="text-sm text-gray-500 mt-2">This section would contain the actual submission data from the LGU-IU IOO.</p>
+        ${approvedSubmission ? renderSubmissionDetails(approvedSubmission, milestone, isDelayed, delayReason) : ''}
+      </div>
+    `;
+  }
+
+  // Function to render submission details (similar to MilestoneSubmissionModal)
+  function renderSubmissionDetails(submission, milestone, isDelayed, delayReason) {
+    // Get API URL for file paths
+    const API_URL = typeof window !== 'undefined' 
+      ? (() => {
+          const hostname = window.location.hostname;
+          const protocol = window.location.protocol;
+          if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3000/api';
+          }
+          if (hostname.includes('build-watch.com')) {
+            return `${protocol}//${hostname}/api`;
+          }
+          return 'http://localhost:3000/api';
+        })()
+      : 'http://localhost:3000/api';
+    
+    const baseUrl = API_URL.replace('/api', '');
+    
+    // Parse timeline activities
+    let timelineActivities = [];
+    try {
+      if (submission.timelineActivitiesDeliverables) {
+        try {
+          timelineActivities = JSON.parse(submission.timelineActivitiesDeliverables);
+        } catch {
+          timelineActivities = [{
+            title: 'Timeline Activities',
+            description: submission.timelineActivitiesDeliverables,
+            status: 'Submitted'
+          }];
+        }
+      }
+    } catch (error) {
+      console.log('Error parsing timeline activities:', error);
+    }
+    
+    // Get evidence files
+    const photoEvidence = submission.photoEvidence || [];
+    const videoEvidence = submission.videoEvidence || [];
+    const documentFiles = submission.documentFiles || [];
+    
+    // Get submitter info
+    const submitterInfo = submission.submitterInfo || {};
+    
+    // Get budget info
+    const plannedBudget = parseFloat(submission.plannedBudget || milestone.plannedBudget || 0);
+    let usedBudget = 0;
+    if (submission.usedBudget !== null && submission.usedBudget !== undefined) {
+      if (typeof submission.usedBudget === 'string') {
+        usedBudget = parseFloat(submission.usedBudget.replace(/[^\d.-]/g, '')) || 0;
+      } else {
+        usedBudget = parseFloat(submission.usedBudget) || 0;
+      }
+    }
+    const remainingBudget = plannedBudget - usedBudget;
+    
+    // Format funding source
+    let fundingSource = 'LOCAL FUND';
+    if (submission.fundingSource) {
+      if (submission.fundingSource === 'donor_fund') {
+        fundingSource = 'MUNICIPAL DEVELOPMENT FUND';
+      } else {
+        fundingSource = submission.fundingSource.replace(/_/g, ' ').toUpperCase();
+      }
+    }
+    
+    return `
+      <!-- Submission Details Section -->
+      <div class="border-t pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Submission Details</h3>
+        
+        ${isDelayed && delayReason ? `
+          <!-- Delay Reason Section -->
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <h4 class="text-sm font-semibold text-red-800">Reason of Delayed</h4>
+              <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium">Late Submission</span>
+            </div>
+            <p class="text-sm text-red-700 whitespace-pre-wrap">${delayReason}</p>
+          </div>
+        ` : ''}
+        
+        <!-- Timeline Division -->
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+          <h4 class="text-md font-semibold text-purple-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Timeline Division
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+            <div>
+              <label class="text-xs font-medium text-purple-700">Start Date</label>
+              <p class="text-sm font-semibold text-gray-800">${formatDate(submission.timelineStartDate) || 'N/A'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-purple-700">Target Completion Date</label>
+              <p class="text-sm font-semibold text-gray-800">${formatDate(submission.timelineEndDate) || 'N/A'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-purple-700">Submission Date</label>
+              <p class="text-sm font-semibold text-purple-600">${formatDateTime(submission.submittedAt || submission.submissionDate) || 'N/A'}</p>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-purple-700 mb-2 block">Timeline Activities & Deliverables</label>
+            <div class="bg-white rounded-lg p-3 max-h-32 overflow-y-auto">
+              ${timelineActivities.length > 0 ? timelineActivities.map(activity => `
+                <div class="mb-2 pb-2 border-b border-purple-100 last:border-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <h5 class="font-semibold text-purple-800 text-sm">${activity.title || activity.name || 'Activity'}</h5>
+                    ${activity.date ? `<span class="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">${formatDate(activity.date)}</span>` : ''}
+                  </div>
+                  <p class="text-xs text-gray-600">${activity.description || 'No description'}</p>
+                </div>
+              `).join('') : '<p class="text-gray-500 italic text-sm">No timeline activities provided</p>'}
+            </div>
           </div>
         </div>
+        
+        <!-- Budget Division -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <h4 class="text-md font-semibold text-green-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+            Budget Division
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+            <div>
+              <label class="text-xs font-medium text-green-700">Planned Budget</label>
+              <p class="text-sm font-bold text-green-600">₱${formatCurrency(plannedBudget)}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-green-700">Used Budget</label>
+              <p class="text-sm font-bold text-blue-600">₱${formatCurrency(usedBudget)}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-green-700">Remaining Budget</label>
+              <p class="text-sm font-bold text-orange-600">₱${formatCurrency(remainingBudget)}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-green-700">Funding Source</label>
+              <p class="text-sm font-semibold text-gray-800">${fundingSource}</p>
+            </div>
+          </div>
+          ${submission.budgetBreakdownAllocation ? `
+            <div>
+              <label class="text-xs font-medium text-green-700 mb-2 block">Budget Breakdown & Allocation</label>
+              <div class="bg-white rounded-lg p-3">
+                <p class="text-xs text-gray-700 whitespace-pre-wrap">${submission.budgetBreakdownAllocation}</p>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+        
+        <!-- Physical Division -->
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+          <h4 class="text-md font-semibold text-orange-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Physical Division
+          </h4>
+          ${submission.physicalProgressDescription ? `
+            <div class="mb-3">
+              <label class="text-xs font-medium text-orange-700 mb-2 block">Physical Progress Description</label>
+              <div class="bg-white rounded-lg p-3">
+                <p class="text-xs text-gray-700 whitespace-pre-wrap">${submission.physicalProgressDescription}</p>
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Photo Evidence -->
+          ${Array.isArray(photoEvidence) && photoEvidence.length > 0 ? `
+            <div class="mb-3">
+              <label class="text-xs font-medium text-orange-700 mb-2 block">Photo Evidence (${photoEvidence.length} files)</label>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                ${photoEvidence.map((photo, index) => {
+                  let photoUrl = '';
+                  let photoName = '';
+                  if (typeof photo === 'object' && photo !== null) {
+                    photoUrl = photo.url || photo.src || photo.path || photo.filePath || '';
+                    photoName = photo.name || photo.originalName || `Photo ${index + 1}`;
+                  } else if (typeof photo === 'string') {
+                    photoUrl = photo;
+                    photoName = photo.split('/').pop() || `Photo ${index + 1}`;
+                  }
+                  if (photoUrl && !photoUrl.startsWith('http')) {
+                    photoUrl = photoUrl.includes('/') ? `${baseUrl}/${photoUrl}` : `${baseUrl}/uploads/${photoUrl}`;
+                  }
+                  return `
+                    <div class="relative group cursor-pointer" onclick="window.open('${photoUrl}', '_blank')">
+                      <img src="${photoUrl}" alt="${photoName}" 
+                           class="w-full h-20 object-cover rounded-lg border border-orange-200 group-hover:opacity-75 transition-opacity"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="w-full h-20 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center justify-center hidden">
+                        <svg class="w-4 h-4 text-red-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-red-500 text-xs">Image not found</span>
+                      </div>
+                      <div class="absolute bottom-1 left-1 bg-black bg-opacity-75 text-white px-1 py-0.5 rounded text-xs truncate max-w-full">
+                        ${photoName}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Video Evidence -->
+          ${Array.isArray(videoEvidence) && videoEvidence.length > 0 ? `
+            <div class="mb-3">
+              <label class="text-xs font-medium text-orange-700 mb-2 block">Video Evidence (${videoEvidence.length} files)</label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                ${videoEvidence.map((video, index) => {
+                  let videoUrl = '';
+                  let videoName = '';
+                  if (typeof video === 'object' && video !== null) {
+                    videoUrl = video.url || video.src || video.path || video.filePath || '';
+                    videoName = video.name || video.originalName || `Video ${index + 1}`;
+                  } else if (typeof video === 'string') {
+                    videoUrl = video;
+                    videoName = video.split('/').pop() || `Video ${index + 1}`;
+                  }
+                  if (videoUrl && !videoUrl.startsWith('http')) {
+                    videoUrl = videoUrl.includes('/') ? `${baseUrl}/${videoUrl}` : `${baseUrl}/uploads/${videoUrl}`;
+                  }
+                  return `
+                    <div class="relative group bg-gray-100 rounded-lg border border-orange-200 overflow-hidden cursor-pointer" onclick="window.open('${videoUrl}', '_blank')">
+                      <div class="w-full h-20 relative bg-gray-800 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                      <div class="absolute bottom-1 left-1 bg-black bg-opacity-75 text-white px-1 py-0.5 rounded text-xs truncate max-w-full">
+                        ${videoName}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Document Files -->
+          ${Array.isArray(documentFiles) && documentFiles.length > 0 ? `
+            <div class="mb-3">
+              <label class="text-xs font-medium text-orange-700 mb-2 block">Document Files (${documentFiles.length} files)</label>
+              <div class="space-y-2">
+                ${documentFiles.map((doc, index) => {
+                  let docUrl = '';
+                  let docName = '';
+                  if (typeof doc === 'object' && doc !== null) {
+                    docUrl = doc.url || doc.src || doc.path || doc.filePath || '';
+                    docName = doc.name || doc.originalName || `Document ${index + 1}`;
+                  } else if (typeof doc === 'string') {
+                    docUrl = doc;
+                    docName = doc.split('/').pop() || `Document ${index + 1}`;
+                  }
+                  if (docUrl && !docUrl.startsWith('http')) {
+                    docUrl = docUrl.includes('/') ? `${baseUrl}/${docUrl}` : `${baseUrl}/uploads/${docUrl}`;
+                  }
+                  return `
+                    <div class="bg-white rounded-lg p-2 border border-orange-200 flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="text-sm text-gray-800">${docName}</span>
+                      </div>
+                      <a href="${docUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</a>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+        
+        <!-- Submitted By Information -->
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Submitted By
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-gray-700">Full Name</label>
+              <p class="text-sm font-semibold text-gray-800">${submitterInfo.fullName || 'EIU User'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-700">Subrole</label>
+              <p class="text-sm font-semibold text-gray-800">${submitterInfo.subrole || 'External Implementing Unit'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-700">Contact Number</label>
+              <p class="text-sm font-semibold text-gray-800">${submitterInfo.contactNumber || 'N/A'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-700">Company</label>
+              <p class="text-sm font-semibold text-gray-800">${submitterInfo.company || 'External Partner'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-700">Department</label>
+              <p class="text-sm font-semibold text-gray-800">${submitterInfo.department || 'EIU Department'}</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-gray-700">Submission Date</label>
+              <p class="text-sm font-semibold text-indigo-600">${formatDateTime(submission.submittedAt || submission.submissionDate) || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+        
+        ${submission.additionalNotes ? `
+          <!-- Additional Notes -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-md font-semibold text-blue-800 mb-2">Additional Notes</h4>
+            <p class="text-sm text-gray-700 whitespace-pre-wrap">${submission.additionalNotes}</p>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -4461,11 +5067,33 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
     const overviewSection = document.getElementById('compilation-overview');
     const departmentCards = document.getElementById('departmentCards');
     const projectContainer = document.getElementById('project-view-container');
+    const analyticsContainer = document.getElementById('submission-history-analytics-container');
     
     if (overviewSection) overviewSection.style.display = 'block';
     if (departmentCards) departmentCards.style.display = 'block';
     if (projectContainer) {
       projectContainer.style.display = 'none';
+    }
+    // Hide the Submission History & Analytics component
+    if (analyticsContainer) {
+      analyticsContainer.classList.add('hidden');
+      analyticsContainer.style.display = 'none';
+      // Move it back to its original location if it was moved
+      const placeholder = document.getElementById('submission-history-analytics-placeholder');
+      if (placeholder && placeholder.contains(analyticsContainer)) {
+        // Find the original location (outside project-view-container, next to it)
+        const mainContent = document.querySelector('main') || document.querySelector('#compilation-overview')?.parentElement;
+        if (mainContent && analyticsContainer.parentElement !== mainContent) {
+          // Insert after project-view-container
+          if (projectContainer && projectContainer.nextSibling) {
+            mainContent.insertBefore(analyticsContainer, projectContainer.nextSibling);
+          } else {
+            mainContent.appendChild(analyticsContainer);
+          }
+        }
+      }
+    }
+    if (projectContainer) {
       projectContainer.classList.add('hidden');
     }
     
@@ -4862,6 +5490,124 @@ import SecretariatLayout from '../../../../components/SecretariatLayout.astro';
   // Export functions to global scope
   window.setupProgressAnimation = setupProgressAnimation;
   window.animateProgressBars = animateProgressBars;
+
+  // Global debugging function for Submission History & Analytics component
+  window.debugSubmissionHistoryAnalytics = function() {
+    console.log('🔍 [SubmissionHistoryAnalytics Debug] === STARTING DEBUG ===');
+    console.log('🔍 [SubmissionHistoryAnalytics Debug] Timestamp:', new Date().toISOString());
+    
+    // 1. Check container elements
+    const analyticsContainer = document.getElementById('submission-history-analytics-container');
+    const placeholder = document.getElementById('submission-history-analytics-placeholder');
+    const projectContainer = document.getElementById('project-view-container');
+    
+    console.log('\n📦 [1] ELEMENT CHECK:');
+    console.log('  - analyticsContainer:', analyticsContainer ? '✅ Found' : '❌ NOT FOUND');
+    console.log('  - placeholder:', placeholder ? '✅ Found' : '❌ NOT FOUND');
+    console.log('  - projectContainer:', projectContainer ? '✅ Found' : '❌ NOT FOUND');
+    
+    if (analyticsContainer) {
+      // 2. Check container properties
+      console.log('\n📊 [2] CONTAINER PROPERTIES:');
+      console.log('  - className:', analyticsContainer.className);
+      console.log('  - id:', analyticsContainer.id);
+      console.log('  - style.display:', analyticsContainer.style.display);
+      console.log('  - style.visibility:', analyticsContainer.style.visibility);
+      console.log('  - style.opacity:', analyticsContainer.style.opacity);
+      
+      // 3. Check computed styles
+      const computed = window.getComputedStyle(analyticsContainer);
+      console.log('\n🎨 [3] COMPUTED STYLES:');
+      console.log('  - display:', computed.display);
+      console.log('  - visibility:', computed.visibility);
+      console.log('  - opacity:', computed.opacity);
+      console.log('  - height:', computed.height);
+      console.log('  - width:', computed.width);
+      console.log('  - position:', computed.position);
+      console.log('  - z-index:', computed.zIndex);
+      
+      // 4. Check dimensions
+      console.log('\n📐 [4] DIMENSIONS:');
+      console.log('  - offsetHeight:', analyticsContainer.offsetHeight);
+      console.log('  - offsetWidth:', analyticsContainer.offsetWidth);
+      console.log('  - clientHeight:', analyticsContainer.clientHeight);
+      console.log('  - clientWidth:', analyticsContainer.clientWidth);
+      
+      // 5. Check parent and siblings
+      console.log('\n👨‍👩‍👧 [5] DOM STRUCTURE:');
+      console.log('  - parentElement:', analyticsContainer.parentElement);
+      console.log('  - parentElement.id:', analyticsContainer.parentElement?.id);
+      console.log('  - parentElement.className:', analyticsContainer.parentElement?.className);
+      
+      // 6. Check children
+      console.log('\n👶 [6] CHILDREN:');
+      console.log('  - children.length:', analyticsContainer.children.length);
+      for (let i = 0; i < analyticsContainer.children.length; i++) {
+        const child = analyticsContainer.children[i];
+        console.log(`  - child[${i}]:`, child.tagName, child.className, child.id);
+      }
+      
+      // 7. Check for React
+      console.log('\n⚛️ [7] REACT CHECK:');
+      const reactRoots = analyticsContainer.querySelectorAll('[data-reactroot], [data-react-root], [data-react-component]');
+      console.log('  - React root elements found:', reactRoots.length);
+      
+      // 8. Check for component content
+      console.log('\n📄 [8] CONTENT CHECK:');
+      const profileCards = analyticsContainer.querySelectorAll('.profile-card, [class*="profile"], [class*="submission"]');
+      console.log('  - Profile cards found:', profileCards.length);
+      console.log('  - innerHTML length:', analyticsContainer.innerHTML.length);
+      console.log('  - textContent preview (first 200 chars):', analyticsContainer.textContent.substring(0, 200));
+    }
+    
+    // 9. Check global variables
+    console.log('\n🌐 [9] GLOBAL VARIABLES:');
+    console.log('  - window.selectedProject:', window.selectedProject);
+    console.log('  - window.API_URL:', window.API_URL);
+    console.log('  - window.currentProject:', window.currentProject);
+    
+    // 10. Check project container visibility
+    if (projectContainer) {
+      console.log('\n📋 [10] PROJECT CONTAINER:');
+      const projectComputed = window.getComputedStyle(projectContainer);
+      console.log('  - display:', projectComputed.display);
+      console.log('  - visibility:', projectComputed.visibility);
+      console.log('  - className:', projectContainer.className);
+    }
+    
+    // 11. Check placeholder
+    if (placeholder) {
+      console.log('\n📍 [11] PLACEHOLDER:');
+      console.log('  - parentElement:', placeholder.parentElement);
+      console.log('  - children.length:', placeholder.children.length);
+      console.log('  - contains analyticsContainer:', placeholder.contains(analyticsContainer));
+    }
+    
+    // 12. Try to force show
+    console.log('\n🔧 [12] ATTEMPTING TO FORCE SHOW:');
+    if (analyticsContainer) {
+      analyticsContainer.classList.remove('hidden');
+      analyticsContainer.style.display = 'block';
+      analyticsContainer.style.visibility = 'visible';
+      analyticsContainer.style.opacity = '1';
+      console.log('  - ✅ Applied force show styles');
+      console.log('  - New computed display:', window.getComputedStyle(analyticsContainer).display);
+    }
+    
+    console.log('\n🔍 [SubmissionHistoryAnalytics Debug] === DEBUG COMPLETE ===');
+    console.log('💡 TIP: If container exists but is not visible, check parent container visibility');
+    console.log('💡 TIP: Run this function after selecting a project to see component state');
+    
+    return {
+      container: analyticsContainer,
+      placeholder: placeholder,
+      projectContainer: projectContainer,
+      isVisible: analyticsContainer ? window.getComputedStyle(analyticsContainer).display !== 'none' : false,
+      hasContent: analyticsContainer ? analyticsContainer.children.length > 0 : false
+    };
+  };
+  
+  console.log('✅ [SubmissionHistoryAnalytics Debug] Debug function loaded. Run debugSubmissionHistoryAnalytics() in console.');
 
 </script>
 

@@ -4,6 +4,7 @@ import Layout from '../../../../layouts/Layout.astro';
 import EIULayout from '../../../../components/EIULayout.astro';
 import ProjectCard from '../../../../components/ProjectCard.astro';
 import ProjectDetailsModal from '../../../../components/ProjectDetailsModal.astro';
+import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAnalytics.jsx';
 
 // Determine API URL based on environment (server-side)
 const isProduction = import.meta.env.PROD;
@@ -1572,227 +1573,12 @@ loading = false;
           </div>
         </div>
 
-        <!-- Enhanced Submission History -->
-        <div id="updatesHistory" class="profile-card border border-emerald-200 p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4 group">
-              <div class="icon-container-small bg-gradient-to-br from-emerald-500 to-emerald-600 group-hover:from-emerald-600 group-hover:to-emerald-700">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-xl font-bold text-black group-hover:text-emerald-800 transition-colors duration-300">Submission History & Analytics</h3>
-                <p class="text-sm text-gray-600">Track your milestone submissions and performance metrics</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <button onclick="exportSubmissionReport()" class="btn-success btn-sm inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Export Report
-              </button>
-              <button onclick="refreshSubmissionHistory()" class="btn-primary btn-sm inline-flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                Refresh Data
-              </button>
-              <button id="toggleSubmissionHistory" class="icon-container-small bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 cursor-pointer ml-2">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Collapsible Content -->
-          <div id="submissionHistoryContent">
-            <!-- Enhanced History Summary -->
-          <div id="historySummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <!-- Total Submissions Card -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Total Submissions</p>
-                  <p class="text-2xl font-bold text-black" id="totalSubmissions">0</p>
-                  <p class="text-xs text-emerald-600 mt-1">Milestone updates</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-emerald-500 to-emerald-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Pending Review Card -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Pending Review</p>
-                  <p class="text-2xl font-bold text-black" id="pendingReviews">0</p>
-                  <p class="text-xs text-amber-600 mt-1">Awaiting decision</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Approved Updates Card -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Approved</p>
-                  <p class="text-2xl font-bold text-black" id="approvedUpdates">0</p>
-                  <p class="text-xs text-green-600 mt-1">Successfully finished</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-green-500 to-emerald-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Rejected Updates Card -->
-            <div class="profile-card p-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600">Rejected</p>
-                  <p class="text-2xl font-bold text-black" id="rejectedUpdates">0</p>
-                  <p class="text-xs text-red-600 mt-1">Needs revision</p>
-                </div>
-                <div class="icon-container bg-gradient-to-br from-red-500 to-red-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Analytics Charts -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <!-- Budget Trend Chart -->
-            <div class="profile-card p-6">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="icon-container-small bg-gradient-to-br from-green-500 to-emerald-600">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                  </svg>
-                </div>
-                <h4 class="text-lg font-bold text-black">Budget Utilization Trend</h4>
-              </div>
-              <div id="budgetTrendChart" class="h-48 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                <div class="text-center">
-                  <svg class="w-12 h-12 text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                  </svg>
-                  <p class="text-green-600 text-sm font-medium">Budget trend will appear after submissions</p>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Progress Curve Chart -->
-            <div class="profile-card p-6">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="icon-container-small bg-gradient-to-br from-emerald-500 to-emerald-600">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                </div>
-                <h4 class="text-lg font-bold text-black">Progress Completion Curve</h4>
-              </div>
-              <div id="progressCurveChart" class="h-48 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
-                <div class="text-center">
-                  <svg class="w-12 h-12 text-emerald-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                  <p class="text-emerald-600 text-sm font-medium">Progress curve will appear after submissions</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Timeline View Toggle -->
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-3">
-              <div class="icon-container-small bg-gradient-to-br from-emerald-500 to-emerald-600">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <h4 class="text-lg font-bold text-black">Submission Timeline</h4>
-            </div>
-            <div class="flex items-center bg-gray-100 rounded-xl p-1">
-              <button onclick="toggleTimelineView('list')" id="listViewBtn" class="tab-button active inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                </svg>
-                List View
-              </button>
-              <button onclick="toggleTimelineView('timeline')" id="timelineViewBtn" class="tab-button inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Timeline View
-              </button>
-            </div>
-          </div>
-          
-          <!-- Chronological Timeline View -->
-          <div id="timelineView" class="hidden">
-            <div class="relative">
-              <div class="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-200 via-emerald-300 to-emerald-400 rounded-full"></div>
-              <div id="timelineContainer" class="space-y-8 pl-4">
-                <!-- Timeline items will be inserted here -->
-              </div>
-            </div>
-          </div>
-          
-          <!-- Updates List View -->
-          <div id="updatesContainer" class="space-y-4">
-            <!-- Updates will be displayed here -->
-          </div>
-          
-          <!-- Empty State -->
-          <div id="emptyHistory" class="text-center py-12" style="display: none;">
-            <div class="icon-container bg-gradient-to-br from-emerald-100 to-emerald-200 mx-auto mb-6">
-              <svg class="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-            </div>
-            <h4 class="text-xl font-bold text-black mb-3">No Submissions Yet</h4>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">Submit your first milestone update to see detailed analytics, trends, and submission history appear here.</p>
-            <div class="flex items-center justify-center gap-6 text-sm text-gray-500">
-              <div class="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                </svg>
-                <span class="text-emerald-700 font-medium">Budget Trends</span>
-              </div>
-              <div class="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                <span class="text-emerald-700 font-medium">Progress Analytics</span>
-              </div>
-              <div class="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span class="text-emerald-700 font-medium">Export Reports</span>
-              </div>
-            </div>
-          </div>
-          
-          </div> <!-- End of submissionHistoryContent -->
-        </div>
+        <!-- Submission History & Analytics - Centralized Component -->
+        <SubmissionHistoryAnalytics 
+          client:load
+          mode="eiu"
+          apiUrl={API_URL}
+        />
 
 
 
@@ -1930,9 +1716,42 @@ loading = false;
       }
 
       selectedProject = projects.find(p => p.id === projectId);
+      // Make selectedProject available globally for React components
+      if (typeof window !== 'undefined') {
+        window.selectedProject = selectedProject;
+        window.API_URL = API_URL;
+      }
       if (!selectedProject) {
-        console.error('Project not found:', projectId);
-        return;
+        console.warn('Project not found in local cache, fetching from API:', projectId);
+        // Try to fetch the project from API
+        try {
+          const token = localStorage.getItem('token');
+          const projectRes = await fetch(`${API_URL}/projects/${projectId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (projectRes.ok) {
+            const projectData = await projectRes.json();
+            if (projectData.success && projectData.project) {
+              selectedProject = projectData.project;
+              // Add to projects array if not already there
+              if (!projects.find(p => p.id === projectId)) {
+                projects.push(selectedProject);
+              }
+            } else {
+              console.error('Project not found in API:', projectId);
+              return;
+            }
+          } else {
+            console.error('Failed to fetch project from API:', projectId);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching project:', error);
+          return;
+        }
       }
 
       console.log('Project selected:', selectedProject.name);
@@ -1976,12 +1795,12 @@ loading = false;
         // Project is completed - show history only
         if (pendingMessage) pendingMessage.style.display = 'none';
         if (updatesHistory) updatesHistory.style.display = 'block';
-        loadSubmissionHistory();
+        // Submission history now handled by centralized component
       } else {
         // Project is ongoing (approved) - EIU can submit updates
         if (pendingMessage) pendingMessage.style.display = 'none';
         if (updatesHistory) updatesHistory.style.display = 'block';
-        loadSubmissionHistory();
+        // Submission history now handled by centralized component
         
         // Keep milestones section collapsed by default - user can expand manually
       }
@@ -1995,11 +1814,11 @@ loading = false;
   function updateSelectedProjectUI() {
     if (!selectedProject) return;
 
-    // Get progress values directly from the project data
-    const overallProgress = selectedProject.overallProgress || 0;
-    const timelineProgress = selectedProject.timelineProgress || 0;
-    const budgetProgress = selectedProject.budgetProgress || 0;
-    const physicalProgress = selectedProject.physicalProgress || 0;
+    // Get progress values directly from the project data, ensuring they're numbers
+    const overallProgress = parseFloat(selectedProject.overallProgress || 0) || 0;
+    const timelineProgress = parseFloat(selectedProject.timelineProgress || 0) || 0;
+    const budgetProgress = parseFloat(selectedProject.budgetProgress || 0) || 0;
+    const physicalProgress = parseFloat(selectedProject.physicalProgress || 0) || 0;
 
     console.log('Project progress data:', {
       overall: overallProgress,
@@ -2332,6 +2151,107 @@ loading = false;
   }
 
       // Display milestones
+    // Helper function to calculate milestone progress (similar to LGU-IU)
+    function calculateMilestoneProgress(milestone, progressData) {
+      // PRIORITY 1: Check if milestone has its own individual progress value
+      if (milestone.progress !== undefined && milestone.progress !== null && milestone.progress !== 0) {
+        const progress = parseFloat(milestone.progress);
+        if (progress > 0) {
+          return progress;
+        }
+      }
+      
+      // PRIORITY 2: Check progressData.milestones for individual milestone progress
+      if (progressData && progressData.milestones && Array.isArray(progressData.milestones)) {
+        const milestoneProgress = progressData.milestones.find(m => m.id === milestone.id);
+        if (milestoneProgress && milestoneProgress.progress !== undefined && milestoneProgress.progress !== null && milestoneProgress.progress !== 0) {
+          const progress = parseFloat(milestoneProgress.progress);
+          if (progress > 0) {
+            return progress;
+          }
+        }
+      }
+      
+      // PRIORITY 3: For completed/approved milestones, calculate from approved submissions
+      const isCompleted = milestone.status === 'completed' || milestone.status === 'approved' ||
+                         (milestone.timelineStatus === 'approved' && milestone.budgetStatus === 'approved' && milestone.physicalStatus === 'approved');
+      
+      if (isCompleted) {
+        // For milestones with submissions, check approved submission progress
+        if (milestone.submissions && Array.isArray(milestone.submissions)) {
+          const approvedSubmission = milestone.submissions.find(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          );
+          
+          if (approvedSubmission) {
+            // Try to get progress from submission's milestoneUtilizationPercentage
+            if (approvedSubmission.milestoneUtilizationPercentage !== undefined && approvedSubmission.milestoneUtilizationPercentage !== null) {
+              const submissionProgress = parseFloat(approvedSubmission.milestoneUtilizationPercentage) || 0;
+              if (submissionProgress > 0) {
+                return submissionProgress;
+              }
+            }
+            
+            // Calculate from division progress percentages if available
+            // For milestone progress, we need to calculate the actual progress from each division
+            // based on the milestone weight and division weights
+            const milestoneWeight = parseFloat(milestone.weight || 0);
+            const timelineDivWeight = parseFloat(milestone.timelineWeight || approvedSubmission.timelineWeight || 33.33);
+            const budgetDivWeight = parseFloat(milestone.budgetWeight || approvedSubmission.budgetWeight || 33.33);
+            const physicalDivWeight = parseFloat(milestone.physicalWeight || approvedSubmission.physicalWeight || 33.34);
+            
+            // Calculate actual division progress percentages
+            // Get budget utilization percentage
+            const budgetUtilization = approvedSubmission.budgetUtilizationPercentage !== undefined ? 
+              parseFloat(approvedSubmission.budgetUtilizationPercentage) : 0;
+            
+            // Calculate actual progress from each division
+            // Each division contributes: (milestoneWeight * divisionWeight / 100) * completionPercentage
+            const timelineProgressValue = (milestoneWeight * timelineDivWeight / 100) * 1.0; // Assuming 100% if approved
+            const budgetProgressValue = (milestoneWeight * budgetDivWeight / 100) * (budgetUtilization / 100);
+            const physicalProgressValue = (milestoneWeight * physicalDivWeight / 100) * 1.0; // Assuming 100% if approved
+            
+            // Sum of all division progress values gives the total milestone progress
+            const totalProgress = timelineProgressValue + budgetProgressValue + physicalProgressValue;
+            
+            if (totalProgress > 0) {
+              return totalProgress;
+            }
+            
+            // Try budgetUtilizationPercentage as fallback
+            if (approvedSubmission.budgetUtilizationPercentage !== undefined && approvedSubmission.budgetUtilizationPercentage !== null) {
+              const budgetProgress = parseFloat(approvedSubmission.budgetUtilizationPercentage) || 0;
+              if (budgetProgress > 0) {
+                return budgetProgress;
+              }
+            }
+          }
+        }
+        
+        // PRIORITY 4: For completed milestones without individual progress, calculate from weight contribution
+        const milestoneWeight = parseFloat(milestone.weight || 0);
+        if (milestoneWeight > 0) {
+          // Get project overall progress
+          let overallProgress = 0;
+          if (typeof selectedProject !== 'undefined' && selectedProject) {
+            overallProgress = parseFloat(selectedProject.overallProgress || selectedProject.progress?.overall || 0);
+          } else if (progressData && progressData.progress) {
+            overallProgress = parseFloat(progressData.progress.overall || progressData.progress.overallProgress || 0);
+          }
+          
+          if (overallProgress > 0) {
+            // Calculate milestone's individual progress: (overall progress / 100) * milestone weight
+            // This gives the actual progress contribution of this milestone
+            const milestoneProgress = (overallProgress / 100) * milestoneWeight;
+            return milestoneProgress;
+          }
+        }
+      }
+      
+      // Fallback: Return 0 if no progress can be calculated
+      return 0;
+    }
+
     function displayMilestones() {
       console.log('🎯 displayMilestones called');
       const container = document.getElementById('milestonesContainer');
@@ -2431,16 +2351,35 @@ loading = false;
       });
 
       const underApprovalMilestones = projectMilestones.filter(milestone => {
-        // Check if milestone has been submitted for approval
-        // Also check for pending_review status from submissions
+        // Exclude completed/approved milestones - they should be in completedMilestones section
+        if (milestone.status === 'completed' || milestone.status === 'approved') {
+          return false;
+        }
+        
+        // Check if milestone has approved submissions - if all divisions are approved, it's completed
+        const hasApprovedSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
+          milestone.submissions.some(s => s.status === 'approved' || s.status === 'iu_approved');
+        
+        // If milestone has approved submission, it's completed, not under approval
+        if (hasApprovedSubmission) {
+          return false;
+        }
+        
+        // Check if all divisions are approved - if so, milestone is completed
+        const allDivisionsApproved = milestone.timelineStatus === 'approved' && 
+                                    milestone.budgetStatus === 'approved' && 
+                                    milestone.physicalStatus === 'approved';
+        if (allDivisionsApproved) {
+          return false;
+        }
+        
+        // Check if milestone has been submitted for approval (but not yet fully approved)
         const hasBeenSubmitted = milestone.status === 'under_approval' || 
                                 milestone.status === 'pending_review' ||
-                                milestone.timelineStatus === 'approved' || 
-                                milestone.timelineStatus === 'rejected' || 
-                                milestone.budgetStatus === 'approved' || 
-                                milestone.budgetStatus === 'rejected' || 
-                                milestone.physicalStatus === 'approved' || 
-                                milestone.physicalStatus === 'rejected';
+                                milestone.status === 'under_review' ||
+                                (milestone.timelineStatus && milestone.timelineStatus !== 'pending') ||
+                                (milestone.budgetStatus && milestone.budgetStatus !== 'pending') ||
+                                (milestone.physicalStatus && milestone.physicalStatus !== 'pending');
         
         // Exclude milestones that need resubmission - they should go to revision section
         const needsResubmission = milestone.status === 'revision_request' || 
@@ -2451,7 +2390,9 @@ loading = false;
         console.log(`Milestone ${milestone.id} - Under approval check:`, {
           milestoneStatus: milestone.status,
           hasBeenSubmitted: hasBeenSubmitted,
-          needsResubmission: needsResubmission
+          needsResubmission: needsResubmission,
+          hasApprovedSubmission: hasApprovedSubmission,
+          allDivisionsApproved: allDivisionsApproved
         });
         
         return hasBeenSubmitted && !needsResubmission;
@@ -2474,9 +2415,29 @@ loading = false;
         return needsResubmission;
       });
 
-      const completedMilestones = projectMilestones.filter(milestone => 
-        milestone.status === 'completed'
-      );
+      const completedMilestones = projectMilestones.filter(milestone => {
+        // Check if milestone is marked as completed
+        if (milestone.status === 'completed' || milestone.status === 'approved') {
+          return true;
+        }
+        
+        // Check if milestone has approved submissions
+        const hasApprovedSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
+          milestone.submissions.some(s => s.status === 'approved' || s.status === 'iu_approved');
+        if (hasApprovedSubmission) {
+          return true;
+        }
+        
+        // Check if all divisions are approved
+        const allDivisionsApproved = milestone.timelineStatus === 'approved' && 
+                                    milestone.budgetStatus === 'approved' && 
+                                    milestone.physicalStatus === 'approved';
+        if (allDivisionsApproved) {
+          return true;
+        }
+        
+        return false;
+      });
 
       let milestonesHTML = '';
 
@@ -3257,7 +3218,7 @@ loading = false;
         
         const sectionTitle = needsResubmission ? 
           'Under Resubmission' : 
-          'Under Secretariat Review (Locked)';
+          'Under LGU-IU Review (Locked)';
         const sectionIcon = needsResubmission ? 
           '<svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' :
           '<svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
@@ -3266,31 +3227,39 @@ loading = false;
         milestonesHTML += `<h4 class="text-lg font-bold ${sectionColor} mb-6 flex items-center gap-2">${sectionIcon}${sectionTitle}</h4>`;
         milestonesHTML += underApprovalMilestones.map((milestone, index) => {
           const project = projects.find(p => p.id === milestone.projectId);
-          const isUnderSecretariatReview = project && (project.workflowStatus === 'compiled_for_secretariat' || project.workflowStatus === 'iu_approved');
           
-          // Determine the appropriate status message based on project workflow
+          // Determine the appropriate status message based on milestone submission status
+          // Flow: EIU submits → LGU-IU approves → Milestone completed
           let statusMessage = '';
           let statusColor = 'bg-yellow-100 text-yellow-700';
           let statusText = 'Under Review';
           
-          if (project) {
-            if (project.workflowStatus === 'validated_by_secretariat') {
-              statusMessage = 'This milestone has been approved by the Secretariat. All divisions have been validated and the project is now complete.';
-              statusColor = 'bg-green-100 text-green-700';
-              statusText = 'Approved';
-            } else if (project.workflowStatus === 'revision_requested') {
-              statusMessage = 'The Secretariat has requested revisions for this milestone. Please wait for the Implementing Office to provide specific revision requirements before making changes.';
-              statusColor = 'bg-orange-100 text-orange-700';
-              statusText = 'Revision Requested';
-            } else if (project.workflowStatus === 'rejected') {
-              statusMessage = 'This milestone has been rejected by the Secretariat. Please wait for the Implementing Office to provide feedback on the rejection.';
-              statusColor = 'bg-red-100 text-red-700';
-              statusText = 'Rejected';
-            } else {
-              statusMessage = 'This milestone is currently under Secretariat review and cannot be updated. Please wait for the Secretariat\'s final verdict (approve/reject/revision) before making any changes.';
-            }
+          // Check milestone submission status (not project workflow status)
+          const hasApprovedSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
+            milestone.submissions.some(s => s.status === 'approved' || s.status === 'iu_approved');
+          const hasPendingSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
+            milestone.submissions.some(s => s.status === 'pending_review' || s.status === 'under_review');
+          const hasRevisionRequest = milestone.submissions && Array.isArray(milestone.submissions) && 
+            milestone.submissions.some(s => s.status === 'revision_request' || s.status === 'needs_revision');
+          
+          if (hasApprovedSubmission || milestone.status === 'completed' || milestone.status === 'approved') {
+            statusMessage = 'This milestone has been approved by the LGU-IU Implementing Office. All divisions have been validated and the milestone is now complete.';
+            statusColor = 'bg-green-100 text-green-700';
+            statusText = 'Approved';
+          } else if (hasRevisionRequest || milestone.status === 'revision_request') {
+            statusMessage = 'The LGU-IU Implementing Office has requested revisions for this milestone. Please review the feedback and submit an updated milestone submission.';
+            statusColor = 'bg-orange-100 text-orange-700';
+            statusText = 'Revision Requested';
+          } else if (milestone.status === 'rejected') {
+            statusMessage = 'This milestone has been rejected by the LGU-IU Implementing Office. Please contact the Implementing Office for feedback on the rejection.';
+            statusColor = 'bg-red-100 text-red-700';
+            statusText = 'Rejected';
+          } else if (hasPendingSubmission || milestone.status === 'pending_review' || milestone.status === 'under_review') {
+            statusMessage = 'This milestone is currently under LGU-IU Implementing Office review and cannot be updated. Please wait for the Implementing Office\'s verdict (approve/reject/revision) before making any changes.';
+            statusColor = 'bg-yellow-100 text-yellow-700';
+            statusText = 'Under Review';
           } else {
-            statusMessage = 'This milestone is under Secretariat approval and cannot be updated. Please wait for the Secretariat\'s verdict (approve/reject) before making any changes.';
+            statusMessage = 'This milestone is under LGU-IU Implementing Office approval and cannot be updated. Please wait for the Implementing Office\'s verdict (approve/reject) before making any changes.';
           }
           
           return `
@@ -4348,7 +4317,7 @@ loading = false;
           </div>
           
           <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-green-50 rounded-lg mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-green-50 rounded-lg mb-4">
               <div class="text-center">
                 <div class="text-2xl font-bold text-green-600">${milestone.weight}%</div>
                 <div class="text-sm text-gray-600">Weight</div>
@@ -4360,6 +4329,24 @@ loading = false;
               <div class="text-center">
                 <div class="text-lg font-semibold text-gray-800">${milestone.dueDate}</div>
                 <div class="text-sm text-gray-600">Due Date</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-emerald-600">${(() => {
+                  // Calculate actual progress gained for completed milestone using calculateMilestoneProgress
+                  const progressData = {
+                    progress: {
+                      overall: selectedProject?.overallProgress || selectedProject?.progress?.overall || 0
+                    },
+                    milestones: null // Can be populated if available
+                  };
+                  
+                  const actualProgress = calculateMilestoneProgress(milestone, progressData);
+                  
+                  // Ensure actualProgress is a number before calling toFixed
+                  const progressValue = parseFloat(actualProgress) || 0;
+                  return typeof progressValue === 'number' ? progressValue.toFixed(2) : '0.00';
+                })()}%</div>
+                <div class="text-sm text-gray-600">Progress</div>
               </div>
             </div>
             
@@ -4373,7 +4360,21 @@ loading = false;
                 </svg>
                 <div>
                   <p class="text-sm text-green-700 font-medium">This milestone has been completed successfully.</p>
-                  <p class="text-xs text-green-600 mt-1">Progress: ${milestone.progress || 0}% | Status: ${milestone.status}</p>
+                  <p class="text-xs text-green-600 mt-1">Progress: ${(() => {
+                    // Calculate actual progress gained for completed milestone using calculateMilestoneProgress
+                    const progressData = {
+                      progress: {
+                        overall: selectedProject?.overallProgress || selectedProject?.progress?.overall || 0
+                      },
+                      milestones: null // Can be populated if available
+                    };
+                    
+                    const actualProgress = calculateMilestoneProgress(milestone, progressData);
+                    
+                    // Ensure actualProgress is a number before calling toFixed
+                    const progressValue = parseFloat(actualProgress) || 0;
+                    return typeof progressValue === 'number' ? progressValue.toFixed(2) : '0.00';
+                  })()}% | Status: ${milestone.status}</p>
                 </div>
               </div>
             </div>
@@ -4685,7 +4686,7 @@ loading = false;
           
           // Refresh project details and submission history
           await loadProjectDetails(selectedProject.id);
-          await loadSubmissionHistory();
+          // Submission history now handled by centralized component
           
           // Disable the form for this milestone until Secretariat verdict
           disableMilestoneForm(milestoneId);
@@ -5201,301 +5202,7 @@ loading = false;
     }, 1000);
   }
 
-  // Load submission history for the selected project
-  async function loadSubmissionHistory() {
-    if (!selectedProject) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Load milestone submissions for this EIU user and project
-      const response = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${selectedProject.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          projectUpdates = data.submissions || [];
-          displaySubmissionHistory();
-          updateAnalyticsCharts();
-        }
-      }
-    } catch (error) {
-      console.error('Error loading submission history:', error);
-    }
-  }
-
-  // Update analytics charts with submission data
-  function updateAnalyticsCharts() {
-    if (!projectUpdates || projectUpdates.length === 0) {
-      // Show empty state for charts
-      showEmptyAnalyticsState();
-      return;
-    }
-
-    // Update budget utilization trend
-    updateBudgetUtilizationTrend();
-    
-    // Update progress completion curve
-    updateProgressCompletionCurve();
-    
-    // Update submission timeline
-    updateSubmissionTimeline();
-  }
-
-  // Update budget utilization trend chart
-  function updateBudgetUtilizationTrend() {
-    const chartContainer = document.querySelector('.budget-trend-chart');
-    if (!chartContainer) return;
-
-    // Calculate budget utilization over time
-    const budgetData = projectUpdates
-      .filter(submission => submission.usedBudget > 0)
-      .sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt))
-      .map(submission => ({
-        date: new Date(submission.submittedAt).toLocaleDateString(),
-        used: parseFloat(submission.usedBudget || 0),
-        planned: parseFloat(submission.plannedBudget || 0)
-      }));
-
-    if (budgetData.length > 0) {
-      chartContainer.innerHTML = `
-        <div class="h-64 flex items-end justify-around space-x-2 px-4">
-          ${budgetData.map((point, index) => {
-            const percentage = point.planned > 0 ? (point.used / point.planned) * 100 : 0;
-            return `
-              <div class="flex-1 flex flex-col items-center">
-                <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
-                  <div class="bg-gradient-to-r from-green-400 to-emerald-500 h-4 rounded-full transition-all duration-500" 
-                       style="width: ${Math.min(percentage, 100)}%"></div>
-                </div>
-                <span class="text-xs text-gray-600">${point.date}</span>
-                <span class="text-xs font-semibold text-green-600">${percentage.toFixed(1)}%</span>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-  }
-
-  // Update progress completion curve
-  function updateProgressCompletionCurve() {
-    const chartContainer = document.querySelector('.progress-curve-chart');
-    if (!chartContainer) return;
-
-    // Calculate progress over time
-    const progressData = projectUpdates
-      .sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt))
-      .map((submission, index) => ({
-        date: new Date(submission.submittedAt).toLocaleDateString(),
-        progress: (index + 1) / projectUpdates.length * 100,
-        status: submission.status
-      }));
-
-    if (progressData.length > 0) {
-      chartContainer.innerHTML = `
-        <div class="h-64 flex items-end justify-around space-x-2 px-4">
-          ${progressData.map((point, index) => {
-            const height = (point.progress / 100) * 100;
-            const statusColor = point.status === 'approved' ? 'bg-green-500' : 
-                               point.status === 'pending_review' ? 'bg-yellow-500' : 'bg-red-500';
-            return `
-              <div class="flex-1 flex flex-col items-center">
-                <div class="w-full bg-gray-200 rounded-full h-32 mb-2 flex items-end">
-                  <div class="${statusColor} w-full rounded-full transition-all duration-500" 
-                       style="height: ${height}%"></div>
-                </div>
-                <span class="text-xs text-gray-600">${point.date}</span>
-                <span class="text-xs font-semibold text-blue-600">${point.progress.toFixed(1)}%</span>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-  }
-
-  // Update submission timeline
-  function updateSubmissionTimeline() {
-    const timelineContainer = document.getElementById('timelineContainer');
-    if (!timelineContainer) return;
-
-    const sortedSubmissions = [...projectUpdates].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-
-    timelineContainer.innerHTML = sortedSubmissions.map((submission, index) => {
-      const date = new Date(submission.submittedAt);
-      const statusColor = submission.status === 'approved' ? 'bg-green-100 border-green-300' : 
-                         submission.status === 'pending_review' ? 'bg-yellow-100 border-yellow-300' : 
-                         'bg-red-100 border-red-300';
-      
-      return `
-        <div class="flex items-start space-x-4">
-          <div class="flex-shrink-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white shadow-md relative z-10"></div>
-          <div class="flex-1 ${statusColor} rounded-lg p-4 border">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="font-semibold text-gray-800">${submission.milestone?.title || 'Milestone Update'}</h4>
-              <span class="text-sm text-gray-500">${date.toLocaleDateString()}</span>
-            </div>
-            <p class="text-sm text-gray-600 mb-2">Budget Used: ₱${parseFloat(submission.usedBudget || 0).toLocaleString()}</p>
-            <div class="flex items-center justify-between">
-              <span class="text-xs px-2 py-1 rounded-full ${
-                submission.status === 'approved' ? 'bg-green-200 text-green-800' :
-                submission.status === 'pending_review' ? 'bg-yellow-200 text-yellow-800' :
-                'bg-red-200 text-red-800'
-              }">
-                ${submission.status.replace('_', ' ').toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // Show empty analytics state
-  function showEmptyAnalyticsState() {
-    const budgetChart = document.querySelector('.budget-trend-chart');
-    const progressChart = document.querySelector('.progress-curve-chart');
-    
-    if (budgetChart) {
-      budgetChart.innerHTML = `
-        <div class="h-64 flex items-center justify-center text-gray-500">
-          <div class="text-center">
-            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            <p class="text-sm">Budget trend will appear after submissions</p>
-          </div>
-        </div>
-      `;
-    }
-    
-    if (progressChart) {
-      progressChart.innerHTML = `
-        <div class="h-64 flex items-center justify-center text-gray-500">
-          <div class="text-center">
-            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-            </svg>
-            <p class="text-sm">Progress curve will appear after submissions</p>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  // Display submission history
-  function displaySubmissionHistory() {
-    const container = document.getElementById('updatesContainer');
-    const emptyHistory = document.getElementById('emptyHistory');
-    
-    if (!container) return;
-    
-    // Update summary statistics
-    const totalSubmissions = projectUpdates.length;
-    const pendingReviews = projectUpdates.filter(u => u.status === 'pending_review' || u.status === 'under_review').length;
-    const approvedUpdates = projectUpdates.filter(u => u.status === 'approved').length;
-    const rejectedUpdates = projectUpdates.filter(u => u.status === 'rejected' || u.status === 'needs_revision').length;
-    
-    // Update summary cards if they exist
-    const totalElement = document.getElementById('totalSubmissions');
-    const pendingElement = document.getElementById('pendingReviews');
-    const approvedElement = document.getElementById('approvedUpdates');
-    const rejectedElement = document.getElementById('rejectedUpdates');
-    
-    if (totalElement) totalElement.textContent = totalSubmissions;
-    if (pendingElement) pendingElement.textContent = pendingReviews;
-    if (approvedElement) approvedElement.textContent = approvedUpdates;
-    if (rejectedElement) rejectedElement.textContent = rejectedUpdates;
-    
-    if (projectUpdates.length === 0) {
-      container.style.display = 'none';
-      if (emptyHistory) emptyHistory.style.display = 'block';
-      return;
-    }
-    
-    container.style.display = 'block';
-    if (emptyHistory) emptyHistory.style.display = 'none';
-    
-    // Sort updates by date (newest first)
-    const sortedUpdates = [...projectUpdates].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-    
-    container.innerHTML = sortedUpdates.map(submission => {
-      const date = new Date(submission.submittedAt);
-      const statusColors = {
-        'pending_review': 'bg-yellow-100 border-yellow-300 text-yellow-800',
-        'under_review': 'bg-blue-100 border-blue-300 text-blue-800',
-        'approved': 'bg-green-100 border-green-300 text-green-800',
-        'needs_revision': 'bg-orange-100 border-orange-300 text-orange-800',
-        'rejected': 'bg-red-100 border-red-300 text-red-800'
-      };
-      
-      const statusText = {
-        'pending_review': 'Pending Review',
-        'under_review': 'Under Review',
-        'approved': 'Approved',
-        'needs_revision': 'Needs Revision',
-        'rejected': 'Rejected'
-      };
-      
-      return `
-        <div class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </div>
-              <div>
-                <h4 class="font-semibold text-gray-800">${submission.milestone?.title || 'Milestone Update'}</h4>
-                <p class="text-sm text-gray-600">${date.toLocaleDateString()} at ${date.toLocaleTimeString()}</p>
-              </div>
-            </div>
-            <span class="px-3 py-1 rounded-full text-sm font-medium border ${statusColors[submission.status] || statusColors['pending_review']}">
-              ${statusText[submission.status] || 'Pending Review'}
-            </span>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label class="text-sm font-medium text-gray-600">Budget Used</label>
-              <p class="text-lg font-semibold text-green-600">₱${parseFloat(submission.usedBudget || 0).toLocaleString()}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Budget Utilization</label>
-              <p class="text-lg font-semibold text-blue-600">${submission.budgetUtilizationPercentage || 0}%</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-600">Milestone Weight</label>
-              <p class="text-lg font-semibold text-purple-600">${submission.milestoneUtilizationPercentage || 0}%</p>
-            </div>
-          </div>
-          
-          ${submission.physicalProgressDescription ? `
-            <div class="mb-4">
-              <label class="text-sm font-medium text-gray-600">Progress Description</label>
-              <p class="text-sm text-gray-700 mt-1">${submission.physicalProgressDescription.substring(0, 150)}${submission.physicalProgressDescription.length > 150 ? '...' : ''}</p>
-            </div>
-          ` : ''}
-          
-          ${submission.reviewNotes ? `
-            <div class="bg-gray-50 rounded-lg p-3">
-              <label class="text-sm font-medium text-gray-600">Review Notes</label>
-              <p class="text-sm text-gray-700 mt-1">${submission.reviewNotes}</p>
-            </div>
-          ` : ''}
-        </div>
-             `;
-     }).join('');
-  }
-
-  // Refresh submission history
-  function refreshSubmissionHistory() {
-    loadSubmissionHistory();
-  }
+  // Submission history functions removed - now handled by centralized SubmissionHistoryAnalytics component
 
   // ===== HORIZONTAL TIMELINE FUNCTIONS =====
   
@@ -6971,37 +6678,13 @@ loading = false;
   }
   
   // Update milestone status automatically (for overdue detection)
+  // Note: This endpoint does not exist - milestone status is managed through submissions workflow
+  // We skip the API call entirely to avoid 404 errors
   async function updateMilestoneStatus(milestoneId, newStatus) {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.warn('No token available for milestone status update');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/milestones/${milestoneId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      
-      // Handle 404 gracefully - endpoint might not exist, but local status update is fine
-      if (response.status === 404) {
-        console.warn(`Milestone status update endpoint not found for milestone ${milestoneId}. Status updated locally only.`);
-        return;
-      }
-
-      if (response.ok) {
-        console.log(`Milestone ${milestoneId} status updated to ${newStatus}`);
-      } else {
-        console.error('Failed to update milestone status:', response.status);
-      }
-    } catch (error) {
-      console.error('Error updating milestone status:', error);
-    }
+    // Milestone status is managed through milestone submissions workflow, not direct status updates
+    // The status will be updated when LGU-IU approves/rejects the milestone submission
+    // No API call needed - status is updated locally for UI display only
+    // This prevents 404 errors in the console
   }
 
   // Check if milestone can be updated based on status
@@ -7447,7 +7130,7 @@ loading = false;
   window.debugUpdateUI = debugUpdateUI;
   window.checkDOMElements = checkDOMElements;
   window.forceRecreateProgressElements = forceRecreateProgressElements;
-  window.refreshSubmissionHistory = refreshSubmissionHistory;
+  // refreshSubmissionHistory removed - now handled by centralized component
   window.refreshProjectTimeline = refreshProjectTimeline;
   window.updateMilestoneStatus = updateMilestoneStatus;
   window.closeMilestoneDrawer = closeMilestoneDrawer;
@@ -7455,185 +7138,7 @@ loading = false;
   window.canUpdateMilestone = canUpdateMilestone;
   window.isMilestoneLocked = isMilestoneLocked;
   
-  // Timeline view toggle function
-  function toggleTimelineView(view) {
-    const listView = document.getElementById('updatesContainer');
-    const timelineView = document.getElementById('timelineView');
-    const listBtn = document.getElementById('listViewBtn');
-    const timelineBtn = document.getElementById('timelineViewBtn');
-    
-    if (view === 'timeline') {
-      listView.style.display = 'none';
-      timelineView.classList.remove('hidden');
-      // Update tab button classes - List View inactive
-      listBtn.className = 'tab-button inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300';
-      // Timeline View active
-      timelineBtn.className = 'tab-button active inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300';
-      renderTimelineView();
-    } else {
-      listView.style.display = 'block';
-      timelineView.classList.add('hidden');
-      // List View active
-      listBtn.className = 'tab-button active inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300';
-      // Timeline View inactive
-      timelineBtn.className = 'tab-button inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300';
-    }
-  }
-  
-  // Render timeline view
-  function renderTimelineView() {
-    const container = document.getElementById('timelineContainer');
-    if (!container || !projectUpdates || projectUpdates.length === 0) return;
-    
-    const sortedUpdates = [...projectUpdates].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    container.innerHTML = sortedUpdates.map((update, index) => {
-      const date = new Date(update.createdAt);
-      const statusColors = {
-        'submitted': 'from-amber-500 to-amber-600',
-        'iu_approved': 'from-emerald-500 to-emerald-600',
-        'secretariat_approved': 'from-green-500 to-emerald-600',
-        'rejected': 'from-red-500 to-red-600',
-        'compiled_for_secretariat': 'from-emerald-500 to-emerald-600'
-      };
-      
-      return `
-        <div class="flex items-start gap-6 relative">
-          <div class="icon-container bg-gradient-to-br ${statusColors[update.status] || 'from-emerald-500 to-emerald-600'} flex-shrink-0 z-10">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-          </div>
-          <div class="flex-1 profile-card p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center gap-3">
-                <div class="icon-container-small bg-gradient-to-br from-emerald-500 to-emerald-600">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                  </svg>
-                </div>
-                <h5 class="text-lg font-bold text-black">${update.title || 'Milestone Update'}</h5>
-              </div>
-              <div class="text-xs text-emerald-600 font-medium bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">${date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                <div class="flex items-center gap-2 mb-1">
-                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                  <span class="text-sm text-emerald-700 font-medium">Progress</span>
-                </div>
-                <span class="text-xl font-bold text-emerald-800">${update.currentProgress || 0}%</span>
-              </div>
-              <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                <div class="flex items-center gap-2 mb-1">
-                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                  </svg>
-                  <span class="text-sm text-emerald-700 font-medium">Budget Used</span>
-                </div>
-                <span class="text-xl font-bold text-emerald-800">₱${(update.budgetUsed || 0).toLocaleString()}</span>
-              </div>
-              <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                <div class="flex items-center gap-2 mb-1">
-                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <span class="text-sm text-emerald-700 font-medium">Status</span>
-                </div>
-                <span class="text-lg font-bold text-emerald-800 capitalize">${update.status.replace('_', ' ')}</span>
-              </div>
-            </div>
-            ${update.remarks ? `
-              <div class="bg-gradient-to-br from-emerald-50 to-green-50 p-4 rounded-xl border border-emerald-200">
-                <div class="flex items-center gap-2 mb-2">
-                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                  </svg>
-                  <span class="text-sm text-emerald-700 font-semibold">Remarks</span>
-                </div>
-                <p class="text-sm text-emerald-800">${update.remarks}</p>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-  
-  // Export submission report function
-  function exportSubmissionReport() {
-    if (!selectedProject || !projectUpdates || projectUpdates.length === 0) {
-      alert('No submission data available to export.');
-      return;
-    }
-    
-    // Create a comprehensive report
-    const reportData = {
-      project: {
-        name: selectedProject.name,
-        code: selectedProject.projectCode,
-        totalBudget: selectedProject.totalBudget,
-        startDate: selectedProject.startDate,
-        endDate: selectedProject.endDate
-      },
-      submissions: projectUpdates.map(update => ({
-        date: new Date(update.createdAt).toLocaleDateString(),
-        status: update.status,
-        progress: update.currentProgress || 0,
-        budgetUsed: update.budgetUsed || 0,
-        remarks: update.remarks || ''
-      })),
-      summary: {
-        totalSubmissions: projectUpdates.length,
-        approvedCount: projectUpdates.filter(u => u.status === 'secretariat_approved').length,
-        pendingCount: projectUpdates.filter(u => u.status === 'submitted').length,
-        rejectedCount: projectUpdates.filter(u => u.status === 'rejected').length,
-        totalBudgetUsed: projectUpdates.reduce((sum, u) => sum + (u.budgetUsed || 0), 0)
-      },
-      generatedAt: new Date().toISOString()
-    };
-    
-    // Create and download CSV
-    const csvContent = [
-      ['EIU Project Submission Report'],
-      ['Project:', reportData.project.name],
-      ['Project Code:', reportData.project.code],
-      ['Generated:', new Date().toLocaleDateString()],
-      [''],
-      ['Date', 'Status', 'Progress (%)', 'Budget Used (₱)', 'Remarks'],
-      ...reportData.submissions.map(s => [s.date, s.status, s.progress, s.budgetUsed, s.remarks])
-    ].map(row => row.join(',')).join('\\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedProject.projectCode}_submission_report_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    
-    // Show success notification
-    const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    notification.innerHTML = `
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        Report exported successfully!
-      </div>
-    `;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
-  }
+  // Timeline view and export functions removed - now handled by centralized SubmissionHistoryAnalytics component
   
   // AI-Assisted Summary Generation (Step 8)
   function generateAISummary(milestoneId) {
@@ -7733,7 +7238,7 @@ loading = false;
   window.validateMilestone = validateMilestone;
   window.toggleTimelineView = toggleTimelineView;
   window.renderTimelineView = renderTimelineView;
-  window.exportSubmissionReport = exportSubmissionReport;
+  // exportSubmissionReport removed - now handled by centralized component
   window.generateAISummary = generateAISummary;
   
   // Enhanced Notification System (Step 6)
@@ -10075,6 +9580,12 @@ window.restoreVideosFromStorage = function(milestoneId) {
         isDelayed: isDelayed,
         delayReason: delayReason || null
       };
+      
+      console.log('📋 Collected milestone data includes delay info:', {
+        isDelayed: isDelayed,
+        delayReason: delayReason,
+        milestoneStatus: milestone.status
+      });
 
     } catch (error) {
       console.error('Error collecting milestone data:', error);
@@ -10435,7 +9946,22 @@ window.restoreVideosFromStorage = function(milestoneId) {
     }
 
     // Automatically populate submission date with current internet time
-    window.generateInternetBasedSubmissionDate(milestone.id);
+    // Use generateServerBasedSubmissionDate if available, otherwise use current date
+    if (typeof window.generateServerBasedSubmissionDate === 'function') {
+      window.generateServerBasedSubmissionDate(milestone.id);
+    } else {
+      // Fallback: Set current date/time
+      const submissionDateInput = document.getElementById(`milestone-${milestone.id}-submission-date`);
+      if (submissionDateInput) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        submissionDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+    }
 
     console.log('✅ Milestone form header populated successfully');
   };

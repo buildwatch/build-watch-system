@@ -569,6 +569,18 @@ router.post('/milestone-submissions', authenticateToken, async (req, res) => {
       fundingSource = project.fundingSource;
     }
 
+    // Extract delay information from submissionData BEFORE creating the payload
+    const isDelayed = submissionData.isDelayed === true || submissionData.isDelayed === 'true' || (submissionData.delayReason !== null && submissionData.delayReason !== undefined && submissionData.delayReason !== '');
+    const delayReason = submissionData.delayReason || null;
+    
+    console.log('🔍 Delay information extracted:', {
+      isDelayed: isDelayed,
+      delayReason: delayReason,
+      submissionDataIsDelayed: submissionData.isDelayed,
+      submissionDataDelayReason: submissionData.delayReason,
+      submissionDataKeys: Object.keys(submissionData || {})
+    });
+
     // Prepare submission data
     const submissionPayload = {
       projectId,
@@ -611,7 +623,12 @@ router.post('/milestone-submissions', authenticateToken, async (req, res) => {
         subrole: submittedBy?.subrole || req.user.subrole || req.user.subRole,
         contactNumber: submittedBy?.contactNumber || req.user.contactNumber,
         department: submittedBy?.department || req.user.department,
-        company: submittedBy?.company || 'External Partner'
+        company: submittedBy?.company || 'External Partner',
+        // Store delay information in submitterInfo JSON field
+        delayInfo: isDelayed ? {
+          isDelayed: true,
+          delayReason: delayReason
+        } : null
       },
       
       // Division Weights (from milestone or defaults)
@@ -1603,6 +1620,14 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
         console.log('🔄 Calling ProgressCalculationService.calculateProjectProgress...');
         const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, req.user.role || 'iu');
         
+        // Check if all milestones are completed after milestone approval
+        const ProjectCompletionService = require('../services/projectCompletionService');
+        const completionResult = await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+        
+        if (completionResult.wasUpdated) {
+          console.log(`✅ Project ${project.projectCode} marked as completed after milestone approval`);
+        }
+        
         console.log('📊 Progress Calculation Results:', {
           overall: progressData.progress.overall,
           timeline: progressData.progress.timeline,
@@ -1632,24 +1657,13 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
           physical: projectUpdateData.physicalProgress
         });
         
-        // Check if all milestones are completed
-        const allProjectMilestones = await ProjectMilestone.findAll({
-          where: { projectId: project.id },
-          attributes: ['id', 'status']
-        });
-
-        const allMilestonesCompleted = allProjectMilestones.length > 0 && 
-          allProjectMilestones.every(m => m.status === 'completed' || m.status === 'approved');
-
-        // If all milestones are completed, mark project as completed
-        if (allMilestonesCompleted) {
-          const completionDate = new Date();
-          await project.update({
-            status: 'completed',
-            actualCompletionDate: completionDate,
-            completionDate: completionDate
-          });
-          console.log('✅ All milestones completed. Project marked as completed with date:', completionDate);
+        // Check completion status again after progress update (using already declared ProjectCompletionService)
+        const completionResultAfterUpdate = await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+        
+        if (completionResultAfterUpdate.wasUpdated) {
+          console.log(`✅ Project ${project.projectCode} marked as completed - all milestones are completed/approved`);
+        } else if (completionResultAfterUpdate.isCompleted) {
+          console.log(`✅ Project ${project.projectCode} is already marked as completed`);
         }
         
         // Reload project to verify update

@@ -13,7 +13,7 @@ router.get('/stats', async (req, res) => {
         [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'totalProjects'],
         [require('sequelize').fn('SUM', require('sequelize').col('totalBudget')), 'totalBudget'],
         [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN status IN ("ongoing", "delayed") THEN 1 END')), 'ongoingProjects'],
-        [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN status = "completed" THEN 1 END')), 'completedProjects'],
+        [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN status = "complete" THEN 1 END')), 'completedProjects'],
         [require('sequelize').fn('COUNT', require('sequelize').literal('CASE WHEN status = "pending" THEN 1 END')), 'planningProjects']
       ],
       where: {
@@ -108,12 +108,13 @@ router.get('/stats', async (req, res) => {
     for (const project of allProjects) {
       try {
         // Calculate average progress using ProgressCalculationService
-        const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'executive');
-        const overallProgress = progress?.progress?.overall || 0;
-        if (overallProgress > 0) {
-          totalProgress += overallProgress;
-          projectsWithProgress++;
-        }
+        // Use 'public' role to match what's shown on the public home page
+        const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
+        const overallProgress = parseFloat(progress?.progress?.overall || progress?.overall || 0);
+        
+        // Include all projects in average (even if 0% progress)
+        totalProgress += overallProgress;
+        projectsWithProgress++;
         
         // Debug log only in development
         if (process.env.NODE_ENV === 'development') {
@@ -125,14 +126,13 @@ router.get('/stats', async (req, res) => {
         // Fallback to database progress
         const projectProgress = parseFloat(project.overallProgress) || 0;
         
-        if (projectProgress > 0) {
-          totalProgress += projectProgress;
-          projectsWithProgress++;
-        }
+        // Include all projects in average (even if 0% progress)
+        totalProgress += projectProgress;
+        projectsWithProgress++;
       }
     }
     
-    // Calculate average progress
+    // Calculate average progress (include all projects, even with 0% progress)
     const averageProgress = projectsWithProgress > 0 ? Math.round((totalProgress / projectsWithProgress) * 100) / 100 : 0;
 
     // Get user statistics
@@ -192,7 +192,7 @@ router.get('/featured-projects', async (req, res) => {
     const featuredProjects = await Project.findAll({
       where: {
         status: {
-          [Op.in]: ['ongoing', 'completed', 'delayed']
+          [Op.in]: ['ongoing', 'complete', 'delayed']
         },
         [Op.or]: [
           { approvedByMPMEC: true },
@@ -213,9 +213,28 @@ router.get('/featured-projects', async (req, res) => {
       limit: parseInt(limit)
     });
 
+    // Check and update project completion status based on milestones
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    await Promise.all(featuredProjects.map(async (project) => {
+      await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+    }));
+
+    // Reload projects to get updated statuses
+    const updatedFeaturedProjects = await Promise.all(
+      featuredProjects.map(p => Project.findByPk(p.id, {
+        include: [
+          {
+            model: User,
+            as: 'implementingOffice',
+            attributes: ['id', 'name', 'department']
+          }
+        ]
+      }))
+    );
+
     // Calculate progress for each project using ProgressCalculationService
     const ProgressCalculationService = require('../services/progressCalculationService');
-    const projectsWithProgress = await Promise.all(featuredProjects.map(async (project) => {
+    const projectsWithProgress = await Promise.all(updatedFeaturedProjects.map(async (project) => {
       try {
         const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
         return {
@@ -244,7 +263,7 @@ router.get('/featured-projects', async (req, res) => {
         name: project.name,
         projectCode: project.projectCode,
         location: project.location || 'Santa Cruz, Laguna',
-        status: project.status,
+        status: project.status === 'complete' ? 'completed' : project.status, // Normalize status
         startDate: project.startDate,
         endDate: project.endDate,
         budget: project.totalBudget,
@@ -329,13 +348,28 @@ router.get('/recent-activity', async (req, res) => {
 // Get project locations for map
 router.get('/project-locations', async (req, res) => {
   try {
+    // Fetch all approved projects (approved by MPMEC or Secretariat)
     const projects = await Project.findAll({
       where: {
-        status: {
-          [Op.in]: ['ongoing', 'completed', 'delayed', 'planning']
-        },
-        // Only show approved projects to the public (same as projects.astro)
-        approvedBySecretariat: true
+        [Op.and]: [
+          {
+            status: {
+              [Op.in]: ['ongoing', 'complete', 'delayed', 'pending', 'completed'] // Include all active statuses
+            }
+          },
+          {
+            status: {
+              [Op.ne]: 'deleted' // Exclude deleted projects
+            }
+          },
+          {
+            // Only show approved projects to the public (approved by MPMEC or Secretariat)
+            [Op.or]: [
+              { approvedBySecretariat: true },
+              { approvedByMPMEC: true }
+            ]
+          }
+        ]
       },
       attributes: [
         'id',
@@ -346,13 +380,44 @@ router.get('/project-locations', async (req, res) => {
         'overallProgress',
         'startDate',
         'endDate',
-        'category'
+        'category',
+        'approvedByMPMEC',
+        'approvedBySecretariat'
       ]
     });
+    
+    console.log(`📍 [project-locations] Found ${projects.length} approved projects`);
 
+    // Check and update project completion status based on milestones
+    const ProjectCompletionService = require('../services/projectCompletionService');
+    await Promise.all(projects.map(async (project) => {
+      await ProjectCompletionService.checkAndUpdateProjectCompletion(project.id, project);
+    }));
+
+    // Reload projects to get updated statuses (include approval fields)
+    const updatedProjects = await Promise.all(
+      projects.map(p => Project.findByPk(p.id, {
+        attributes: [
+          'id', 'name', 'location', 'status', 'totalBudget', 'overallProgress',
+          'startDate', 'endDate', 'category', 'approvedByMPMEC', 'approvedBySecretariat'
+        ]
+      }))
+    );
+    
+    // Filter to ensure only approved projects are included (double-check after reload)
+    const approvedProjects = updatedProjects.filter(project => {
+      const isApproved = project && (project.approvedByMPMEC === true || project.approvedBySecretariat === true);
+      if (!isApproved && project) {
+        console.warn(`⚠️ [project-locations] Project ${project.id} (${project.name}) lost approval status after reload`);
+      }
+      return isApproved;
+    });
+    
+    console.log(`📍 [project-locations] After filtering: ${approvedProjects.length} approved projects`);
+    
     // Calculate progress for each project using ProgressCalculationService
     const ProgressCalculationService = require('../services/progressCalculationService');
-    const projectsWithProgress = await Promise.all(projects.map(async (project) => {
+    const projectsWithProgress = await Promise.all(approvedProjects.map(async (project) => {
       const progress = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
       return {
         ...project.toJSON(),
@@ -365,7 +430,7 @@ router.get('/project-locations', async (req, res) => {
       id: project.id,
       name: project.name,
       location: project.location,
-      status: project.status,
+      status: project.status === 'complete' ? 'completed' : (project.status || 'ongoing'), // Normalize status
       budget: project.totalBudget,
       progress: project.progress?.progress?.overall || project.progress?.overall || project.overallProgress || 0,
       startDate: project.startDate,
@@ -428,7 +493,11 @@ router.get('/barangay-stats', async (req, res) => {
           location: {
             [Op.like]: `%${barangay}%`
           },
-          status: 'completed'
+          status: 'complete',
+          [Op.or]: [
+            { approvedByMPMEC: true },
+            { approvedBySecretariat: true }
+          ]
         }
       });
 
@@ -439,16 +508,63 @@ router.get('/barangay-stats', async (req, res) => {
           },
           status: {
             [Op.ne]: 'deleted'
-          }
+          },
+          [Op.or]: [
+            { approvedByMPMEC: true },
+            { approvedBySecretariat: true }
+          ]
         }
       });
+
+      // Get all projects for this barangay to calculate overall progress
+      const barangayProjects = await Project.findAll({
+        where: {
+          location: {
+            [Op.like]: `%${barangay}%`
+          },
+          status: {
+            [Op.ne]: 'deleted'
+          },
+          [Op.or]: [
+            { approvedByMPMEC: true },
+            { approvedBySecretariat: true }
+          ]
+        },
+        attributes: ['id', 'overallProgress']
+      });
+
+      // Calculate overall progress for barangay (average of all projects' progress)
+      let totalProgress = 0;
+      let projectsWithProgress = 0;
+      const ProgressCalculationService = require('../services/progressCalculationService');
+      
+      for (const project of barangayProjects) {
+        try {
+          const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, 'public');
+          const overallProgress = progressData?.progress?.overall || 0;
+          if (overallProgress > 0) {
+            totalProgress += overallProgress;
+            projectsWithProgress++;
+          }
+        } catch (error) {
+          // Fallback to database progress
+          const projectProgress = parseFloat(project.overallProgress) || 0;
+          if (projectProgress > 0) {
+            totalProgress += projectProgress;
+            projectsWithProgress++;
+          }
+        }
+      }
+      
+      const overallProgress = projectsWithProgress > 0 ? Math.round((totalProgress / projectsWithProgress) * 100) / 100 : 0;
 
       barangayStats.push({
         name: barangay,
         totalProjects: projects,
         ongoingProjects,
         completedProjects,
-        totalBudget: totalBudget || 0
+        totalBudget: totalBudget || 0,
+        overallProgress: overallProgress
       });
     }
 
