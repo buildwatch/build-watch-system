@@ -4243,17 +4243,65 @@ try {
               // Function to generate Unique User ID
               async function generateUniqueUserId(group, email) {
                 try {
+                  // Get token from localStorage
+                  const token = localStorage.getItem('token') || '';
+                  if (!token) {
+                    console.error('❌ No authentication token found');
+                    userIdField.value = 'ERROR: Please log in again';
+                    return;
+                  }
+                  
+                  // Determine API URL dynamically
+                  const getApiUrl = () => {
+                    const hostname = window.location.hostname;
+                    const protocol = window.location.protocol;
+                    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                      return 'http://localhost:3000/api';
+                    }
+                    if (hostname.includes('build-watch.com')) {
+                      if (protocol === 'https:') {
+                        return `${protocol}//${hostname}/api`;
+                      } else {
+                        return `http://${hostname}:3000/api`;
+                      }
+                    }
+                    return 'http://localhost:3000/api';
+                  };
+                  
+                  const apiUrl = getApiUrl();
+                  
                   // Get the count of existing users in this group
-                  const response = await fetch(`http://localhost:3000/api/users/count-by-group?group=${encodeURIComponent(group)}`, {
+                  const response = await fetch(`${apiUrl}/users/count-by-group?group=${encodeURIComponent(group)}`, {
                     headers: {
-                      'Authorization': `Bearer ${getCookie('token')}`
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
                     }
                   });
                   
+                  // Handle 401 Unauthorized
+                  if (response.status === 401) {
+                    console.error('❌ Authentication failed - session expired');
+                    userIdField.value = 'ERROR: Session expired. Please refresh the page.';
+                    alert('Session expired. Please refresh the page and log in again.');
+                    return;
+                  }
+                  
+                  if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Failed to fetch user count' }));
+                    console.error('❌ Failed to get user count:', errorData.error);
+                    userIdField.value = `ERROR: ${errorData.error || 'Failed to generate User ID'}`;
+                    return;
+                  }
+                  
                   let userCount = 0;
-                  if (response.ok) {
-                    const data = await response.json();
+                  const data = await response.json();
+                  if (data.success) {
                     userCount = data.count || 0;
+                    console.log(`✅ Found ${userCount} existing users in group: ${group}`);
+                  } else {
+                    console.error('❌ Failed to get user count:', data.error);
+                    userIdField.value = `ERROR: ${data.error || 'Failed to generate User ID'}`;
+                    return;
                   }
                   
                   // Generate the next sequential number
@@ -6078,10 +6126,35 @@ try {
             }
             
             try {
-              const token = localStorage.getItem('token');
+              const token = localStorage.getItem('token') || '';
+              if (!token) {
+                alert('Session expired. Please refresh the page and log in again.');
+                window.location.reload();
+                return;
+              }
+              
+              // Determine API URL dynamically
+              const getApiUrl = () => {
+                const hostname = window.location.hostname;
+                const protocol = window.location.protocol;
+                if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                  return 'http://localhost:3000/api';
+                }
+                if (hostname.includes('build-watch.com')) {
+                  if (protocol === 'https:') {
+                    return `${protocol}//${hostname}/api`;
+                  } else {
+                    return `http://${hostname}:3000/api`;
+                  }
+                }
+                return 'http://localhost:3000/api';
+              };
+              
+              const apiUrl = getApiUrl();
+              
               console.log('🔐 Attempting password verification for UUID reveal');
               
-              const response = await fetch('http://localhost:3000/api/auth/verify-password', {
+              const response = await fetch(`${apiUrl}/auth/verify-password`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -6091,6 +6164,15 @@ try {
               });
               
               console.log('Password verification response status:', response.status);
+              
+              // Handle 401 Unauthorized
+              if (response.status === 401) {
+                const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }));
+                console.error('❌ Authentication failed:', errorData.error);
+                alert('Session expired. Please refresh the page and log in again.');
+                window.location.reload();
+                return;
+              }
               
               if (response.ok) {
                 console.log('✅ Password verification successful');
@@ -6848,7 +6930,31 @@ try {
             try {
               // Get the permanently deleted users history
               const token = localStorage.getItem('token') || '';
-              const historyResponse = await fetch('http://localhost:3000/api/users/deleted-history', {
+              if (!token) {
+                console.error('❌ No authentication token found');
+                return;
+              }
+              
+              // Determine API URL dynamically
+              const getApiUrl = () => {
+                const hostname = window.location.hostname;
+                const protocol = window.location.protocol;
+                if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                  return 'http://localhost:3000/api';
+                }
+                if (hostname.includes('build-watch.com')) {
+                  if (protocol === 'https:') {
+                    return `${protocol}//${hostname}/api`;
+                  } else {
+                    return `http://${hostname}:3000/api`;
+                  }
+                }
+                return 'http://localhost:3000/api';
+              };
+              
+              const apiUrl = getApiUrl();
+              
+              const historyResponse = await fetch(`${apiUrl}/users/deleted-history`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: { 
@@ -6856,6 +6962,12 @@ try {
                   'Authorization': `Bearer ${token}`
                 }
               });
+              
+              // Handle 401 Unauthorized
+              if (historyResponse.status === 401) {
+                console.error('❌ Authentication failed - session expired');
+                return;
+              }
               
               if (historyResponse.ok) {
                 const historyData = await historyResponse.json();

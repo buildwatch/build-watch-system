@@ -2099,9 +2099,17 @@ router.get('/count-by-group', authenticateToken, requireSystemAdmin, async (req,
       });
     }
 
+    // Count users by group field (not role field)
     const count = await User.count({
-      where: { role: group }
+      where: { 
+        group: group,
+        status: {
+          [Op.ne]: 'deleted' // Exclude soft-deleted users
+        }
+      }
     });
+
+    console.log(`🔍 [COUNT BY GROUP] Group: ${group}, Count: ${count}`);
 
     res.json({
       success: true,
@@ -2109,7 +2117,7 @@ router.get('/count-by-group', authenticateToken, requireSystemAdmin, async (req,
     });
 
   } catch (error) {
-    console.error('Count users by group error:', error);
+    console.error('❌ [COUNT BY GROUP] Error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to count users by group'
