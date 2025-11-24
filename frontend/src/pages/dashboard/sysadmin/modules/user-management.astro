@@ -2282,7 +2282,7 @@ try {
               <button 
                 type="button" 
                 id="createUserBtn" 
-                onclick="testCreateUser()" 
+                type="button" 
                 class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border border-blue-500/30 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-600 hover:border-blue-400/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 backdrop-blur-sm"
               >
                 <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2869,6 +2869,23 @@ try {
           </style>
           
           <script>
+            // Global helper function to get API URL dynamically
+            window.getApiUrl = function() {
+              const hostname = window.location.hostname;
+              const protocol = window.location.protocol;
+              if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'http://localhost:3000/api';
+              }
+              if (hostname.includes('build-watch.com')) {
+                if (protocol === 'https:') {
+                  return `${protocol}//${hostname}/api`;
+                } else {
+                  return `http://${hostname}:3000/api`;
+                }
+              }
+              return 'http://localhost:3000/api';
+            };
+            
             // Enhanced modal animations - 2x Better
             const modal = document.getElementById('addUserModal');
             const modalContent = document.getElementById('modalContent');
@@ -3058,7 +3075,12 @@ try {
             async function checkEmailExists(email) {
               try {
                 const token = localStorage.getItem('token') || '';
-                const response = await fetch(`http://localhost:3000/api/users/check-email`, {
+                if (!token) {
+                  console.error('❌ No authentication token found');
+                  return false;
+                }
+                const apiUrl = window.getApiUrl();
+                const response = await fetch(`${apiUrl}/users/check-email`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -3066,6 +3088,13 @@ try {
                   },
                   body: JSON.stringify({ email })
                 });
+                
+                if (response.status === 401) {
+                  console.error('❌ Authentication failed - session expired');
+                  alert('Session expired. Please refresh the page and log in again.');
+                  return false;
+                }
+                
                 const data = await response.json();
                 return data.exists;
               } catch (error) {
@@ -3078,7 +3107,12 @@ try {
             async function checkContactExists(contactNumber) {
               try {
                 const token = localStorage.getItem('token') || '';
-                const response = await fetch(`http://localhost:3000/api/users/check-contact`, {
+                if (!token) {
+                  console.error('❌ No authentication token found');
+                  return false;
+                }
+                const apiUrl = window.getApiUrl();
+                const response = await fetch(`${apiUrl}/users/check-contact`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -3086,6 +3120,12 @@ try {
                   },
                   body: JSON.stringify({ contactNumber })
                 });
+                
+                if (response.status === 401) {
+                  console.error('❌ Authentication failed - session expired');
+                  return false;
+                }
+                
                 const data = await response.json();
                 return data.exists;
               } catch (error) {
@@ -3098,7 +3138,12 @@ try {
             async function checkMPMECSecretariatAdminExists() {
               try {
                 const token = localStorage.getItem('token') || '';
-                const response = await fetch(`http://localhost:3000/api/users/check-mpmec-secretariat-admin`, {
+                if (!token) {
+                  console.error('❌ No authentication token found');
+                  return false;
+                }
+                const apiUrl = window.getApiUrl();
+                const response = await fetch(`${apiUrl}/users/check-mpmec-secretariat-admin`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -3480,9 +3525,16 @@ try {
                   };
                   
                   const token = localStorage.getItem('token') || '';
+                  if (!token) {
+                    hideLoadingModal();
+                    await showErrorModal('Session expired. Please refresh the page and log in again.');
+                    return;
+                  }
+                  
+                  const apiUrl = window.getApiUrl();
                   
                   try {
-                    const res = await fetch('http://localhost:3000/api/users/send-user-creation-email', {
+                    const res = await fetch(`${apiUrl}/users/send-user-creation-email`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -3490,6 +3542,12 @@ try {
                       },
                       body: JSON.stringify(emailPayload)
                     });
+                    
+                    if (res.status === 401) {
+                      hideLoadingModal();
+                      await showErrorModal('Session expired. Please refresh the page and log in again.');
+                      return;
+                    }
                     
                     hideLoadingModal();
                     
@@ -3533,8 +3591,13 @@ try {
                 console.log('Sending payload to backend:', { ...payload, password: '***' });
                 
                 const token = localStorage.getItem('token') || '';
+                if (!token) {
+                  await showErrorModal('Session expired. Please refresh the page and log in again.');
+                  return;
+                }
                 
-                const res = await fetch('http://localhost:3000/api/users', {
+                const apiUrl = window.getApiUrl();
+                const res = await fetch(`${apiUrl}/users`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -3542,6 +3605,11 @@ try {
                   },
                   body: JSON.stringify(payload)
                 });
+                
+                if (res.status === 401) {
+                  await showErrorModal('Session expired. Please refresh the page and log in again.');
+                  return;
+                }
                 
                 console.log('Backend response status:', res.status);
                 const data = await res.json();
@@ -3555,7 +3623,8 @@ try {
                       formData.append('profilePicture', profilePhoto);
                       formData.append('userId', userId);
                       
-                      const profileRes = await fetch('http://localhost:3000/api/profile/upload-picture', {
+                      const profileApiUrl = window.getApiUrl();
+                      const profileRes = await fetch(`${profileApiUrl}/profile/upload-picture`, {
                         method: 'POST',
                         headers: {
                           'Authorization': `Bearer ${token}`
@@ -4145,7 +4214,8 @@ try {
                       return;
                     }
                     
-                    const response = await fetch('http://localhost:3000/api/users/check-email', {
+                    const apiUrl = window.getApiUrl();
+                    const response = await fetch(`${apiUrl}/users/check-email`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -6609,7 +6679,8 @@ try {
                 console.log('🔐 Attempting password verification for delete');
                 
                 // Verify the System Admin's own password (not target user's password)
-                const response = await fetch('http://localhost:3000/api/auth/verify-own-password', {
+                const apiUrl = window.getApiUrl();
+                const response = await fetch(`${apiUrl}/auth/verify-own-password`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -6617,6 +6688,13 @@ try {
                   },
                   body: JSON.stringify({ password })
                 });
+                
+                if (response.status === 401) {
+                  const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }));
+                  console.error('❌ Authentication failed:', errorData.error);
+                  alert('Session expired. Please refresh the page and log in again.');
+                  return;
+                }
                 
                 console.log('Password verification response status:', response.status);
                 
@@ -6631,8 +6709,9 @@ try {
                   
                   // Perform deletion(s)
                   try {
+                    const apiUrl = window.getApiUrl();
                     const deletePromises = userIdsArray.map(async (userId) => {
-                      const deleteRes = await fetch(`http://localhost:3000/api/users/${userId}/soft-delete`, {
+                      const deleteRes = await fetch(`${apiUrl}/users/${userId}/soft-delete`, {
                         method: 'PUT',
                         headers: {
                           'Authorization': `Bearer ${token}`
@@ -6857,11 +6936,21 @@ try {
             
             try {
               // First, try to get the deleted user data with preserved profile picture
-              const deletedUsersResponse = await fetch('http://localhost:3000/api/users/deleted', {
+              const token = localStorage.getItem('token') || '';
+              const apiUrl = window.getApiUrl();
+              const deletedUsersResponse = await fetch(`${apiUrl}/users/deleted`, {
                 method: 'GET',
                 credentials: 'include',
-                headers: { 'Accept': 'application/json' }
+                headers: { 
+                  'Accept': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
               });
+              
+              if (deletedUsersResponse.status === 401) {
+                console.error('❌ Authentication failed - session expired');
+                return;
+              }
               
               if (deletedUsersResponse.ok) {
                 const deletedData = await deletedUsersResponse.json();
@@ -7072,9 +7161,10 @@ try {
                   possibleIds.push(userId.replace(/^EIU-/, 'EIU-0001'));
                 }
                 
+                const apiUrl = window.getApiUrl();
                 for (const id of possibleIds) {
                   try {
-                    const url = `http://localhost:3000/api/profile/picture/${encodeURIComponent(id)}?t=${Date.now()}`;
+                    const url = `${apiUrl}/profile/picture/${encodeURIComponent(id)}?t=${Date.now()}`;
                     const response = await fetch(url, {
                       method: 'GET',
                       credentials: 'include',
@@ -7687,9 +7777,14 @@ try {
           
           try {
             const token = localStorage.getItem('token') || '';
+            if (!token) {
+              await showErrorModal('Session expired. Please refresh the page and log in again.');
+              return;
+            }
             console.log('Sending request to backend with token:', token ? 'Present' : 'Missing');
             
-            const res = await fetch('http://localhost:3000/api/users', {
+            const apiUrl = window.getApiUrl();
+            const res = await fetch(`${apiUrl}/users`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -8693,7 +8788,8 @@ try {
               return;
             }
             
-            const apiUrl = `http://localhost:3000/api/users/${userId}`;
+            const apiUrl = window.getApiUrl();
+            const updateUrl = `${apiUrl}/users/${userId}`;
             console.log('🔍 [EDIT USER SUBMIT DEBUG] API URL:', apiUrl);
             console.log('🔍 [EDIT USER SUBMIT DEBUG] Sending PUT request...');
             
@@ -8772,7 +8868,8 @@ try {
             // We need to use a different approach - fetch all projects and filter client-side
             // OR create a backend endpoint to get projects by EIU user ID
             // For now, we'll fetch projects and filter by eiuPersonnelId
-            const response = await fetch(`http://localhost:3000/api/projects?limit=1000`, {
+            const apiUrl = window.getApiUrl();
+            const response = await fetch(`${apiUrl}/projects?limit=1000`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -14130,10 +14227,14 @@ try {
         console.log('🌐 Global debug functions available: window.debugUserManagement(), window.forceLoadProfilePictures()');
         
         // ULTRA-DIRECT APPROACH - Force image loading - DISABLED
-        function forceLoadAllProfilePictures() {
+        window.forceLoadAllProfilePictures = function() {
           console.log('🚀 ULTRA-DIRECT: DISABLED - Using main function instead');
-          loadMainTableProfilePictures();
-        }
+          if (typeof loadMainTableProfilePictures === 'function') {
+            loadMainTableProfilePictures();
+          } else {
+            console.warn('⚠️ loadMainTableProfilePictures function not found');
+          }
+        };
 
         // Activity History Modal Function - Define early to ensure it's available
         window.showActivityHistory = async function(userId, userName, commentCount) {
@@ -15052,7 +15153,8 @@ try {
             }
             
             // Test API connection
-            const res = await fetch('http://localhost:3000/api/users', {
+            const apiUrl = window.getApiUrl();
+            const res = await fetch(`${apiUrl}/users`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${token}`
