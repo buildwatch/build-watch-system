@@ -393,7 +393,7 @@ try {
       }
       
       /* Check mark animations */
-      #lengthCheck, #caseCheck, #underscoreCheck, #strengthCheck {
+      #lengthCheck, #caseCheck, #numberCheck, #specialCheck, #strengthCheck {
         transition: all 0.3s ease-in-out;
       }
       
@@ -954,14 +954,6 @@ try {
                   </div>
                 </th>
                 <th class="px-6 py-4 text-left font-semibold text-gray-800">
-                  <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    Birthdate
-                  </div>
-                </th>
-                <th class="px-6 py-4 text-left font-semibold text-gray-800">
                   <a href={`?sortBy=group&sortOrder=${sortBy === 'group' && sortOrder === 'asc' ? 'desc' : 'asc'}${search ? `&search=${encodeURIComponent(search)}` : ''}${filterGroup ? `&filterGroup=${encodeURIComponent(filterGroup)}` : ''}${filterDepartment ? `&filterDepartment=${encodeURIComponent(filterDepartment)}` : ''}`} class="flex items-center gap-2 hover:text-black transition-colors duration-200">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -1117,9 +1109,6 @@ try {
                       </td>
                       <td class="px-6 py-4">
                         <div class="text-sm text-gray-700">{user.contactNumber || '-'}</div>
-                      </td>
-                      <td class="px-6 py-4">
-                        <div class="text-sm text-gray-700">{user.birthdate ? new Date(user.birthdate).toLocaleDateString() : '-'}</div>
                       </td>
                       <td class="px-6 py-4">
                         <span class={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
@@ -2064,9 +2053,9 @@ try {
               <div class="text-xs text-gray-400 mt-1">Automatically generated from first, middle, and last names</div>
             </div>
             
-            <!-- Enhanced Email Username field with icon and tooltip -->
+            <!-- Enhanced Email Username field with icon, tooltip, and verification badge -->
             <div class="relative">
-              <div class="flex items-center">
+              <div class="flex items-center relative">
                 <input type="text" name="username" id="usernameField" placeholder="Email (Username)" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 pr-10 w-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm" />
                 <div class="absolute right-3 cursor-help group">
                   <svg class="w-5 h-5 text-gray-400 hover:text-white transition-colors" fill="currentColor" viewBox="0 0 20 20">
@@ -2079,7 +2068,23 @@ try {
                 </div>
               </div>
               <div class="flex items-center justify-between mt-1">
-                <div id="usernameError" class="text-red-400 text-xs hidden">Please enter a valid email address.</div>
+                <div class="flex items-center gap-2">
+                  <div id="usernameError" class="text-red-400 text-xs hidden">Please enter a valid email address.</div>
+                  <!-- Verified Badge - positioned below input to prevent overlap -->
+                  <div id="emailVerifiedBadge" class="hidden items-center gap-1 px-2 py-1 bg-green-500/20 border border-green-500/50 rounded-lg">
+                    <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-xs text-green-400 font-semibold">Verified</span>
+                  </div>
+                  <!-- Loading Spinner - positioned below input -->
+                  <div id="emailCheckingSpinner" class="hidden">
+                    <svg class="animate-spin h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </div>
                 <div class="text-xs text-gray-400">Enter a valid email address that will be used as the username</div>
               </div>
             </div>
@@ -2130,7 +2135,7 @@ try {
                       <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                     </svg>
                   </div>
-                  <span class="text-sm text-gray-300">At least 8 characters</span>
+                  <span class="text-sm text-gray-300">At least 12 characters</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <div id="caseCheck" class="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center transition-all duration-300">
@@ -2141,12 +2146,20 @@ try {
                   <span class="text-sm text-gray-300">Uppercase & lowercase</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div id="underscoreCheck" class="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center transition-all duration-300">
+                  <div id="numberCheck" class="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center transition-all duration-300">
                     <svg class="w-2.5 h-2.5 text-white opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                     </svg>
                   </div>
-                  <span class="text-sm text-gray-300">Contains underscore (_)</span>
+                  <span class="text-sm text-gray-300">Contains number</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div id="specialCheck" class="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center transition-all duration-300">
+                    <svg class="w-2.5 h-2.5 text-white opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <span class="text-sm text-gray-300">Contains special character</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <div id="strengthCheck" class="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center transition-all duration-300">
@@ -2159,50 +2172,28 @@ try {
               </div>
             </div>
             
-            <div class="text-xs text-gray-400 -mt-2 mb-1">Password must be at least 8 characters, include uppercase & lowercase letters, and contain an underscore (_). Minimum strength: Medium.</div>
-            <!-- Enhanced Birthdate field -->
-            <div class="relative">
-              <label class="block text-sm font-medium text-white mb-2">Birthdate *</label>
-              <div class="relative">
-                <input 
-                  type="date" 
-                  name="birthdate" 
-                  id="birthdateField" 
-                  required 
-                  class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 pr-10 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all cursor-pointer backdrop-blur-sm" 
-                  style="appearance: none; -webkit-appearance: none; -moz-appearance: none; color-scheme: dark;"
-                />
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-5">
-                  <svg class="w-5 h-5 text-gray-400 hover:text-white transition-colors cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div id="birthdateError" class="text-red-400 text-xs mt-1 hidden">User must be at least 18 years old.</div>
-              <div class="text-xs text-gray-400 mt-1">Select a date (user must be at least 18 years old)</div>
-            </div>
+            <div class="text-xs text-gray-400 -mt-2 mb-1">Password must be at least 12 characters, include uppercase & lowercase letters, numbers, and special characters. Minimum strength: Medium.</div>
             <div class="flex gap-2">
               <div class="w-1/2">
+                <label class="block text-sm font-medium text-white mb-2">Select Group</label>
                 <select name="group" id="groupSelect" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                <option value="" class="bg-neutral-800 text-white">Select Group</option>
-                <option value="LGU-PMT" class="bg-neutral-800 text-white">LGU-PMT</option>
-                <option value="LGU-IU" class="bg-neutral-800 text-white">LGU-IU</option>
-                <option value="EIU" class="bg-neutral-800 text-white">EIU</option>
-                <option value="EMS" class="bg-neutral-800 text-white">EMS</option>
-              </select>
+                  <option value="LGU-PMT" class="bg-neutral-800 text-white">LGU-PMT</option>
+                  <option value="LGU-IU" class="bg-neutral-800 text-white">LGU-IU</option>
+                  <option value="EIU" class="bg-neutral-800 text-white">EIU</option>
+                </select>
                 <div id="groupError" class="text-red-400 text-xs mt-1 hidden">Please select a group.</div>
               </div>
               <div class="w-1/2">
+                <label class="block text-sm font-medium text-white mb-2">Select Role</label>
                 <select name="role" id="roleSelect" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                <option value="" class="bg-neutral-800 text-white">Select Role</option>
-              </select>
+                </select>
                 <div id="roleError" class="text-red-400 text-xs mt-1 hidden">Please select a role.</div>
               </div>
             </div>
             <div class="flex gap-2">
               <div id="subRoleContainer" class="w-1/2">
+                <label class="block text-sm font-medium text-white mb-2">Select Subrole</label>
                 <select name="subRole" id="subRoleSelect" class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                  <option value="" class="bg-neutral-800 text-white">Select Subrole</option>
                 </select>
                 <div id="subRoleError" class="text-red-400 text-xs mt-1 hidden">Please select a subrole.</div>
               </div>
@@ -2233,9 +2224,9 @@ try {
               </div>
             </div>
             
-            <!-- Profile Photo Section -->
+            <!-- Department/Company Picture Section -->
             <div>
-              <label class="block text-sm font-medium text-white mb-2">Profile Photo</label>
+              <label class="block text-sm font-medium text-white mb-2">Department/Company Picture</label>
               <div class="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-white/40 transition-colors duration-200">
                 <div class="flex flex-col items-center space-y-4">
                   <div id="profilePhotoPreview" class="w-20 h-20 rounded-full bg-neutral-700/50 flex items-center justify-center border-2 border-white/20">
@@ -2255,6 +2246,13 @@ try {
                 </div>
                 <input type="file" id="profilePhotoInput" name="profilePhoto" accept="image/*" class="hidden" />
               </div>
+              <div class="mt-3 flex items-center">
+                <input type="checkbox" id="useDefaultPicture" name="useDefaultPicture" class="w-4 h-4 text-blue-600 bg-neutral-800 border-white/20 rounded focus:ring-blue-500 focus:ring-2" />
+                <label for="useDefaultPicture" class="ml-2 text-sm text-gray-300 cursor-pointer">
+                  Use default department/company picture if no picture is uploaded
+                </label>
+              </div>
+              <div id="defaultPictureError" class="text-red-400 text-xs mt-1 hidden">Please either upload a picture or select to use the default picture.</div>
             </div>
             
             <!-- Enhanced Unique User ID field -->
@@ -2288,9 +2286,9 @@ try {
                 class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 border border-blue-500/30 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-600 hover:border-blue-400/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 backdrop-blur-sm"
               >
                 <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
-                Create User (Direct)
+                Send User Creation Email
               </button>
               <button 
                 type="button" 
@@ -3119,12 +3117,146 @@ try {
               }
             }
 
-            async function createUserDirect() {
+        // Show loading modal
+        function showLoadingModal(message = 'Please wait...') {
+          const existingModal = document.getElementById('loadingModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          const modalHTML = `
+            <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+                <div class="p-8">
+                  <div class="flex flex-col items-center">
+                    <div class="relative w-20 h-20 mb-6">
+                      <div class="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+                      <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Sending Email</h3>
+                    <p class="text-gray-600 text-center">
+                      ${message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        // Hide loading modal
+        function hideLoadingModal() {
+          const modal = document.getElementById('loadingModal');
+          if (modal) {
+            modal.remove();
+          }
+        }
+        
+        // Show success modal with check animation
+        function showUserCreationSuccessModal(email) {
+          const existingModal = document.getElementById('userCreationSuccessModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          // Close the Add User modal first
+          const addUserModal = document.getElementById('addUserModal');
+          if (addUserModal) {
+            addUserModal.classList.add('hidden');
+          }
+          
+          const modalHTML = `
+            <div id="userCreationSuccessModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+                <div class="p-6">
+                  <div class="flex items-center justify-center mb-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg class="w-8 h-8 text-green-600 checkmark" viewBox="0 0 52 52">
+                        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path class="checkmark-check" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 text-center mb-2">Email Sent Successfully!</h3>
+                  <p class="text-gray-600 text-center mb-4" style="line-height: 1.6;">
+                    A user creation email has been sent to <strong class="text-gray-900">${email}</strong>. 
+                    The user will receive an email with a link to create their account.
+                  </p>
+                  <button 
+                    id="closeUserCreationSuccessModal" 
+                    class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+            <style>
+              .checkmark-circle {
+                stroke-dasharray: 166;
+                stroke-dashoffset: 166;
+                stroke-width: 2;
+                stroke-miterlimit: 10;
+                stroke: currentColor;
+                fill: none;
+                animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+              }
+              .checkmark-check {
+                transform-origin: 50% 50%;
+                stroke-dasharray: 48;
+                stroke-dashoffset: 48;
+                animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+              }
+              @keyframes stroke {
+                100% {
+                  stroke-dashoffset: 0;
+                }
+              }
+            </style>
+          `;
+          
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
+          
+          const modal = document.getElementById('userCreationSuccessModal');
+          const closeBtn = document.getElementById('closeUserCreationSuccessModal');
+          
+          closeBtn.addEventListener('click', () => {
+            modal.remove();
+            // Close the Add User modal and reload
+            const addUserModal = document.getElementById('addUserModal');
+            if (addUserModal) {
+              addUserModal.classList.add('hidden');
+            }
+            window.location.reload();
+          });
+          
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.remove();
+              const addUserModal = document.getElementById('addUserModal');
+              if (addUserModal) {
+                addUserModal.classList.add('hidden');
+              }
+              window.location.reload();
+            }
+          });
+        }
+        
+        // Send User Creation Email
+        async function sendUserCreationEmail() {
+          // Use the same validation as createUserDirect but send email instead
+          // This will be called from the button click handler
+          await createUserDirect(true); // Pass true to indicate email mode
+        }
+        
+            async function createUserDirect(sendEmailMode = false) {
               console.log('createUserDirect function called');
               
               try {
                 // Clear all previous error states
-                ['firstNameField', 'middleNameField', 'lastNameField', 'usernameField', 'contactNumberField', 'passwordField', 'birthdateField', 'groupSelect', 'roleSelect', 'subRoleSelect', 'departmentOfficeSelect', 'externalCompanyName', 'userIdField'].forEach(clearFieldError);
+                ['firstNameField', 'middleNameField', 'lastNameField', 'usernameField', 'contactNumberField', 'passwordField', 'groupSelect', 'roleSelect', 'subRoleSelect', 'departmentOfficeSelect', 'externalCompanyName', 'userIdField'].forEach(clearFieldError);
                 
                 // Also clear the old addUserError div
                 const addUserError = document.getElementById('addUserError');
@@ -3139,13 +3271,13 @@ try {
                 const lastName = document.querySelector('input[name="lastName"]').value.trim();
                 const username = document.querySelector('input[name="username"]').value.trim();
                 const password = document.getElementById('passwordField').value;
-                const birthdate = document.getElementById('birthdateField').value;
                 const contactNumber = document.getElementById('contactNumberField').value.trim();
                 const group = document.getElementById('groupSelect').value;
                 const role = document.getElementById('roleSelect').value;
                 const subRole = document.getElementById('subRoleSelect').value;
                 const userId = document.getElementById('userIdField').value.trim();
                 const profilePhoto = document.getElementById('profilePhotoInput').files[0];
+                const useDefaultPicture = document.getElementById('useDefaultPicture').checked;
                 
                 console.log('Form data collected for validation');
                 
@@ -3162,12 +3294,10 @@ try {
                   { field: 'email', value: username, message: 'Error: Email is required.', fieldId: 'usernameField' },
                   { field: 'contactNumber', value: contactNumber, message: 'Error: Contact Number is required.', fieldId: 'contactNumberField' },
                   { field: 'password', value: password, message: 'Error: Password is required.', fieldId: 'passwordField' },
-                  { field: 'birthdate', value: birthdate, message: 'Error: Birthdate is required.', fieldId: 'birthdateField' },
                   { field: 'group', value: group, message: 'Error: Group is required.', fieldId: 'groupSelect' },
                   { field: 'role', value: role, message: 'Error: Role is required.', fieldId: 'roleSelect' },
                   { field: 'subrole', value: subRole, message: 'Error: Subrole is required.', fieldId: 'subRoleSelect' },
                   { field: 'departmentOffice', value: departmentOffice, message: 'Error: Department/Office is required.', fieldId: 'departmentOfficeSelect' },
-                  { field: 'profilePicture', value: profilePhoto, message: 'Error: Profile Picture is required.', fieldId: 'profilePhotoInput' },
                   { field: 'userId', value: userId, message: 'Error: Unique User ID is required.', fieldId: 'userIdField' }
                 ];
                 
@@ -3188,6 +3318,26 @@ try {
                     fieldId: 'externalCompanyName'
                   });
                   highlightFieldError('externalCompanyName', 'Company Name is required.');
+                }
+                
+                // Validate picture: either uploaded or default checkbox must be selected
+                if (!profilePhoto && !useDefaultPicture) {
+                  missingFields.push({
+                    field: 'picture',
+                    value: null,
+                    message: 'Error: Please either upload a picture or select to use the default picture.',
+                    fieldId: 'defaultPictureError'
+                  });
+                  const defaultPictureError = document.getElementById('defaultPictureError');
+                  if (defaultPictureError) {
+                    defaultPictureError.textContent = 'Please either upload a picture or select to use the default picture.';
+                    defaultPictureError.classList.remove('hidden');
+                  }
+                } else {
+                  const defaultPictureError = document.getElementById('defaultPictureError');
+                  if (defaultPictureError) {
+                    defaultPictureError.classList.add('hidden');
+                  }
                 }
                 
                 // If there are missing fields, show sequential modals
@@ -3232,19 +3382,16 @@ try {
                 
                 // Validate Group → Role → Subrole combination
                 const validRoleMapping = {
-                  'LGU-PMT': ['MPMEC Secretariat', 'MPMEC'],
-                  'LGU-IU': ['IO Officer', 'MDC', 'Municipal Officer'],
-                  'EIU': ['Contractor', 'Program Partner Agency']
+                  'LGU-PMT': ['MPMEC', 'MPMEC Secretariat'],
+                  'LGU-IU': ['IO Officer'],
+                  'EIU': ['Contractor']
                 };
                 
                 const validSubRoleMapping = {
+                  'MPMEC': ['Chairperson'],
                   'MPMEC Secretariat': ['Focal Person (Admin)'],
-                  'MPMEC': ['Chairperson', 'Vice Chairperson', 'Member'],
-                  'IO Officer': ['Department Encoder (Admin)'],
-                  'MDC': ['Member'],
-                  'Municipal Officer': ['Member'],
-                  'Contractor': ['Head'],
-                  'Program Partner Agency': ['Head']
+                  'IO Officer': ['Department Encoder'],
+                  'Contractor': ['Head']
                 };
                 
                 // Check if the selected role is valid for the selected group
@@ -3311,22 +3458,58 @@ try {
                   return;
                 }
                 
-                // Validate age requirement
-                const today = new Date();
-                const birthDate = new Date(birthdate);
-                let age = today.getFullYear() - birthDate.getFullYear();
-                const monthDiff = today.getMonth() - birthDate.getMonth();
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                  age--;
-                }
-                
-                if (age < 18) {
-                  highlightFieldError('birthdateField', `User must be at least 18 years old. Current age: ${age} years.`);
-                  await showErrorModal(`Error: User must be at least 18 years old. Current age: ${age} years.`);
-                  document.getElementById('birthdateField').focus();
+                // If sendEmailMode, send email instead of creating user directly
+                if (sendEmailMode) {
+                  showLoadingModal('Sending user creation email. Please wait...');
+                  
+                  const emailPayload = {
+                    firstName: firstName.trim(),
+                    middleName: middleName.trim() || null,
+                    lastName: lastName.trim(),
+                    fullName: fullName.trim(),
+                    email: username.trim(),
+                    contactNumber: contactNumber.trim(),
+                    password,
+                    group: group.trim(),
+                    role: role.trim(),
+                    subRole: subRole.trim(),
+                    departmentOffice: departmentOffice?.trim() || null,
+                    externalCompanyName: externalCompanyName?.trim() || null,
+                    userId: userId.trim(),
+                    useDefaultPicture: useDefaultPicture
+                  };
+                  
+                  const token = localStorage.getItem('token') || '';
+                  
+                  try {
+                    const res = await fetch('http://localhost:3000/api/users/send-user-creation-email', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify(emailPayload)
+                    });
+                    
+                    hideLoadingModal();
+                    
+                    const data = await res.json();
+                    
+                    if (res.ok && data.success) {
+                      showUserCreationSuccessModal(username.trim());
+                    } else {
+                      await showErrorModal('Failed to send email: ' + (data.error || 'Unknown error'));
+                    }
+                  } catch (err) {
+                    hideLoadingModal();
+                    console.error('Error sending email:', err);
+                    await showErrorModal('Error sending email. Please try again.');
+                  }
+                  
                   return;
                 }
                 
+                // Normal user creation flow
                 const payload = {
                   firstName: firstName.trim(),
                   middleName: middleName.trim(),
@@ -3335,7 +3518,6 @@ try {
                   username: username.trim(),
                   email: username.trim(),
                   password,
-                  birthdate,
                   contactNumber: contactNumber.trim(),
                   role: group.trim(), // This should be the group (LGU-PMT, LGU-IU, EIU, EMS) for the ENUM field
                   subRole: `${role.trim()} - ${subRole.trim()}`, // Combined role and subrole for storage
@@ -3389,6 +3571,9 @@ try {
                     } catch (profileError) {
                       console.error('Profile picture upload error:', profileError);
                     }
+                  } else if (useDefaultPicture) {
+                    // Handle default picture - this will be set in the backend when user verifies
+                    console.log('Using default department/company picture');
                   }
                   
                   alert('User created successfully!');
@@ -3474,15 +3659,6 @@ try {
                 });
               }
               
-              // Make calendar icon clickable to open date picker
-              const calendarIcon = document.querySelector('#birthdateField').nextElementSibling.querySelector('svg');
-              const birthdateField = document.getElementById('birthdateField');
-              
-              if (calendarIcon && birthdateField) {
-                calendarIcon.addEventListener('click', function() {
-                  birthdateField.showPicker ? birthdateField.showPicker() : birthdateField.click();
-                });
-              }
               const first = document.querySelector('input[name="firstName"]');
               const middle = document.querySelector('input[name="middleName"]');
               const last = document.querySelector('input[name="lastName"]');
@@ -3492,9 +3668,6 @@ try {
               const firstNameError = document.getElementById('firstNameError');
               const middleNameError = document.getElementById('middleNameError');
               const lastNameError = document.getElementById('lastNameError');
-              
-              // Birthday validation elements
-              const birthdateError = document.getElementById('birthdateError');
               
               // Contact number validation elements
               const contactNumberField = document.getElementById('contactNumberField');
@@ -3508,7 +3681,6 @@ try {
               const strengthBar = document.getElementById('strengthBar');
               const lengthCheck = document.getElementById('lengthCheck');
               const caseCheck = document.getElementById('caseCheck');
-              const underscoreCheck = document.getElementById('underscoreCheck');
               const strengthCheck = document.getElementById('strengthCheck');
               
               // Office/Department container
@@ -3517,20 +3689,18 @@ try {
               // Password validation function
               function validatePassword(password) {
                 const checks = {
-                  length: password.length >= 8,
+                  length: password.length >= 12,
                   case: /[a-z]/.test(password) && /[A-Z]/.test(password),
-                  underscore: /_/.test(password)
+                  number: /[0-9]/.test(password),
+                  special: /[^a-zA-Z0-9]/.test(password) // All special characters (anything that's not alphanumeric)
                 };
                 
                 // Calculate strength score
                 let score = 0;
-                if (checks.length) score += 25;
+                if (checks.length) score += 30;
                 if (checks.case) score += 25;
-                if (checks.underscore) score += 25;
-                
-                // Additional complexity points
-                if (/[0-9]/.test(password)) score += 15;
-                if (/[^a-zA-Z0-9_]/.test(password)) score += 10;
+                if (checks.number) score += 20;
+                if (checks.special) score += 25;
                 
                 // Determine strength level
                 let strength = 'Weak';
@@ -3575,7 +3745,8 @@ try {
                 // Update checkmarks with new UI
                 const lengthCheckElement = lengthCheck.querySelector('svg');
                 const caseCheckElement = caseCheck.querySelector('svg');
-                const underscoreCheckElement = underscoreCheck.querySelector('svg');
+                const numberCheckElement = document.getElementById('numberCheck')?.querySelector('svg');
+                const specialCheckElement = document.getElementById('specialCheck')?.querySelector('svg');
                 const strengthCheckElement = strengthCheck.querySelector('svg');
                 
                 if (checks.length) {
@@ -3598,14 +3769,28 @@ try {
                   caseCheckElement.style.opacity = '0';
                 }
                 
-                if (checks.underscore) {
-                  underscoreCheck.style.backgroundColor = '#22c55e';
-                  underscoreCheck.style.borderColor = '#22c55e';
-                  underscoreCheckElement.style.opacity = '1';
-                } else {
-                  underscoreCheck.style.backgroundColor = 'transparent';
-                  underscoreCheck.style.borderColor = '#4b5563';
-                  underscoreCheckElement.style.opacity = '0';
+                if (numberCheckElement) {
+                  if (checks.number) {
+                    document.getElementById('numberCheck').style.backgroundColor = '#22c55e';
+                    document.getElementById('numberCheck').style.borderColor = '#22c55e';
+                    numberCheckElement.style.opacity = '1';
+                  } else {
+                    document.getElementById('numberCheck').style.backgroundColor = 'transparent';
+                    document.getElementById('numberCheck').style.borderColor = '#4b5563';
+                    numberCheckElement.style.opacity = '0';
+                  }
+                }
+                
+                if (specialCheckElement) {
+                  if (checks.special) {
+                    document.getElementById('specialCheck').style.backgroundColor = '#22c55e';
+                    document.getElementById('specialCheck').style.borderColor = '#22c55e';
+                    specialCheckElement.style.opacity = '1';
+                  } else {
+                    document.getElementById('specialCheck').style.backgroundColor = 'transparent';
+                    document.getElementById('specialCheck').style.borderColor = '#4b5563';
+                    specialCheckElement.style.opacity = '0';
+                  }
                 }
                 
                 if (score >= 50) {
@@ -3812,33 +3997,6 @@ try {
                 return str.replace(/\b\w/g, l => l.toUpperCase());
               }
               
-              // Birthday validation
-              birthdateField.addEventListener('change', function() {
-                const selectedDate = new Date(this.value);
-                const today = new Date();
-                const age = today.getFullYear() - selectedDate.getFullYear();
-                const monthDiff = today.getMonth() - selectedDate.getMonth();
-                const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < selectedDate.getDate()) ? age - 1 : age;
-                
-                if (actualAge < 18) {
-                  birthdateError.textContent = `User must be at least 18 years old. Current age: ${actualAge} years.`;
-                  birthdateError.classList.remove('hidden');
-                } else {
-                  birthdateError.classList.add('hidden');
-                }
-              });
-              
-              // Set maximum date for birthdate field (18 years ago from today)
-              function setMaxBirthdate() {
-                const today = new Date();
-                const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-                const maxDateString = maxDate.toISOString().split('T')[0];
-                birthdateField.setAttribute('max', maxDateString);
-              }
-              
-              // Initialize max date
-              setMaxBirthdate();
-              
               // Character counting for name fields
               const nameFields = ['firstName', 'middleName', 'lastName'];
               nameFields.forEach(fieldName => {
@@ -3927,6 +4085,128 @@ try {
               const userIdField = document.getElementById('userIdField');
               const usernameField = document.querySelector('input[name="username"]');
               const groupSelect = document.getElementById('groupSelect');
+              
+              // Email checking functionality
+              let emailCheckTimeout = null;
+              const emailVerifiedBadge = document.getElementById('emailVerifiedBadge');
+              const emailCheckingSpinner = document.getElementById('emailCheckingSpinner');
+              const usernameError = document.getElementById('usernameError');
+              
+              // Email validation and checking
+              usernameField.addEventListener('input', function() {
+                const email = this.value.trim();
+                
+                // Hide verified badge and spinner
+                if (emailVerifiedBadge) emailVerifiedBadge.classList.add('hidden');
+                if (emailCheckingSpinner) emailCheckingSpinner.classList.add('hidden');
+                if (usernameError) usernameError.classList.add('hidden');
+                
+                // Clear previous timeout
+                if (emailCheckTimeout) {
+                  clearTimeout(emailCheckTimeout);
+                }
+                
+                // Basic email format validation (frontend check before API call)
+                // More strict regex: requires proper domain structure
+                const strictEmailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+                
+                if (!email) {
+                  return; // Don't check if empty
+                }
+                
+                // Quick format check
+                if (email.length < 5 || email.length > 254 || email.includes('..') || email.startsWith('.') || email.endsWith('.')) {
+                  if (usernameError) {
+                    usernameError.textContent = 'Please enter a valid email address.';
+                    usernameError.classList.remove('hidden');
+                  }
+                  return;
+                }
+                
+                if (!strictEmailRegex.test(email)) {
+                  // Invalid format - show error and warning modal
+                  if (usernameError) {
+                    usernameError.textContent = 'Invalid email format. Please use a valid email address (e.g., user@example.com)';
+                    usernameError.classList.remove('hidden');
+                  }
+                  showEmailWarningModal(email, 'invalid', 'Please use a valid email format (e.g., user@example.com).');
+                  return;
+                }
+                
+                // Valid format - check if exists and verify domain after debounce
+                if (emailCheckingSpinner) emailCheckingSpinner.classList.remove('hidden');
+                
+                emailCheckTimeout = setTimeout(async () => {
+                  try {
+                    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                    if (!token) {
+                      console.error('No token available for email check');
+                      if (emailCheckingSpinner) emailCheckingSpinner.classList.add('hidden');
+                      return;
+                    }
+                    
+                    const response = await fetch('http://localhost:3000/api/users/check-email', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ email })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (emailCheckingSpinner) emailCheckingSpinner.classList.add('hidden');
+                    
+                    if (data.success) {
+                      if (data.exists) {
+                        // Email exists in database - show warning modal
+                        showEmailWarningModal(email, 'existing');
+                        if (usernameError) {
+                          usernameError.textContent = 'This email is already registered.';
+                          usernameError.classList.remove('hidden');
+                        }
+                      } else if (!data.validFormat) {
+                        // Invalid format from backend
+                        if (usernameError) {
+                          usernameError.textContent = data.reason || 'Invalid email format.';
+                          usernameError.classList.remove('hidden');
+                        }
+                        showEmailWarningModal(email, 'invalid', data.reason || 'Please use a valid email format (e.g., user@example.com).');
+                      } else if (!data.validDomain) {
+                        // Domain doesn't exist or doesn't accept emails
+                        if (usernameError) {
+                          usernameError.textContent = data.reason || 'Email domain does not exist or does not accept emails.';
+                          usernameError.classList.remove('hidden');
+                        }
+                        showEmailWarningModal(email, 'invalid', data.reason || 'The email domain does not exist or does not accept emails. Please use a valid email address.');
+                      } else {
+                        // Email is valid, available, and domain exists - show verified badge
+                        if (emailVerifiedBadge) {
+                          emailVerifiedBadge.classList.remove('hidden');
+                        }
+                        if (usernameError) {
+                          usernameError.classList.add('hidden');
+                        }
+                      }
+                    } else {
+                      // API error
+                      if (usernameError) {
+                        usernameError.textContent = data.error || 'Failed to verify email. Please try again.';
+                        usernameError.classList.remove('hidden');
+                      }
+                      showEmailWarningModal(email, 'error');
+                    }
+                  } catch (error) {
+                    console.error('Error checking email:', error);
+                    if (emailCheckingSpinner) emailCheckingSpinner.classList.add('hidden');
+                    if (usernameError) {
+                      usernameError.textContent = 'Network error. Please check your connection and try again.';
+                      usernameError.classList.remove('hidden');
+                    }
+                  }
+                }, 800); // 800ms debounce
+              });
               
               // Store the generated User ID for validation
               let generatedUserId = null;
@@ -4214,21 +4494,16 @@ try {
               const subRoleContainer = document.getElementById('subRoleContainer');
 
               const roleOptions = {
-                'LGU-PMT': ['MPMEC Secretariat', 'MPMEC'],
-                'LGU-IU': ['IO Officer', 'MDC', 'Municipal Officer'],
-                'EIU': ['Contractor', 'Program Partner Agency'],
-                'EMS': ['Soon to be implemented']
+                'LGU-PMT': ['MPMEC', 'MPMEC Secretariat'],
+                'LGU-IU': ['IO Officer'],
+                'EIU': ['Contractor']
               };
 
               const subRoleOptions = {
+                'MPMEC': ['Chairperson'],
                 'MPMEC Secretariat': ['Focal Person (Admin)'],
-                'MPMEC': ['Chairperson', 'Vice Chairperson', 'Member'],
-                'IO Officer': ['Department Encoder (Admin)'],
-                'MDC': ['Member'],
-                'Municipal Officer': ['Member'],
-                'Contractor': ['Head'],
-                'Program Partner Agency': ['Head'],
-                'Soon to be implemented': []
+                'IO Officer': ['Department Encoder'],
+                'Contractor': ['Head']
               };
 
               groupSelect.addEventListener('change', function() {
@@ -4237,35 +4512,49 @@ try {
                 console.log('Role select element:', roleSelect);
                 console.log('Subrole select element:', subRoleSelect);
                 
-                roleSelect.innerHTML = '<option value="">Select Role</option>';
-                subRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
+                // Clear role and subrole selects
+                roleSelect.innerHTML = '';
+                subRoleSelect.innerHTML = '';
                 if (officeDepartmentContainer) officeDepartmentContainer.classList.add('hidden');
                 
                 // Reset sub-role visibility
                 if (subRoleContainer) subRoleContainer.classList.remove('hidden');
-
-                // Handle Department/Office dropdown based on selected group
+                
+                // Handle Department/Office dropdown
                 const departmentSelect = document.getElementById('departmentOfficeSelect');
                 const externalCompanyContainer = document.getElementById('externalCompanyContainer');
                 
-                if (departmentSelect) {
-                  // Clear existing options except the first one
-                  departmentSelect.innerHTML = '<option value="" class="bg-neutral-800 text-white">Select Department/Office</option>';
-                  
-                  if (selectedGroup === 'EIU') {
-                    // For EIU: Show only External Partner Company
+                if (selectedGroup === 'LGU-PMT') {
+                  // LGU-PMT: Show roles MPMEC and MPMEC Secretariat
+                  roleOptions['LGU-PMT'].forEach(role => {
                     const option = document.createElement('option');
-                    option.value = 'External Partner Company';
-                    option.textContent = 'External Partner Company';
-                    option.className = 'bg-neutral-800 text-white';
-                    departmentSelect.appendChild(option);
-                    
-                    // Show free text field for company name
-                    if (externalCompanyContainer) {
-                      externalCompanyContainer.classList.remove('hidden');
-                    }
-                  } else if (selectedGroup === 'LGU-PMT' || selectedGroup === 'LGU-IU') {
-                    // For LGU-PMT and LGU-IU: Show all departments except External Partner Company
+                    option.value = role;
+                    option.textContent = role;
+                    roleSelect.appendChild(option);
+                  });
+                  
+                  // Auto-populate department when role is selected
+                  if (departmentSelect) {
+                    departmentSelect.innerHTML = '<option value="Municipal Planning and Development Office" class="bg-neutral-800 text-white">Municipal Planning and Development Office</option>';
+                    departmentSelect.value = 'Municipal Planning and Development Office';
+                  }
+                } else if (selectedGroup === 'LGU-IU') {
+                  // LGU-IU: Auto-populate Role and Subrole
+                  const ioOfficerOption = document.createElement('option');
+                  ioOfficerOption.value = 'IO Officer';
+                  ioOfficerOption.textContent = 'IO Officer';
+                  roleSelect.appendChild(ioOfficerOption);
+                  roleSelect.value = 'IO Officer';
+                  
+                  const deptEncoderOption = document.createElement('option');
+                  deptEncoderOption.value = 'Department Encoder';
+                  deptEncoderOption.textContent = 'Department Encoder';
+                  subRoleSelect.appendChild(deptEncoderOption);
+                  subRoleSelect.value = 'Department Encoder';
+                  
+                  // Show department dropdown
+                  if (departmentSelect) {
+                    departmentSelect.innerHTML = '<option value="" class="bg-neutral-800 text-white">Select Department/Office</option>';
                     const departments = [
                       'Municipal Engineer\'s Office',
                       'Municipal Agriculturist\'s Office',
@@ -4279,7 +4568,6 @@ try {
                       'Municipal Civil Registry Office',
                       'Municipal Environment And Natural Resources Office'
                     ];
-                    
                     departments.forEach(dept => {
                       const option = document.createElement('option');
                       option.value = dept;
@@ -4287,89 +4575,77 @@ try {
                       option.className = 'bg-neutral-800 text-white';
                       departmentSelect.appendChild(option);
                     });
-                    
-                    // Hide free text field
-                    if (externalCompanyContainer) {
-                      externalCompanyContainer.classList.add('hidden');
-                    }
-                  } else {
-                    // For other groups (EMS): Show all departments
-                    const allDepartments = [
-                      'Municipal Engineer\'s Office',
-                      'Municipal Agriculturist\'s Office',
-                      'Municipal General Services Office',
-                      'Municipal Social Welfare and Development Office',
-                      'Municipal Disaster and Risk Reduction Management Office',
-                      'Municipal Planning and Development Office',
-                      'Municipal Treasurer\'s Office',
-                      'Municipal Budget Office',
-                      'Municipal Health Office',
-                      'Municipal Civil Registry Office',
-                      'Municipal Environment And Natural Resources Office',
-                      'External Partner Company'
-                    ];
-                    
-                    allDepartments.forEach(dept => {
-                      const option = document.createElement('option');
-                      option.value = dept;
-                      option.textContent = dept;
-                      option.className = 'bg-neutral-800 text-white';
-                      departmentSelect.appendChild(option);
-                    });
-                    
-                    // Hide free text field
-                    if (externalCompanyContainer) {
-                      externalCompanyContainer.classList.add('hidden');
-                    }
+                  }
+                } else if (selectedGroup === 'EIU') {
+                  // EIU: Auto-populate Role, Subrole, and Department/Office
+                  const contractorOption = document.createElement('option');
+                  contractorOption.value = 'Contractor';
+                  contractorOption.textContent = 'Contractor';
+                  roleSelect.appendChild(contractorOption);
+                  roleSelect.value = 'Contractor';
+                  
+                  const headOption = document.createElement('option');
+                  headOption.value = 'Head';
+                  headOption.textContent = 'Head';
+                  subRoleSelect.appendChild(headOption);
+                  subRoleSelect.value = 'Head';
+                  
+                  // Auto-populate Department/Office with External Partner Company
+                  if (departmentSelect) {
+                    departmentSelect.innerHTML = '<option value="External Partner Company" class="bg-neutral-800 text-white">External Partner Company</option>';
+                    departmentSelect.value = 'External Partner Company';
+                  }
+                  
+                  // Show free text field for company name
+                  if (externalCompanyContainer) {
+                    externalCompanyContainer.classList.remove('hidden');
                   }
                 }
 
-                if (selectedGroup && roleOptions[selectedGroup]) {
-                  console.log('Role options for', selectedGroup, ':', roleOptions[selectedGroup]);
-                  // Show special message for EMS
-                  if (selectedGroup === 'EMS') {
-                    roleSelect.innerHTML = '<option value="">Soon to be implemented</option>';
-                    roleSelect.disabled = true;
-                  } else {
-                    roleSelect.disabled = false;
-                    roleOptions[selectedGroup].forEach(role => {
-                      const option = document.createElement('option');
-                      option.value = role;
-                      option.textContent = role;
-                      roleSelect.appendChild(option);
-                    });
-                    console.log('Role options populated');
-                  }
-                }
               });
 
               roleSelect.addEventListener('change', function() {
                 const selectedRole = this.value;
                 const selectedGroup = groupSelect.value;
                 
-                subRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
+                // Clear subrole select
+                subRoleSelect.innerHTML = '';
                 if (officeDepartmentContainer) officeDepartmentContainer.classList.add('hidden');
 
-                // Show sub-role container for all groups except EMS
-                if (selectedGroup === 'EMS') {
-                  if (subRoleContainer) subRoleContainer.classList.add('hidden');
-                } else {
-                  if (subRoleContainer) subRoleContainer.classList.remove('hidden');
-                }
+                // Show sub-role container
+                if (subRoleContainer) subRoleContainer.classList.remove('hidden');
 
-                if (selectedRole && subRoleOptions[selectedRole]) {
-                  subRoleOptions[selectedRole].forEach(subRole => {
-                    const option = document.createElement('option');
-                    option.value = subRole;
-                    option.textContent = subRole;
-                    subRoleSelect.appendChild(option);
-                  });
-                }
-
-
-                // Show office/department for LGU-IU with specific roles
-                if (selectedGroup === 'LGU-IU' && (selectedRole === 'IO Officer' || selectedRole === 'MDC' || selectedRole === 'Municipal Officer')) {
-                  if (officeDepartmentContainer) officeDepartmentContainer.classList.remove('hidden');
+                if (selectedGroup === 'LGU-PMT') {
+                  // For LGU-PMT: Auto-populate subrole based on role
+                  if (selectedRole === 'MPMEC') {
+                    const chairpersonOption = document.createElement('option');
+                    chairpersonOption.value = 'Chairperson';
+                    chairpersonOption.textContent = 'Chairperson';
+                    subRoleSelect.appendChild(chairpersonOption);
+                    subRoleSelect.value = 'Chairperson';
+                  } else if (selectedRole === 'MPMEC Secretariat') {
+                    const focalPersonOption = document.createElement('option');
+                    focalPersonOption.value = 'Focal Person (Admin)';
+                    focalPersonOption.textContent = 'Focal Person (Admin)';
+                    subRoleSelect.appendChild(focalPersonOption);
+                    subRoleSelect.value = 'Focal Person (Admin)';
+                  }
+                  
+                  // Auto-populate department
+                  const departmentSelect = document.getElementById('departmentOfficeSelect');
+                  if (departmentSelect) {
+                    departmentSelect.innerHTML = '<option value="Municipal Planning and Development Office" class="bg-neutral-800 text-white">Municipal Planning and Development Office</option>';
+                    departmentSelect.value = 'Municipal Planning and Development Office';
+                  }
+                } else if (selectedGroup === 'LGU-IU') {
+                  // LGU-IU already has role and subrole auto-populated in group change handler
+                  // Just ensure department is shown
+                  const departmentSelect = document.getElementById('departmentOfficeSelect');
+                  if (departmentSelect && departmentSelect.options.length > 0) {
+                    // Department dropdown already populated in group change handler
+                  }
+                } else if (selectedGroup === 'EIU') {
+                  // EIU already has role, subrole, and department auto-populated in group change handler
                 }
               });
 
@@ -4384,8 +4660,8 @@ try {
                 
                 // Add the correct event listener
                 newBtn.addEventListener('click', async function() {
-                  console.log('Create User (Direct) button clicked!');
-                  await createUserDirect();
+                  console.log('Send User Creation Email button clicked!');
+                  await sendUserCreationEmail();
                 });
               } else {
                 console.error('Create User button not found!');
@@ -4417,7 +4693,7 @@ try {
               // Add event listeners to clear errors when users start typing
               const fieldsToClearErrors = [
                 'firstNameField', 'middleNameField', 'lastNameField', 'usernameField',
-                'contactNumberField', 'passwordField', 'birthdateField', 'groupSelect',
+                'contactNumberField', 'passwordField', 'groupSelect',
                 'roleSelect', 'subRoleSelect', 'departmentOfficeSelect', 
                 'externalCompanyName', 'userIdField', 'profilePhotoInput'
               ];
@@ -4536,9 +4812,6 @@ try {
                   </div>
                 </div>
               </div>
-                <button type="button" id="editVerifyEmailBtn" class="mt-2 px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200">
-                Verify Email
-              </button>
                 <div class="text-xs text-gray-400 mt-1">Enter a valid email address that will be used as the username</div>
             </div>
             
@@ -4552,78 +4825,9 @@ try {
                 </div>
               </div>
               
-              <!-- Birthdate -->
-            <div>
-                <label class="block text-sm font-medium text-white mb-2">Birthdate *</label>
-                <div class="relative">
-                  <input type="date" name="birthdate" id="editBirthdateField" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 pr-10 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all cursor-pointer backdrop-blur-sm" style="appearance: none; -webkit-appearance: none; -moz-appearance: none; color-scheme: dark;" />
-                  <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-5">
-                    <svg class="w-5 h-5 text-gray-400 hover:text-white transition-colors cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div id="editBirthdateError" class="text-red-400 text-xs mt-1 hidden">User must be at least 18 years old.</div>
-                <div class="text-xs text-gray-400 mt-1">Select a date (user must be at least 18 years old)</div>
-            </div>
-            
-              <!-- Group and Role Selection -->
-            <div class="flex gap-2">
-                <div class="w-1/2">
-                  <label class="block text-sm font-medium text-white mb-2">Select Group</label>
-                  <select name="group" id="editGroupSelect" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                    <option value="" class="bg-neutral-800 text-white">Select Group</option>
-                    <option value="LGU-PMT" class="bg-neutral-800 text-white">LGU-PMT</option>
-                    <option value="LGU-IU" class="bg-neutral-800 text-white">LGU-IU</option>
-                    <option value="EIU" class="bg-neutral-800 text-white">EIU</option>
-                    <option value="EMS" class="bg-neutral-800 text-white">EMS</option>
-              </select>
-                </div>
-                <div class="w-1/2">
-                  <label class="block text-sm font-medium text-white mb-2">Select Role</label>
-                  <select name="role" id="editRoleSelect" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                    <option value="" class="bg-neutral-800 text-white">Select Role</option>
-              </select>
-            </div>
-              </div>
-              
-              <!-- Subrole and Project Code -->
-            <div class="flex gap-2">
-              <div id="editSubRoleContainer" class="w-1/2">
-                  <label class="block text-sm font-medium text-white mb-2">Select Subrole</label>
-                  <select name="subRole" id="editSubRoleSelect" class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                    <option value="" class="bg-neutral-800 text-white">Select Subrole</option>
-                </select>
-              </div>
-            </div>
-            
-              <!-- Department/Office Field -->
+              <!-- Department/Office Picture Section -->
               <div>
-                <label class="block text-sm font-medium text-white mb-2">Department/Office</label>
-                <select name="departmentOffice" id="editDepartmentOfficeSelect" class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                  <option value="" class="bg-neutral-800 text-white">Select Department/Office</option>
-                  <option value="Municipal Engineer's Office" class="bg-neutral-800 text-white">Municipal Engineer's Office</option>
-                  <option value="Municipal Agriculturist's Office" class="bg-neutral-800 text-white">Municipal Agriculturist's Office</option>
-                  <option value="Municipal General Services Office" class="bg-neutral-800 text-white">Municipal General Services Office</option>
-                  <option value="Municipal Social Welfare and Development Office" class="bg-neutral-800 text-white">Municipal Social Welfare and Development Office</option>
-                  <option value="Municipal Disaster and Risk Reduction Management Office" class="bg-neutral-800 text-white">Municipal Disaster and Risk Reduction Management Office</option>
-                  <option value="Municipal Planning and Development Office" class="bg-neutral-800 text-white">Municipal Planning and Development Office</option>
-                  <option value="Municipal Treasurer's Office" class="bg-neutral-800 text-white">Municipal Treasurer's Office</option>
-                  <option value="Municipal Budget Office" class="bg-neutral-800 text-white">Municipal Budget Office</option>
-                  <option value="Municipal Health Office" class="bg-neutral-800 text-white">Municipal Health Office</option>
-                  <option value="Municipal Civil Registry Office" class="bg-neutral-800 text-white">Municipal Civil Registry Office</option>
-                  <option value="Municipal Environment And Natural Resources Office" class="bg-neutral-800 text-white">Municipal Environment And Natural Resources Office</option>
-                  <option value="External Partner Company" class="bg-neutral-800 text-white">External Partner Company</option>
-              </select>
-              <!-- Free text field for EIU External Partner Company -->
-              <div id="editExternalCompanyContainer" class="mt-2 hidden">
-                <input type="text" name="editExternalCompanyName" id="editExternalCompanyName" placeholder="Enter Company Name" class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white placeholder-gray-400 focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm" />
-              </div>
-            </div>
-              
-              <!-- Profile Photo Section -->
-              <div>
-                <label class="block text-sm font-medium text-white mb-2">Profile Photo</label>
+                <label class="block text-sm font-medium text-white mb-2">Department/Office Picture</label>
                 <div class="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-white/40 transition-colors duration-200">
                   <div class="flex flex-col items-center space-y-4">
                     <div id="editProfilePhotoPreview" class="w-20 h-20 rounded-full bg-neutral-700/50 flex items-center justify-center border-2 border-white/20">
@@ -4652,16 +4856,6 @@ try {
                 <div class="text-xs text-gray-400 mt-1">This field is auto-generated and cannot be modified</div>
               </div>
               
-              <!-- Status -->
-              <div>
-                <label class="block text-sm font-medium text-white mb-2">Status</label>
-                <select name="status" required class="bg-neutral-800/80 border border-white/20 rounded-lg px-4 py-2 w-full text-white focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-200 backdrop-blur-sm">
-                  <option value="active" class="bg-neutral-800 text-white">Active</option>
-                  <option value="blocked" class="bg-neutral-800 text-white">Blocked</option>
-                  <option value="deactivated" class="bg-neutral-800 text-white">Deactivated</option>
-            </select>
-              </div>
-              
               <div id="editUserError" class="text-red-400 text-sm mt-2 hidden"></div>
           </form>
           </div>
@@ -4673,7 +4867,8 @@ try {
                 type="submit" 
                 form="editUserForm"
                 id="editUserBtn" 
-                class="btn-primary flex items-center space-x-3 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 backdrop-blur-sm"
+                disabled
+                class="btn-primary flex items-center space-x-3 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 backdrop-blur-sm opacity-50 cursor-not-allowed"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -6917,24 +7112,21 @@ try {
             const firstNameError = document.getElementById('firstNameError');
             const middleNameError = document.getElementById('middleNameError');
             const lastNameError = document.getElementById('lastNameError');
-            const birthdateError = document.getElementById('birthdateError');
             const contactNumberError = document.getElementById('contactNumberError');
             const first = document.querySelector('input[name="firstName"]');
             const middle = document.querySelector('input[name="middleName"]');
             const last = document.querySelector('input[name="lastName"]');
             const passwordField = document.getElementById('passwordField');
-            const birthdateField = document.getElementById('birthdateField');
             const contactNumberField = document.getElementById('contactNumberField');
             
             // Hide error messages
             firstNameError.classList.add('hidden');
             middleNameError.classList.add('hidden');
             lastNameError.classList.add('hidden');
-            birthdateError.classList.add('hidden');
             contactNumberError.classList.add('hidden');
             
             // Reset field styling
-            [first, middle, last, passwordField, birthdateField, contactNumberField].forEach(field => {
+            [first, middle, last, passwordField, contactNumberField].forEach(field => {
               field.classList.remove('border-red-500');
               field.classList.add('border-gray-300');
             });
@@ -6944,7 +7136,8 @@ try {
             const strengthBar = document.getElementById('strengthBar');
             const lengthCheck = document.getElementById('lengthCheck');
             const caseCheck = document.getElementById('caseCheck');
-            const underscoreCheck = document.getElementById('underscoreCheck');
+            const numberCheck = document.getElementById('numberCheck');
+            const specialCheck = document.getElementById('specialCheck');
             const strengthCheck = document.getElementById('strengthCheck');
             
             strengthText.textContent = 'Weak';
@@ -6952,8 +7145,13 @@ try {
             strengthBar.style.width = '0%';
             strengthBar.style.backgroundColor = '#ef4444';
             
-            [lengthCheck, caseCheck, underscoreCheck, strengthCheck].forEach(check => {
-              check.style.backgroundColor = '#d1d5db';
+            [lengthCheck, caseCheck, numberCheck, specialCheck, strengthCheck].forEach(check => {
+              if (check) {
+                check.style.backgroundColor = 'transparent';
+                check.style.borderColor = '#4b5563';
+                const svg = check.querySelector('svg');
+                if (svg) svg.style.opacity = '0';
+              }
             });
             
             // Clear verification messages
@@ -7115,7 +7313,6 @@ try {
             const contactNumber = document.getElementById('contactNumberField');
             const password = document.getElementById('passwordField');
             const confirmPassword = document.getElementById('confirmPasswordField');
-            const birthdate = document.getElementById('birthdateField');
             const group = document.getElementById('groupSelect');
             const role = document.getElementById('roleSelect');
             const subRole = document.getElementById('subRoleSelect');
@@ -7151,11 +7348,6 @@ try {
             
             if (!confirmPassword.value.trim()) {
               showFieldError(confirmPassword, 'confirmPasswordError', 'Please confirm your password.');
-              hasErrors = true;
-            }
-            
-            if (!birthdate.value.trim()) {
-              showFieldError(birthdate, 'birthdateError', 'Birthdate is required.');
               hasErrors = true;
             }
             
@@ -7209,14 +7401,7 @@ try {
             // Validate password strength
             const passwordValidation = validatePassword(password.value);
             if (!passwordValidation.isValid) {
-              showFieldError(password, 'passwordError', 'Password must meet all requirements: at least 8 characters, include uppercase & lowercase letters, contain an underscore (_), and have Medium strength or higher.');
-              hasErrors = true;
-            }
-            
-            // Validate age
-            const ageValidation = validateAge(birthdate.value);
-            if (!ageValidation.isValid) {
-              showFieldError(birthdate, 'birthdateError', 'User must be at least 18 years old.');
+              showFieldError(password, 'passwordError', 'Password must meet all requirements: at least 12 characters, include uppercase & lowercase letters, numbers, and special characters. Minimum strength: Medium.');
               hasErrors = true;
             }
             
@@ -7449,46 +7634,85 @@ try {
         // Function to check if form has been modified
         function hasFormBeenModified() {
           // If no original values stored yet, consider it not modified
-          if (Object.keys(originalFormValues).length === 0) {
-            console.log('No original values stored, considering not modified');
+          if (!originalFormValues || Object.keys(originalFormValues).length === 0) {
+            console.log('🔍 [BUTTON STATE DEBUG] No original values stored, considering not modified');
             return false;
           }
           
-          // Get current values with fallbacks
+          // Get current values for editable fields only
           const firstName = editUserForm.querySelector('input[name="firstName"]')?.value || '';
           const middleName = editUserForm.querySelector('input[name="middleName"]')?.value || '';
           const lastName = editUserForm.querySelector('input[name="lastName"]')?.value || '';
-          const fullName = editUserForm.querySelector('input[name="fullName"]')?.value || '';
           const username = editUserForm.querySelector('input[name="username"]')?.value || '';
           const contactNumber = editUserForm.querySelector('input[name="contactNumber"]')?.value || '';
-          const birthdate = editUserForm.querySelector('input[name="birthdate"]')?.value || '';
-          const userId = editUserForm.querySelector('input[name="userId"]')?.value || '';
-          const status = editUserForm.querySelector('select[name="status"]')?.value || '';
-          const group = editUserForm.querySelector('select[name="group"]')?.value || '';
-          const role = editUserForm.querySelector('select[name="role"]')?.value || '';
-          const subRole = editUserForm.querySelector('select[name="subRole"]')?.value || '';
-          const departmentOffice = document.getElementById('editDepartmentOfficeSelect')?.value || '';
           
-          const currentValues = {
-            firstName, middleName, lastName, fullName, username, 
-            contactNumber, birthdate, userId, status, group, 
-            role, subRole, departmentOffice
-          };
+          // Check if profile photo has been changed
+          const editProfilePhotoInput = document.getElementById('editProfilePhotoInput');
+          const profilePhotoChanged = editProfilePhotoInput && editProfilePhotoInput.files.length > 0;
           
-          console.log('Current values:', currentValues);
-          console.log('Original values:', originalFormValues);
-          
-          // Compare each field individually for better debugging
+          // Compare editable fields only
           let isModified = false;
-          for (const key in originalFormValues) {
-            if (currentValues[key] !== originalFormValues[key]) {
-              console.log(`Field ${key} changed: "${originalFormValues[key]}" -> "${currentValues[key]}"`);
-              isModified = true;
-            }
+          
+          const origFirstName = originalFormValues.firstName || '';
+          const origMiddleName = originalFormValues.middleName || '';
+          const origLastName = originalFormValues.lastName || '';
+          const origUsername = originalFormValues.username || '';
+          const origContactNumber = originalFormValues.contactNumber || '';
+          
+          if (firstName !== origFirstName) {
+            console.log(`🔍 [BUTTON STATE DEBUG] Field firstName changed: "${origFirstName}" -> "${firstName}"`);
+            isModified = true;
+          }
+          if (middleName !== origMiddleName) {
+            console.log(`🔍 [BUTTON STATE DEBUG] Field middleName changed: "${origMiddleName}" -> "${middleName}"`);
+            isModified = true;
+          }
+          if (lastName !== origLastName) {
+            console.log(`🔍 [BUTTON STATE DEBUG] Field lastName changed: "${origLastName}" -> "${lastName}"`);
+            isModified = true;
+          }
+          if (username !== origUsername) {
+            console.log(`🔍 [BUTTON STATE DEBUG] Field username changed: "${origUsername}" -> "${username}"`);
+            isModified = true;
+          }
+          if (contactNumber !== origContactNumber) {
+            console.log(`🔍 [BUTTON STATE DEBUG] Field contactNumber changed: "${origContactNumber}" -> "${contactNumber}"`);
+            isModified = true;
+          }
+          if (profilePhotoChanged) {
+            console.log('🔍 [BUTTON STATE DEBUG] Profile photo has been changed');
+            isModified = true;
           }
           
-          console.log('Form modified:', isModified);
+          console.log('🔍 [BUTTON STATE DEBUG] Form modified:', isModified);
+          console.log('🔍 [BUTTON STATE DEBUG] Original values:', originalFormValues);
+          console.log('🔍 [BUTTON STATE DEBUG] Current values:', { firstName, middleName, lastName, username, contactNumber });
+          
           return isModified;
+        }
+        
+        // Function to update Update button state based on form modifications
+        function updateEditButtonState() {
+          const editUserBtn = document.getElementById('editUserBtn');
+          if (!editUserBtn) {
+            console.log('🔍 [BUTTON STATE DEBUG] Update button not found');
+            return;
+          }
+          
+          const isModified = hasFormBeenModified();
+          console.log('🔍 [BUTTON STATE DEBUG] Updating button state, isModified:', isModified);
+          
+          if (isModified) {
+            editUserBtn.disabled = false;
+            editUserBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            editUserBtn.classList.add('hover:from-blue-700', 'hover:to-blue-800');
+            console.log('🔍 [BUTTON STATE DEBUG] Button enabled');
+          } else {
+            editUserBtn.disabled = true;
+            editUserBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            editUserBtn.classList.remove('hover:from-blue-700', 'hover:to-blue-800');
+            console.log('🔍 [BUTTON STATE DEBUG] Button disabled');
+          }
         }
         
         // Function to close edit modal
@@ -7499,73 +7723,104 @@ try {
           editUserForm.reset();
           editUserError.classList.add('hidden');
           
-          // Reset modal styles
+          // Reset modal styles completely
           editUserModal.style.display = 'none';
           editUserModal.style.visibility = 'hidden';
           editUserModal.style.opacity = '0';
+          editUserModal.style.pointerEvents = 'none';
+          editUserModal.style.zIndex = '50';
+          
+          // Also reset the modal content
+          const editUserModalContent = document.getElementById('editUserModalContent');
+          if (editUserModalContent) {
+            editUserModalContent.style.opacity = '0';
+            editUserModalContent.style.transform = 'scale(0.95)';
+          }
           
           // Clear original values and reset confirmation dialog flag
           originalFormValues = {};
           isConfirmationDialogOpen = false;
+          
+          // Reset Update button state
+          const editUserBtn = document.getElementById('editUserBtn');
+          if (editUserBtn) {
+            editUserBtn.disabled = true;
+            editUserBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          }
         }
 
-        // Edit modal role/subrole logic
+        // Edit modal role/subrole logic - REMOVED: Fields are no longer editable
+        // These event listeners are kept for backward compatibility but won't be triggered
+        // since the fields have been removed from the DOM
         const editGroupSelect = document.getElementById('editGroupSelect');
         const editRoleSelect = document.getElementById('editRoleSelect');
         const editSubRoleSelect = document.getElementById('editSubRoleSelect');
         const editSubRoleContainer = document.getElementById('editSubRoleContainer');
         const editProjectCodeContainer = document.getElementById('editProjectCodeContainer');
 
-        const roleOptions = {
-          'LGU-PMT': ['MPMEC Secretariat', 'MPMEC'],
-          'LGU-IU': ['IO Officer', 'MDC', 'Municipal Officer'],
-          'EIU': ['Contractor', 'Program Partner Agency'],
-          'EMS': ['Soon to be implemented']
-        };
-
-        const subRoleOptions = {
-          'MPMEC Secretariat': ['Focal Person (Admin)'],
-          'MPMEC': ['Chairperson', 'Vice Chairperson', 'Member'],
-          'IO Officer': ['Department Encoder (Admin)'],
-          'MDC': ['Member'],
-          'Municipal Officer': ['Member'],
-          'Contractor': ['Head'],
-          'Program Partner Agency': ['Head'],
-          'Soon to be implemented': []
-        };
-
+        // Note: Event listeners below are kept for backward compatibility
+        // but won't execute since fields are removed from DOM
         if (editGroupSelect) {
         editGroupSelect.addEventListener('change', function() {
           const selectedGroup = this.value;
-            if (editRoleSelect) editRoleSelect.innerHTML = '<option value="">Select Role</option>';
-            if (editSubRoleSelect) editSubRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
-            if (editProjectCodeContainer) editProjectCodeContainer.classList.add('hidden');
+          console.log('🔍 [EDIT USER DEBUG] Group changed to:', selectedGroup);
+          
+          // Clear role and subrole selects
+          if (editRoleSelect) editRoleSelect.innerHTML = '<option value="" disabled selected class="bg-neutral-800 text-white">Select Role</option>';
+          if (editSubRoleSelect) editSubRoleSelect.innerHTML = '<option value="" disabled selected class="bg-neutral-800 text-white">Select Subrole</option>';
+          if (editProjectCodeContainer) editProjectCodeContainer.classList.add('hidden');
           
           // Reset sub-role visibility
-            if (editSubRoleContainer) editSubRoleContainer.classList.remove('hidden');
+          if (editSubRoleContainer) editSubRoleContainer.classList.remove('hidden');
 
           // Handle Department/Office dropdown based on selected group
           const editDepartmentSelect = document.getElementById('editDepartmentOfficeSelect');
           const editExternalCompanyContainer = document.getElementById('editExternalCompanyContainer');
           
           if (editDepartmentSelect) {
-            // Clear existing options except the first one
-            editDepartmentSelect.innerHTML = '<option value="" class="bg-neutral-800 text-white">Select Department/Office</option>';
+            // Clear existing options
+            editDepartmentSelect.innerHTML = '<option value="" disabled selected class="bg-neutral-800 text-white">Select Department/Office</option>';
             
-            if (selectedGroup === 'EIU') {
-              // For EIU: Show only External Partner Company
-              const option = document.createElement('option');
-              option.value = 'External Partner Company';
-              option.textContent = 'External Partner Company';
-              option.className = 'bg-neutral-800 text-white';
-              editDepartmentSelect.appendChild(option);
+            if (selectedGroup === 'LGU-PMT') {
+              // LGU-PMT: Show roles MPMEC and MPMEC Secretariat
+              const roles = ['MPMEC', 'MPMEC Secretariat'];
+              roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role;
+                option.textContent = role;
+                option.className = 'bg-neutral-800 text-white';
+                if (editRoleSelect) editRoleSelect.appendChild(option);
+              });
               
-              // Show free text field for company name
+              // Auto-populate department
+              editDepartmentSelect.innerHTML = '<option value="Municipal Planning and Development Office" class="bg-neutral-800 text-white">Municipal Planning and Development Office</option>';
+              editDepartmentSelect.value = 'Municipal Planning and Development Office';
+              
+              // Hide free text field
               if (editExternalCompanyContainer) {
-                editExternalCompanyContainer.classList.remove('hidden');
+                editExternalCompanyContainer.classList.add('hidden');
               }
-            } else if (selectedGroup === 'LGU-PMT' || selectedGroup === 'LGU-IU') {
-              // For LGU-PMT and LGU-IU: Show all departments except External Partner Company
+            } else if (selectedGroup === 'LGU-IU') {
+              // LGU-IU: Auto-populate Role and Subrole
+              const ioOfficerOption = document.createElement('option');
+              ioOfficerOption.value = 'IO Officer';
+              ioOfficerOption.textContent = 'IO Officer';
+              ioOfficerOption.className = 'bg-neutral-800 text-white';
+              if (editRoleSelect) {
+                editRoleSelect.appendChild(ioOfficerOption);
+                editRoleSelect.value = 'IO Officer';
+              }
+              
+              const deptEncoderOption = document.createElement('option');
+              deptEncoderOption.value = 'Department Encoder';
+              deptEncoderOption.textContent = 'Department Encoder';
+              deptEncoderOption.className = 'bg-neutral-800 text-white';
+              if (editSubRoleSelect) {
+                editSubRoleSelect.appendChild(deptEncoderOption);
+                editSubRoleSelect.value = 'Department Encoder';
+              }
+              
+              // Show department dropdown
               const departments = [
                 'Municipal Engineer\'s Office',
                 'Municipal Agriculturist\'s Office',
@@ -7579,7 +7834,6 @@ try {
                 'Municipal Civil Registry Office',
                 'Municipal Environment And Natural Resources Office'
               ];
-              
               departments.forEach(dept => {
                 const option = document.createElement('option');
                 option.value = dept;
@@ -7592,54 +7846,34 @@ try {
               if (editExternalCompanyContainer) {
                 editExternalCompanyContainer.classList.add('hidden');
               }
-            } else {
-              // For other groups (EMS): Show all departments
-              const allDepartments = [
-                'Municipal Engineer\'s Office',
-                'Municipal Agriculturist\'s Office',
-                'Municipal General Services Office',
-                'Municipal Social Welfare and Development Office',
-                'Municipal Disaster and Risk Reduction Management Office',
-                'Municipal Planning and Development Office',
-                'Municipal Treasurer\'s Office',
-                'Municipal Budget Office',
-                'Municipal Health Office',
-                'Municipal Civil Registry Office',
-                'Municipal Environment And Natural Resources Office',
-                'External Partner Company'
-              ];
-              
-              allDepartments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept;
-                option.textContent = dept;
-                option.className = 'bg-neutral-800 text-white';
-                editDepartmentSelect.appendChild(option);
-              });
-              
-              // Hide free text field
-              if (editExternalCompanyContainer) {
-                editExternalCompanyContainer.classList.add('hidden');
-              }
-            }
-          }
-
-          if (selectedGroup && roleOptions[selectedGroup]) {
-            roleOptions[selectedGroup].forEach(role => {
-              const option = document.createElement('option');
-              option.value = role;
-              option.textContent = role;
-                if (editRoleSelect) editRoleSelect.appendChild(option);
-            });
-
-            // Show special message for EMS
-            if (selectedGroup === 'EMS') {
+            } else if (selectedGroup === 'EIU') {
+              // EIU: Auto-populate Role, Subrole, and Department/Office
+              const contractorOption = document.createElement('option');
+              contractorOption.value = 'Contractor';
+              contractorOption.textContent = 'Contractor';
+              contractorOption.className = 'bg-neutral-800 text-white';
               if (editRoleSelect) {
-                editRoleSelect.innerHTML = '<option value="">Soon to be implemented</option>';
-                editRoleSelect.disabled = true;
+                editRoleSelect.appendChild(contractorOption);
+                editRoleSelect.value = 'Contractor';
               }
-            } else {
-              if (editRoleSelect) editRoleSelect.disabled = false;
+              
+              const headOption = document.createElement('option');
+              headOption.value = 'Head';
+              headOption.textContent = 'Head';
+              headOption.className = 'bg-neutral-800 text-white';
+              if (editSubRoleSelect) {
+                editSubRoleSelect.appendChild(headOption);
+                editSubRoleSelect.value = 'Head';
+              }
+              
+              // Auto-populate Department/Office with External Partner Company
+              editDepartmentSelect.innerHTML = '<option value="External Partner Company" class="bg-neutral-800 text-white">External Partner Company</option>';
+              editDepartmentSelect.value = 'External Partner Company';
+              
+              // Show free text field for company name
+              if (editExternalCompanyContainer) {
+                editExternalCompanyContainer.classList.remove('hidden');
+              }
             }
           }
         });
@@ -7648,29 +7882,50 @@ try {
         if (editRoleSelect) {
         editRoleSelect.addEventListener('change', function() {
           const selectedRole = this.value;
-            const selectedGroup = editGroupSelect ? editGroupSelect.value : '';
-            if (editSubRoleSelect) editSubRoleSelect.innerHTML = '<option value="">Select Subrole</option>';
-            if (editProjectCodeContainer) editProjectCodeContainer.classList.add('hidden');
+          const selectedGroup = editGroupSelect ? editGroupSelect.value : '';
+          console.log('🔍 [EDIT USER DEBUG] Role changed to:', selectedRole, 'for group:', selectedGroup);
           
-          // Show sub-role container for all groups except EMS
-          if (selectedGroup === 'EMS') {
-            if (editSubRoleContainer) editSubRoleContainer.classList.add('hidden');
-          } else {
-            if (editSubRoleContainer) editSubRoleContainer.classList.remove('hidden');
-          }
+          // Clear subrole select
+          if (editSubRoleSelect) editSubRoleSelect.innerHTML = '<option value="" disabled selected class="bg-neutral-800 text-white">Select Subrole</option>';
+          if (editProjectCodeContainer) editProjectCodeContainer.classList.add('hidden');
+          
+          // Show sub-role container
+          if (editSubRoleContainer) editSubRoleContainer.classList.remove('hidden');
 
-          // Populate sub-role options based on selected role
-          if (selectedRole && subRoleOptions[selectedRole]) {
-            subRoleOptions[selectedRole].forEach(subRole => {
-              const option = document.createElement('option');
-              option.value = subRole;
-              option.textContent = subRole;
-              if (editSubRoleSelect) editSubRoleSelect.appendChild(option);
-            });
-          }
-
-          // Show project code for EIU only
-          if (selectedGroup === 'EIU') {
+          if (selectedGroup === 'LGU-PMT') {
+            // For LGU-PMT: Auto-populate subrole based on role
+            if (selectedRole === 'MPMEC') {
+              const chairpersonOption = document.createElement('option');
+              chairpersonOption.value = 'Chairperson';
+              chairpersonOption.textContent = 'Chairperson';
+              chairpersonOption.className = 'bg-neutral-800 text-white';
+              if (editSubRoleSelect) {
+                editSubRoleSelect.appendChild(chairpersonOption);
+                editSubRoleSelect.value = 'Chairperson';
+              }
+            } else if (selectedRole === 'MPMEC Secretariat') {
+              const focalPersonOption = document.createElement('option');
+              focalPersonOption.value = 'Focal Person (Admin)';
+              focalPersonOption.textContent = 'Focal Person (Admin)';
+              focalPersonOption.className = 'bg-neutral-800 text-white';
+              if (editSubRoleSelect) {
+                editSubRoleSelect.appendChild(focalPersonOption);
+                editSubRoleSelect.value = 'Focal Person (Admin)';
+              }
+            }
+            
+            // Auto-populate department
+            const editDepartmentSelect = document.getElementById('editDepartmentOfficeSelect');
+            if (editDepartmentSelect) {
+              editDepartmentSelect.innerHTML = '<option value="Municipal Planning and Development Office" class="bg-neutral-800 text-white">Municipal Planning and Development Office</option>';
+              editDepartmentSelect.value = 'Municipal Planning and Development Office';
+            }
+          } else if (selectedGroup === 'LGU-IU') {
+            // LGU-IU already has role and subrole auto-populated in group change handler
+            // Just ensure department is shown
+          } else if (selectedGroup === 'EIU') {
+            // EIU already has role, subrole, and department auto-populated in group change handler
+            // Show project code for EIU
             if (editProjectCodeContainer) editProjectCodeContainer.classList.remove('hidden');
           }
         });
@@ -7682,11 +7937,8 @@ try {
             e.preventDefault();
             e.stopPropagation();
             console.log('Edit user button clicked');
-            alert('Edit user button clicked - testing if event listener works');
             const user = JSON.parse(btn.getAttribute('data-user'));
-            // alert('User data: ' + JSON.stringify(user, null, 2));
             console.log('User data received:', user);
-            console.log('User birthdate:', user.birthdate);
             console.log('User role:', user.role);
             console.log('User group:', user.group);
             console.log('User profilePhoto:', user.profilePhoto);
@@ -7695,7 +7947,6 @@ try {
             
             // Populate form fields
             console.log('Edit user form element:', editUserForm);
-            alert('Form element found: ' + (editUserForm ? 'YES' : 'NO'));
             editUserForm.id.value = user.id;
             
             // Split full name into components
@@ -7707,35 +7958,11 @@ try {
             
             editUserForm.querySelector('input[name="username"]').value = user.username || user.email || '';
             editUserForm.querySelector('input[name="contactNumber"]').value = user.contactNumber || '';
-            const birthdateField = editUserForm.querySelector('input[name="birthdate"]');
             const userIdField = editUserForm.querySelector('input[name="userId"]');
             const statusField = editUserForm.querySelector('select[name="status"]');
             
-            console.log('Birthdate field found:', birthdateField);
             console.log('UserId field found:', userIdField);
             console.log('Status field found:', statusField);
-            alert('Birthdate field found: ' + (birthdateField ? 'YES' : 'NO'));
-            
-            if (birthdateField) {
-              const birthdateValue = user.birthdate ? user.birthdate.split('T')[0] : '';
-              birthdateField.value = birthdateValue;
-              console.log('Birthdate value set to:', birthdateValue);
-              console.log('Birthdate field value after setting:', birthdateField.value);
-              
-              // Force the field to show the value
-              birthdateField.setAttribute('value', birthdateValue);
-              birthdateField.dispatchEvent(new Event('input', { bubbles: true }));
-              birthdateField.dispatchEvent(new Event('change', { bubbles: true }));
-              
-              // Set birthdate again after a delay to ensure it sticks
-              setTimeout(() => {
-                birthdateField.value = birthdateValue;
-                birthdateField.setAttribute('value', birthdateValue);
-                console.log('Birthdate field value after delay:', birthdateField.value);
-              }, 200);
-            } else {
-              console.log('Birthdate field not found!');
-            }
             
             if (userIdField) {
               userIdField.value = user.userId || '';
@@ -7752,87 +7979,204 @@ try {
             const departmentOfficeSelect = document.getElementById('editDepartmentOfficeSelect');
             if (departmentOfficeSelect) {
               departmentOfficeSelect.value = user.departmentOffice || user.department || '';
+              // If it's External Partner Company, show the company name field
+              if (departmentOfficeSelect.value === 'External Partner Company') {
+                const externalCompanyContainer = document.getElementById('editExternalCompanyContainer');
+                const externalCompanyName = document.getElementById('editExternalCompanyName');
+                if (externalCompanyContainer) externalCompanyContainer.classList.remove('hidden');
+                if (externalCompanyName) externalCompanyName.value = user.companyName || user.company || '';
+              }
             }
             
-            // Set group and role - role should be group, subrole should be the actual role
-            const groupSelect = editUserForm.querySelector('select[name="group"]');
-            const roleSelect = editUserForm.querySelector('select[name="role"]');
-            const subRoleSelect = editUserForm.querySelector('select[name="subRole"]');
+            // Store the user object for later use in form submission (for preserving non-editable fields)
+            window.currentEditUser = user;
             
-            console.log('Group select found:', groupSelect);
-            console.log('Role select found:', roleSelect);
-            console.log('SubRole select found:', subRoleSelect);
+            // 🔍 DEBUG: Log user data structure
+            console.log('🔍 [EDIT USER DEBUG] ========== USER DATA ==========');
+            console.log('🔍 [EDIT USER DEBUG] Full user object:', JSON.stringify(user, null, 2));
+            console.log('🔍 [EDIT USER DEBUG] user.group:', user.group);
+            console.log('🔍 [EDIT USER DEBUG] user.role:', user.role);
+            console.log('🔍 [EDIT USER DEBUG] user.subRole:', user.subRole);
+            console.log('🔍 [EDIT USER DEBUG] user.department:', user.department);
+            console.log('🔍 [EDIT USER DEBUG] user.departmentOffice:', user.departmentOffice);
+            console.log('🔍 [EDIT USER DEBUG] user.externalCompanyName:', user.externalCompanyName);
+            console.log('🔍 [EDIT USER DEBUG] user.companyName:', user.companyName);
+            console.log('🔍 [EDIT USER DEBUG] user.company:', user.company);
             
-            if (groupSelect) {
-              groupSelect.value = user.group || '';
-              console.log('Group value set to:', groupSelect.value);
+            // Note: Group, Role, SubRole, Department/Office, and Status fields have been removed from the Edit User modal
+            // These values are preserved from the original user object and sent to backend during form submission
+            
+            // Parse subRole to extract role and subrole
+            // subRole is stored as "Role - SubRole" (e.g., "Contractor - Head", "MPMEC - Chairperson", "IO Officer - Department Encoder")
+            let parsedRole = '';
+            let parsedSubRole = '';
+            
+            if (user.subRole && typeof user.subRole === 'string' && user.subRole.includes(' - ')) {
+              const parts = user.subRole.split(' - ');
+              parsedRole = parts[0] || '';
+              parsedSubRole = parts[1] || '';
+              console.log('🔍 [EDIT USER DEBUG] Parsed subRole:', user.subRole, '-> Role:', parsedRole, 'SubRole:', parsedSubRole);
             } else {
-              console.log('Group select not found!');
+              // Fallback: if subRole doesn't have the format, try to infer from group
+              console.log('🔍 [EDIT USER DEBUG] subRole does not match expected format, using fallback logic');
+              if (user.group === 'EIU') {
+                parsedRole = 'Contractor';
+                parsedSubRole = user.subRole || 'Head';
+              } else if (user.group === 'LGU-IU') {
+                parsedRole = 'IO Officer';
+                parsedSubRole = user.subRole || 'Department Encoder';
+              } else if (user.group === 'LGU-PMT') {
+                // Try to extract from subRole or use user.role
+                if (user.subRole && user.subRole.includes('MPMEC')) {
+                  if (user.subRole.includes('Secretariat')) {
+                    parsedRole = 'MPMEC Secretariat';
+                    parsedSubRole = 'Focal Person (Admin)';
+                  } else {
+                    parsedRole = 'MPMEC';
+                    parsedSubRole = 'Chairperson';
+                  }
+                } else {
+                  parsedRole = user.role || 'MPMEC';
+                  parsedSubRole = user.subRole || 'Chairperson';
+                }
+              }
             }
+            
+            console.log('🔍 [EDIT USER DEBUG] Final parsed values - Role:', parsedRole, 'SubRole:', parsedSubRole);
             
             if (editGroupSelect) editGroupSelect.dispatchEvent(new Event('change'));
             
             // Set role and subrole after group is populated
             setTimeout(() => {
-              console.log('Setting role and subrole after group population...');
-              console.log('User group:', user.group);
-              console.log('User role:', user.role);
-              console.log('User subRole:', user.subRole);
+              console.log('🔍 [EDIT USER DEBUG] Setting role and subrole after group population...');
+              console.log('🔍 [EDIT USER DEBUG] Parsed Role:', parsedRole);
+              console.log('🔍 [EDIT USER DEBUG] Parsed SubRole:', parsedSubRole);
               
-              // Role should be the group value
               if (roleSelect) {
-                const roleValue = user.group || '';
-                roleSelect.value = roleValue;
-                console.log('Role (group) value set to:', roleValue);
+                roleSelect.value = parsedRole;
+                console.log('🔍 [EDIT USER DEBUG] Role value set to:', parsedRole);
               } else {
-                console.log('Role select not found in setTimeout!');
+                console.log('🔍 [EDIT USER DEBUG] Role select not found in setTimeout!');
               }
               
-              // SubRole should be the actual role value
               if (subRoleSelect) {
-                const subRoleValue = user.role || '';
-                subRoleSelect.value = subRoleValue;
-                console.log('SubRole value set to:', subRoleValue);
+                subRoleSelect.value = parsedSubRole;
+                console.log('🔍 [EDIT USER DEBUG] SubRole value set to:', parsedSubRole);
               } else {
-                console.log('SubRole select not found in setTimeout!');
+                console.log('🔍 [EDIT USER DEBUG] SubRole select not found in setTimeout!');
               }
               
-              if (editRoleSelect) editRoleSelect.dispatchEvent(new Event('change'));
+              if (editRoleSelect && parsedRole) editRoleSelect.dispatchEvent(new Event('change'));
               
-              // Set subrole, project code, and office department
+              // Set department/office field
               setTimeout(() => {
-                if (editUserForm.subRole) editUserForm.subRole.value = user.subRole || '';
-                // Set department/office field
                 const departmentOfficeField = document.getElementById('editDepartmentOfficeSelect');
                 if (departmentOfficeField) {
-                  departmentOfficeField.value = user.departmentOffice || user.department || '';
+                  const deptValue = user.departmentOffice || user.department || user.officeDepartment || '';
+                  departmentOfficeField.value = deptValue;
+                  console.log('🔍 [EDIT USER DEBUG] Department/Office value set to:', deptValue);
+                  
+                  // Handle External Partner Company
+                  if (deptValue === 'External Partner Company') {
+                    const externalCompanyContainer = document.getElementById('editExternalCompanyContainer');
+                    const externalCompanyName = document.getElementById('editExternalCompanyName');
+                    if (externalCompanyContainer) {
+                      externalCompanyContainer.classList.remove('hidden');
+                      console.log('🔍 [EDIT USER DEBUG] External company container shown');
+                    }
+                    if (externalCompanyName) {
+                      const companyName = user.externalCompanyName || user.companyName || user.company || '';
+                      externalCompanyName.value = companyName;
+                      console.log('🔍 [EDIT USER DEBUG] Company name set to:', companyName);
+                    }
+                  } else {
+                    const externalCompanyContainer = document.getElementById('editExternalCompanyContainer');
+                    if (externalCompanyContainer) {
+                      externalCompanyContainer.classList.add('hidden');
+                    }
+                  }
+                } else {
+                  console.log('🔍 [EDIT USER DEBUG] Department/Office field not found!');
                 }
                 
-                // Store original form values AFTER all fields are populated
-                originalFormValues = {
-                  firstName: editUserForm.querySelector('input[name="firstName"]')?.value || '',
-                  middleName: editUserForm.querySelector('input[name="middleName"]')?.value || '',
-                  lastName: editUserForm.querySelector('input[name="lastName"]')?.value || '',
-                  fullName: editUserForm.querySelector('input[name="fullName"]')?.value || '',
-                  username: editUserForm.querySelector('input[name="username"]')?.value || '',
-                  contactNumber: editUserForm.querySelector('input[name="contactNumber"]')?.value || '',
-                  birthdate: editUserForm.querySelector('input[name="birthdate"]')?.value || '',
-                  userId: editUserForm.querySelector('input[name="userId"]')?.value || '',
-                  status: editUserForm.querySelector('select[name="status"]')?.value || '',
-                  group: editUserForm.querySelector('select[name="group"]')?.value || '',
-                  role: editUserForm.querySelector('select[name="role"]')?.value || '',
-                  subRole: editUserForm.querySelector('select[name="subRole"]')?.value || '',
-                  departmentOffice: document.getElementById('editDepartmentOfficeSelect')?.value || ''
-                };
-                
-                console.log('Stored original values AFTER population:', originalFormValues);
-                
-                // Test form modification detection after storing original values
+                // Store original form values (editable fields only) - use a delay to ensure form is populated
                 setTimeout(() => {
-                  console.log('Testing form modification detection after population...');
-                  const isModified = hasFormBeenModified();
-                  console.log('Form modified after population:', isModified);
-                }, 50);
+                  originalFormValues = {
+                    firstName: editUserForm.querySelector('input[name="firstName"]')?.value || '',
+                    middleName: editUserForm.querySelector('input[name="middleName"]')?.value || '',
+                    lastName: editUserForm.querySelector('input[name="lastName"]')?.value || '',
+                    fullName: editUserForm.querySelector('input[name="fullName"]')?.value || '',
+                    username: editUserForm.querySelector('input[name="username"]')?.value || '',
+                    contactNumber: editUserForm.querySelector('input[name="contactNumber"]')?.value || '',
+                    userId: editUserForm.querySelector('input[name="userId"]')?.value || '',
+                    companyName: document.getElementById('editExternalCompanyName')?.value || user.externalCompanyName || user.companyName || '',
+                    profilePhotoChanged: false
+                  };
+                  
+                  console.log('🔍 [EDIT USER DEBUG] Stored original form values (editable fields only):', originalFormValues);
+                  console.log('🔍 [EDIT USER DEBUG] Original values keys:', Object.keys(originalFormValues));
+                  
+                  // Set up event listeners to track form changes and update button state
+                  const editableFields = [
+                    'input[name="firstName"]',
+                    'input[name="middleName"]',
+                    'input[name="lastName"]',
+                    'input[name="username"]',
+                    'input[name="contactNumber"]'
+                  ];
+                  
+                  // Add event listeners to fields (don't clone - just add listeners)
+                  editableFields.forEach(selector => {
+                    const field = editUserForm.querySelector(selector);
+                    if (field) {
+                      // Remove any existing listeners by using a named function
+                      const handler = function() {
+                        console.log('🔍 [BUTTON STATE DEBUG] Field changed:', selector, 'New value:', this.value);
+                        updateEditButtonState();
+                      };
+                      
+                      // Remove old listeners and add new ones
+                      field.removeEventListener('input', handler);
+                      field.removeEventListener('change', handler);
+                      field.removeEventListener('keyup', handler);
+                      
+                      field.addEventListener('input', handler);
+                      field.addEventListener('change', handler);
+                      field.addEventListener('keyup', handler);
+                      
+                      console.log('🔍 [BUTTON STATE DEBUG] Event listeners added to:', selector);
+                    } else {
+                      console.warn('🔍 [BUTTON STATE DEBUG] Field not found:', selector);
+                    }
+                  });
+                  
+                  // Track profile photo changes
+                  const editProfilePhotoInput = document.getElementById('editProfilePhotoInput');
+                  if (editProfilePhotoInput) {
+                    const photoHandler = function() {
+                      console.log('🔍 [BUTTON STATE DEBUG] Profile photo changed');
+                      updateEditButtonState();
+                    };
+                    editProfilePhotoInput.removeEventListener('change', photoHandler);
+                    editProfilePhotoInput.addEventListener('change', photoHandler);
+                  }
+                  
+                  // Initial button state - should be disabled since no changes yet
+                  console.log('🔍 [BUTTON STATE DEBUG] Setting initial button state...');
+                  updateEditButtonState();
+                  
+                  // Make originalFormValues globally accessible for debugging
+                  window.debugOriginalFormValues = originalFormValues;
+                  console.log('🔍 [EDIT USER DEBUG] Original values stored and accessible via window.debugOriginalFormValues');
+                  
+                  // Also expose updateEditButtonState for manual testing
+                  window.debugUpdateButtonState = updateEditButtonState;
+                  window.debugHasFormBeenModified = hasFormBeenModified;
+                  console.log('🔍 [EDIT USER DEBUG] Debug functions available:');
+                  console.log('  - window.debugOriginalFormValues (original values)');
+                  console.log('  - window.debugUpdateButtonState() (update button state)');
+                  console.log('  - window.debugHasFormBeenModified() (check if modified)');
+                }, 200);
               }, 100);
             }, 100);
             
@@ -7881,10 +8225,7 @@ try {
               editUserModal.classList.add('show');
             editUserError.classList.add('hidden');
               
-              // Verify field values after modal is shown
-              console.log('Birthdate field value after modal show:', editUserForm.querySelector('input[name="birthdate"]')?.value);
-              console.log('Role field value after modal show:', editUserForm.querySelector('select[name="role"]')?.value);
-              console.log('Group field value after modal show:', editUserForm.querySelector('select[name="group"]')?.value);
+              // Fields removed: group, role, subRole, departmentOffice, status are no longer editable
             }, 100);
             
             // Force the modal to be visible immediately with all necessary properties
@@ -7960,30 +8301,15 @@ try {
           
           if (isModified) {
             isConfirmationDialogOpen = true;
-            if (confirm('You have unsaved changes. Are you sure you want to close without saving?')) {
+            showUnsavedChangesWarningModal(() => {
               closeEditModal();
-            }
-            isConfirmationDialogOpen = false;
+              isConfirmationDialogOpen = false;
+            }, () => {
+              isConfirmationDialogOpen = false;
+            });
           } else {
             console.log('No changes detected, closing modal directly');
-            // Close modal without resetting form first
-          editUserModal.classList.add('hidden');
-            editUserModal.classList.remove('show');
-            editUserError.classList.add('hidden');
-            
-            // Reset modal styles
-            editUserModal.style.display = 'none';
-            editUserModal.style.visibility = 'hidden';
-            editUserModal.style.opacity = '0';
-            
-            // Clear original values and reset confirmation dialog flag
-            originalFormValues = {};
-            isConfirmationDialogOpen = false;
-            
-            // Reset form after closing
-            setTimeout(() => {
-          editUserForm.reset();
-            }, 100);
+            closeEditModal();
           }
         });
         
@@ -8006,30 +8332,15 @@ try {
             
             if (isModified) {
               isConfirmationDialogOpen = true;
-              if (confirm('You have unsaved changes. Are you sure you want to cancel without saving?')) {
+              showUnsavedChangesWarningModal(() => {
                 closeEditModal();
-              }
-              isConfirmationDialogOpen = false;
+                isConfirmationDialogOpen = false;
+              }, () => {
+                isConfirmationDialogOpen = false;
+              });
             } else {
               console.log('No changes detected, closing modal directly');
-              // Close modal without resetting form first
-              editUserModal.classList.add('hidden');
-              editUserModal.classList.remove('show');
-          editUserError.classList.add('hidden');
-          
-              // Reset modal styles
-              editUserModal.style.display = 'none';
-              editUserModal.style.visibility = 'hidden';
-              editUserModal.style.opacity = '0';
-              
-              // Clear original values and reset confirmation dialog flag
-              originalFormValues = {};
-              isConfirmationDialogOpen = false;
-              
-              // Reset form after closing
-              setTimeout(() => {
-                editUserForm.reset();
-              }, 100);
+              closeEditModal();
             }
           });
         }
@@ -8051,30 +8362,15 @@ try {
             
             if (isModified) {
               isConfirmationDialogOpen = true;
-              if (confirm('You have unsaved changes. Are you sure you want to close without saving?')) {
+              showUnsavedChangesWarningModal(() => {
                 closeEditModal();
-              }
-              isConfirmationDialogOpen = false;
+                isConfirmationDialogOpen = false;
+              }, () => {
+                isConfirmationDialogOpen = false;
+              });
             } else {
               console.log('No changes detected, closing modal directly');
-              // Close modal without resetting form first
-              editUserModal.classList.add('hidden');
-              editUserModal.classList.remove('show');
-              editUserError.classList.add('hidden');
-              
-              // Reset modal styles
-              editUserModal.style.display = 'none';
-              editUserModal.style.visibility = 'hidden';
-              editUserModal.style.opacity = '0';
-              
-              // Clear original values and reset confirmation dialog flag
-              originalFormValues = {};
-              isConfirmationDialogOpen = false;
-              
-              // Reset form after closing
-              setTimeout(() => {
-                editUserForm.reset();
-              }, 100);
+              closeEditModal();
             }
           }
         });
@@ -8090,92 +8386,263 @@ try {
         // Edit form validation and submission
         editUserForm.addEventListener('submit', async function(e) {
           e.preventDefault();
+          e.stopPropagation(); // Prevent double submission
+          
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] ========== FORM SUBMIT TRIGGERED ==========');
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Submit event fired at:', new Date().toISOString());
+          
+          // Prevent double submission
+          if (editUserForm.dataset.submitting === 'true') {
+            console.warn('⚠️ [EDIT USER SUBMIT DEBUG] Form is already being submitted, ignoring duplicate submission');
+            return;
+          }
+          editUserForm.dataset.submitting = 'true';
+          
+          try {
+          
+          // Check if button is disabled and force enable it if form is being submitted
+          const editUserBtn = document.getElementById('editUserBtn');
+          if (editUserBtn && editUserBtn.disabled) {
+            console.warn('⚠️ [EDIT USER SUBMIT DEBUG] Update button is disabled! Enabling it to allow submission...');
+            const isModified = hasFormBeenModified();
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Form modified check result:', isModified);
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Original values:', originalFormValues);
+            
+            // Force enable the button - if user clicked submit, they want to submit
+            editUserBtn.disabled = false;
+            editUserBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            editUserBtn.classList.add('hover:from-blue-700', 'hover:to-blue-800');
+            console.log('✅ [EDIT USER SUBMIT DEBUG] Button enabled manually');
+          }
+          
           editUserError.classList.add('hidden');
+          
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Starting validation...');
           
           // Validate name fields
           const first = editUserForm.querySelector('input[name="firstName"]');
           const middle = editUserForm.querySelector('input[name="middleName"]');
           const last = editUserForm.querySelector('input[name="lastName"]');
           
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Name fields found:', { first: !!first, middle: !!middle, last: !!last });
+          
+          if (!first || !last) {
+            console.error('❌ [EDIT USER SUBMIT DEBUG] Missing required name fields!');
+            editUserError.textContent = 'Error: Required name fields are missing.';
+            editUserError.classList.remove('hidden');
+            return;
+          }
+          
           const hasFirstNameNumbers = /\d/.test(first.value);
           const hasMiddleNameNumbers = /\d/.test(middle.value);
           const hasLastNameNumbers = /\d/.test(last.value);
           
-          const hasFirstNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(first.value);
-          const hasMiddleNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(middle.value);
-          const hasLastNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(last.value);
+          // Allow periods (.) in names as they're common (Jr., Sr., Corp., etc.)
+          // But disallow other special characters
+          const hasFirstNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]/.test(first.value);
+          const hasMiddleNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]/.test(middle.value);
+          const hasLastNameSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]/.test(last.value);
+          
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Name validation:', {
+            hasFirstNameNumbers,
+            hasFirstNameSpecialChars,
+            hasMiddleNameNumbers,
+            hasMiddleNameSpecialChars,
+            hasLastNameNumbers,
+            hasLastNameSpecialChars
+          });
           
           if (hasFirstNameNumbers || hasFirstNameSpecialChars || hasMiddleNameNumbers || hasMiddleNameSpecialChars || hasLastNameNumbers || hasLastNameSpecialChars) {
+            console.warn('⚠️ [EDIT USER SUBMIT DEBUG] Name validation failed - numbers or special chars found');
             editUserError.textContent = 'Please remove numbers and special characters from name fields.';
             editUserError.classList.remove('hidden');
             return;
           }
           
-          // Validate age
-          const birthdate = editUserForm.querySelector('input[name="birthdate"]').value;
-          const ageValidation = validateAge(birthdate);
+          console.log('✅ [EDIT USER SUBMIT DEBUG] Name validation passed');
           
-          if (!ageValidation.isValid) {
-            editUserError.textContent = 'User must be at least 18 years old.';
+          // Validate contact number
+          const contactNumberField = editUserForm.querySelector('input[name="contactNumber"]');
+          if (!contactNumberField) {
+            console.error('❌ [EDIT USER SUBMIT DEBUG] Contact number field not found!');
+            editUserError.textContent = 'Error: Contact number field is missing.';
             editUserError.classList.remove('hidden');
             return;
           }
-
-          // Validate contact number
-          const contactNumber = editUserForm.querySelector('input[name="contactNumber"]').value;
+          
+          const contactNumber = contactNumberField.value;
           const contactNumberRegex = /^[0-9]*$/;
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Contact number validation:', { contactNumber, isValid: contactNumberRegex.test(contactNumber) });
+          
           if (!contactNumberRegex.test(contactNumber)) {
+            console.warn('⚠️ [EDIT USER SUBMIT DEBUG] Contact number validation failed');
             editUserError.textContent = 'Contact number must only contain numbers.';
             editUserError.classList.remove('hidden');
             return;
           }
           
+          console.log('✅ [EDIT USER SUBMIT DEBUG] Contact number validation passed');
+          
+          // Check if email has changed
+          const currentEmail = editUserForm.querySelector('input[name="username"]').value.trim();
+          const originalEmail = originalFormValues?.username || '';
+          const emailChanged = currentEmail !== originalEmail;
+          
           const formData = new FormData(editUserForm);
+          
+          // Get user ID from original user object (required for API call)
+          const originalUser = window.currentEditUser || {};
+          const userId = originalUser.id;
+          
+          // 🔍 DEBUG: Log form data
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] ========== FORM SUBMISSION ==========');
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] User ID:', userId);
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Original User:', originalUser);
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Email Changed:', emailChanged);
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Current Email:', currentEmail);
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] Original Email:', originalEmail);
+          
+          if (!userId) {
+            console.error('❌ [EDIT USER SUBMIT DEBUG] ERROR: User ID is missing!');
+            editUserError.textContent = 'Error: User ID is missing. Please refresh the page and try again.';
+            editUserError.classList.remove('hidden');
+            return;
+          }
           
           // Add profile photo if selected
           const editProfilePhoto = document.getElementById('editProfilePhotoInput').files[0];
           if (editProfilePhoto) {
             formData.append('profilePhoto', editProfilePhoto);
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Profile photo selected:', editProfilePhoto.name);
           }
           
-          const payload = Object.fromEntries(formData.entries());
+          // Preserve original values for removed fields (group, role, subRole, departmentOffice, status)
+          // These fields are no longer editable but must be sent to backend to maintain user data
+          if (originalUser.group) formData.append('group', originalUser.group);
+          if (originalUser.role) formData.append('role', originalUser.role);
+          if (originalUser.subRole) formData.append('subRole', originalUser.subRole);
+          if (originalUser.department || originalUser.departmentOffice) {
+            formData.append('departmentOffice', originalUser.departmentOffice || originalUser.department || '');
+          }
+          if (originalUser.status) formData.append('status', originalUser.status);
           
-          // Map roles correctly for backend
-          const group = payload.group;
-          const role = payload.role;
-          
-          payload.role = group;
-          payload.subRole = role;
-          
-          if (role === 'Member') {
-            payload.subRole = 'Member';
-          } else if (['NGO Personnel', 'CSO Personnel', 'PPMC'].includes(role)) {
-            payload.subRole = role;
+          // Add company name if it's an external partner (preserve original if field doesn't exist)
+          const externalCompanyName = document.getElementById('editExternalCompanyName')?.value || originalUser.externalCompanyName || originalUser.companyName || '';
+          if (externalCompanyName) {
+            formData.append('companyName', externalCompanyName);
           }
           
-          if (payload.fullName && !payload.name) {
-            payload.name = payload.fullName;
+          // Indicate if email has changed (backend will handle email verification)
+          if (emailChanged) {
+            formData.append('emailChanged', 'true');
+            formData.append('newEmail', currentEmail);
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Email change detected - verification will be required');
           }
           
-          try {
+          // Map roles correctly for backend (using original user values)
+          const group = originalUser.group || '';
+          const role = originalUser.role || '';
+          
+          // Parse subRole if it's in "Role - SubRole" format
+          let actualRole = role;
+          let actualSubRole = originalUser.subRole || '';
+          
+          if (originalUser.subRole && typeof originalUser.subRole === 'string' && originalUser.subRole.includes(' - ')) {
+            const parts = originalUser.subRole.split(' - ');
+            actualRole = parts[0] || role;
+            actualSubRole = parts[1] || '';
+          }
+          
+          formData.append('role', group);
+          formData.append('subRole', `${actualRole} - ${actualSubRole}`);
+          
+          // Get fullName from form
+          const fullName = editUserForm.querySelector('input[name="fullName"]')?.value || '';
+          if (fullName) {
+            formData.append('name', fullName);
+          }
+          
+          // 🔍 DEBUG: Log FormData contents
+          console.log('🔍 [EDIT USER SUBMIT DEBUG] FormData contents:');
+          for (const [key, value] of formData.entries()) {
+            if (value instanceof File) {
+              console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
+            } else {
+              console.log(`  ${key}: ${value}`);
+            }
+          }
+          
             const token = localStorage.getItem('token') || '';
-            const res = await fetch(`http://localhost:3000/api/users/${payload.id}`, {
+            if (!token) {
+              console.error('❌ [EDIT USER SUBMIT DEBUG] ERROR: No authentication token found!');
+              editUserError.textContent = 'Error: Authentication required. Please log in again.';
+              editUserError.classList.remove('hidden');
+              editUserForm.dataset.submitting = 'false';
+              return;
+            }
+            
+            const apiUrl = `http://localhost:3000/api/users/${userId}`;
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] API URL:', apiUrl);
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Sending PUT request...');
+            
+            const res = await fetch(apiUrl, {
               method: 'PUT',
               headers: {
                 'Authorization': `Bearer ${token}`
               },
               body: formData
             });
-            const data = await res.json();
+            
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Response status:', res.status);
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Response ok:', res.ok);
+            
+            let data;
+            try {
+              data = await res.json();
+              console.log('🔍 [EDIT USER SUBMIT DEBUG] Response data:', data);
+            } catch (jsonError) {
+              console.error('❌ [EDIT USER SUBMIT DEBUG] ERROR: Failed to parse JSON response:', jsonError);
+              const textResponse = await res.text();
+              console.error('❌ [EDIT USER SUBMIT DEBUG] Raw response:', textResponse);
+              editUserError.textContent = 'Error: Invalid response from server. Please check the console for details.';
+              editUserError.classList.remove('hidden');
+              editUserForm.dataset.submitting = 'false';
+              return;
+            }
+            
             if (res.ok && data.success) {
-              window.location.reload();
+              console.log('✅ [EDIT USER SUBMIT DEBUG] User updated successfully!');
+              // Close edit modal completely before showing success modal
+              closeEditModal();
+              
+              // Small delay to ensure modal is fully closed
+              setTimeout(() => {
+                if (emailChanged) {
+                  console.log('🔍 [EDIT USER SUBMIT DEBUG] Showing email verification modal');
+                  // Show email verification modal - backend should have sent verification email
+                  showEmailVerificationModal(currentEmail);
+                } else {
+                  console.log('🔍 [EDIT USER SUBMIT DEBUG] Showing success modal');
+                  // Show success modal with check animation
+                  showUpdateSuccessModal();
+                }
+              }, 100);
             } else {
+              console.error('❌ [EDIT USER SUBMIT DEBUG] Update failed:', data.error || 'Unknown error');
               editUserError.textContent = data.error || 'Failed to update user.';
               editUserError.classList.remove('hidden');
+              editUserForm.dataset.submitting = 'false';
             }
           } catch (err) {
-            editUserError.textContent = 'Failed to update user.';
+            console.error('❌ [EDIT USER SUBMIT DEBUG] EXCEPTION:', err);
+            console.error('❌ [EDIT USER SUBMIT DEBUG] Error stack:', err.stack);
+            editUserError.textContent = `Failed to update user: ${err.message || 'Network error'}`;
             editUserError.classList.remove('hidden');
+            editUserForm.dataset.submitting = 'false';
+          } finally {
+            // Always reset submitting flag
+            editUserForm.dataset.submitting = 'false';
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Form submission handler completed');
           }
         });
 
@@ -12669,58 +13136,341 @@ try {
           });
         }
 
-        // Edit verify email functionality
-        const editVerifyEmailBtn = document.getElementById('editVerifyEmailBtn');
-        const editUsernameField = editUserForm.querySelector('input[name="username"]');
-        
-        if (editVerifyEmailBtn && editUsernameField) {
-          editVerifyEmailBtn.addEventListener('click', function() {
-            const email = editUsernameField.value.trim();
-            
-            if (!email) {
-              showEditVerificationMessage('Please enter an email address first.', 'error');
-              return;
+        // Show email warning modal for invalid or existing email
+        function showEmailWarningModal(email, type, customMessage) {
+          // Remove existing modal if any
+          const existingModal = document.getElementById('emailWarningModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          const isExisting = type === 'existing';
+          const isInvalid = type === 'invalid';
+          const isError = type === 'error';
+          
+          let title = 'Email Warning';
+          let message = '';
+          let iconColor = 'bg-yellow-100';
+          let iconSvg = '';
+          
+          if (isExisting) {
+            title = 'Email Already Exists';
+            message = `The email address <strong class="text-gray-900">${email}</strong> is already registered in the system. Please use a different email address.`;
+            iconColor = 'bg-red-100';
+            iconSvg = `<svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>`;
+          } else if (isInvalid) {
+            title = customMessage && customMessage.includes('domain') ? 'Invalid Email Domain' : 'Invalid Email Format';
+            if (customMessage) {
+              message = `The email address <strong class="text-gray-900">${email}</strong> ${customMessage.includes('domain') ? 'has an invalid domain' : 'is not valid'}. ${customMessage}`;
+            } else {
+              message = `The email address <strong class="text-gray-900">${email}</strong> is not in a valid format or the domain does not exist. Please enter a valid email address.`;
             }
-            
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-              showEditVerificationMessage('Please enter a valid email address.', 'error');
-              return;
+            iconColor = 'bg-yellow-100';
+            iconSvg = `<svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>`;
+          } else {
+            title = 'Email Verification Error';
+            message = `Unable to verify the email address <strong class="text-gray-900">${email}</strong>. Please try again.`;
+            iconColor = 'bg-red-100';
+            iconSvg = `<svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>`;
+          }
+          
+          const modalHTML = `
+            <div id="emailWarningModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100 animate-warning-pulse" onclick="event.stopPropagation()">
+                <div class="p-6">
+                  <div class="flex items-center justify-center mb-4">
+                    <div class="w-16 h-16 ${iconColor} rounded-full flex items-center justify-center warning-icon-animation">
+                      ${iconSvg}
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 text-center mb-2">${title}</h3>
+                  <p class="text-gray-600 text-center mb-4" style="line-height: 1.6;">
+                    ${message}
+                  </p>
+                  <button 
+                    id="closeEmailWarningModal" 
+                    class="w-full px-6 py-3 bg-gradient-to-r ${isExisting || isError ? 'from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' : 'from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800'} text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    I Understand
+                  </button>
+                </div>
+              </div>
+            </div>
+            <style>
+              @keyframes warning-pulse {
+                0%, 100% {
+                  transform: scale(1);
+                }
+                50% {
+                  transform: scale(1.02);
+                }
+              }
+              .animate-warning-pulse {
+                animation: warning-pulse 2s ease-in-out infinite;
+              }
+              @keyframes warning-icon-shake {
+                0%, 100% {
+                  transform: rotate(0deg);
+                }
+                10%, 30%, 50%, 70%, 90% {
+                  transform: rotate(-5deg);
+                }
+                20%, 40%, 60%, 80% {
+                  transform: rotate(5deg);
+                }
+              }
+              .warning-icon-animation {
+                animation: warning-icon-shake 0.5s ease-in-out;
+              }
+            </style>
+          `;
+          
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
+          
+          const modal = document.getElementById('emailWarningModal');
+          const closeBtn = document.getElementById('closeEmailWarningModal');
+          
+          closeBtn.addEventListener('click', () => {
+            modal.remove();
+          });
+          
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.remove();
             }
-            
-            editVerifyEmailBtn.disabled = true;
-            editVerifyEmailBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Verifying...';
-            
-            setTimeout(() => {
-              showEditVerificationMessage('Email format is valid.', 'success');
-              
-              editVerifyEmailBtn.disabled = false;
-              editVerifyEmailBtn.innerHTML = 'Verify Email';
-            }, 1500);
           });
         }
         
-        function showEditVerificationMessage(message, type) {
-          const existingMessage = document.querySelector('.edit-verification-message');
-          if (existingMessage) {
-            existingMessage.remove();
+        // Show email verification modal when email is changed
+        function showEmailVerificationModal(email) {
+          // Remove existing modal if any
+          const existingModal = document.getElementById('emailVerificationModal');
+          if (existingModal) {
+            existingModal.remove();
           }
           
-          const messageDiv = document.createElement('div');
-          messageDiv.className = `edit-verification-message mt-2 px-3 py-2 text-xs rounded-lg ${
-            type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 
-            type === 'error' ? 'bg-red-100 text-red-700 border border-red-200' : 
-            'bg-blue-100 text-blue-700 border border-blue-200'
-          }`;
-          messageDiv.textContent = message;
+          const modalHTML = `
+            <div id="emailVerificationModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+                <div class="p-6">
+                  <div class="flex items-center justify-center mb-4">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 text-center mb-2">Email Verification Required</h3>
+                  <p class="text-gray-600 text-center mb-4">
+                    A verification email has been sent to <strong class="text-gray-900">${email}</strong>. 
+                    Please check your email and click the verification link to complete the email update.
+                  </p>
+                  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-blue-800">
+                      <strong>Note:</strong> The user's email will only be updated after they verify the new email address by clicking the link in the email.
+                    </p>
+                  </div>
+                  <button 
+                    id="closeEmailVerificationModal" 
+                    class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
           
-          editVerifyEmailBtn.parentNode.insertBefore(messageDiv, editVerifyEmailBtn.nextSibling);
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
           
-          setTimeout(() => {
-            if (messageDiv.parentNode) {
-              messageDiv.remove();
+          const modal = document.getElementById('emailVerificationModal');
+          const closeBtn = document.getElementById('closeEmailVerificationModal');
+          
+          closeBtn.addEventListener('click', () => {
+            modal.remove();
+            window.location.reload();
+          });
+          
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.remove();
+              window.location.reload();
             }
-          }, 5000);
+          });
+        }
+        
+        // Show modern warning modal for unsaved changes
+        function showUnsavedChangesWarningModal(onConfirm, onCancel) {
+          // Remove existing modal if any
+          const existingModal = document.getElementById('unsavedChangesWarningModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          const modalHTML = `
+            <div id="unsavedChangesWarningModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+                <div class="p-6">
+                  <div class="flex items-center justify-center mb-4">
+                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center warning-icon-animation">
+                      <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 text-center mb-2">Unsaved Changes</h3>
+                  <p class="text-gray-600 text-center mb-6">
+                    You have unsaved changes. Are you sure you want to close without saving?
+                  </p>
+                  <div class="flex gap-3">
+                    <button 
+                      id="unsavedChangesCancelBtn" 
+                      class="flex-1 px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      id="unsavedChangesConfirmBtn" 
+                      class="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-semibold rounded-xl hover:from-amber-700 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      Close Without Saving
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <style>
+              @keyframes warning-pulse {
+                0%, 100% {
+                  transform: scale(1);
+                }
+                50% {
+                  transform: scale(1.05);
+                }
+              }
+              .warning-icon-animation {
+                animation: warning-pulse 1.5s ease-in-out infinite;
+              }
+              @keyframes warning-shake {
+                0%, 100% {
+                  transform: rotate(0deg);
+                }
+                10%, 30%, 50%, 70%, 90% {
+                  transform: rotate(-5deg);
+                }
+                20%, 40%, 60%, 80% {
+                  transform: rotate(5deg);
+                }
+              }
+              .warning-icon-animation svg {
+                animation: warning-shake 0.5s ease-in-out;
+              }
+            </style>
+          `;
+          
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
+          
+          const modal = document.getElementById('unsavedChangesWarningModal');
+          const confirmBtn = document.getElementById('unsavedChangesConfirmBtn');
+          const cancelBtn = document.getElementById('unsavedChangesCancelBtn');
+          
+          confirmBtn.addEventListener('click', () => {
+            modal.remove();
+            if (onConfirm) onConfirm();
+          });
+          
+          cancelBtn.addEventListener('click', () => {
+            modal.remove();
+            if (onCancel) onCancel();
+          });
+          
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.remove();
+              if (onCancel) onCancel();
+            }
+          });
+        }
+        
+        // Show success modal with check animation
+        function showUpdateSuccessModal() {
+          // Remove existing modal if any
+          const existingModal = document.getElementById('updateSuccessModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          const modalHTML = `
+            <div id="updateSuccessModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" onclick="event.stopPropagation()">
+                <div class="p-6">
+                  <div class="flex items-center justify-center mb-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg class="w-8 h-8 text-green-600 checkmark" viewBox="0 0 52 52">
+                        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path class="checkmark-check" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 text-center mb-2">User Updated Successfully!</h3>
+                  <p class="text-gray-600 text-center mb-4">
+                    The user information has been updated successfully.
+                  </p>
+                  <button 
+                    id="closeUpdateSuccessModal" 
+                    class="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+            <style>
+              .checkmark-circle {
+                stroke-dasharray: 166;
+                stroke-dashoffset: 166;
+                stroke-width: 2;
+                stroke-miterlimit: 10;
+                stroke: currentColor;
+                fill: none;
+                animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+              }
+              .checkmark-check {
+                transform-origin: 50% 50%;
+                stroke-dasharray: 48;
+                stroke-dashoffset: 48;
+                animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+              }
+              @keyframes stroke {
+                100% {
+                  stroke-dashoffset: 0;
+                }
+              }
+            </style>
+          `;
+          
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
+          
+          const modal = document.getElementById('updateSuccessModal');
+          const closeBtn = document.getElementById('closeUpdateSuccessModal');
+          
+          closeBtn.addEventListener('click', () => {
+            modal.remove();
+            window.location.reload();
+          });
+          
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.remove();
+              window.location.reload();
+            }
+          });
         }
         
         // End of initializeUserManagement function

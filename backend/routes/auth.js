@@ -796,38 +796,66 @@ router.post('/forgot-password', async (req, res) => {
       resetPasswordExpires: resetTokenExpiry
     });
 
-    // Send password reset email
-    // Redirect all reset emails to buildwatch69@gmail.com for testing
-    const targetEmail = 'buildwatch69@gmail.com';
-    
     // Determine frontend URL based on environment
     // In production, use FRONTEND_URL from environment, otherwise default to localhost
     const isProduction = process.env.NODE_ENV === 'production';
     const frontendUrl = process.env.FRONTEND_URL || (isProduction ? 'https://build-watch.com' : 'http://localhost:4321');
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     
-    console.log('🔍 [FORGOT PASSWORD] Original user email:', user.email);
-    console.log('🔍 [FORGOT PASSWORD] Sending email to:', targetEmail);
+    console.log('🔍 [FORGOT PASSWORD] User email:', user.email);
     console.log('🔍 [FORGOT PASSWORD] Environment:', process.env.NODE_ENV || 'development');
     console.log('🔍 [FORGOT PASSWORD] Frontend URL:', frontendUrl);
     console.log('🔍 [FORGOT PASSWORD] Reset URL:', resetUrl);
     console.log('🔍 [FORGOT PASSWORD] Checking email configuration...');
     
-    let emailSent = false;
+    // Send password reset email to BOTH:
+    // 1. System admin email (buildwatch69@gmail.com)
+    // 2. User's email address
+    const systemAdminEmail = 'buildwatch69@gmail.com';
+    const userEmail = user.email;
+    const userName = user.name || user.fullName || user.username;
+    
+    let systemAdminEmailSent = false;
+    let userEmailSent = false;
+    
+    // Send email to system admin
     try {
-      emailSent = await sendPasswordResetEmail(
-        targetEmail, // Send to buildwatch69@gmail.com
+      console.log('🔍 [FORGOT PASSWORD] Sending email to system admin:', systemAdminEmail);
+      systemAdminEmailSent = await sendPasswordResetEmail(
+        systemAdminEmail,
         resetUrl, 
-        user.name || user.username, 
+        userName, 
         user.userId,
-        user.email // Pass original email for display in email body
+        userEmail // Pass user's email for display in email body
       );
-      console.log('🔍 [FORGOT PASSWORD] Email sent result:', emailSent);
+      console.log('✅ [FORGOT PASSWORD] System admin email sent:', systemAdminEmailSent);
     } catch (emailError) {
-      console.error('❌ [FORGOT PASSWORD] Email sending failed:', emailError.message);
-      // Still return success to user, but log the error
-      emailSent = false;
+      console.error('❌ [FORGOT PASSWORD] System admin email sending failed:', emailError.message);
+      systemAdminEmailSent = false;
     }
+    
+    // Send email to user (if user has a valid email and it's different from system admin)
+    if (userEmail && userEmail.trim() !== '' && userEmail.toLowerCase() !== systemAdminEmail.toLowerCase()) {
+      try {
+        console.log('🔍 [FORGOT PASSWORD] Sending email to user:', userEmail);
+        userEmailSent = await sendPasswordResetEmail(
+          userEmail,
+          resetUrl, 
+          userName, 
+          user.userId,
+          null // No need to show original email when sending to the user themselves
+        );
+        console.log('✅ [FORGOT PASSWORD] User email sent:', userEmailSent);
+      } catch (emailError) {
+        console.error('❌ [FORGOT PASSWORD] User email sending failed:', emailError.message);
+        userEmailSent = false;
+      }
+    } else {
+      console.log('⚠️ [FORGOT PASSWORD] User email is missing or same as system admin, skipping user email');
+    }
+    
+    // Consider it successful if at least one email was sent
+    const emailSent = systemAdminEmailSent || userEmailSent;
 
     // Log activity
     await ActivityLog.create({
@@ -843,10 +871,26 @@ router.post('/forgot-password', async (req, res) => {
       module: 'Authentication'
     });
 
+    // Build response message based on which emails were sent
+    let message = 'Password reset link has been sent.';
+    if (systemAdminEmailSent && userEmailSent) {
+      message = `Password reset link has been sent to both ${systemAdminEmail} and ${userEmail}.`;
+    } else if (systemAdminEmailSent) {
+      message = `Password reset link has been sent to ${systemAdminEmail}.`;
+    } else if (userEmailSent) {
+      message = `Password reset link has been sent to ${userEmail}.`;
+    } else {
+      message = 'Password reset link generation completed, but email sending failed. Please contact administrator.';
+    }
+    
     res.json({
-      success: true,
-      message: 'Password reset link has been sent.',
-      email: user.email // Return email for display in success message
+      success: emailSent, // Return true only if at least one email was sent
+      message: message,
+      email: user.email, // Return user email for display in success message
+      emailsSent: {
+        systemAdmin: systemAdminEmailSent,
+        user: userEmailSent
+      }
     });
 
   } catch (error) {

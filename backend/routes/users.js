@@ -1,11 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { Op } = require('sequelize');
+const dns = require('dns').promises;
 const { User, ActivityLog, Notification, Project, ProjectUpdate, ProjectIssue, RPMESForm, MonitoringReport, SiteVisit, Upload, ProjectValidation } = require('../models');
 const { authenticateToken, updateUserActivity, isUserActive, userActivityTracker } = require('../middleware/auth');
-const { sendUserIdEmail } = require('../services/emailService');
+const { sendUserIdEmail, sendUserCreationEmail } = require('../services/emailService');
 const { createNotification, createNotificationForRole } = require('./notifications');
+
+// In-memory store for user creation tokens (in production, use Redis or database)
+const userCreationTokens = new Map();
+
+// Clean up expired tokens every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, data] of userCreationTokens.entries()) {
+    if (data.expiresAt < now) {
+      userCreationTokens.delete(token);
+    }
+  }
+}, 3600000); // 1 hour
 
 // Middleware to check if user is System Admin
 const requireSystemAdmin = async (req, res, next) => {
@@ -1100,6 +1115,591 @@ router.delete('/:id/permanent-delete', authenticateToken, requireSystemAdmin, as
   }
 });
 
+// Update user by ID (handles profile photo upload and email changes)
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for profile picture uploads
+const profileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../uploads/profile-pictures');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    const userId = req.params.id || 'user';
+    cb(null, `profile-${userId}-${uniqueSuffix}${ext}`);
+  }
+});
+
+const profileUpload = multer({
+  storage: profileStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
+router.put('/:id', authenticateToken, requireSystemAdmin, profileUpload.single('profilePhoto'), async (req, res) => {
+  try {
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] ========== UPDATE USER REQUEST ==========');
+    const { id } = req.params;
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] User ID:', id);
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] Request body:', req.body);
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] File uploaded:', req.file ? req.file.filename : 'None');
+    
+    const {
+      firstName,
+      middleName,
+      lastName,
+      fullName,
+      username,
+      contactNumber,
+      group,
+      role,
+      subRole,
+      departmentOffice,
+      status,
+      companyName,
+      emailChanged,
+      newEmail
+    } = req.body;
+    
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] Parsed fields:');
+    console.log('  firstName:', firstName);
+    console.log('  middleName:', middleName);
+    console.log('  lastName:', lastName);
+    console.log('  fullName:', fullName);
+    console.log('  username:', username);
+    console.log('  contactNumber:', contactNumber);
+    console.log('  emailChanged:', emailChanged);
+    console.log('  newEmail:', newEmail);
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      console.error('❌ [BACKEND UPDATE USER DEBUG] User not found with ID:', id);
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] Found user:', user.fullName || user.name);
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] Current user data:', {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      contactNumber: user.contactNumber
+    });
+
+    // Prepare update data
+    const updateData = {};
+    console.log('🔍 [BACKEND UPDATE USER DEBUG] Preparing update data...');
+    
+    // Helper function to safely trim string values
+    const safeTrim = (value) => {
+      if (!value) return null;
+      if (typeof value === 'string') return value.trim();
+      if (Array.isArray(value)) return value[0] ? String(value[0]).trim() : null;
+      return String(value).trim();
+    };
+    
+    if (firstName) updateData.firstName = safeTrim(firstName);
+    if (middleName) updateData.middleName = safeTrim(middleName);
+    if (lastName) updateData.lastName = safeTrim(lastName);
+    if (fullName) {
+      const trimmedFullName = safeTrim(fullName);
+      updateData.fullName = trimmedFullName;
+      updateData.name = trimmedFullName; // Backward compatibility
+    }
+    if (contactNumber) updateData.contactNumber = safeTrim(contactNumber);
+    if (group) updateData.group = safeTrim(group);
+    if (role) updateData.role = safeTrim(role);
+    if (subRole) updateData.subRole = safeTrim(subRole);
+    if (departmentOffice) {
+      const trimmedDept = safeTrim(departmentOffice);
+      updateData.department = trimmedDept;
+      updateData.officeDepartment = trimmedDept;
+    }
+    if (status) updateData.status = status;
+    if (companyName) updateData.externalCompanyName = safeTrim(companyName);
+
+    // Handle profile photo upload
+    if (req.file) {
+      const baseUrl = req.protocol + '://' + req.get('host');
+      updateData.profilePictureUrl = `${baseUrl}/uploads/profile-pictures/${req.file.filename}`;
+    }
+
+    // Handle email change with verification
+    if (emailChanged === 'true' && newEmail && newEmail !== user.email) {
+      // Check if new email already exists
+      const existingUser = await User.findOne({
+        where: {
+          [Op.or]: [
+            { email: newEmail },
+            { username: newEmail }
+          ],
+          id: { [Op.ne]: id }
+        }
+      });
+
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email is already registered to another user'
+        });
+      }
+
+      // Generate verification token for email change
+      const emailChangeToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+
+      // Store email change token (in production, use Redis or database)
+      // For now, we'll store it in a similar way to user creation tokens
+      if (!global.emailChangeTokens) {
+        global.emailChangeTokens = new Map();
+      }
+      
+      global.emailChangeTokens.set(emailChangeToken, {
+        userId: id,
+        oldEmail: user.email,
+        newEmail: newEmail.trim(),
+        updateData: updateData, // Store other updates to apply after verification
+        expiresAt: expiresAt,
+        createdAt: Date.now()
+      });
+
+      // Send verification email
+      const { sendEmailChangeVerificationEmail } = require('../services/emailService');
+      const baseUrl = req.protocol + '://' + req.get('host');
+      const verificationUrl = `${baseUrl}/api/users/verify-email-change?token=${emailChangeToken}`;
+      
+      const emailSent = await sendEmailChangeVerificationEmail(newEmail, verificationUrl, {
+        oldEmail: user.email,
+        newEmail: newEmail,
+        userName: user.fullName || user.name
+      });
+
+      if (!emailSent) {
+        global.emailChangeTokens.delete(emailChangeToken);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to send verification email'
+        });
+      }
+
+      // Don't update email yet - wait for verification
+      // But update other fields
+      if (Object.keys(updateData).length > 0) {
+        await user.update(updateData);
+      }
+
+      // Log activity
+      await ActivityLog.create({
+        userId: req.user.id,
+        action: 'UPDATE_USER_PENDING_EMAIL',
+        entityType: 'User',
+        entityId: user.id,
+        details: `Updated user information. Email change pending verification: ${user.email} -> ${newEmail}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      return res.json({
+        success: true,
+        message: 'User updated successfully. Email verification required.',
+        emailVerificationRequired: true,
+        newEmail: newEmail
+      });
+    } else {
+      // No email change - update all fields directly
+      if (username && username !== user.username) {
+        // Check if username/email already exists
+        const existingUser = await User.findOne({
+          where: {
+            [Op.or]: [
+              { email: username },
+              { username: username }
+            ],
+            id: { [Op.ne]: id }
+          }
+        });
+
+        if (existingUser) {
+          console.error('❌ [BACKEND UPDATE USER DEBUG] Email/Username already exists');
+          return res.status(400).json({
+            success: false,
+            error: 'Email/Username is already registered to another user'
+          });
+        }
+
+        updateData.username = username.trim();
+        updateData.email = username.trim();
+      }
+
+      console.log('🔍 [BACKEND UPDATE USER DEBUG] Update data to apply:', updateData);
+      
+      if (Object.keys(updateData).length > 0) {
+        console.log('🔍 [BACKEND UPDATE USER DEBUG] Updating user in database...');
+        await user.update(updateData);
+        console.log('✅ [BACKEND UPDATE USER DEBUG] User updated in database');
+        
+        // Reload user to get updated data
+        await user.reload();
+        console.log('🔍 [BACKEND UPDATE USER DEBUG] User reloaded, new data:', {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          contactNumber: user.contactNumber
+        });
+      } else {
+        console.log('⚠️ [BACKEND UPDATE USER DEBUG] No update data to apply');
+      }
+
+      // Log activity
+      await ActivityLog.create({
+        userId: req.user.id,
+        action: 'UPDATE_USER',
+        entityType: 'User',
+        entityId: user.id,
+        details: `Updated user information: ${user.fullName || user.name}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      console.log('✅ [BACKEND UPDATE USER DEBUG] User updated successfully');
+      return res.json({
+        success: true,
+        message: 'User updated successfully',
+        user: {
+          id: user.id,
+          name: user.name,
+          fullName: user.fullName,
+          username: user.username,
+          email: user.email,
+          contactNumber: user.contactNumber,
+          profilePictureUrl: user.profilePictureUrl
+        }
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ [BACKEND UPDATE USER DEBUG] Update user error:', error);
+    console.error('❌ [BACKEND UPDATE USER DEBUG] Error stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update user: ' + error.message
+    });
+  }
+});
+
+// Verify email change token and complete user update
+router.get('/verify-email-change', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).send(`
+        <html>
+          <head><title>Invalid Token</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Invalid Verification Link</h1>
+            <p>The verification link is invalid or missing.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    if (!global.emailChangeTokens || !global.emailChangeTokens.has(token)) {
+      return res.status(400).send(`
+        <html>
+          <head><title>Invalid Token</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Invalid or Expired Link</h1>
+            <p>The verification link is invalid or has expired. Please request a new email change.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    const tokenData = global.emailChangeTokens.get(token);
+
+    // Check if token has expired
+    if (Date.now() > tokenData.expiresAt) {
+      global.emailChangeTokens.delete(token);
+      return res.status(400).send(`
+        <html>
+          <head><title>Expired Token</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Verification Link Expired</h1>
+            <p>The verification link has expired. Please request a new email change.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    const user = await User.findByPk(tokenData.userId);
+    if (!user) {
+      global.emailChangeTokens.delete(token);
+      return res.status(404).send(`
+        <html>
+          <head><title>User Not Found</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">User Not Found</h1>
+            <p>The user account could not be found.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    // Check if new email is already taken
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: tokenData.newEmail },
+          { username: tokenData.newEmail }
+        ],
+        id: { [Op.ne]: user.id }
+      }
+    });
+
+    if (existingUser) {
+      global.emailChangeTokens.delete(token);
+      return res.status(400).send(`
+        <html>
+          <head><title>Email Already Taken</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Email Already Registered</h1>
+            <p>The email address ${tokenData.newEmail} is already registered to another account.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    // Update user with new email and other changes
+    const updateData = {
+      ...tokenData.updateData,
+      email: tokenData.newEmail,
+      username: tokenData.newEmail
+    };
+
+    await user.update(updateData);
+
+    // Delete token
+    global.emailChangeTokens.delete(token);
+
+    // Log activity
+    await ActivityLog.create({
+      userId: user.id,
+      action: 'EMAIL_CHANGE_VERIFIED',
+      entityType: 'User',
+      entityId: user.id,
+      details: `Email change verified and completed: ${tokenData.oldEmail} -> ${tokenData.newEmail}`,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    // Return success page
+    return res.send(`
+      <html>
+        <head>
+          <title>Email Changed Successfully</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              text-align: center;
+              padding: 20px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              overflow: hidden;
+            }
+            body::before {
+              content: '';
+              position: absolute;
+              top: -50%;
+              left: -50%;
+              width: 200%;
+              height: 200%;
+              background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+              background-size: 50px 50px;
+              animation: float 20s infinite linear;
+            }
+            @keyframes float {
+              0% { transform: translate(0, 0); }
+              100% { transform: translate(50px, 50px); }
+            }
+            .container {
+              background: white;
+              padding: 50px 40px;
+              border-radius: 20px;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+              max-width: 550px;
+              width: 100%;
+              position: relative;
+              z-index: 1;
+              animation: slideUp 0.6s ease-out;
+            }
+            @keyframes slideUp {
+              from {
+                opacity: 0;
+                transform: translateY(30px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            .success-icon {
+              width: 100px;
+              height: 100px;
+              margin: 0 auto 30px;
+              background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              animation: scaleIn 0.6s ease-out, pulse 2s ease-in-out infinite;
+              box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+            }
+            @keyframes scaleIn {
+              from {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+              }
+              to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+              }
+            }
+            @keyframes pulse {
+              0%, 100% {
+                transform: scale(1);
+              }
+              50% {
+                transform: scale(1.05);
+              }
+            }
+            .success-icon svg {
+              width: 60px;
+              height: 60px;
+              color: white;
+              stroke-width: 3;
+            }
+            h1 {
+              color: #1f2937;
+              margin-bottom: 15px;
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.5px;
+            }
+            .subtitle {
+              color: #22c55e;
+              font-size: 16px;
+              font-weight: 600;
+              margin-bottom: 20px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            p {
+              color: #6b7280;
+              line-height: 1.7;
+              font-size: 16px;
+              margin-bottom: 30px;
+            }
+            .login-button {
+              display: inline-block;
+              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+              color: white;
+              padding: 14px 40px;
+              text-decoration: none;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 16px;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+              position: relative;
+              overflow: hidden;
+            }
+            .login-button::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+              transition: left 0.5s;
+            }
+            .login-button:hover::before {
+              left: 100%;
+            }
+            .login-button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            }
+            .decorative-line {
+              width: 60px;
+              height: 4px;
+              background: linear-gradient(90deg, transparent, #22c55e, transparent);
+              margin: 25px auto;
+              border-radius: 2px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h1>Email Changed Successfully!</h1>
+            <div class="subtitle">Update Complete</div>
+            <p>Your email address has been successfully changed from <strong>${tokenData.oldEmail}</strong> to <strong>${tokenData.newEmail}</strong>.</p>
+            <p>All your account information has been updated successfully.</p>
+            <div class="decorative-line"></div>
+            <a href="/" class="login-button">Go to Login</a>
+          </div>
+        </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Verify email change error:', error);
+    return res.status(500).send(`
+      <html>
+        <head><title>Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h1 style="color: #EB3C3C;">Error Verifying Email Change</h1>
+          <p>An error occurred while verifying your email change. Please contact your system administrator.</p>
+          <p style="margin-top: 20px; color: #666; font-size: 14px;">Error: ${error.message}</p>
+        </body>
+      </html>
+    `);
+  }
+});
+
 // Hard delete user (original endpoint)
 router.delete('/:id', authenticateToken, requireSystemAdmin, async (req, res) => {
   try {
@@ -1701,6 +2301,46 @@ router.post('/update-lgu-iu-departments', authenticateToken, requireSystemAdmin,
   }
 });
 
+// Advanced email validation function
+const validateEmailFormat = (email) => {
+  // More strict email regex: requires proper domain structure
+  // Must have: local part (1+ chars), @, domain (1+ chars), . (dot), TLD (2+ chars)
+  const strictEmailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+  
+  // Additional checks
+  if (!email || email.length < 5 || email.length > 254) {
+    return { valid: false, reason: 'Email length must be between 5 and 254 characters' };
+  }
+  
+  if (!strictEmailRegex.test(email)) {
+    return { valid: false, reason: 'Invalid email format. Please use a valid email address (e.g., user@example.com)' };
+  }
+  
+  // Check for consecutive dots
+  if (email.includes('..') || email.startsWith('.') || email.endsWith('.')) {
+    return { valid: false, reason: 'Invalid email format' };
+  }
+  
+  // Check local part length (before @)
+  const localPart = email.split('@')[0];
+  if (localPart.length > 64) {
+    return { valid: false, reason: 'Email local part is too long' };
+  }
+  
+  return { valid: true };
+};
+
+// Check MX records for email domain
+const checkMXRecords = async (domain) => {
+  try {
+    const mxRecords = await dns.resolveMx(domain);
+    return mxRecords && mxRecords.length > 0;
+  } catch (error) {
+    // If MX lookup fails, the domain likely doesn't exist or doesn't accept email
+    return false;
+  }
+};
+
 // Check if email already exists
 router.post('/check-email', authenticateToken, requireSystemAdmin, async (req, res) => {
   try {
@@ -1713,9 +2353,22 @@ router.post('/check-email', authenticateToken, requireSystemAdmin, async (req, r
       });
     }
     
+    // Step 1: Validate email format
+    const formatValidation = validateEmailFormat(email);
+    if (!formatValidation.valid) {
+      return res.json({
+        success: true,
+        exists: false,
+        validFormat: false,
+        validDomain: false,
+        reason: formatValidation.reason
+      });
+    }
+    
+    // Step 2: Check if email already exists in database
     const existingUser = await User.findOne({
       where: {
-        [require('sequelize').Op.or]: [
+        [Op.or]: [
           { email: email },
           { username: email }
         ]
@@ -1723,16 +2376,44 @@ router.post('/check-email', authenticateToken, requireSystemAdmin, async (req, r
       paranoid: false // Include soft-deleted users
     });
     
-    res.json({
+    if (existingUser) {
+      return res.json({
+        success: true,
+        exists: true,
+        validFormat: true,
+        validDomain: false,
+        reason: 'This email is already registered'
+      });
+    }
+    
+    // Step 3: Check MX records to verify domain exists
+    const domain = email.split('@')[1];
+    const hasMXRecords = await checkMXRecords(domain);
+    
+    if (!hasMXRecords) {
+      return res.json({
+        success: true,
+        exists: false,
+        validFormat: true,
+        validDomain: false,
+        reason: 'Email domain does not exist or does not accept emails'
+      });
+    }
+    
+    // All checks passed
+    return res.json({
       success: true,
-      exists: !!existingUser
+      exists: false,
+      validFormat: true,
+      validDomain: true,
+      reason: 'Email is valid and available'
     });
     
   } catch (error) {
     console.error('Error checking email:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to check email uniqueness'
+      error: 'Failed to check email'
     });
   }
 });
@@ -2128,6 +2809,614 @@ router.get('/feedback-users', authenticateToken, requireSystemAdmin, async (req,
     res.status(500).json({
       success: false,
       error: 'Failed to fetch feedback users'
+    });
+  }
+});
+
+// Send User Creation Email
+router.post('/send-user-creation-email', authenticateToken, requireSystemAdmin, async (req, res) => {
+  try {
+    const {
+      firstName,
+      middleName,
+      lastName,
+      fullName,
+      email,
+      contactNumber,
+      password,
+      group,
+      role,
+      subRole,
+      departmentOffice,
+      externalCompanyName,
+      userId,
+      useDefaultPicture
+    } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !contactNumber || !password || !group || !role || !userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: email },
+          { username: email }
+        ]
+      },
+      paranoid: false
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is already registered'
+      });
+    }
+
+    // Generate verification token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+
+    // Store token with user data
+    userCreationTokens.set(token, {
+      firstName,
+      middleName,
+      lastName,
+      fullName,
+      email,
+      contactNumber,
+      password,
+      group,
+      role,
+      subRole,
+      departmentOffice,
+      externalCompanyName,
+      userId,
+      useDefaultPicture,
+      expiresAt,
+      createdAt: Date.now()
+    });
+
+    // Get base URL from request
+    const baseUrl = req.protocol + '://' + req.get('host');
+
+    // Send email
+    const emailSent = await sendUserCreationEmail(email, {
+      group,
+      role,
+      subRole
+    }, token, baseUrl);
+
+    if (!emailSent) {
+      userCreationTokens.delete(token);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to send email'
+      });
+    }
+
+    // Log activity
+    await ActivityLog.create({
+      userId: req.user.id,
+      action: 'SEND_USER_CREATION_EMAIL',
+      entityType: 'User',
+      details: `Sent user creation email to ${email}`,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+
+    res.json({
+      success: true,
+      message: 'User creation email sent successfully',
+      email: email
+    });
+
+  } catch (error) {
+    console.error('Send user creation email error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send user creation email'
+    });
+  }
+});
+
+// Verify Token and Create User Account
+router.get('/verify-user-creation', async (req, res) => {
+  console.log('🔍 [DEBUG] Verify user creation route called');
+  console.log('🔍 [DEBUG] Query params:', req.query);
+  console.log('🔍 [DEBUG] Token from query:', req.query.token ? req.query.token.substring(0, 20) + '...' : 'MISSING');
+  console.log('🔍 [DEBUG] Total tokens in storage:', userCreationTokens.size);
+  
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      console.error('❌ [DEBUG] No token provided in query');
+      return res.status(400).send(`
+        <html>
+          <head><title>Invalid Token</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Invalid Verification Link</h1>
+            <p>The verification link is invalid or missing.</p>
+            <p>Please contact your system administrator.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    console.log('🔍 [DEBUG] Looking up token in storage...');
+    const tokenData = userCreationTokens.get(token);
+
+    if (!tokenData) {
+      console.error('❌ [DEBUG] Token not found in storage');
+      console.error('❌ [DEBUG] Available tokens:', Array.from(userCreationTokens.keys()).map(t => t.substring(0, 10) + '...'));
+      return res.status(400).send(`
+        <html>
+          <head><title>Invalid Token</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Invalid or Expired Link</h1>
+            <p>The verification link is invalid or has expired.</p>
+            <p>Please contact your system administrator to request a new link.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    console.log('✅ [DEBUG] Token found in storage');
+    console.log('🔍 [DEBUG] Token expires at:', new Date(tokenData.expiresAt).toISOString());
+    console.log('🔍 [DEBUG] Current time:', new Date().toISOString());
+    console.log('🔍 [DEBUG] Is expired?', tokenData.expiresAt < Date.now());
+    
+    if (tokenData.expiresAt < Date.now()) {
+      console.error('❌ [DEBUG] Token has expired');
+      userCreationTokens.delete(token);
+      return res.status(400).send(`
+        <html>
+          <head><title>Expired Token</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Link Expired</h1>
+            <p>This verification link has expired.</p>
+            <p>Please contact your system administrator to request a new link.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: tokenData.email },
+          { username: tokenData.email }
+        ]
+      },
+      paranoid: false
+    });
+
+    if (existingUser) {
+      userCreationTokens.delete(token);
+      return res.status(400).send(`
+        <html>
+          <head><title>Account Already Exists</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1 style="color: #EB3C3C;">Account Already Exists</h1>
+            <p>An account with this email already exists.</p>
+            <p>Please try logging in instead.</p>
+          </body>
+        </html>
+      `);
+    }
+
+    // Log token data for debugging
+    console.log('🔍 [DEBUG] Token data received:', JSON.stringify({
+      firstName: tokenData.firstName,
+      lastName: tokenData.lastName,
+      email: tokenData.email,
+      group: tokenData.group,
+      role: tokenData.role,
+      subRole: tokenData.subRole,
+      userId: tokenData.userId,
+      hasPassword: !!tokenData.password,
+      hasContactNumber: !!tokenData.contactNumber,
+      useDefaultPicture: tokenData.useDefaultPicture
+    }, null, 2));
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(tokenData.password, 10);
+    console.log('✅ [DEBUG] Password hashed successfully');
+
+    // Prepare user data
+    const userData = {
+      firstName: tokenData.firstName,
+      middleName: tokenData.middleName || null,
+      lastName: tokenData.lastName,
+      fullName: tokenData.fullName,
+      name: tokenData.fullName, // Required field for backward compatibility
+      username: tokenData.email,
+      email: tokenData.email,
+      password: hashedPassword,
+      contactNumber: tokenData.contactNumber,
+      role: tokenData.group,
+      subRole: `${tokenData.role} - ${tokenData.subRole}`,
+      department: tokenData.departmentOffice || null,
+      officeDepartment: tokenData.departmentOffice || null,
+      externalCompanyName: tokenData.externalCompanyName || null,
+      userId: tokenData.userId,
+      group: tokenData.group,
+      status: 'active',
+      profilePictureUrl: tokenData.useDefaultPicture ? '/default-dept-picture.png' : null,
+    };
+
+    console.log('🔍 [DEBUG] User data to create:', JSON.stringify({
+      ...userData,
+      password: '***HIDDEN***'
+    }, null, 2));
+
+    // Create user
+    console.log('🔄 [DEBUG] Attempting to create user...');
+    const newUser = await User.create(userData);
+    console.log('✅ [DEBUG] User created successfully with ID:', newUser.id);
+
+    // Delete token after successful creation
+    userCreationTokens.delete(token);
+    console.log('✅ [DEBUG] Token deleted from storage');
+
+    // Log activity (non-blocking - don't fail if this fails)
+    try {
+      await ActivityLog.create({
+        userId: newUser.id,
+        action: 'USER_CREATED_VIA_EMAIL',
+        entityType: 'User',
+        details: `User account created via email verification: ${tokenData.email}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      console.log('✅ [DEBUG] Activity log created');
+    } catch (activityError) {
+      console.error('⚠️ [DEBUG] Failed to create activity log (non-critical):', activityError.message);
+      // Don't fail the user creation if activity log fails
+    }
+
+    // Return success page
+    return res.send(`
+      <html>
+        <head>
+          <title>Account Created Successfully</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              text-align: center;
+              padding: 20px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              overflow: hidden;
+            }
+            body::before {
+              content: '';
+              position: absolute;
+              top: -50%;
+              left: -50%;
+              width: 200%;
+              height: 200%;
+              background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+              background-size: 50px 50px;
+              animation: float 20s infinite linear;
+            }
+            @keyframes float {
+              0% { transform: translate(0, 0); }
+              100% { transform: translate(50px, 50px); }
+            }
+            .container {
+              background: white;
+              padding: 50px 40px;
+              border-radius: 20px;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+              max-width: 550px;
+              width: 100%;
+              position: relative;
+              z-index: 1;
+              animation: slideUp 0.6s ease-out;
+            }
+            @keyframes slideUp {
+              from {
+                opacity: 0;
+                transform: translateY(30px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            .success-icon {
+              width: 100px;
+              height: 100px;
+              margin: 0 auto 30px;
+              background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              animation: scaleIn 0.6s ease-out, pulse 2s ease-in-out infinite;
+              box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+            }
+            @keyframes scaleIn {
+              from {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+              }
+              to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+              }
+            }
+            @keyframes pulse {
+              0%, 100% {
+                transform: scale(1);
+              }
+              50% {
+                transform: scale(1.05);
+              }
+            }
+            .success-icon svg {
+              width: 60px;
+              height: 60px;
+              color: white;
+              stroke-width: 3;
+            }
+            h1 {
+              color: #1f2937;
+              margin-bottom: 15px;
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.5px;
+            }
+            .subtitle {
+              color: #22c55e;
+              font-size: 16px;
+              font-weight: 600;
+              margin-bottom: 20px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            p {
+              color: #6b7280;
+              line-height: 1.7;
+              font-size: 16px;
+              margin-bottom: 30px;
+            }
+            .login-button {
+              display: inline-block;
+              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+              color: white;
+              padding: 14px 40px;
+              text-decoration: none;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 16px;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+              position: relative;
+              overflow: hidden;
+            }
+            .login-button::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+              transition: left 0.5s;
+            }
+            .login-button:hover::before {
+              left: 100%;
+            }
+            .login-button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            }
+            .login-button:active {
+              transform: translateY(0);
+            }
+            .decorative-line {
+              width: 60px;
+              height: 4px;
+              background: linear-gradient(90deg, transparent, #22c55e, transparent);
+              margin: 25px auto;
+              border-radius: 2px;
+            }
+            @media (max-width: 640px) {
+              .container {
+                padding: 40px 30px;
+              }
+              h1 {
+                font-size: 24px;
+              }
+              .success-icon {
+                width: 80px;
+                height: 80px;
+              }
+              .success-icon svg {
+                width: 50px;
+                height: 50px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h1>Account Created Successfully!</h1>
+            <div class="subtitle">Welcome to Build Watch</div>
+            <p>Your account has been created successfully. You can now log in to the Build Watch System and start managing your projects.</p>
+            <div class="decorative-line"></div>
+            <a href="/" class="login-button">Go to Login</a>
+          </div>
+        </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('❌ Verify user creation error:', error);
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    
+    // Log token data if available
+    if (req.query.token) {
+      const tokenData = userCreationTokens.get(req.query.token);
+      if (tokenData) {
+        console.error('❌ Token data:', JSON.stringify(tokenData, null, 2));
+      } else {
+        console.error('❌ Token not found in storage');
+      }
+    }
+    
+    // Log Sequelize validation errors
+    if (error.name === 'SequelizeValidationError') {
+      console.error('❌ Validation errors:', error.errors);
+    }
+    
+    // Log Sequelize unique constraint errors
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      console.error('❌ Unique constraint error:', error.errors);
+    }
+    
+    // Log database errors
+    if (error.name === 'SequelizeDatabaseError') {
+      console.error('❌ Database error:', error.original);
+    }
+    
+    return res.status(500).send(`
+      <html>
+        <head>
+          <title>Error</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0;
+            }
+            .error-container {
+              background: white;
+              padding: 40px;
+              border-radius: 10px;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+              max-width: 500px;
+            }
+            .error-icon {
+              width: 80px;
+              height: 80px;
+              margin: 0 auto 20px;
+              background: #ef4444;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .error-icon svg {
+              width: 50px;
+              height: 50px;
+              color: white;
+            }
+            h1 {
+              color: #ef4444;
+              margin-bottom: 20px;
+            }
+            p {
+              color: #666;
+              line-height: 1.6;
+            }
+            .error-details {
+              background: #fee2e2;
+              border-left: 4px solid #ef4444;
+              padding: 15px;
+              margin: 20px 0;
+              text-align: left;
+              border-radius: 4px;
+            }
+            .error-details code {
+              font-family: monospace;
+              font-size: 12px;
+              color: #991b1b;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="error-container">
+            <div class="error-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h1>Error Creating Account</h1>
+            <p>An error occurred while creating your account.</p>
+            <div class="error-details">
+              <strong>Error Details:</strong><br>
+              <code>${error.name}: ${error.message}</code>
+            </div>
+            <p style="margin-top: 20px;">
+              Please contact your system administrator with the error details above.
+            </p>
+            <p style="margin-top: 20px;">
+              <a href="/login" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px;">
+                Go to Login
+              </a>
+            </p>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+});
+
+// Debug endpoint to check token storage (remove in production)
+router.get('/debug/tokens', authenticateToken, requireSystemAdmin, (req, res) => {
+  try {
+    const tokens = Array.from(userCreationTokens.entries()).map(([token, data]) => ({
+      token: token.substring(0, 10) + '...', // Only show first 10 chars for security
+      email: data.email,
+      expiresAt: new Date(data.expiresAt).toISOString(),
+      isExpired: data.expiresAt < Date.now(),
+      createdAt: new Date(data.createdAt).toISOString()
+    }));
+    
+    res.json({
+      success: true,
+      totalTokens: userCreationTokens.size,
+      tokens: tokens
+    });
+  } catch (error) {
+    console.error('Debug tokens error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });

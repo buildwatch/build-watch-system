@@ -489,55 +489,62 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             // Calculate utilized budget - role-specific logic
             let utilizedBudget = 0;
             
-            if (currentRole === 'EIU' && projectsList.length > 0) {
+            if (currentRole === 'EIU') {
               // For EIU, calculate utilized budget from their own projects only
-              // Fetch amountSpent for each EIU project in parallel (ProgressCalculationService calculates this accurately)
-              try {
-                const projectBudgetPromises = projectsList.map(async (project) => {
-                  try {
-                    const projectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
-                      headers: getAuthHeaders()
-                    });
-                    if (projectResponse.ok) {
-                      const projectData = await projectResponse.json();
-                      if (projectData.success && projectData.progress?.amountSpent !== undefined) {
-                        // amountSpent is calculated by ProgressCalculationService from approved milestone submissions
-                        return parseFloat(projectData.progress.amountSpent || 0);
-                      } else if (projectData.success && projectData.project?.amountSpent !== undefined) {
-                        return parseFloat(projectData.project.amountSpent || 0);
+              // If no projects, utilized budget should be 0 (not global stats)
+              if (projectsList.length > 0) {
+                // Fetch amountSpent for each EIU project in parallel (ProgressCalculationService calculates this accurately)
+                try {
+                  const projectBudgetPromises = projectsList.map(async (project) => {
+                    try {
+                      const projectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                        headers: getAuthHeaders()
+                      });
+                      if (projectResponse.ok) {
+                        const projectData = await projectResponse.json();
+                        if (projectData.success && projectData.progress?.amountSpent !== undefined) {
+                          // amountSpent is calculated by ProgressCalculationService from approved milestone submissions
+                          return parseFloat(projectData.progress.amountSpent || 0);
+                        } else if (projectData.success && projectData.project?.amountSpent !== undefined) {
+                          return parseFloat(projectData.project.amountSpent || 0);
+                        }
                       }
+                    } catch (err) {
+                      console.warn(`⚠️ Failed to fetch budget for project ${project.id}:`, err);
                     }
-                  } catch (err) {
-                    console.warn(`⚠️ Failed to fetch budget for project ${project.id}:`, err);
+                    return 0;
+                  });
+                  
+                  const projectBudgets = await Promise.all(projectBudgetPromises);
+                  utilizedBudget = projectBudgets.reduce((sum, budget) => sum + budget, 0);
+                  console.log('💰 Utilized budget calculated from EIU projects only:', utilizedBudget);
+                } catch (budgetError) {
+                  console.warn('⚠️ Failed to calculate utilized budget from EIU projects, using fallback:', budgetError);
+                  // Fallback: Calculate from milestone data if available in projects
+                  for (const project of projectsList) {
+                    if (project.milestones && Array.isArray(project.milestones)) {
+                      project.milestones.forEach(milestone => {
+                        const usedBudget = parseFloat(milestone.usedBudget || 0);
+                        if (usedBudget > 0) {
+                          utilizedBudget += usedBudget;
+                        }
+                      });
+                    }
                   }
-                  return 0;
-                });
-                
-                const projectBudgets = await Promise.all(projectBudgetPromises);
-                utilizedBudget = projectBudgets.reduce((sum, budget) => sum + budget, 0);
-                console.log('💰 Utilized budget calculated from EIU projects only:', utilizedBudget);
-              } catch (budgetError) {
-                console.warn('⚠️ Failed to calculate utilized budget from EIU projects, using fallback:', budgetError);
-                // Fallback: Calculate from milestone data if available in projects
-                for (const project of projectsList) {
-                  if (project.milestones && Array.isArray(project.milestones)) {
-                    project.milestones.forEach(milestone => {
-                      const usedBudget = parseFloat(milestone.usedBudget || 0);
-                      if (usedBudget > 0) {
-                        utilizedBudget += usedBudget;
-                      }
-                    });
+                  
+                  // Final fallback: Calculate from budget progress percentage (least accurate)
+                  if (utilizedBudget === 0) {
+                    utilizedBudget = projectsList.reduce((sum, p) => {
+                      const budget = parseFloat(p.totalBudget || 0);
+                      const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+                      return sum + (budget * budgetProgress / 100);
+                    }, 0);
                   }
                 }
-                
-                // Final fallback: Calculate from budget progress percentage (least accurate)
-                if (utilizedBudget === 0) {
-                  utilizedBudget = projectsList.reduce((sum, p) => {
-                    const budget = parseFloat(p.totalBudget || 0);
-                    const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
-                    return sum + (budget * budgetProgress / 100);
-                  }, 0);
-                }
+              } else {
+                // EIU user has no projects - utilized budget should be 0
+                utilizedBudget = 0;
+                console.log('💰 EIU user has no projects - utilized budget set to 0');
               }
             } else {
               // For other roles, use the original logic (fetch from /api/home/stats)

@@ -420,8 +420,184 @@ const sendPasswordResetEmail = async (email, resetUrl, userName, userUserId, ori
   }
 };
 
+// Send User Creation Email with verification link
+const sendUserCreationEmail = async (email, userData, verificationToken, baseUrl) => {
+  try {
+    const transporter = createGmailTransporter();
+    
+    const verificationUrl = `${baseUrl}/api/users/verify-user-creation?token=${verificationToken}`;
+    
+    if (transporter) {
+      const mailOptions = {
+        from: process.env.GMAIL_USER || 'buildwatch69@gmail.com',
+        to: email,
+        subject: 'Complete Your Account Creation - Build Watch System',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+            <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 24px;">Build Watch System</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px;">Santa Cruz LGU</p>
+            </div>
+            
+            <div style="padding: 30px 20px; background-color: #f9f9f9;">
+              <h2 style="color: #333; margin-bottom: 20px;">Welcome to Build Watch System!</h2>
+              
+              <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+                Hello! You have been invited to join the Build Watch System. 
+                Please complete your account creation by clicking the button below.
+              </p>
+              
+              <div style="background-color: #e8f4fd; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #1d4ed8;">Your Account Details:</h4>
+                <p style="margin: 5px 0; color: #666;"><strong>Email:</strong> ${email}</p>
+                <p style="margin: 5px 0; color: #666;"><strong>Group:</strong> ${userData.group || 'N/A'}</p>
+                <p style="margin: 5px 0; color: #666;"><strong>Role:</strong> ${userData.role || 'N/A'}</p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationUrl}" 
+                   style="display: inline-block; background-color: #2563eb; color: white; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);">
+                  Create Your Account
+                </a>
+              </div>
+              
+              <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #856404;">Important:</h4>
+                <p style="margin: 0; color: #856404; line-height: 1.6;">
+                  This link will expire in 24 hours. If you did not request this account, please ignore this email.
+                </p>
+              </div>
+              
+              <p style="color: #666; line-height: 1.6; margin-top: 30px;">
+                If you have any questions or need assistance, please contact your system administrator.
+              </p>
+              
+              <p style="color: #999; font-size: 12px; margin-top: 30px; text-align: center;">
+                This is an automated message from the Build Watch System. Please do not reply to this email.
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ User creation email sent successfully to:', email);
+      console.log('📧 Message ID:', info.messageId);
+      return true;
+    } else {
+      // Development mode
+      console.log('\n📧 ===== USER CREATION EMAIL (DEVELOPMENT MODE) =====');
+      console.log('📧 To:', email);
+      console.log('📧 Subject: Complete Your Account Creation - Build Watch System');
+      console.log('📧 Verification URL:', verificationUrl);
+      console.log('📧 User Data:', JSON.stringify(userData, null, 2));
+      console.log('📧 ================================================\n');
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Error sending user creation email:', error);
+    return false;
+  }
+};
+
+// Send email change verification email
+const sendEmailChangeVerificationEmail = async (newEmail, verificationUrl, userData) => {
+  try {
+    const transporter = createGmailTransporter();
+    
+    const mailOptions = {
+      from: '"Build Watch System" <buildwatch69@gmail.com>',
+      to: newEmail,
+      subject: 'Verify Your New Email Address - Build Watch System',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: 700;">Build Watch System</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Santa Cruz LGU</p>
+          </div>
+          
+          <div style="background-color: white; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #1f2937; margin-bottom: 20px; font-size: 24px;">Email Change Verification</h2>
+            
+            <p style="color: #4b5563; line-height: 1.7; font-size: 16px; margin-bottom: 20px;">
+              Hello ${userData.userName || 'User'},
+            </p>
+            
+            <p style="color: #4b5563; line-height: 1.7; font-size: 16px; margin-bottom: 20px;">
+              You have requested to change your email address from <strong>${userData.oldEmail}</strong> to <strong>${userData.newEmail}</strong>.
+            </p>
+            
+            <p style="color: #4b5563; line-height: 1.7; font-size: 16px; margin-bottom: 30px;">
+              To complete the email change and update your account information, please click the button below:
+            </p>
+            
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${verificationUrl}" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); transition: all 0.3s ease;">
+                Verify Email Change
+              </a>
+            </div>
+            
+            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 30px 0; border-radius: 6px;">
+              <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.6;">
+                <strong>⚠️ Important:</strong> This verification link will expire in 24 hours. If you did not request this email change, please ignore this email or contact your system administrator.
+              </p>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+              If the button above doesn't work, you can copy and paste the following link into your browser:
+            </p>
+            <p style="color: #2563eb; font-size: 12px; word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 6px; margin: 10px 0 30px 0;">
+              ${verificationUrl}
+            </p>
+            
+            <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px;">
+              <p style="color: #9ca3af; font-size: 12px; line-height: 1.6; margin: 0;">
+                This is an automated email from the Build Watch System. Please do not reply to this email.
+              </p>
+              <p style="color: #9ca3af; font-size: 12px; margin-top: 10px;">
+                © ${new Date().getFullYear()} Build Watch System - Santa Cruz LGU
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    if (transporter) {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email change verification email sent successfully to:', newEmail);
+      console.log('📧 Message ID:', info.messageId);
+      return true;
+    } else {
+      // Development mode
+      console.log('\n📧 ===== EMAIL CHANGE VERIFICATION EMAIL (DEVELOPMENT MODE) =====');
+      console.log('📧 To:', newEmail);
+      console.log('📧 Subject:', mailOptions.subject);
+      console.log('📧 Old Email:', userData.oldEmail);
+      console.log('📧 New Email:', userData.newEmail);
+      console.log('📧 Verification URL:', verificationUrl);
+      console.log('📧 ================================================================\n');
+      
+      return true; // Return true to allow testing
+    }
+  } catch (error) {
+    console.error('❌ Error sending email change verification email:', error);
+    
+    // Fallback to development mode
+    console.log('\n📧 ===== EMAIL CHANGE VERIFICATION EMAIL (FALLBACK MODE) =====');
+    console.log('📧 To:', newEmail);
+    console.log('📧 Old Email:', userData.oldEmail);
+    console.log('📧 New Email:', userData.newEmail);
+    console.log('📧 ================================================================\n');
+    
+    return false; // Return false on error
+  }
+};
+
 module.exports = {
   sendUserIdEmail,
   sendAnnouncementEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendUserCreationEmail,
+  sendEmailChangeVerificationEmail
 }; 

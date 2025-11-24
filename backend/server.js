@@ -305,7 +305,25 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Handle preflight OPTIONS requests for uploaded files
 app.options('/uploads/:filename', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.header('Access-Control-Max-Age', '86400');
@@ -314,7 +332,25 @@ app.options('/uploads/:filename', (req, res) => {
 
 // Handle preflight OPTIONS requests for message files (must be before generic route)
 app.options('/uploads/messages/:filename', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.header('Access-Control-Max-Age', '86400');
@@ -329,8 +365,27 @@ app.get('/uploads/messages/:filename', (req, res) => {
   console.log(`📸 Requesting message file: ${filename}`);
   console.log(`📸 File path: ${filePath}`);
   
+  // Get allowed origins from CORS config
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  const origin = req.headers.origin;
+  
   // Set explicit CORS headers BEFORE any other operations
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
@@ -401,8 +456,28 @@ app.get('/uploads/:filename', (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, 'uploads', filename);
   
-  // Set explicit CORS headers
-  res.header('Access-Control-Allow-Origin', '*');
+  // Get allowed origins from CORS config
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  // Get the origin from the request
+  const origin = req.headers.origin;
+  
+  // Set CORS headers - use specific origin if it's in the allowed list, otherwise use wildcard
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
@@ -451,9 +526,27 @@ app.get('/uploads/:filename', (req, res) => {
 
 // Static file serving for uploads with CORS headers
 app.use('/uploads', (req, res, next) => {
+  // Get allowed origins from CORS config
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  const origin = req.headers.origin;
+  
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', '*');
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    } else {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Credentials', 'false');
+    }
     res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
     res.header('Access-Control-Max-Age', '86400'); // 24 hours
@@ -461,8 +554,15 @@ app.use('/uploads', (req, res, next) => {
     return;
   }
   
-  // Set CORS headers for actual requests - more permissive for static files
-  res.header('Access-Control-Allow-Origin', '*');
+  // Set CORS headers for actual requests - use specific origin if allowed
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
@@ -606,7 +706,25 @@ app.use('/api/project-comments', projectCommentRoutes);
 
 // OPTIONS handler for profile pictures
 app.options('/uploads/profile-pictures/:filename', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
   res.header('Access-Control-Max-Age', '86400');
@@ -619,11 +737,30 @@ app.get('/uploads/profile-pictures/:filename', (req, res) => {
   const filePath = path.join(__dirname, 'uploads', 'profile-pictures', filename);
   const defaultProfilePath = path.join(__dirname, 'uploads', 'profile-pictures', 'default-profile.png');
   
-  // Set CORS headers specifically for profile pictures - more permissive
-  res.header('Access-Control-Allow-Origin', '*');
+  // Get allowed origins from CORS config
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  // Get the origin from the request
+  const origin = req.headers.origin;
+  
+  // Set CORS headers - use specific origin if it's in the allowed list, otherwise use wildcard
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
-  res.header('Access-Control-Allow-Credentials', 'false'); // Changed to false for wildcard origin
   res.header('Cache-Control', 'public, max-age=31536000');
   res.header('Vary', 'Origin');
   
@@ -669,11 +806,29 @@ app.get('/uploads/project-comments/:filename', (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, 'uploads', 'project-comments', filename);
   
+  // Get allowed origins from CORS config
+  const allowedOrigins = [
+    'http://localhost:4321',
+    'http://localhost:4322',
+    'https://build-watch.com',
+    'http://build-watch.com',
+    'https://www.build-watch.com',
+    'http://www.build-watch.com',
+  ];
+  
+  const origin = req.headers.origin;
+  
   // Set CORS headers specifically for comment images
-  res.header('Access-Control-Allow-Origin', '*');
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'false');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
-  res.header('Access-Control-Allow-Credentials', 'false');
   res.header('Cache-Control', 'public, max-age=31536000');
   res.header('Vary', 'Origin');
   
