@@ -400,9 +400,7 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
       client:load
       userRole="public"
       isPublic={true}
-      apiUrl={typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? 'http://localhost:3000/api'
-        : `${window.location.protocol}//${window.location.hostname}/api`}
+      apiUrl="/api"
       theme={{
         headerBg: 'from-blue-50 to-indigo-100',
         headerIconBg: 'from-blue-500 to-indigo-600',

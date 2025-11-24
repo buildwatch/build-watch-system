@@ -15,9 +15,7 @@ const ProjectAnalyticsDashboard = ({
     buttonClass: 'btn-primary'
   },
   userRole = 'lgu-iu', // eiu, mpmec-secretariat, mpmec, public, lgu-iu
-  apiUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
-    : `${window.location.protocol}//${window.location.hostname}/api`,
+  apiUrl = '/api', // Default to relative path, will be resolved client-side
   projectsEndpoint = null, // Custom endpoint, or null to use default based on userRole
   isPublic = false
 }) => {
@@ -36,8 +34,27 @@ const ProjectAnalyticsDashboard = ({
     avgProgress: 0
   });
   const [timeRange, setTimeRange] = useState('all');
+  const [resolvedApiUrl, setResolvedApiUrl] = useState(apiUrl);
   const chartsRef = useRef({});
   const chartCanvasesRef = useRef({});
+  
+  // Resolve API URL on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (apiUrl === '/api' || !apiUrl) {
+        // Resolve relative path to absolute
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          setResolvedApiUrl('http://localhost:3000/api');
+        } else {
+          setResolvedApiUrl(`${protocol}//${hostname}/api`);
+        }
+      } else {
+        setResolvedApiUrl(apiUrl);
+      }
+    }
+  }, [apiUrl]);
   
   // Sync with external isOpen prop
   useEffect(() => {
@@ -101,7 +118,7 @@ const ProjectAnalyticsDashboard = ({
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${apiUrl}${endpoint}?_t=${timestamp}`, {
+      const response = await fetch(`${resolvedApiUrl}${endpoint}?_t=${timestamp}`, {
         headers
       });
       
@@ -166,7 +183,7 @@ const ProjectAnalyticsDashboard = ({
       try {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
-          const statsResponse = await fetch(`${apiUrl}/home/stats`, {
+          const statsResponse = await fetch(`${resolvedApiUrl}/home/stats`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
