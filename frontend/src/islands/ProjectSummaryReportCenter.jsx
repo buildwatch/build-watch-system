@@ -1389,6 +1389,31 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     }
   }, [selectedProject, projectMilestones, fetchBudgetData, fetchTimelineData]);
 
+  // Animate progress bars in Time Table tab when timeline data is loaded
+  useEffect(() => {
+    if (activeTab === 'timeline' && timelineData && timelineData.timelineItems) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        const progressBars = document.querySelectorAll('.progress-bar-fill-timeline');
+        
+        progressBars.forEach(bar => {
+          const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
+          const weight = parseFloat(bar.getAttribute('data-weight')) || 0;
+          
+          if (weight > 0) {
+            const fillPercentage = (progress / weight) * 100;
+            bar.style.setProperty('--progress-width', `${fillPercentage}%`);
+            
+            // Reset animation
+            bar.style.animation = 'none';
+            bar.offsetHeight; // Trigger reflow
+            bar.style.animation = 'fillProgressTimeline 2s ease-out forwards';
+          }
+        });
+      }, 100);
+    }
+  }, [activeTab, timelineData]);
+
   // Expose debugging function to window
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -2960,9 +2985,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                             item.isDelayed ? 'bg-red-100 text-red-800' :
                                             'bg-blue-100 text-blue-800'
                                           }`}>
-                                            {item.isCompleted ? 'Completed' : item.isDelayed ? 'Delayed' : item.status}
+                                            {item.isCompleted ? 'Completed' : item.isDelayed ? 'Delayed' : item.status} {item.progress.toFixed(1)}%/{item.weight ? item.weight.toFixed(1) : '0.0'}%
                                           </span>
-                                          <span className="text-sm text-gray-600">{item.progress.toFixed(1)}%</span>
                                         </div>
                                       </div>
                                       <div className="text-sm text-gray-600 mb-2">
@@ -2971,15 +2995,28 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                           <span className="ml-4">Completed: {formatDate(item.actualEndDate.toISOString())}</span>
                                         )}
                                       </div>
-                                      <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                                      <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+                                        {/* Progress bar container with capacity equal to milestone weight */}
                                         <div
-                                          className={`h-full rounded-full ${
-                                            item.isCompleted ? 'bg-green-500' :
-                                            item.isDelayed ? 'bg-red-500' :
-                                            'bg-blue-500'
-                                          }`}
-                                          style={{ width: `${item.progress}%` }}
+                                          className="absolute top-0 left-0 h-full bg-gray-300 rounded-full"
+                                          style={{ width: `${item.weight || 0}%` }}
                                         />
+                                        {/* Progress bar fill with animation */}
+                                        {item.weight > 0 && (
+                                          <div
+                                            className={`absolute top-0 left-0 h-full rounded-full progress-bar-fill-timeline ${
+                                              item.isCompleted ? 'bg-green-500' :
+                                              item.isDelayed ? 'bg-red-500' :
+                                              'bg-blue-500'
+                                            }`}
+                                            style={{ 
+                                              width: `${((item.progress / item.weight) * 100)}%`,
+                                              maxWidth: `${item.weight}%`
+                                            }}
+                                            data-progress={item.progress}
+                                            data-weight={item.weight}
+                                          />
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -3348,6 +3385,15 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           }
         }
         
+        @keyframes fillProgressTimeline {
+          from {
+            width: 0%;
+          }
+          to {
+            width: var(--progress-width);
+          }
+        }
+        
         .animate-fadeInUp {
           animation: fadeInUp 0.3s ease-out;
         }
@@ -3358,6 +3404,11 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         
         .animate-drawCheck {
           animation: drawCheck 0.6s ease-out forwards;
+        }
+        
+        .progress-bar-fill-timeline {
+          transform-origin: left;
+          animation: fillProgressTimeline 2s ease-out forwards;
         }
       `}</style>
     </div>
