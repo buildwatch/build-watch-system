@@ -1071,7 +1071,10 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                              '';
           }
           
-          cumulativeUsed += milestoneUsed;
+          // Only add to cumulative if this milestone has budget used
+          if (milestoneUsed > 0) {
+            cumulativeUsed += milestoneUsed;
+          }
           
           milestoneBudgets.push({
             name: milestone.title || milestone.name || `Milestone ${index + 1}`,
@@ -1082,12 +1085,17 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             budgetBreakdown: budgetBreakdown
           });
           
-          // Build trend data (cumulative)
+          // Build trend data - only show milestones with budget activity OR show all with individual utilization
+          // For cumulative: only increase when milestone has budget used
+          // For individual utilization: show each milestone's own utilization percentage
+          const individualUtilization = milestoneBudget > 0 ? (milestoneUsed / milestoneBudget) * 100 : 0;
+          
           budgetTrend.push({
             milestone: milestone.title || milestone.name || `M${index + 1}`,
             date: milestone.dueDate || new Date().toISOString(),
-            cumulative: cumulativeUsed,
-            percentage: totalBudget > 0 ? (cumulativeUsed / totalBudget) * 100 : 0
+            cumulative: cumulativeUsed, // Cumulative only increases when milestone has budget
+            individualUtilization: individualUtilization, // Individual milestone utilization
+            percentage: totalBudget > 0 ? (cumulativeUsed / totalBudget) * 100 : 0 // Cumulative percentage of total budget
           });
         });
         
@@ -2717,7 +2725,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     },
                                     {
                                       label: 'Budget Utilization %',
-                                      data: budgetData.budgetTrend.map(item => (item.cumulative / budgetData.total) * 100),
+                                      data: budgetData.budgetTrend.map(item => item.individualUtilization || 0),
                                       borderColor: theme.accent === 'green' ? 'rgba(5, 150, 105, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(234, 88, 12, 0.8)' :
                                                    theme.accent === 'blue' ? 'rgba(37, 99, 235, 0.8)' :
@@ -2795,7 +2803,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                   datasets: [
                                     {
                                       label: 'Budget Utilization %',
-                                      data: budgetData.budgetTrend.map(item => item.percentage),
+                                      data: budgetData.budgetTrend.map(item => item.individualUtilization || 0),
                                       borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
                                                    theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
