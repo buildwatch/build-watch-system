@@ -2459,7 +2459,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
               </div>
             </div>
 
-              {/* Tab Content */}
+            {/* Tab Content */}
+            <div className="bg-white rounded-xl shadow-lg mb-6">
               <div className="p-6">
                 {/* Project Summary Tab */}
                 {activeTab === 'summary' && (
