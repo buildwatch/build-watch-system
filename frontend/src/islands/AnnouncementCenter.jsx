@@ -34,11 +34,18 @@ const loadQuill = async () => {
   }
 };
 
-const API_URL = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : `${window.location.protocol}//${window.location.hostname}/api`)
-  : 'http://localhost:3000/api';
+// Dynamic API URL helper - works for both localhost and production
+const getApiUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3000/api'; // Server-side fallback
+  }
+  const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  return isProd 
+    ? `${window.location.protocol}//${window.location.hostname}/api`
+    : 'http://localhost:3000/api';
+};
+
+const API_URL = getApiUrl();
 
 // Get token from cookies (for server-side) or localStorage (for client-side)
 const getToken = () => {
@@ -607,9 +614,11 @@ export default function AnnouncementCenter({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000'
-      : `${window.location.protocol}//${window.location.hostname}`;
+    // Dynamic socket URL - works for both localhost and production
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const SOCKET_URL = isProd 
+      ? `${window.location.protocol}//${window.location.hostname}`
+      : 'http://localhost:3000';
 
     // Initialize Socket.IO connection for real-time updates
     const initSocket = async () => {

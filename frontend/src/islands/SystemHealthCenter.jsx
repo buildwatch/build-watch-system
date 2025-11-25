@@ -16,11 +16,18 @@ const loadChart = async () => {
   }
 };
 
-const API_URL = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : `${window.location.protocol}//${window.location.hostname}:3000/api`)
-  : 'http://localhost:3000/api';
+// Dynamic API URL helper - works for both localhost and production
+const getApiUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3000/api'; // Server-side fallback
+  }
+  const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  return isProd 
+    ? `${window.location.protocol}//${window.location.hostname}/api`
+    : 'http://localhost:3000/api';
+};
+
+const API_URL = getApiUrl();
 
 // Get token from cookies or localStorage
 const getToken = () => {

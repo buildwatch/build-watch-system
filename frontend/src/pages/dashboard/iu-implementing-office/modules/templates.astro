@@ -5,20 +5,16 @@ import IUImplementingOfficeLayout from '../../../../components/IUImplementingOff
 import DocumentCenter from '../../../../islands/DocumentCenter.jsx';
 
 // Dynamic API URL based on request
-const getApiUrl = () => {
-  const url = Astro.url;
-  const hostname = url.hostname;
-  const protocol = url.protocol;
+const getApiUrlForSSR = () => {
+  const hostname = Astro.url.hostname;
+  const protocol = Astro.url.protocol;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3000/api';
   }
-  if (hostname.includes('build-watch.com')) {
-    // For production, use same protocol and domain without port (reverse proxy)
-    return `${protocol}//${hostname}/api`;
-  }
-  return 'http://localhost:3000/api';
+  // For production, use same protocol and domain without port (reverse proxy)
+  return `${protocol}//${hostname}/api`;
 };
-const API_URL = getApiUrl();
+const API_URL = getApiUrlForSSR();
 let userData = null;
 let token = '';
 

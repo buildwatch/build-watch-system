@@ -1744,9 +1744,18 @@ export default function MessagingCenter({ theme = 'green' }) {
       // Normalize the profile picture URL
       let normalizedUrl = profilePictureUrl;
       if (normalizedUrl.startsWith('/') && !normalizedUrl.startsWith('//') && !normalizedUrl.startsWith('http')) {
-        normalizedUrl = 'http://localhost:3000' + normalizedUrl;
+        // Use dynamic base URL
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const backendOrigin = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}`
+          : 'http://localhost:3000';
+        normalizedUrl = backendOrigin + normalizedUrl;
       } else if (normalizedUrl.startsWith('/uploads/') || normalizedUrl.startsWith('uploads/')) {
-        const backendOrigin = 'http://localhost:3000';
+        // Use dynamic base URL
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const backendOrigin = isProd 
+          ? `${window.location.protocol}//${window.location.hostname}`
+          : 'http://localhost:3000';
         normalizedUrl = normalizedUrl.startsWith('/') ? 
           backendOrigin + normalizedUrl : 
           backendOrigin + '/' + normalizedUrl;
@@ -1847,7 +1856,7 @@ export default function MessagingCenter({ theme = 'green' }) {
       if (identifier) {
         const token = getToken();
         
-        fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(identifier)}?t=${Date.now()}`, {
+        fetch(`${API_URL}/profile/picture/${encodeURIComponent(identifier)}?t=${Date.now()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -1864,9 +1873,18 @@ export default function MessagingCenter({ theme = 'green' }) {
             
             // Normalize URL
             if (pictureUrl.startsWith('/') && !pictureUrl.startsWith('//') && !pictureUrl.startsWith('http')) {
-              pictureUrl = 'http://localhost:3000' + pictureUrl;
+              // Use dynamic base URL
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const backendOrigin = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}`
+                : 'http://localhost:3000';
+              pictureUrl = backendOrigin + pictureUrl;
             } else if (pictureUrl.startsWith('/uploads/') || pictureUrl.startsWith('uploads/')) {
-              const backendOrigin = 'http://localhost:3000';
+              // Use dynamic base URL
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const backendOrigin = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}`
+                : 'http://localhost:3000';
               pictureUrl = pictureUrl.startsWith('/') ? 
                 backendOrigin + pictureUrl : 
                 backendOrigin + '/' + pictureUrl;
@@ -2103,7 +2121,7 @@ export default function MessagingCenter({ theme = 'green' }) {
             console.log(`   UserData:`, { email: userData.email, userId: userData.userId, id: userData.id, key });
             
             // CRITICAL: Use full backend URL with userId (like sidebar/topbar/office-groups)
-            const response = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(identifier)}?t=${Date.now()}`, {
+            const response = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(identifier)}?t=${Date.now()}`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -2128,10 +2146,17 @@ export default function MessagingCenter({ theme = 'green' }) {
                   // Handle regular URLs - ensure they're absolute
                   if (pictureUrl.startsWith('/') && !pictureUrl.startsWith('//') && !pictureUrl.startsWith('http')) {
                     // Convert relative URLs to use backend server
-                    pictureUrl = 'http://localhost:3000' + pictureUrl;
+                    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+                    const backendOrigin = isProd 
+                      ? `${window.location.protocol}//${window.location.hostname}`
+                      : 'http://localhost:3000';
+                    pictureUrl = backendOrigin + pictureUrl;
                   } else if (pictureUrl.startsWith('/uploads/') || pictureUrl.startsWith('uploads/')) {
                     // Ensure upload URLs use backend server
-                    const backendOrigin = 'http://localhost:3000';
+                    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+                    const backendOrigin = isProd 
+                      ? `${window.location.protocol}//${window.location.hostname}`
+                      : 'http://localhost:3000';
                     pictureUrl = pictureUrl.startsWith('/') ? 
                       backendOrigin + pictureUrl : 
                       backendOrigin + '/' + pictureUrl;

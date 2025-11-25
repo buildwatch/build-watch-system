@@ -29,20 +29,18 @@ ChartJS.register(
   ArcElement
 );
 
-const API_URL = typeof window !== 'undefined' 
-  ? (() => {
-      const hostname = window.location.hostname;
-      const protocol = window.location.protocol;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:3000/api';
-      }
-      if (hostname.includes('build-watch.com')) {
-        // For production, use same protocol and domain without port (reverse proxy)
-        return `${protocol}//${hostname}/api`;
-      }
-      return 'http://localhost:3000/api';
-    })()
-  : 'http://localhost:3000/api';
+// Dynamic API URL helper - works for both localhost and production
+const getApiUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3000/api'; // Server-side fallback
+  }
+  const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  return isProd 
+    ? `${window.location.protocol}//${window.location.hostname}/api`
+    : 'http://localhost:3000/api';
+};
+
+const API_URL = getApiUrl();
 
 // Get token from localStorage
 const getToken = () => {
@@ -610,9 +608,11 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     // WebSocket connection for real-time notifications (using Socket.IO)
     try {
       // Use Socket.IO instead of raw WebSocket
-      const socketUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000'
-        : `${window.location.protocol}//${window.location.hostname}`;
+      // Dynamic socket URL - works for both localhost and production
+      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      const socketUrl = isProd 
+        ? `${window.location.protocol}//${window.location.hostname}`
+        : 'http://localhost:3000';
       
       const socket = io(socketUrl, {
         path: '/socket.io',

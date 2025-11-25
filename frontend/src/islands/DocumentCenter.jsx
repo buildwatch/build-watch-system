@@ -14,12 +14,25 @@ import { useState, useEffect, useCallback } from 'react';
  * @param {string} props.token - Authentication token
  * @param {string} props.theme - Theme color ('sky', 'blue', 'green', 'orange')
  */
+// Dynamic API URL helper - works for both localhost and production
+const getApiUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3000/api'; // Server-side fallback
+  }
+  const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  return isProd 
+    ? `${window.location.protocol}//${window.location.hostname}/api`
+    : 'http://localhost:3000/api';
+};
+
 export default function DocumentCenter({
   userRole = 'secretariat',
-  apiUrl = 'http://localhost:3000/api',
+  apiUrl = null, // Will use dynamic detection if not provided
   token = '',
   theme = 'sky'
 }) {
+  // Use provided apiUrl or detect dynamically
+  const resolvedApiUrl = apiUrl || getApiUrl();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid', 'list', 'compact'
@@ -99,17 +112,17 @@ export default function DocumentCenter({
       let evidenceResponse;
       if (userRole === 'secretariat' || userRole === 'mpmec') {
         // For Secretariat/MPMEC: Get all approved evidence files
-        evidenceResponse = await fetch(`${apiUrl}/milestones/secretariat/evidence-files`, {
+        evidenceResponse = await fetch(`${resolvedApiUrl}/milestones/secretariat/evidence-files`, {
           headers
         });
       } else if (userRole === 'eiu') {
         // For EIU: Get files from their submitted updates
-        evidenceResponse = await fetch(`${apiUrl}/milestones/eiu/evidence-files`, {
+        evidenceResponse = await fetch(`${resolvedApiUrl}/milestones/eiu/evidence-files`, {
           headers
         });
       } else if (userRole === 'lgu-iu') {
         // For LGU-IU: Get files from approved milestones
-        evidenceResponse = await fetch(`${apiUrl}/milestones/lgu-iu/evidence-files`, {
+        evidenceResponse = await fetch(`${resolvedApiUrl}/milestones/lgu-iu/evidence-files`, {
           headers
         });
       }
@@ -124,7 +137,7 @@ export default function DocumentCenter({
       }
 
       // Fetch projects for organization
-      const projectsResponse = await fetch(`${apiUrl}/projects`, { headers });
+      const projectsResponse = await fetch(`${resolvedApiUrl}/projects`, { headers });
       if (projectsResponse.ok) {
         const projectsData = await projectsResponse.json();
         if (projectsData.success) {
@@ -141,7 +154,7 @@ export default function DocumentCenter({
     } finally {
       setLoading(false);
     }
-  }, [userRole, apiUrl, token]);
+  }, [userRole, resolvedApiUrl, token]);
 
   // Calculate statistics
   const calculateStats = (files) => {
@@ -947,7 +960,7 @@ export default function DocumentCenter({
             const projectId = project.id;
             const getProjectImage = () => {
               if (project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None') {
-                return project.initialPhoto.startsWith('http') ? project.initialPhoto : `${apiUrl.replace('/api', '')}${project.initialPhoto}`;
+                return project.initialPhoto.startsWith('http') ? project.initialPhoto : `${resolvedApiUrl.replace('/api', '')}${project.initialPhoto}`;
               }
               return '/projects-page-header-bg.png';
             };
@@ -1430,7 +1443,7 @@ export default function DocumentCenter({
   function getFullFileUrl(url) {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    return `${apiUrl.replace('/api', '')}${url.startsWith('/') ? url : '/' + url}`;
+    return `${resolvedApiUrl.replace('/api', '')}${url.startsWith('/') ? url : '/' + url}`;
   }
 
   // Render files list
