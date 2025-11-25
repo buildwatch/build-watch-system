@@ -4340,7 +4340,7 @@ router.get('/:projectId/activity-history', authenticateToken, async (req, res) =
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name', 'role', 'subRole']
+          attributes: ['id', 'name', 'email', 'role', 'subRole', 'department', 'profilePictureUrl', 'fullName']
         }
       ],
       order: [['createdAt', 'DESC']],
