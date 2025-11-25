@@ -37,7 +37,7 @@ const getApiUrl = () => {
   const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
   return isProd 
     ? `${window.location.protocol}//${window.location.hostname}/api`
-    : 'http://localhost:3000/api';
+  : 'http://localhost:3000/api';
 };
 
 const API_URL = getApiUrl();
@@ -417,9 +417,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             // Get submissions from milestone or from persistent map
             const milestoneSubmissions = milestone.submissions || submissionsMap[milestone.id] || [];
             const approvedSubmission = milestoneSubmissions.find(s => 
-              s.status === 'approved' || s.status === 'iu_approved'
-            );
-            
+                s.status === 'approved' || s.status === 'iu_approved'
+              );
+              
             // Ensure usedBudget is set from approved submission if not already in milestone
             let usedBudget = milestone.usedBudget;
             if (!usedBudget && approvedSubmission && approvedSubmission.usedBudget) {
@@ -444,9 +444,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             
             // Calculate actual progress from submissions using division-based calculation
             if (approvedSubmission) {
-              // If milestone has approved submission, mark as completed
-              if (milestone.status !== 'completed' && milestone.status !== 'approved') {
-                enhanced.status = 'completed';
+                // If milestone has approved submission, mark as completed
+                if (milestone.status !== 'completed' && milestone.status !== 'approved') {
+                  enhanced.status = 'completed';
               }
             }
             
@@ -465,7 +465,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                   console.log(`⚠️ [${milestone.title}] Calculation returned 0, keeping existing progress:`, enhanced.progress);
                 } else {
                   console.log(`⚠️ [${milestone.title}] Calculation returned 0, using fallback 100%`);
-                  enhanced.progress = 100;
+                enhanced.progress = 100;
                 }
               }
             }
@@ -1073,7 +1073,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           
           // Only add to cumulative if this milestone has budget used
           if (milestoneUsed > 0) {
-            cumulativeUsed += milestoneUsed;
+          cumulativeUsed += milestoneUsed;
           }
           
           milestoneBudgets.push({
@@ -1290,7 +1290,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           // Only add to cumulative if milestone has actual progress
           // Cumulative progress = sum of (milestone progress * milestone weight / 100) for all milestones with progress
           if (milestoneProgress > 0) {
-            cumulativeProgress += milestoneProgress * (weight / 100);
+          cumulativeProgress += milestoneProgress * (weight / 100);
           }
           
           timelineItems.push({
@@ -2329,72 +2329,72 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
               <div>
                 <label className="block text-sm font-semibold text-gray-900">
                   Select Project
-                </label>
+          </label>
                 <p className="text-xs text-gray-500 mt-0.5">Choose a project to view its summary and reports</p>
               </div>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
-              <select
-                value={selectedProject?.id || ''}
-                onChange={async (e) => {
-                  const project = projects.find(p => p.id === e.target.value);
-                  if (!project) return;
-                  
-                  // Fetch full project details to get amountSpent and targetCompletionDate
-                  try {
-                    const fullProjectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
-                      headers: {
-                        'Authorization': `Bearer ${getToken()}`,
-                        'Content-Type': 'application/json'
-                      }
-                    });
-                    
-                    if (fullProjectResponse.ok) {
-                      const fullProjectResult = await fullProjectResponse.json();
-                      const fullProject = fullProjectResult.project || fullProjectResult;
-                      
-                      // Merge with amountSpent from progress if available
-                      if (fullProject.amountSpent) {
-                        // Already in project object
-                      } else if (fullProjectResult.progress?.amountSpent) {
-                        fullProject.amountSpent = fullProjectResult.progress.amountSpent;
-                      }
-                      
-                      // Normalize status (database uses 'complete', API should return 'completed')
-                      if (fullProject.status === 'complete') {
-                        fullProject.status = 'completed';
-                      }
-                      
-                      // Ensure overallProgress is set
-                      if (!fullProject.overallProgress || fullProject.overallProgress === 0) {
-                        if (fullProjectResult.progress?.overall) {
-                          fullProject.overallProgress = fullProjectResult.progress.overall;
-                        }
-                      }
-                      
-                      // Ensure targetCompletionDate is set
-                      if (!fullProject.targetCompletionDate && fullProject.endDate) {
-                        fullProject.targetCompletionDate = fullProject.endDate;
-                      }
-                      
-                      setSelectedProject(fullProject);
-                    } else {
-                      setSelectedProject(project);
-                    }
-                  } catch (error) {
-                    console.error('Error fetching full project details:', error);
-                    setSelectedProject(project);
+          <select
+            value={selectedProject?.id || ''}
+            onChange={async (e) => {
+              const project = projects.find(p => p.id === e.target.value);
+              if (!project) return;
+              
+              // Fetch full project details to get amountSpent and targetCompletionDate
+              try {
+                const fullProjectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                  headers: {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
                   }
-                }}
+                });
+                
+                if (fullProjectResponse.ok) {
+                  const fullProjectResult = await fullProjectResponse.json();
+                  const fullProject = fullProjectResult.project || fullProjectResult;
+                  
+                  // Merge with amountSpent from progress if available
+                  if (fullProject.amountSpent) {
+                    // Already in project object
+                  } else if (fullProjectResult.progress?.amountSpent) {
+                    fullProject.amountSpent = fullProjectResult.progress.amountSpent;
+                  }
+                  
+                  // Normalize status (database uses 'complete', API should return 'completed')
+                  if (fullProject.status === 'complete') {
+                    fullProject.status = 'completed';
+                  }
+                  
+                  // Ensure overallProgress is set
+                  if (!fullProject.overallProgress || fullProject.overallProgress === 0) {
+                    if (fullProjectResult.progress?.overall) {
+                      fullProject.overallProgress = fullProjectResult.progress.overall;
+                    }
+                  }
+                  
+                  // Ensure targetCompletionDate is set
+                  if (!fullProject.targetCompletionDate && fullProject.endDate) {
+                    fullProject.targetCompletionDate = fullProject.endDate;
+                  }
+                  
+                  setSelectedProject(fullProject);
+                } else {
+                  setSelectedProject(project);
+                }
+              } catch (error) {
+                console.error('Error fetching full project details:', error);
+                setSelectedProject(project);
+              }
+            }}
                 className={`w-full px-4 py-3 bg-white border-2 ${theme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${theme.accent}-500 text-gray-900 font-medium transition-all duration-200 hover:border-${theme.accent}-400`}
-              >
+          >
                 <option value="">-- Select a project --</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>
-                    {project.name || project.projectTitle} - {project.projectCode || 'N/A'}
-                  </option>
-                ))}
-              </select>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.name || project.projectTitle} - {project.projectCode || 'N/A'}
+              </option>
+            ))}
+          </select>
             </div>
           </div>
         </div>
@@ -2471,9 +2471,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                   Download Summary
                 </button>
               </div>
-            </div>
+              </div>
 
-            {/* Tab Content */}
+              {/* Tab Content */}
             <div className="bg-white rounded-xl shadow-lg mb-6">
               <div className="p-6">
                 {/* Project Summary Tab */}
@@ -2950,7 +2950,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                             {timelineData.progressData && timelineData.progressData.length > 0 ? (
                               <Line
                                 data={{
-                                  labels: timelineData.progressData.map(item => {
+                                  labels: timelineData.progressData.map((item, index) => {
                                     // Format date for display: "MMM DD, YYYY"
                                     const date = new Date(item.date);
                                     const formattedDate = date.toLocaleDateString('en-US', { 
@@ -2958,8 +2958,13 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       day: 'numeric', 
                                       year: 'numeric' 
                                     });
+                                    // Truncate long milestone names and show date below
+                                    const maxLength = 25;
+                                    const milestoneName = item.milestone.length > maxLength 
+                                      ? item.milestone.substring(0, maxLength) + '...'
+                                      : item.milestone;
                                     // Return milestone name and date on separate lines
-                                    return `${item.milestone}\n${formattedDate}`;
+                                    return `${milestoneName}\n${formattedDate}`;
                                   }),
                                   datasets: [
                                     {
@@ -2976,7 +2981,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                                         theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
                                                         'rgba(99, 102, 241, 0.2)',
                                       fill: true,
-                                      tension: 0.5
+                                      tension: 0.5,
+                                      pointRadius: 5,
+                                      pointHoverRadius: 7
                                     },
                                     {
                                       label: 'Cumulative Progress',
@@ -2988,18 +2995,44 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                                    'rgba(79, 70, 229, 0.8)',
                                       backgroundColor: 'transparent',
                                       borderDash: [5, 5],
-                                      tension: 0.5
+                                      tension: 0.5,
+                                      pointRadius: 5,
+                                      pointHoverRadius: 7
                                     }
                                   ]
                                 }}
                                 options={{
                                   responsive: true,
                                   maintainAspectRatio: false,
+                                  layout: {
+                                    padding: {
+                                      bottom: 20,
+                                      top: 10,
+                                      left: 10,
+                                      right: 10
+                                    }
+                                  },
                                   plugins: {
                                     legend: {
                                       position: 'top',
+                                      labels: {
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        font: {
+                                          size: 12
+                                        }
+                                      }
                                     },
                                     tooltip: {
+                                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                      padding: 12,
+                                      titleFont: {
+                                        size: 13,
+                                        weight: 'bold'
+                                      },
+                                      bodyFont: {
+                                        size: 12
+                                      },
                                       callbacks: {
                                         title: function(context) {
                                           const dataIndex = context[0].dataIndex;
@@ -3007,7 +3040,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                           if (!item) return '';
                                           const date = new Date(item.date);
                                           const formattedDate = formatDate(date.toISOString());
-                                          return `${item.milestone} - ${formattedDate}`;
+                                          return `${item.milestone}\n${formattedDate}`;
                                         },
                                         label: function(context) {
                                           return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
@@ -3021,15 +3054,44 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         display: true,
                                         text: 'Milestone & Date',
                                         font: {
-                                          size: 12,
-                                          weight: 'bold'
-                                        }
+                                          size: 13,
+                                          weight: 'bold',
+                                          family: "'Inter', 'Segoe UI', sans-serif"
+                                        },
+                                        padding: {
+                                          top: 10,
+                                          bottom: 0
+                                        },
+                                        color: '#374151'
+                                      },
+                                      grid: {
+                                        display: true,
+                                        color: 'rgba(0, 0, 0, 0.05)'
                                       },
                                       ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45,
+                                        maxRotation: 60,
+                                        minRotation: 60,
                                         font: {
-                                          size: 10
+                                          size: 10,
+                                          family: "'Inter', 'Segoe UI', sans-serif"
+                                        },
+                                        color: '#6B7280',
+                                        padding: 8,
+                                        maxTicksLimit: 10,
+                                        callback: function(value, index) {
+                                          const item = timelineData.progressData[index];
+                                          if (!item) return '';
+                                          const date = new Date(item.date);
+                                          const formattedDate = date.toLocaleDateString('en-US', { 
+                                            month: 'short', 
+                                            day: 'numeric', 
+                                            year: 'numeric' 
+                                          });
+                                          const maxLength = 20;
+                                          const milestoneName = item.milestone.length > maxLength 
+                                            ? item.milestone.substring(0, maxLength) + '...'
+                                            : item.milestone;
+                                          return [`${milestoneName}`, formattedDate];
                                         }
                                       }
                                     },
@@ -3040,11 +3102,27 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         display: true,
                                         text: 'Progress (%)',
                                         font: {
-                                          size: 12,
-                                          weight: 'bold'
-                                        }
+                                          size: 13,
+                                          weight: 'bold',
+                                          family: "'Inter', 'Segoe UI', sans-serif"
+                                        },
+                                        padding: {
+                                          top: 0,
+                                          bottom: 10
+                                        },
+                                        color: '#374151'
+                                      },
+                                      grid: {
+                                        display: true,
+                                        color: 'rgba(0, 0, 0, 0.05)'
                                       },
                                       ticks: {
+                                        font: {
+                                          size: 11,
+                                          family: "'Inter', 'Segoe UI', sans-serif"
+                                        },
+                                        color: '#6B7280',
+                                        padding: 8,
                                         callback: function(value) {
                                           return value + '%';
                                         }
@@ -3105,10 +3183,10 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         {item.weight > 0 && (
                                           <div
                                             className={`absolute top-0 left-0 h-full rounded-full progress-bar-fill-timeline ${
-                                              item.isCompleted ? 'bg-green-500' :
-                                              item.isDelayed ? 'bg-red-500' :
-                                              'bg-blue-500'
-                                            }`}
+                                            item.isCompleted ? 'bg-green-500' :
+                                            item.isDelayed ? 'bg-red-500' :
+                                            'bg-blue-500'
+                                          }`}
                                             style={{ 
                                               width: `${((item.progress / item.weight) * 100)}%`,
                                               maxWidth: `${item.weight}%`
