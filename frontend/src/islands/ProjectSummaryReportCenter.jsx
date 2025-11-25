@@ -561,7 +561,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         
         // Process activities and ensure proper formatting
         activities.forEach(activity => {
-          // Format activity for display
+          // Format activity for display - preserve all user data including profilePictureUrl
+          const userData = activity.user || {};
           const formattedActivity = {
             id: activity.id || `activity-${activity.entityId}-${activity.createdAt}`,
             action: activity.action || 'UNKNOWN_ACTION',
@@ -571,10 +572,13 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
               ? activity.details 
               : (activity.details?.message || JSON.stringify(activity.details) || 'No details available'),
             createdAt: activity.createdAt || activity.timestamp || new Date().toISOString(),
-            user: activity.user || {
-              name: activity.userName || 'System',
-              role: activity.userRole || 'System',
-              department: activity.department || 'System'
+            user: {
+              id: userData.id || activity.userId,
+              name: userData.name || activity.userName || 'System',
+              role: userData.role || activity.userRole || 'System',
+              department: userData.department || activity.department || 'System',
+              email: userData.email || activity.userEmail,
+              profilePictureUrl: userData.profilePictureUrl || activity.profilePictureUrl || null
             },
             module: activity.module || 'Project Management'
           };
@@ -601,6 +605,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           submissions.forEach(submission => {
             // Add submission entry (from EIU)
             if (submission.status !== 'rejected') {
+              const submitter = submission.submitter || submission.submitterInfo || {};
               allActivities.push({
                 id: `submission-${submission.id}`,
                 action: 'MILESTONE_SUBMITTED',
@@ -609,9 +614,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                 details: `Submitted milestone update: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
                 createdAt: submission.submittedAt || submission.createdAt,
                 user: {
-                  name: submission.submitter?.name || submission.submitterInfo?.name || 'EIU Personnel',
+                  id: submitter.id || submission.submitterId,
+                  name: submitter.name || 'EIU Personnel',
                   role: 'EIU',
-                  department: submission.submitter?.department || submission.submitterInfo?.department
+                  department: submitter.department,
+                  email: submitter.email,
+                  profilePictureUrl: submitter.profilePictureUrl || null
                 },
                 module: 'Milestone Submission'
               });
@@ -619,6 +627,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             
             // Add approval entry (from LGU-IU)
             if (submission.status === 'approved' || submission.status === 'iu_approved') {
+              const reviewer = submission.reviewer || {};
               allActivities.push({
                 id: `approval-${submission.id}`,
                 action: 'MILESTONE_APPROVED',
@@ -627,9 +636,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                 details: `Approved milestone submission: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
                 createdAt: submission.reviewedAt || submission.updatedAt || submission.createdAt,
                 user: {
-                  name: submission.reviewer?.name || 'LGU-IU Personnel',
+                  id: reviewer.id || submission.reviewerId,
+                  name: reviewer.name || 'LGU-IU Personnel',
                   role: 'LGU-IU',
-                  department: submission.reviewer?.department
+                  department: reviewer.department,
+                  email: reviewer.email,
+                  profilePictureUrl: reviewer.profilePictureUrl || null
                 },
                 module: 'Milestone Approval'
               });
