@@ -1632,6 +1632,91 @@ loading = false;
   let projectUpdates = [];
   let globalUploadedFiles = [];
 
+  // Define functions early to make them available for onclick handlers
+  // Toggle collapsible sections (defined early for onclick handlers)
+  window.toggleProjectSection = function(sectionName) {
+    const sectionContent = document.getElementById(`${sectionName}Section`);
+    const chevron = document.querySelector(`[data-section="${sectionName}"]`);
+    
+    if (sectionContent && chevron) {
+      const isExpanded = sectionContent.classList.contains('expanded');
+      
+      if (isExpanded) {
+        // Collapse
+        sectionContent.classList.remove('expanded');
+        chevron.classList.remove('rotated');
+        console.log(`🔼 Collapsed section: ${sectionName}`);
+      } else {
+        // Expand
+        sectionContent.classList.add('expanded');
+        chevron.classList.add('rotated');
+        console.log(`🔽 Expanded section: ${sectionName}`);
+        
+        // Load content if needed (functions may not be defined yet, so check)
+        if (sectionName === 'timeline') {
+          if (typeof loadModernTimeline === 'function') {
+            loadModernTimeline(true);
+          } else {
+            console.warn('loadModernTimeline not yet defined');
+          }
+        } else if (sectionName === 'summary') {
+          if (typeof displayMilestoneSummary === 'function') {
+            displayMilestoneSummary();
+          } else {
+            console.warn('displayMilestoneSummary not yet defined');
+          }
+        } else if (sectionName === 'milestones') {
+          if (typeof displayMilestones === 'function') {
+            displayMilestones();
+          } else {
+            console.warn('displayMilestones not yet defined');
+          }
+        }
+      }
+    } else {
+      console.warn(`⚠️ Section elements not found for: ${sectionName}`);
+    }
+  };
+
+  // View project details function (defined early for onclick handlers)
+  window.viewProjectDetails = function(projectId) {
+    console.log('🚀 EIU viewProjectDetails called with projectId:', projectId);
+    
+    if (!projectId) {
+      console.error('❌ No project ID provided');
+      return;
+    }
+    
+    // Check if authService is available
+    if (typeof authService !== 'undefined' && authService && typeof authService.redirectIfInvalidSession === 'function') {
+      if (!authService.redirectIfInvalidSession()) {
+        return;
+      }
+    }
+    
+    // Use the unified ProjectDetailsModal (same as other modules)
+    if (window.showProjectDetailsModal) {
+      console.log('✅ Using unified ProjectDetailsModal');
+      window.showProjectDetailsModal(projectId);
+    } else {
+      console.error('❌ ProjectDetailsModal not available');
+      alert('Unable to load project details. Please refresh the page.');
+    }
+  };
+
+  // Placeholder functions for timeline view (if not defined elsewhere)
+  window.toggleTimelineView = function(viewType) {
+    console.log('🔄 toggleTimelineView called with:', viewType);
+    // This function can be implemented later if needed
+    // For now, just log to prevent errors
+  };
+
+  window.renderTimelineView = function() {
+    console.log('🔄 renderTimelineView called');
+    // This function can be implemented later if needed
+    // For now, just log to prevent errors
+  };
+
   // Initialize the page
   async function initializePage() {
     try {
@@ -4389,6 +4474,10 @@ loading = false;
 
 
 
+    if (!container) {
+      console.error('❌ milestonesContainer not found');
+      return;
+    }
     container.innerHTML = milestonesHTML;
     console.log('🎉 Milestones HTML set successfully');
     
@@ -4504,6 +4593,10 @@ loading = false;
   // Display updates
   function displayUpdates() {
     const container = document.getElementById('updatesContainer');
+    if (!container) {
+      console.error('❌ updatesContainer not found');
+      return;
+    }
     if (!projectUpdates || projectUpdates.length === 0) {
       container.innerHTML = '<p class="text-gray-500">No updates found for this project.</p>';
       return;
@@ -4526,8 +4619,15 @@ loading = false;
       </div>
     `).join('');
 
+    if (!container) {
+      console.error('❌ Updates container not found');
+      return;
+    }
     container.innerHTML = updatesHTML;
-    document.getElementById('updatesHistory').style.display = 'block';
+    const updatesHistoryEl = document.getElementById('updatesHistory');
+    if (updatesHistoryEl) {
+      updatesHistoryEl.style.display = 'block';
+    }
   }
 
 
@@ -7134,6 +7234,8 @@ loading = false;
   window.isMilestoneLocked = isMilestoneLocked;
   
   // Timeline view and export functions removed - now handled by centralized SubmissionHistoryAnalytics component
+  // Note: toggleTimelineView and renderTimelineView are already defined early in the script (line 1708-1716)
+  // They are placeholder functions to prevent errors when called via onclick handlers
   
   // AI-Assisted Summary Generation (Step 8)
   function generateAISummary(milestoneId) {
@@ -7231,8 +7333,10 @@ loading = false;
   window.previewSubmission = previewSubmission;
   window.updatePreviewData = updatePreviewData;
   window.validateMilestone = validateMilestone;
-  window.toggleTimelineView = toggleTimelineView;
-  window.renderTimelineView = renderTimelineView;
+  // toggleTimelineView and renderTimelineView are already defined early (line 1708-1716)
+  // They are placeholder functions to prevent errors - no need to reassign here
+  // window.toggleTimelineView = toggleTimelineView; // Removed - already defined early
+  // window.renderTimelineView = renderTimelineView; // Removed - already defined early
   // exportSubmissionReport removed - now handled by centralized component
   window.generateAISummary = generateAISummary;
   
@@ -7738,7 +7842,8 @@ loading = false;
     setTimeout(fetchBudgetData, 100);
   }
 
-  // Toggle collapsible sections (renamed to avoid conflict with ProjectDetailsModal)
+  // Toggle collapsible sections - Update the early definition with full implementation
+  // This will override the early simple definition with the complete version
   window.toggleProjectSection = function(sectionName) {
     const sectionContent = document.getElementById(`${sectionName}Section`);
     const chevron = document.querySelector(`[data-section="${sectionName}"]`);
@@ -7759,11 +7864,17 @@ loading = false;
         
         // Load content if needed
         if (sectionName === 'timeline') {
-          loadModernTimeline(true); // Force load when section is expanded
+          if (typeof loadModernTimeline === 'function') {
+            loadModernTimeline(true); // Force load when section is expanded
+          }
         } else if (sectionName === 'summary') {
-          displayMilestoneSummary();
+          if (typeof displayMilestoneSummary === 'function') {
+            displayMilestoneSummary();
+          }
         } else if (sectionName === 'milestones') {
-          displayMilestones();
+          if (typeof displayMilestones === 'function') {
+            displayMilestones();
+          }
           
           // Extra safety: ensure all milestones remain collapsed after display
           setTimeout(() => {
@@ -9995,14 +10106,22 @@ window.restoreVideosFromStorage = function(milestoneId) {
     }
   });
 
-  // View project details function (uses generic API like other modules)
+  // View project details function - Update the early definition with full implementation
+  // This will override the early simple definition with the complete version
   window.viewProjectDetails = function(projectId) {
     console.log('🚀 EIU viewProjectDetails called with projectId:', projectId);
     console.log('🔍 Project ID type:', typeof projectId);
     
-    // Check session validity first
-    if (!authService.redirectIfInvalidSession()) {
+    if (!projectId) {
+      console.error('❌ No project ID provided');
       return;
+    }
+    
+    // Check session validity first (if authService is available)
+    if (typeof authService !== 'undefined' && authService && typeof authService.redirectIfInvalidSession === 'function') {
+      if (!authService.redirectIfInvalidSession()) {
+        return;
+      }
     }
     
     // Use the unified ProjectDetailsModal (same as other modules)
