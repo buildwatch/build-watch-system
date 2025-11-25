@@ -203,6 +203,15 @@ function getImageUrl(imageUrl) {
   if (imageUrl.startsWith('http')) {
     return imageUrl;
   }
+  // Use dynamic base URL
+  if (typeof window !== 'undefined') {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const baseUrl = isProd 
+      ? `${window.location.protocol}//${window.location.hostname}`
+      : 'http://localhost:3000';
+    return `${baseUrl}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+  }
+  // Server-side fallback
   return `http://localhost:3000${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
 }
 

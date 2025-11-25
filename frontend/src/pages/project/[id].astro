@@ -5,7 +5,18 @@ import TopBar from "../../components/TopBar.astro";
 import LGUFooter from "../../components/LGUFooter.astro";
 import ProjectFeedback from "../../islands/ProjectFeedback.jsx";
 
-const API_URL = 'http://localhost:3000/api';
+// Dynamic API URL detection - works for both localhost and production
+const getApiUrlForSSR = () => {
+  const hostname = Astro.url.hostname;
+  const protocol = Astro.url.protocol;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000/api';
+  }
+  // For production, use same protocol and domain without port (reverse proxy)
+  return `${protocol}//${hostname}/api`;
+};
+
+const API_URL = getApiUrlForSSR();
 const { id } = Astro.params;
 
 // Function to get project-specific background images based on category and content
@@ -19,7 +30,13 @@ function getProjectBackgroundImage(project) {
     // Otherwise, prepend the base URL
     // Ensure the path starts with '/' before adding base URL
     const photoPath = project.initialPhoto.startsWith('/') ? project.initialPhoto : `/${project.initialPhoto}`;
-    return `http://localhost:3000${photoPath}`;
+    // Use dynamic base URL for server-side
+    const hostname = Astro.url.hostname;
+    const protocol = Astro.url.protocol;
+    const baseUrl = (hostname === 'localhost' || hostname === '127.0.0.1') 
+      ? 'http://localhost:3000'
+      : `${protocol}//${hostname}`;
+    return `${baseUrl}${photoPath}`;
   }
   
   // Array of construction and infrastructure background images
@@ -881,7 +898,16 @@ loading = false;
                     <div class="bg-green-50 p-4 rounded-lg border border-green-100">
                       {project.initialPhoto && project.initialPhoto !== 'None' && project.initialPhoto !== '' && project.initialPhoto !== 'null' ? (
                         <img 
-                          src={project.initialPhoto.startsWith('http') ? project.initialPhoto : (project.initialPhoto.startsWith('/') ? `http://localhost:3000${project.initialPhoto}` : `http://localhost:3000/uploads/${project.initialPhoto}`)} 
+                          src={project.initialPhoto.startsWith('http') ? project.initialPhoto : (() => {
+                            const hostname = typeof window !== 'undefined' ? window.location.hostname : Astro.url.hostname;
+                            const protocol = typeof window !== 'undefined' ? window.location.protocol : Astro.url.protocol;
+                            const baseUrl = (hostname === 'localhost' || hostname === '127.0.0.1') 
+                              ? 'http://localhost:3000'
+                              : `${protocol}//${hostname}`;
+                            return project.initialPhoto.startsWith('/') 
+                              ? `${baseUrl}${project.initialPhoto}` 
+                              : `${baseUrl}/uploads/${project.initialPhoto}`;
+                          })()} 
                           alt="Project Initial Photo" 
                           class="max-w-full h-64 object-cover rounded-lg border border-gray-200" 
                         />

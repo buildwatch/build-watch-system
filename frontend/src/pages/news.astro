@@ -10,8 +10,19 @@ let featuredArticle = null;
 
 try {
   // For server-side rendering, use localhost API directly
+  // Dynamic API URL detection for server-side
+  const getApiUrlForSSR = () => {
+    const hostname = Astro.url.hostname;
+    const protocol = Astro.url.protocol;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    // For production, use same protocol and domain without port (reverse proxy)
+    return `${protocol}//${hostname}/api`;
+  };
+  
   const apiUrl = typeof window === 'undefined' 
-    ? 'http://localhost:3000/api' 
+    ? getApiUrlForSSR()
     : getApiUrl();
   
   console.log('[News.astro] Fetching articles from:', `${apiUrl}/articles?status=Published&limit=50`);
@@ -116,7 +127,21 @@ function getImageUrl(imageUrl) {
   if (imageUrl.startsWith('http')) {
     return imageUrl;
   }
-  return `http://localhost:3000${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+  // Use dynamic base URL
+  if (typeof window !== 'undefined') {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const baseUrl = isProd 
+      ? `${window.location.protocol}//${window.location.hostname}`
+      : 'http://localhost:3000';
+    return `${baseUrl}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+  }
+  // Server-side fallback
+  const hostname = Astro.url.hostname;
+  const protocol = Astro.url.protocol;
+  const baseUrl = (hostname === 'localhost' || hostname === '127.0.0.1') 
+    ? 'http://localhost:3000'
+    : `${protocol}//${hostname}`;
+  return `${baseUrl}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
 }
 
 // Get category color helper
@@ -637,7 +662,22 @@ function getCategoryColor(category) {
       articleDiv.setAttribute('data-article-id', article.id);
       
       const imageUrl = article.imageUrl && article.imageUrl !== 'None' && article.imageUrl !== 'null' && article.imageUrl !== ''
-        ? (article.imageUrl.startsWith('http') ? article.imageUrl : `http://localhost:3000${article.imageUrl.startsWith('/') ? article.imageUrl : '/' + article.imageUrl}`)
+        ? (article.imageUrl.startsWith('http') ? article.imageUrl : (() => {
+            if (typeof window !== 'undefined') {
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const baseUrl = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}`
+                : 'http://localhost:3000';
+              return `${baseUrl}${article.imageUrl.startsWith('/') ? article.imageUrl : '/' + article.imageUrl}`;
+            }
+            // Server-side fallback
+            const hostname = Astro.url.hostname;
+            const protocol = Astro.url.protocol;
+            const baseUrl = (hostname === 'localhost' || hostname === '127.0.0.1') 
+              ? 'http://localhost:3000'
+              : `${protocol}//${hostname}`;
+            return `${baseUrl}${article.imageUrl.startsWith('/') ? article.imageUrl : '/' + article.imageUrl}`;
+          })())
         : 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
       
       const publishDate = article.publishDate ? new Date(article.publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown date';

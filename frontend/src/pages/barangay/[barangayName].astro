@@ -13,7 +13,17 @@ const barangayName = decodeURIComponent(Astro.params.barangayName || 'Barangay')
 // Server-side fetch: initial projects for this barangay (for fast first paint)
 let initialProjects = [];
 try {
-  const apiBase = 'http://localhost:3000/api';
+  // Dynamic API URL detection for server-side
+  const getApiUrlForSSR = () => {
+    const hostname = Astro.url.hostname;
+    const protocol = Astro.url.protocol;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    // For production, use same protocol and domain without port (reverse proxy)
+    return `${protocol}//${hostname}/api`;
+  };
+  const apiBase = getApiUrlForSSR();
   const res = await fetch(`${apiBase}/projects/public?page=1&limit=1000`);
   const data = await res.json();
   const all = (data?.projects || []).map(p => ({
@@ -367,15 +377,25 @@ function getBarangayImageServer(name) {
   <LGUFooter />
 
   <script>
+    // Global API URL helper function - works for both localhost and production
+    window.getApiUrl = function() {
+      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      return isProd 
+        ? `${window.location.protocol}//${window.location.hostname}/api`
+        : 'http://localhost:3000/api';
+    };
     const rootEl = document.getElementById('barangay-root');
     const barangayName = decodeURIComponent(rootEl?.dataset.barangay || '');
     // Dynamic API URL (same logic as config)
+    // Use global API URL helper or create one
     const getApiUrl = () => {
-      const hostname = window.location.hostname;
-      const protocol = window.location.protocol;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:3000/api';
-      if (hostname.includes('build-watch.com')) return protocol === 'https:' ? `${protocol}//${hostname}/api` : `http://${hostname}:3000/api`;
-      return 'http://localhost:3000/api';
+      if (window.getApiUrl) {
+        return window.getApiUrl();
+      }
+      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      return isProd 
+        ? `${window.location.protocol}//${window.location.hostname}/api`
+        : 'http://localhost:3000/api';
     };
 
     // Google maps quick link

@@ -414,6 +414,13 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
 </Layout>
 
 <script>
+  // Global API URL helper function - works for both localhost and production
+  window.getApiUrl = function() {
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  };
   // Highlight animation style
   const style = document.createElement('style');
   style.innerHTML = `
@@ -871,20 +878,15 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
       if (projects.length === 0) {
         console.log('No projects in window.projectsData, attempting to fetch from API...');
         try {
+          // Use global API URL helper or create one
           const getApiUrl = () => {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:3000/api';
+            if (window.getApiUrl) {
+              return window.getApiUrl();
             }
-            if (hostname.includes('build-watch.com')) {
-              if (protocol === 'https:') {
-                return protocol + '//' + hostname + '/api';
-              } else {
-                return 'http://' + hostname + ':3000/api';
-              }
-            }
-            return 'http://localhost:3000/api';
+            const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            return isProd 
+              ? `${window.location.protocol}//${window.location.hostname}/api`
+              : 'http://localhost:3000/api';
           };
           
           const apiUrl = getApiUrl();
