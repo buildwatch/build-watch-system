@@ -2951,20 +2951,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                               <Line
                                 data={{
                                   labels: timelineData.progressData.map((item, index) => {
-                                    // Format date for display: "MMM DD, YYYY"
-                                    const date = new Date(item.date);
-                                    const formattedDate = date.toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric', 
-                                      year: 'numeric' 
-                                    });
-                                    // Truncate long milestone names and show date below
-                                    const maxLength = 25;
-                                    const milestoneName = item.milestone.length > maxLength 
-                                      ? item.milestone.substring(0, maxLength) + '...'
-                                      : item.milestone;
-                                    // Return milestone name and date on separate lines
-                                    return `${milestoneName}\n${formattedDate}`;
+                                    // Only show milestone name (no date in label)
+                                    return item.milestone;
                                   }),
                                   datasets: [
                                     {
@@ -3006,7 +2994,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                   maintainAspectRatio: false,
                                   layout: {
                                     padding: {
-                                      bottom: 20,
+                                      bottom: 10,
                                       top: 10,
                                       left: 10,
                                       right: 10
@@ -3040,7 +3028,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                           if (!item) return '';
                                           const date = new Date(item.date);
                                           const formattedDate = formatDate(date.toISOString());
-                                          return `${item.milestone}\n${formattedDate}`;
+                                          return `${item.milestone} - ${formattedDate}`;
                                         },
                                         label: function(context) {
                                           return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
@@ -3052,7 +3040,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     x: {
                                       title: {
                                         display: true,
-                                        text: 'Milestone & Date',
+                                        text: 'Milestone',
                                         font: {
                                           size: 13,
                                           weight: 'bold',
@@ -3069,30 +3057,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         color: 'rgba(0, 0, 0, 0.05)'
                                       },
                                       ticks: {
-                                        maxRotation: 60,
-                                        minRotation: 60,
+                                        maxRotation: 45,
+                                        minRotation: 45,
                                         font: {
-                                          size: 10,
+                                          size: 11,
                                           family: "'Inter', 'Segoe UI', sans-serif"
                                         },
                                         color: '#6B7280',
-                                        padding: 8,
-                                        maxTicksLimit: 10,
-                                        callback: function(value, index) {
-                                          const item = timelineData.progressData[index];
-                                          if (!item) return '';
-                                          const date = new Date(item.date);
-                                          const formattedDate = date.toLocaleDateString('en-US', { 
-                                            month: 'short', 
-                                            day: 'numeric', 
-                                            year: 'numeric' 
-                                          });
-                                          const maxLength = 20;
-                                          const milestoneName = item.milestone.length > maxLength 
-                                            ? item.milestone.substring(0, maxLength) + '...'
-                                            : item.milestone;
-                                          return [`${milestoneName}`, formattedDate];
-                                        }
+                                        padding: 5
                                       }
                                     },
                                     y: {
