@@ -8632,13 +8632,8 @@ This compilation report has been generated automatically based on approved EIU m
            budgetDivisionUtilized
          });
 
-         // Prepare the RPMES form file
-         const formData = new FormData();
-         formData.append('rpmesForm', rpmesForm.files[0]);
-         if (additionalNotes) {
-           formData.append('reviewNotes', additionalNotes);
-         }
-
+         // RPMES form is no longer required - removed formData preparation
+         
          // Get authentication token
          const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
          
@@ -8685,14 +8680,18 @@ This compilation report has been generated automatically based on approved EIU m
            throw new Error(errorMessage);
          }
 
-         // Upload RPMES form if provided
-         if (rpmesForm.files.length > 0) {
+         // Upload RPMES form if provided (optional - no longer required)
+         const rpmesFormElement = document.getElementById('rpmesFormUpload');
+         if (rpmesFormElement && rpmesFormElement.files && rpmesFormElement.files.length > 0) {
+           const rpmesFormData = new FormData();
+           rpmesFormData.append('rpmesForm', rpmesFormElement.files[0]);
+           
            const uploadResponse = await fetch(`${API_URL}/milestones/milestone-submissions/${window.currentReviewSubmissionId}/upload-rpmes`, {
              method: 'POST',
              headers: {
                'Authorization': `Bearer ${token}`
              },
-             body: formData
+             body: rpmesFormData
            });
 
            if (!uploadResponse.ok) {
