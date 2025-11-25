@@ -1052,14 +1052,23 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             s.status === 'approved' || s.status === 'iu_approved'
           );
           
-          // Get the latest approved submission's used budget
+          // Get the latest approved submission's used budget and breakdown
           let milestoneUsed = 0;
+          let budgetBreakdown = '';
           if (approvedSubmissions.length > 0) {
             // Sort by submittedAt descending and take the latest
             const latestSubmission = approvedSubmissions.sort((a, b) => 
               new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0)
             )[0];
             milestoneUsed = parseFloat(latestSubmission.usedBudget || latestSubmission.budgetUsed || 0);
+            
+            // Get budget breakdown from various possible fields
+            budgetBreakdown = latestSubmission.divisions?.budget?.budgetBreakdown ||
+                             latestSubmission.budget?.breakdown ||
+                             latestSubmission.budgetBreakdownAllocation ||
+                             latestSubmission.budgetBreakdown ||
+                             milestone.budgetBreakdown ||
+                             '';
           }
           
           cumulativeUsed += milestoneUsed;
@@ -1069,7 +1078,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             planned: milestoneBudget,
             used: milestoneUsed,
             remaining: milestoneBudget - milestoneUsed,
-            utilization: milestoneBudget > 0 ? (milestoneUsed / milestoneBudget) * 100 : 0
+            utilization: milestoneBudget > 0 ? (milestoneUsed / milestoneBudget) * 100 : 0,
+            budgetBreakdown: budgetBreakdown
           });
           
           // Build trend data (cumulative)
@@ -2831,6 +2841,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     <th className="text-right py-3 px-4 font-semibold text-gray-700">Used Budget</th>
                                     <th className="text-right py-3 px-4 font-semibold text-gray-700">Remaining</th>
                                     <th className="text-right py-3 px-4 font-semibold text-gray-700">Utilization</th>
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Budget Breakdown & Allocation</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -2848,6 +2859,19 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         }`}>
                                           {milestone.utilization.toFixed(1)}%
                                         </span>
+                                      </td>
+                                      <td className="py-3 px-4 text-gray-700">
+                                        {milestone.budgetBreakdown ? (
+                                          <div className="text-sm max-w-md">
+                                            {milestone.budgetBreakdown.split('\n').map((line, lineIdx) => (
+                                              <div key={lineIdx} className={lineIdx > 0 ? 'mt-1' : ''}>
+                                                {line.trim()}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-400 italic">No breakdown available</span>
+                                        )}
                                       </td>
                                     </tr>
                                   ))}
