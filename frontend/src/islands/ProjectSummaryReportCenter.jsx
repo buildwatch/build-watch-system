@@ -2950,7 +2950,17 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                             {timelineData.progressData && timelineData.progressData.length > 0 ? (
                               <Line
                                 data={{
-                                  labels: timelineData.progressData.map(item => item.milestone),
+                                  labels: timelineData.progressData.map(item => {
+                                    // Format date for display: "MMM DD, YYYY"
+                                    const date = new Date(item.date);
+                                    const formattedDate = date.toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric', 
+                                      year: 'numeric' 
+                                    });
+                                    // Return milestone name and date on separate lines
+                                    return `${item.milestone}\n${formattedDate}`;
+                                  }),
                                   datasets: [
                                     {
                                       label: 'Milestone Progress %',
@@ -2991,6 +3001,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     },
                                     tooltip: {
                                       callbacks: {
+                                        title: function(context) {
+                                          const dataIndex = context[0].dataIndex;
+                                          const item = timelineData.progressData[dataIndex];
+                                          if (!item) return '';
+                                          const date = new Date(item.date);
+                                          const formattedDate = formatDate(date.toISOString());
+                                          return `${item.milestone} - ${formattedDate}`;
+                                        },
                                         label: function(context) {
                                           return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
                                         }
@@ -2998,9 +3016,34 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     }
                                   },
                                   scales: {
+                                    x: {
+                                      title: {
+                                        display: true,
+                                        text: 'Milestone & Date',
+                                        font: {
+                                          size: 12,
+                                          weight: 'bold'
+                                        }
+                                      },
+                                      ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                          size: 10
+                                        }
+                                      }
+                                    },
                                     y: {
                                       beginAtZero: true,
                                       max: 100,
+                                      title: {
+                                        display: true,
+                                        text: 'Progress (%)',
+                                        font: {
+                                          size: 12,
+                                          weight: 'bold'
+                                        }
+                                      },
                                       ticks: {
                                         callback: function(value) {
                                           return value + '%';
