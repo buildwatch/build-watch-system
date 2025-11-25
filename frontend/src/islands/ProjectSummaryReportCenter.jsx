@@ -2301,71 +2301,88 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           </div>
         </div>
 
-        {/* Project Selector */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Project <span className="text-gray-400 text-xs font-normal">(Select a project from the dropdown)</span>
-          </label>
-          <select
-            value={selectedProject?.id || ''}
-            onChange={async (e) => {
-              const project = projects.find(p => p.id === e.target.value);
-              if (!project) return;
-              
-              // Fetch full project details to get amountSpent and targetCompletionDate
-              try {
-                const fullProjectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
-                  headers: {
-                    'Authorization': `Bearer ${getToken()}`,
-                    'Content-Type': 'application/json'
-                  }
-                });
-                
-                if (fullProjectResponse.ok) {
-                  const fullProjectResult = await fullProjectResponse.json();
-                  const fullProject = fullProjectResult.project || fullProjectResult;
+        {/* Project Selector - Enhanced Design */}
+        <div className={`bg-white border ${theme.border} rounded-2xl shadow-lg transition-all duration-500 ease-out hover:shadow-2xl p-6 mb-6 relative overflow-hidden group`}>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/3 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-gradient-to-br ${theme.primary} shadow-xl group-hover:scale-110 group-hover:rotate-3 relative overflow-hidden`}>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
+                <svg className="w-5 h-5 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900">
+                  Select Project
+                </label>
+                <p className="text-xs text-gray-500 mt-0.5">Choose a project to view its summary and reports</p>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
+              <select
+                value={selectedProject?.id || ''}
+                onChange={async (e) => {
+                  const project = projects.find(p => p.id === e.target.value);
+                  if (!project) return;
                   
-                  // Merge with amountSpent from progress if available
-                  if (fullProject.amountSpent) {
-                    // Already in project object
-                  } else if (fullProjectResult.progress?.amountSpent) {
-                    fullProject.amountSpent = fullProjectResult.progress.amountSpent;
-                  }
-                  
-                  // Normalize status (database uses 'complete', API should return 'completed')
-                  if (fullProject.status === 'complete') {
-                    fullProject.status = 'completed';
-                  }
-                  
-                  // Ensure overallProgress is set
-                  if (!fullProject.overallProgress || fullProject.overallProgress === 0) {
-                    if (fullProjectResult.progress?.overall) {
-                      fullProject.overallProgress = fullProjectResult.progress.overall;
+                  // Fetch full project details to get amountSpent and targetCompletionDate
+                  try {
+                    const fullProjectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                      headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    
+                    if (fullProjectResponse.ok) {
+                      const fullProjectResult = await fullProjectResponse.json();
+                      const fullProject = fullProjectResult.project || fullProjectResult;
+                      
+                      // Merge with amountSpent from progress if available
+                      if (fullProject.amountSpent) {
+                        // Already in project object
+                      } else if (fullProjectResult.progress?.amountSpent) {
+                        fullProject.amountSpent = fullProjectResult.progress.amountSpent;
+                      }
+                      
+                      // Normalize status (database uses 'complete', API should return 'completed')
+                      if (fullProject.status === 'complete') {
+                        fullProject.status = 'completed';
+                      }
+                      
+                      // Ensure overallProgress is set
+                      if (!fullProject.overallProgress || fullProject.overallProgress === 0) {
+                        if (fullProjectResult.progress?.overall) {
+                          fullProject.overallProgress = fullProjectResult.progress.overall;
+                        }
+                      }
+                      
+                      // Ensure targetCompletionDate is set
+                      if (!fullProject.targetCompletionDate && fullProject.endDate) {
+                        fullProject.targetCompletionDate = fullProject.endDate;
+                      }
+                      
+                      setSelectedProject(fullProject);
+                    } else {
+                      setSelectedProject(project);
                     }
+                  } catch (error) {
+                    console.error('Error fetching full project details:', error);
+                    setSelectedProject(project);
                   }
-                  
-                  // Ensure targetCompletionDate is set
-                  if (!fullProject.targetCompletionDate && fullProject.endDate) {
-                    fullProject.targetCompletionDate = fullProject.endDate;
-                  }
-                  
-                  setSelectedProject(fullProject);
-                } else {
-                  setSelectedProject(project);
-                }
-              } catch (error) {
-                console.error('Error fetching full project details:', error);
-                setSelectedProject(project);
-              }
-            }}
-            className={`w-full px-4 py-3 border-2 ${theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-${theme.accent}-500`}
-          >
-            {projects.map(project => (
-              <option key={project.id} value={project.id}>
-                {project.name || project.projectTitle} - {project.projectCode || 'N/A'}
-              </option>
-            ))}
-          </select>
+                }}
+                className={`w-full px-4 py-3 bg-white border-2 ${theme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${theme.accent}-500 text-gray-900 font-medium transition-all duration-200 hover:border-${theme.accent}-400`}
+              >
+                <option value="">-- Select a project --</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.name || project.projectTitle} - {project.projectCode || 'N/A'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -2376,70 +2393,71 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
 
         {selectedProject ? (
           <>
-            {/* Tabs */}
-            <div className="bg-white rounded-xl shadow-lg mb-6">
-              <div className="flex border-b border-gray-200">
+            {/* Tabs - Enhanced Design Matching Announcement System */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-1 mb-6">
+              <div className="flex items-center gap-1 flex-wrap">
                 <button
                   onClick={() => setActiveTab('summary')}
-                  className={`px-6 py-4 font-medium transition-colors ${
+                  className={`px-6 py-2.5 font-semibold text-sm rounded-md transition-all duration-200 ${
                     activeTab === 'summary'
-                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? `bg-gradient-to-r ${theme.primary} text-white shadow-sm`
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Project Summary
                 </button>
                 <button
                   onClick={() => setActiveTab('milestones')}
-                  className={`px-6 py-4 font-medium transition-colors ${
+                  className={`px-6 py-2.5 font-semibold text-sm rounded-md transition-all duration-200 ${
                     activeTab === 'milestones'
-                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? `bg-gradient-to-r ${theme.primary} text-white shadow-sm`
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Milestones
                 </button>
                 <button
                   onClick={() => setActiveTab('budget')}
-                  className={`px-6 py-4 font-medium transition-colors ${
+                  className={`px-6 py-2.5 font-semibold text-sm rounded-md transition-all duration-200 ${
                     activeTab === 'budget'
-                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? `bg-gradient-to-r ${theme.primary} text-white shadow-sm`
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Budget Summary
                 </button>
                 <button
                   onClick={() => setActiveTab('timeline')}
-                  className={`px-6 py-4 font-medium transition-colors ${
+                  className={`px-6 py-2.5 font-semibold text-sm rounded-md transition-all duration-200 ${
                     activeTab === 'timeline'
-                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? `bg-gradient-to-r ${theme.primary} text-white shadow-sm`
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Time Table
                 </button>
                 <button
                   onClick={() => setActiveTab('audit')}
-                  className={`px-6 py-4 font-medium transition-colors ${
+                  className={`px-6 py-2.5 font-semibold text-sm rounded-md transition-all duration-200 ${
                     activeTab === 'audit'
-                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? `bg-gradient-to-r ${theme.primary} text-white shadow-sm`
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Report
                 </button>
                 <button
                   onClick={() => setActiveTab('download')}
-                  className={`px-6 py-4 font-medium transition-colors ${
+                  className={`px-6 py-2.5 font-semibold text-sm rounded-md transition-all duration-200 ${
                     activeTab === 'download'
-                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? `bg-gradient-to-r ${theme.primary} text-white shadow-sm`
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Download Summary
                 </button>
               </div>
+            </div>
 
               {/* Tab Content */}
               <div className="p-6">
