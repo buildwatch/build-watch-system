@@ -3057,14 +3057,16 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         color: 'rgba(0, 0, 0, 0.05)'
                                       },
                                       ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45,
+                                        maxRotation: 0,
+                                        minRotation: 0,
                                         font: {
                                           size: 11,
                                           family: "'Inter', 'Segoe UI', sans-serif"
                                         },
                                         color: '#6B7280',
-                                        padding: 5
+                                        padding: 5,
+                                        autoSkip: false,
+                                        maxTicksLimit: 10
                                       }
                                     },
                                     y: {
