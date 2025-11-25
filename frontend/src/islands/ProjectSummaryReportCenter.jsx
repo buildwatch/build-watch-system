@@ -1265,6 +1265,50 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     }
   }, []);
 
+  // Fetch download audit trail
+  const fetchDownloadAuditTrail = useCallback(async (projectId) => {
+    if (!projectId) {
+      setDownloadAuditTrail([]);
+      return;
+    }
+    
+    try {
+      const token = getToken();
+      if (!token) {
+        setDownloadAuditTrail([]);
+        return;
+      }
+      
+      // Use AbortController for timeout (more compatible)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_URL}/projects/${projectId}/download-audit`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDownloadAuditTrail(result.downloads || result.data || []);
+      } else {
+        // If endpoint doesn't exist yet, initialize empty array
+        setDownloadAuditTrail([]);
+      }
+    } catch (err) {
+      // Silently handle errors - endpoint might not exist yet
+      if (err.name !== 'AbortError') {
+        console.warn('Could not fetch download audit trail:', err);
+      }
+      setDownloadAuditTrail([]);
+    }
+  }, []);
+
   // Load milestones, audit trail, budget, and timeline when project is selected
   useEffect(() => {
     if (selectedProject && selectedProject.id) {
@@ -1369,50 +1413,6 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       }
     };
   }, [selectedProject, budgetData, timelineData, projectMilestones]);
-
-  // Fetch download audit trail
-  const fetchDownloadAuditTrail = useCallback(async (projectId) => {
-    if (!projectId) {
-      setDownloadAuditTrail([]);
-      return;
-    }
-    
-    try {
-      const token = getToken();
-      if (!token) {
-        setDownloadAuditTrail([]);
-        return;
-      }
-      
-      // Use AbortController for timeout (more compatible)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch(`${API_URL}/projects/${projectId}/download-audit`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const result = await response.json();
-        setDownloadAuditTrail(result.downloads || result.data || []);
-      } else {
-        // If endpoint doesn't exist yet, initialize empty array
-        setDownloadAuditTrail([]);
-      }
-    } catch (err) {
-      // Silently handle errors - endpoint might not exist yet
-      if (err.name !== 'AbortError') {
-        console.warn('Could not fetch download audit trail:', err);
-      }
-      setDownloadAuditTrail([]);
-    }
-  }, []);
 
   // Record download in audit trail
   const recordDownload = useCallback(async (projectId, format) => {
