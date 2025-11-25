@@ -143,6 +143,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
   const [showNotifications, setShowNotifications] = useState(false);
   const [budgetData, setBudgetData] = useState(null);
   const [timelineData, setTimelineData] = useState(null);
+  const [downloadAuditTrail, setDownloadAuditTrail] = useState([]);
   
   const currentUser = getCurrentUser();
   const theme = getThemeColors(userRole || currentUser?.role);
@@ -1269,8 +1270,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     if (selectedProject) {
       fetchMilestones(selectedProject.id);
       fetchAuditTrail(selectedProject.id);
+      fetchDownloadAuditTrail(selectedProject.id);
     }
-  }, [selectedProject, fetchMilestones, fetchAuditTrail]);
+  }, [selectedProject, fetchMilestones, fetchAuditTrail, fetchDownloadAuditTrail]);
 
   // Load budget and timeline data when milestones are available
   useEffect(() => {
@@ -1361,6 +1363,696 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       }
     };
   }, [selectedProject, budgetData, timelineData, projectMilestones]);
+
+  // Fetch download audit trail
+  const fetchDownloadAuditTrail = useCallback(async (projectId) => {
+    if (!projectId) return;
+    
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}/projects/${projectId}/download-audit`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDownloadAuditTrail(result.downloads || result.data || []);
+      } else {
+        // If endpoint doesn't exist yet, initialize empty array
+        setDownloadAuditTrail([]);
+      }
+    } catch (err) {
+      console.warn('Could not fetch download audit trail:', err);
+      setDownloadAuditTrail([]);
+    }
+  }, []);
+
+  // Record download in audit trail
+  const recordDownload = useCallback(async (projectId, format) => {
+    if (!projectId) return;
+    
+    try {
+      const token = getToken();
+      const user = getCurrentUser();
+      
+      await fetch(`${API_URL}/projects/${projectId}/download-audit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          format: format
+        })
+      });
+      
+      // Refresh download audit trail
+      fetchDownloadAuditTrail(projectId);
+    } catch (err) {
+      console.warn('Could not record download:', err);
+    }
+  }, [fetchDownloadAuditTrail]);
+
+  // Load jsPDF library dynamically
+  const loadJsPDFLibrary = async () => {
+    if (window.jsPDF || window.jspdf) {
+      return true;
+    }
+
+    const scripts = [
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+
+    for (const src of scripts) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+          document.head.appendChild(script);
+        });
+        
+        if (window.jsPDF || window.jspdf) {
+          // Also load html2canvas for chart rendering
+          const html2canvasScript = document.createElement('script');
+          html2canvasScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          document.head.appendChild(html2canvasScript);
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Failed to load jsPDF from ${src}:`, e);
+      }
+    }
+    return false;
+  };
+
+  // Export to PDF
+  const exportToPDF = async () => {
+    if (!selectedProject) {
+      alert('Please select a project first.');
+      return;
+    }
+
+    try {
+      const loaded = await loadJsPDFLibrary();
+      if (!loaded) {
+        alert('Failed to load PDF library. Please try again.');
+        return;
+      }
+
+      let jsPDF = window.jsPDF?.jsPDF || window.jsPDF || window.jspdf?.jsPDF || window.jspdf;
+      if (!jsPDF || typeof jsPDF !== 'function') {
+        alert('PDF library failed to initialize. Please try HTML format.');
+        return;
+      }
+
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      // Get current date and time
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      const reportMonth = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }).toUpperCase();
+      
+      // Get user/organization info
+      const userData = getCurrentUser();
+      const organizationName = userData?.implementingOfficeName || userData?.office || userData?.department || 'MUNICIPAL ENGINEERING OFFICE';
+      
+      // Helper to get base URL for images
+      const getBaseUrl = () => {
+        if (typeof window === 'undefined') return 'http://localhost:3000';
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        return isProd 
+          ? `${window.location.protocol}//${window.location.hostname}`
+          : 'http://localhost:3000';
+      };
+      
+      const baseUrl = getBaseUrl();
+      
+      // Header Section
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      const headerHeight = 40;
+      const pageWidth = 210;
+      const logoSize = 18;
+      const logoY = (headerHeight - logoSize) / 2;
+      
+      // Try to load logos
+      try {
+        const santaCruzLogo = await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              resolve(canvas.toDataURL('image/png'));
+            } catch (e) {
+              resolve(null);
+            }
+          };
+          img.onerror = () => resolve(null);
+          img.src = `${baseUrl}/santa-cruz-seal.png`;
+        });
+        
+        if (santaCruzLogo) {
+          doc.addImage(santaCruzLogo, 'PNG', 10, logoY, logoSize, logoSize);
+        }
+      } catch (e) {
+        console.warn('Could not load Santa Cruz logo:', e);
+      }
+      
+      try {
+        const mpadoLogo = await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              resolve(canvas.toDataURL('image/png'));
+            } catch (e) {
+              resolve(null);
+            }
+          };
+          img.onerror = () => resolve(null);
+          img.src = `${baseUrl}/mpado_logo.png`;
+        });
+        
+        if (mpadoLogo) {
+          doc.addImage(mpadoLogo, 'PNG', pageWidth - 10 - logoSize, logoY, logoSize, logoSize);
+        }
+      } catch (e) {
+        console.warn('Could not load MPDO logo:', e);
+      }
+      
+      // Header text
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('SANTA CRUZ PROJECT MONITORING SYSTEM', pageWidth / 2, 14, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.text('PROJECT SUMMARY & REPORT', pageWidth / 2, 21, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.text(`As of ${reportMonth}`, pageWidth / 2, 28, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      
+      // Report Information Section
+      let yPos = 45;
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Implementing Agency: ${organizationName}`, 10, yPos);
+      
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      doc.text(`Report Generated: ${currentDate} at ${currentTime}`, 10, yPos);
+      
+      yPos += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text(`Project: ${selectedProject.name || 'N/A'}`, 10, yPos);
+      
+      yPos += 6;
+      doc.setFont(undefined, 'normal');
+      doc.text(`Project Code: ${selectedProject.projectCode || 'N/A'}`, 10, yPos);
+      
+      yPos += 10;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(10, yPos, 200, yPos);
+      
+      yPos += 10;
+      
+      // Project Summary Section
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(37, 99, 235);
+      doc.text('PROJECT SUMMARY', 10, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 8;
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      const summaryInfo = [
+        `Location: ${selectedProject.location || 'N/A'}`,
+        `Total Budget: ${formatCurrency(selectedProject.totalBudget)}`,
+        `Used Budget: ${formatCurrency(selectedProject.amountSpent || selectedProject.usedBudget || 0)}`,
+        `Overall Progress: ${selectedProject.overallProgress != null ? parseFloat(selectedProject.overallProgress).toFixed(1) : '0.0'}%`,
+        `Start Date: ${selectedProject.startDate ? formatDate(selectedProject.startDate) : 'N/A'}`,
+        `End Date: ${selectedProject.endDate ? formatDate(selectedProject.endDate) : 'N/A'}`
+      ];
+      
+      summaryInfo.forEach(info => {
+        if (yPos > 280) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.text(info, 10, yPos);
+        yPos += 6;
+      });
+      
+      yPos += 5;
+      
+      // Milestones Section
+      if (projectMilestones.length > 0) {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(37, 99, 235);
+        doc.text('MILESTONES', 10, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 8;
+        
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        
+        projectMilestones.forEach((milestone, idx) => {
+          if (yPos > 280) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          const approvedSubmission = milestone.submissions?.find(s => 
+            s.status === 'approved' || s.status === 'iu_approved'
+          );
+          const progress = milestone.progress && milestone.progress > 0 
+            ? parseFloat(milestone.progress).toFixed(1) 
+            : calculateMilestoneProgressFromDivisions(milestone, approvedSubmission).toFixed(1);
+          
+          doc.setFont(undefined, 'bold');
+          doc.text(`${idx + 1}. ${milestone.title || 'N/A'}`, 10, yPos);
+          yPos += 5;
+          doc.setFont(undefined, 'normal');
+          doc.text(`   Weight: ${parseFloat(milestone.weight || 0).toFixed(1)}%`, 10, yPos);
+          yPos += 5;
+          doc.text(`   Budget: ${formatCurrency(milestone.plannedBudget || milestone.budgetPlanned)}`, 10, yPos);
+          yPos += 5;
+          doc.text(`   Used Budget: ${formatCurrency(milestone.usedBudget || approvedSubmission?.usedBudget || 0)}`, 10, yPos);
+          yPos += 5;
+          doc.text(`   Progress: ${progress}%`, 10, yPos);
+          yPos += 5;
+          doc.text(`   Status: ${milestone.status || 'N/A'}`, 10, yPos);
+          yPos += 8;
+        });
+      }
+      
+      // Budget Summary Section
+      if (budgetData) {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(37, 99, 235);
+        doc.text('BUDGET SUMMARY', 10, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 8;
+        
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Total Budget: ${formatCurrency(budgetData.total)}`, 10, yPos);
+        yPos += 5;
+        doc.text(`Used Budget: ${formatCurrency(budgetData.used)}`, 10, yPos);
+        yPos += 5;
+        doc.text(`Remaining Budget: ${formatCurrency(budgetData.remaining)}`, 10, yPos);
+        yPos += 5;
+        doc.text(`Utilization: ${budgetData.utilizationPercentage?.toFixed(1) || '0.0'}%`, 10, yPos);
+        yPos += 10;
+        
+        // Try to capture budget chart if available
+        try {
+          if (window.html2canvas && budgetChartRef?.current) {
+            const chartCanvas = budgetChartRef.current.querySelector('canvas');
+            if (chartCanvas) {
+              const chartImage = await new Promise((resolve) => {
+                html2canvas(chartCanvas, {
+                  backgroundColor: '#ffffff',
+                  scale: 2
+                }).then(canvas => {
+                  resolve(canvas.toDataURL('image/png'));
+                }).catch(() => resolve(null));
+              });
+              
+              if (chartImage && yPos < 250) {
+                doc.addImage(chartImage, 'PNG', 10, yPos, 190, 60);
+                yPos += 65;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Could not capture budget chart:', e);
+        }
+      }
+      
+      // Report/Audit Trail Section
+      if (Object.keys(auditTrail).length > 0) {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(37, 99, 235);
+        doc.text('REPORT / ACTIVITY LOG', 10, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 8;
+        
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        
+        Object.entries(auditTrail).forEach(([department, activities]) => {
+          if (yPos > 280) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setFont(undefined, 'bold');
+          doc.text(`${department} Department:`, 10, yPos);
+          yPos += 5;
+          doc.setFont(undefined, 'normal');
+          
+          activities.slice(0, 10).forEach((activity) => {
+            if (yPos > 280) {
+              doc.addPage();
+              yPos = 20;
+            }
+            
+            const activityText = `${activity.action} by ${activity.user?.name || 'System'} - ${activity.details || ''}`;
+            const lines = doc.splitTextToSize(activityText, 190);
+            doc.text(lines, 15, yPos);
+            yPos += lines.length * 5 + 2;
+            doc.setFontSize(8);
+            doc.text(formatDate(activity.createdAt), 15, yPos);
+            yPos += 5;
+            doc.setFontSize(9);
+          });
+          
+          yPos += 5;
+        });
+      }
+      
+      // Footer
+      const totalPages = doc.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Page ${i} of ${totalPages} - Generated by Build Watch on ${currentDate} at ${currentTime}`,
+          pageWidth / 2,
+          287,
+          { align: 'center' }
+        );
+      }
+      
+      // Save PDF
+      const fileName = `Project_Summary_${selectedProject.projectCode || selectedProject.id}_${now.getTime()}.pdf`;
+      doc.save(fileName);
+      
+      // Record download
+      await recordDownload(selectedProject.id, 'PDF');
+      
+      alert('PDF exported successfully!');
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      alert('Failed to export PDF. Please try again.');
+    }
+  };
+
+  // Export to HTML
+  const exportToHTML = async () => {
+    if (!selectedProject) {
+      alert('Please select a project first.');
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      const reportMonth = now.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }).toUpperCase();
+      
+      const userData = getCurrentUser();
+      const organizationName = userData?.implementingOfficeName || userData?.office || userData?.department || 'MUNICIPAL ENGINEERING OFFICE';
+      
+      const getBaseUrl = () => {
+        if (typeof window === 'undefined') return 'http://localhost:3000';
+        const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        return isProd 
+          ? `${window.location.protocol}//${window.location.hostname}`
+          : 'http://localhost:3000';
+      };
+      
+      const baseUrl = getBaseUrl();
+      
+      const escapeHtml = (text) => {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      };
+      
+      // Build HTML content
+      let htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Summary & Report - ${escapeHtml(selectedProject.name || 'N/A')}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; }
+        .header { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; padding: 30px; text-align: center; margin-bottom: 30px; border-radius: 8px; }
+        .header h1 { font-size: 24px; margin-bottom: 10px; font-weight: bold; }
+        .header h2 { font-size: 18px; margin-bottom: 5px; font-weight: 600; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .meta { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .meta p { margin: 5px 0; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 20px; font-weight: bold; color: #2563eb; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .info-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .info-item label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
+        .info-item value { font-size: 16px; font-weight: bold; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        table th, table td { padding: 12px; text-align: left; border: 1px solid #ddd; }
+        table th { background: #2563eb; color: white; font-weight: bold; }
+        table tr:nth-child(even) { background: #f8f9fa; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #666; font-size: 12px; }
+        @media print { body { background: white; } .container { box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <img src="${baseUrl}/santa-cruz-seal.png" alt="Santa Cruz Seal" style="height: 70px; width: 70px; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none';">
+                <div style="flex: 1; text-align: center; min-width: 0;">
+                    <h1>SANTA CRUZ PROJECT MONITORING SYSTEM</h1>
+                    <h2>PROJECT SUMMARY & REPORT</h2>
+                    <p>As of ${reportMonth}</p>
+                </div>
+                <img src="${baseUrl}/mpado_logo.png" alt="MPDO Logo" style="height: 70px; width: 70px; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none';">
+            </div>
+        </div>
+        
+        <div class="meta">
+            <p><strong>Implementing Agency:</strong> ${escapeHtml(organizationName)}</p>
+            <p><strong>Report Generated:</strong> ${currentDate} at ${currentTime}</p>
+            <p><strong>Project:</strong> ${escapeHtml(selectedProject.name || 'N/A')}</p>
+            <p><strong>Project Code:</strong> ${escapeHtml(selectedProject.projectCode || 'N/A')}</p>
+        </div>
+        
+        <!-- Project Summary Section -->
+        <div class="section">
+            <div class="section-title">PROJECT SUMMARY</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Location</label>
+                    <value>${escapeHtml(selectedProject.location || 'N/A')}</value>
+                </div>
+                <div class="info-item">
+                    <label>Total Budget</label>
+                    <value>${formatCurrency(selectedProject.totalBudget)}</value>
+                </div>
+                <div class="info-item">
+                    <label>Used Budget</label>
+                    <value>${formatCurrency(selectedProject.amountSpent || selectedProject.usedBudget || 0)}</value>
+                </div>
+                <div class="info-item">
+                    <label>Overall Progress</label>
+                    <value>${selectedProject.overallProgress != null ? parseFloat(selectedProject.overallProgress).toFixed(1) : '0.0'}%</value>
+                </div>
+                <div class="info-item">
+                    <label>Start Date</label>
+                    <value>${selectedProject.startDate ? formatDate(selectedProject.startDate) : 'N/A'}</value>
+                </div>
+                <div class="info-item">
+                    <label>End Date</label>
+                    <value>${selectedProject.endDate ? formatDate(selectedProject.endDate) : 'N/A'}</value>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Milestones Section -->
+        ${projectMilestones.length > 0 ? `
+        <div class="section">
+            <div class="section-title">MILESTONES</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Milestone</th>
+                        <th>Weight</th>
+                        <th>Budget</th>
+                        <th>Used Budget</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${projectMilestones.map((milestone, idx) => {
+                      const approvedSubmission = milestone.submissions?.find(s => 
+                        s.status === 'approved' || s.status === 'iu_approved'
+                      );
+                      const progress = milestone.progress && milestone.progress > 0 
+                        ? parseFloat(milestone.progress).toFixed(1) 
+                        : calculateMilestoneProgressFromDivisions(milestone, approvedSubmission).toFixed(1);
+                      
+                      return `
+                        <tr>
+                            <td>${escapeHtml(milestone.title || 'N/A')}</td>
+                            <td>${parseFloat(milestone.weight || 0).toFixed(1)}%</td>
+                            <td>${formatCurrency(milestone.plannedBudget || milestone.budgetPlanned)}</td>
+                            <td>${formatCurrency(milestone.usedBudget || approvedSubmission?.usedBudget || 0)}</td>
+                            <td>${progress}%</td>
+                            <td>${escapeHtml(milestone.status || 'N/A')}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+        ` : ''}
+        
+        <!-- Budget Summary Section -->
+        ${budgetData ? `
+        <div class="section">
+            <div class="section-title">BUDGET SUMMARY</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Total Budget</label>
+                    <value>${formatCurrency(budgetData.total)}</value>
+                </div>
+                <div class="info-item">
+                    <label>Used Budget</label>
+                    <value>${formatCurrency(budgetData.used)}</value>
+                </div>
+                <div class="info-item">
+                    <label>Remaining Budget</label>
+                    <value>${formatCurrency(budgetData.remaining)}</value>
+                </div>
+                <div class="info-item">
+                    <label>Utilization</label>
+                    <value>${budgetData.utilizationPercentage?.toFixed(1) || '0.0'}%</value>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+        
+        <!-- Report Section -->
+        ${Object.keys(auditTrail).length > 0 ? `
+        <div class="section">
+            <div class="section-title">REPORT / ACTIVITY LOG</div>
+            ${Object.entries(auditTrail).map(([department, activities]) => `
+                <h3 style="margin-top: 20px; margin-bottom: 10px; color: #2563eb; font-size: 16px;">${escapeHtml(department)} Department</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>Details</th>
+                            <th>Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${activities.map(activity => `
+                            <tr>
+                                <td>${escapeHtml(activity.action || 'N/A')}</td>
+                                <td>${escapeHtml(activity.user?.name || 'System')}</td>
+                                <td>${escapeHtml(activity.details || '')}</td>
+                                <td>${formatDate(activity.createdAt)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `).join('')}
+        </div>
+        ` : ''}
+        
+        <div class="footer">
+            <p>Generated by Build Watch - ${escapeHtml(organizationName)}</p>
+            <p>Generated on: ${currentDate} at ${currentTime}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+      // Create and download HTML file
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Project_Summary_${selectedProject.projectCode || selectedProject.id}_${now.getTime()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Record download
+      await recordDownload(selectedProject.id, 'HTML');
+      
+      alert('HTML exported successfully!');
+    } catch (error) {
+      console.error('Error exporting to HTML:', error);
+      alert('Failed to export HTML. Please try again.');
+    }
+  };
 
   // Format date
   const formatDate = (dateString) => {
@@ -1601,6 +2293,16 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                   }`}
                 >
                   Report
+                </button>
+                <button
+                  onClick={() => setActiveTab('download')}
+                  className={`px-6 py-4 font-medium transition-colors ${
+                    activeTab === 'download'
+                      ? `text-${theme.accent}-600 border-b-2 border-${theme.accent}-600`
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Download Summary
                 </button>
               </div>
 
@@ -2312,8 +3014,25 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${getActionColor(activity.action)}`}>
                                       {activity.action}
                                     </span>
-                                    <span className="text-sm text-gray-500">
-                                      by {activity.user?.name || 'System'}
+                                    <span className="text-sm text-gray-500">by</span>
+                                    {activity.user?.profilePictureUrl ? (
+                                      <img 
+                                        src={activity.user.profilePictureUrl} 
+                                        alt={activity.user?.name || 'User'}
+                                        className="w-6 h-6 rounded-full object-cover border-2 border-white shadow-sm"
+                                        onError={(e) => {
+                                          e.target.style.display = 'none';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                      </div>
+                                    )}
+                                    <span className="text-sm font-bold text-gray-900">
+                                      {activity.user?.name || 'System'}
                                     </span>
                                   </div>
                                   {activity.details && (
@@ -2329,6 +3048,108 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                         </div>
                       ))
                     )}
+                  </div>
+                )}
+
+                {/* Download Summary Tab */}
+                {activeTab === 'download' && (
+                  <div className="space-y-6">
+                    {/* Export Summary Form Section */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4">Export Summary Form</h3>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Download the complete project summary report including all tabs (Project Summary, Milestones, Budget Summary, Time Table, and Report) in PDF or HTML format.
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-4">
+                        <button
+                          onClick={() => exportToPDF()}
+                          className={`px-6 py-3 bg-gradient-to-r ${theme.primary} text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2`}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          Export as PDF
+                        </button>
+                        <button
+                          onClick={() => exportToHTML()}
+                          className={`px-6 py-3 bg-gradient-to-r ${theme.secondary} text-white rounded-xl font-semibold hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2`}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          Export as HTML
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Download Audit Trail Table */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4">Download History</h3>
+                      <p className="text-sm text-gray-600 mb-6">
+                        Record of all users who have downloaded the project summary report.
+                      </p>
+                      
+                      {downloadAuditTrail.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">
+                          No download records yet.
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {downloadAuditTrail.map((record, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="flex items-center gap-3">
+                                      {record.user?.profilePictureUrl ? (
+                                        <img 
+                                          src={record.user.profilePictureUrl} 
+                                          alt={record.user?.name || 'User'}
+                                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                                          onError={(e) => {
+                                            e.target.style.display = 'none';
+                                          }}
+                                        />
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                          </svg>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <div className="text-sm font-bold text-gray-900">{record.user?.name || 'Unknown User'}</div>
+                                        <div className="text-sm text-gray-500">{record.user?.email || record.user?.department || ''}</div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                      record.format === 'PDF' 
+                                        ? 'bg-red-100 text-red-800' 
+                                        : 'bg-blue-100 text-blue-800'
+                                    }`}>
+                                      {record.format}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {formatDate(record.downloadedAt)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

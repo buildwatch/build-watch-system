@@ -9123,4 +9123,89 @@ router.post('/:projectId/notes/:noteId/reactions', authenticateToken, async (req
   }
 });
 
+// Get download audit trail for a project
+router.get('/:projectId/download-audit', authenticateToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    
+    const downloads = await ActivityLog.findAll({
+      where: {
+        entityType: 'Project',
+        entityId: projectId,
+        action: {
+          [Op.in]: ['DOWNLOAD_SUMMARY_PDF', 'DOWNLOAD_SUMMARY_HTML']
+        }
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email', 'department', 'profilePictureUrl', 'fullName']
+      }],
+      order: [['createdAt', 'DESC']],
+      limit: 100
+    });
+    
+    res.json({
+      success: true,
+      downloads: downloads.map(download => ({
+        id: download.id,
+        format: download.action === 'DOWNLOAD_SUMMARY_PDF' ? 'PDF' : 'HTML',
+        user: download.user ? {
+          id: download.user.id,
+          name: download.user.name || download.user.fullName,
+          email: download.user.email,
+          department: download.user.department,
+          profilePictureUrl: download.user.profilePictureUrl
+        } : null,
+        downloadedAt: download.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching download audit trail:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch download audit trail'
+    });
+  }
+});
+
+// Record download in audit trail
+router.post('/:projectId/download-audit', authenticateToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { format } = req.body;
+    
+    if (!format || !['PDF', 'HTML'].includes(format)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid format. Must be PDF or HTML'
+      });
+    }
+    
+    const action = format === 'PDF' ? 'DOWNLOAD_SUMMARY_PDF' : 'DOWNLOAD_SUMMARY_HTML';
+    
+    await ActivityLog.create({
+      entityType: 'Project',
+      entityId: projectId,
+      userId: req.user.id,
+      action: action,
+      details: `Downloaded project summary report in ${format} format`,
+      module: 'Project Summary & Report',
+      level: 'Info',
+      status: 'Success'
+    });
+    
+    res.json({
+      success: true,
+      message: 'Download recorded successfully'
+    });
+  } catch (error) {
+    console.error('Error recording download:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to record download'
+    });
+  }
+});
+
 module.exports = router; 
