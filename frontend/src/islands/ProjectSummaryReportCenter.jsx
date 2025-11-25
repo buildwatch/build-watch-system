@@ -1311,6 +1311,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           progressData.push({
             milestone: milestone.title || milestone.name || `M${index + 1}`,
             date: milestoneDue.toISOString(),
+            actualEndDate: actualEnd ? actualEnd.toISOString() : null,
             progress: milestoneProgress, // Individual milestone progress
             cumulative: cumulativeProgress // Cumulative progress (only increases when milestone has progress > 0)
           });
@@ -2946,7 +2947,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                         {/* Progress Completion Curve */}
                         <div className="bg-white border border-gray-200 rounded-xl p-6">
                           <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Completion Curve</h3>
-                          <div className="h-80">
+                          <div className="h-96">
                             {timelineData.progressData && timelineData.progressData.length > 0 ? (
                               <Line
                                 data={{
@@ -3028,7 +3029,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                           if (!item) return '';
                                           const date = new Date(item.date);
                                           const formattedDate = formatDate(date.toISOString());
-                                          return `${item.milestone} - ${formattedDate}`;
+                                          let title = `${item.milestone} - ${formattedDate}`;
+                                          // Add completed date if available
+                                          if (item.actualEndDate) {
+                                            const completedDate = new Date(item.actualEndDate);
+                                            const formattedCompletedDate = formatDate(completedDate.toISOString());
+                                            title += `\nCompleted: ${formattedCompletedDate}`;
+                                          }
+                                          return title;
                                         },
                                         label: function(context) {
                                           return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
