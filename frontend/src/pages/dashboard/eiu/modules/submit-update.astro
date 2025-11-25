@@ -2133,6 +2133,44 @@ loading = false;
             dueDate: m.dueDate || m.deadline || m.targetDate || m.completionDate
           })));
           
+          // Fetch submissions and attach usedBudget to milestones
+          try {
+            const submissionsRes = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (submissionsRes.ok) {
+              const submissionsData = await submissionsRes.json();
+              if (submissionsData.success && submissionsData.submissions) {
+                // Create a map of milestoneId -> latest approved submission's usedBudget
+                const milestoneBudgetMap = {};
+                submissionsData.submissions
+                  .filter(s => s.status === 'approved' || s.status === 'iu_approved')
+                  .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0))
+                  .forEach(submission => {
+                    if (!milestoneBudgetMap[submission.milestoneId] && submission.usedBudget) {
+                      milestoneBudgetMap[submission.milestoneId] = parseFloat(submission.usedBudget || 0);
+                    }
+                  });
+                
+                // Attach usedBudget to milestones
+                projectMilestones.forEach(milestone => {
+                  if (milestoneBudgetMap[milestone.id] !== undefined) {
+                    milestone.usedBudget = milestoneBudgetMap[milestone.id];
+                    console.log(`✅ Attached usedBudget ${milestone.usedBudget} to milestone "${milestone.title}"`);
+                  }
+                  
+                  // Also attach submissions array for other uses
+                  milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+                });
+                
+                console.log('✅ Fetched and attached usedBudget to milestones:', Object.keys(milestoneBudgetMap).length, 'milestones');
+              }
+            }
+          } catch (submissionError) {
+            console.warn('⚠️ Could not fetch submissions to attach usedBudget:', submissionError);
+          }
+          
           // Fetch existing submissions to check which milestones are under approval or approved
           try {
             // Fetch all submissions (pending, approved, etc.)
@@ -2145,6 +2183,17 @@ loading = false;
               if (submissionsData.success && submissionsData.submissions) {
                 console.log('✅ Found existing submissions:', submissionsData.submissions.length);
                 
+                // Create a map of milestoneId -> latest approved submission's usedBudget
+                const milestoneBudgetMap = {};
+                submissionsData.submissions
+                  .filter(s => s.status === 'approved' || s.status === 'iu_approved')
+                  .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0))
+                  .forEach(submission => {
+                    if (!milestoneBudgetMap[submission.milestoneId] && submission.usedBudget) {
+                      milestoneBudgetMap[submission.milestoneId] = parseFloat(submission.usedBudget || 0);
+                    }
+                  });
+                
                 // Process all submissions and attach to milestones
                 submissionsData.submissions.forEach(submission => {
                   const milestone = projectMilestones.find(m => m.id === submission.milestoneId);
@@ -2154,6 +2203,12 @@ loading = false;
                       milestone.submissions = [];
                     }
                     milestone.submissions.push(submission);
+                    
+                    // Attach usedBudget from approved submission
+                    if (milestoneBudgetMap[milestone.id] !== undefined) {
+                      milestone.usedBudget = milestoneBudgetMap[milestone.id];
+                      console.log(`✅ Attached usedBudget ${milestone.usedBudget} to milestone "${milestone.title}"`);
+                    }
                     
                     // If milestone has approved submission, mark as completed
                     if (submission.status === 'approved' || submission.status === 'iu_approved') {
@@ -2167,6 +2222,8 @@ loading = false;
                     }
                   }
                 });
+                
+                console.log('✅ Fetched and attached usedBudget to milestones:', Object.keys(milestoneBudgetMap).length, 'milestones');
               }
             }
           } catch (submissionError) {
@@ -2264,66 +2321,139 @@ loading = false;
           );
           
           if (approvedSubmission) {
-            // Try to get progress from submission's milestoneUtilizationPercentage
-            if (approvedSubmission.milestoneUtilizationPercentage !== undefined && approvedSubmission.milestoneUtilizationPercentage !== null) {
-              const submissionProgress = parseFloat(approvedSubmission.milestoneUtilizationPercentage) || 0;
-              if (submissionProgress > 0) {
-                return submissionProgress;
-              }
-            }
-            
-            // Calculate from division progress percentages if available
-            // For milestone progress, we need to calculate the actual progress from each division
-            // based on the milestone weight and division weights
-            const milestoneWeight = parseFloat(milestone.weight || 0);
-            const timelineDivWeight = parseFloat(milestone.timelineWeight || approvedSubmission.timelineWeight || 33.33);
-            const budgetDivWeight = parseFloat(milestone.budgetWeight || approvedSubmission.budgetWeight || 33.33);
-            const physicalDivWeight = parseFloat(milestone.physicalWeight || approvedSubmission.physicalWeight || 33.34);
-            
-            // Calculate actual division progress percentages
-            // Get budget utilization percentage
-            const budgetUtilization = approvedSubmission.budgetUtilizationPercentage !== undefined ? 
-              parseFloat(approvedSubmission.budgetUtilizationPercentage) : 0;
-            
-            // Calculate actual progress from each division
-            // Each division contributes: (milestoneWeight * divisionWeight / 100) * completionPercentage
-            const timelineProgressValue = (milestoneWeight * timelineDivWeight / 100) * 1.0; // Assuming 100% if approved
-            const budgetProgressValue = (milestoneWeight * budgetDivWeight / 100) * (budgetUtilization / 100);
-            const physicalProgressValue = (milestoneWeight * physicalDivWeight / 100) * 1.0; // Assuming 100% if approved
-            
-            // Sum of all division progress values gives the total milestone progress
-            const totalProgress = timelineProgressValue + budgetProgressValue + physicalProgressValue;
-            
-            if (totalProgress > 0) {
-              return totalProgress;
-            }
-            
-            // Try budgetUtilizationPercentage as fallback
-            if (approvedSubmission.budgetUtilizationPercentage !== undefined && approvedSubmission.budgetUtilizationPercentage !== null) {
-              const budgetProgress = parseFloat(approvedSubmission.budgetUtilizationPercentage) || 0;
-              if (budgetProgress > 0) {
-                return budgetProgress;
-              }
-            }
+            // NOTE: milestoneUtilizationPercentage represents the milestone's contribution to the project,
+            // NOT the actual progress of the milestone itself. We skip it and calculate from divisions instead.
+            // Skip this old calculation method - it uses budgetUtilizationPercentage which is incorrect
+            // We'll use the division-based calculation in PRIORITY 4 instead
           }
         }
         
-        // PRIORITY 4: For completed milestones without individual progress, calculate from weight contribution
+        // PRIORITY 4: For completed milestones without individual progress, calculate from division statuses and budget utilization
+        // This matches the Calendar dashboard calculation logic
         const milestoneWeight = parseFloat(milestone.weight || 0);
         if (milestoneWeight > 0) {
-          // Get project overall progress
-          let overallProgress = 0;
-          if (typeof selectedProject !== 'undefined' && selectedProject) {
-            overallProgress = parseFloat(selectedProject.overallProgress || selectedProject.progress?.overall || 0);
-          } else if (progressData && progressData.progress) {
-            overallProgress = parseFloat(progressData.progress.overall || progressData.progress.overallProgress || 0);
+          // Get division weights (default to equal distribution if not set)
+          const timelineDivWeight = parseFloat(milestone.timelineWeight || milestoneWeight / 3);
+          const budgetDivWeight = parseFloat(milestone.budgetWeight || milestoneWeight / 3);
+          const physicalDivWeight = parseFloat(milestone.physicalWeight || milestoneWeight / 3);
+          
+          // Get budget data from milestone or approved submission
+          let plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || 0);
+          let usedBudget = parseFloat(milestone.usedBudget || 0);
+          
+          console.log(`💰 [${milestone.title}] Initial budget data: plannedBudget=${plannedBudget}, usedBudget=${usedBudget}`);
+          
+          // Try to get budget data from approved submission if not in milestone
+          if ((plannedBudget === 0 || usedBudget === 0 || isNaN(usedBudget)) && milestone.submissions && Array.isArray(milestone.submissions)) {
+            const approvedSubmission = milestone.submissions.find(s => 
+              s.status === 'approved' || s.status === 'iu_approved'
+            );
+            if (approvedSubmission) {
+              console.log(`📝 Found approved submission for "${milestone.title}":`, {
+                usedBudget: approvedSubmission.usedBudget,
+                budgetUtilizationPercentage: approvedSubmission.budgetUtilizationPercentage,
+                plannedBudget: approvedSubmission.plannedBudget || approvedSubmission.budgetPlanned
+              });
+              if (plannedBudget === 0) plannedBudget = parseFloat(approvedSubmission.plannedBudget || approvedSubmission.budgetPlanned || 0);
+              if (usedBudget === 0 || isNaN(usedBudget)) {
+                usedBudget = parseFloat(approvedSubmission.usedBudget || 0);
+                // Also try to get from budgetUtilizationPercentage if usedBudget is still 0
+                if (usedBudget === 0 && approvedSubmission.budgetUtilizationPercentage && plannedBudget > 0) {
+                  const utilizationPercent = parseFloat(approvedSubmission.budgetUtilizationPercentage) || 0;
+                  usedBudget = (plannedBudget * utilizationPercent) / 100;
+                  console.log(`📊 Calculated usedBudget from budgetUtilizationPercentage: ${usedBudget}`);
+                }
+              }
+            }
           }
           
-          if (overallProgress > 0) {
-            // Calculate milestone's individual progress: (overall progress / 100) * milestone weight
-            // This gives the actual progress contribution of this milestone
-            const milestoneProgress = (overallProgress / 100) * milestoneWeight;
-            return milestoneProgress;
+          console.log(`💰 [${milestone.title}] Final budget data: plannedBudget=${plannedBudget}, usedBudget=${usedBudget}`);
+          
+          // Calculate actual progress based on division statuses and budget utilization
+          let actualTimelineProgress = 0;
+          let actualBudgetProgress = 0;
+          let actualPhysicalProgress = 0;
+          
+          // Timeline division: if approved/completed, use full weight
+          if (milestone.timelineStatus === 'completed' || milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'iu_approved' || milestone.timelineStatus === 'secretariat_approved') {
+            actualTimelineProgress = timelineDivWeight;
+          } else if (milestone.timelineStatus === 'in_progress' || milestone.timelineStatus === 'ongoing') {
+            actualTimelineProgress = timelineDivWeight * 0.5;
+          }
+          
+          // Budget division: calculate from actual budget utilization
+          if (milestone.budgetStatus === 'completed' || milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'iu_approved' || milestone.budgetStatus === 'secretariat_approved') {
+            if (plannedBudget > 0 && usedBudget > 0) {
+              // Use actual budget utilization ratio
+              const budgetUtilizationRatio = Math.min(1, usedBudget / plannedBudget);
+              actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio;
+            } else {
+              // Try to get budgetUtilizationPercentage from approved submission
+              let budgetUtilizationRatio = 1.0; // Default to 100% if no data
+              if (milestone.submissions && Array.isArray(milestone.submissions)) {
+                const approvedSubmission = milestone.submissions.find(s => 
+                  s.status === 'approved' || s.status === 'iu_approved'
+                );
+                if (approvedSubmission && approvedSubmission.budgetUtilizationPercentage !== undefined && approvedSubmission.budgetUtilizationPercentage !== null) {
+                  budgetUtilizationRatio = Math.min(1, parseFloat(approvedSubmission.budgetUtilizationPercentage) / 100);
+                }
+              }
+              actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio;
+            }
+          } else if (milestone.budgetStatus === 'in_progress' || milestone.budgetStatus === 'ongoing') {
+            if (plannedBudget > 0 && usedBudget > 0) {
+              const budgetUtilizationRatio = Math.min(1, usedBudget / plannedBudget);
+              actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio * 0.5;
+            } else {
+              // Try to get budgetUtilizationPercentage from approved submission
+              let budgetUtilizationRatio = 0.5; // Default to 50% if no data
+              if (milestone.submissions && Array.isArray(milestone.submissions)) {
+                const approvedSubmission = milestone.submissions.find(s => 
+                  s.status === 'approved' || s.status === 'iu_approved'
+                );
+                if (approvedSubmission && approvedSubmission.budgetUtilizationPercentage !== undefined && approvedSubmission.budgetUtilizationPercentage !== null) {
+                  budgetUtilizationRatio = Math.min(1, parseFloat(approvedSubmission.budgetUtilizationPercentage) / 100) * 0.5;
+                }
+              }
+              actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio;
+            }
+          }
+          
+          // Physical division: if approved/completed, use full weight
+          if (milestone.physicalStatus === 'completed' || milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'iu_approved' || milestone.physicalStatus === 'secretariat_approved') {
+            actualPhysicalProgress = physicalDivWeight;
+          } else if (milestone.physicalStatus === 'in_progress' || milestone.physicalStatus === 'ongoing') {
+            actualPhysicalProgress = physicalDivWeight * 0.5;
+          }
+          
+          // Sum up the actual progress from all divisions
+          const calculatedProgress = actualTimelineProgress + actualBudgetProgress + actualPhysicalProgress;
+          
+          // Enhanced debugging for "Site Preparation and Planning" milestone
+          if (milestone.title && milestone.title.toLowerCase().includes('site preparation')) {
+            console.log(`🔍 [DEBUG] Milestone: "${milestone.title}"`, {
+              milestoneWeight,
+              timelineDivWeight,
+              budgetDivWeight,
+              physicalDivWeight,
+              plannedBudget,
+              usedBudget,
+              budgetUtilizationRatio: plannedBudget > 0 ? (usedBudget / plannedBudget) : 0,
+              timelineStatus: milestone.timelineStatus,
+              budgetStatus: milestone.budgetStatus,
+              physicalStatus: milestone.physicalStatus,
+              actualTimelineProgress,
+              actualBudgetProgress,
+              actualPhysicalProgress,
+              calculatedProgress,
+              milestoneProgressFromAPI: milestone.progress,
+              hasSubmissions: !!(milestone.submissions && Array.isArray(milestone.submissions)),
+              approvedSubmission: milestone.submissions?.find(s => s.status === 'approved' || s.status === 'iu_approved')
+            });
+          }
+          
+          if (calculatedProgress > 0) {
+            return calculatedProgress;
           }
         }
       }
@@ -5347,7 +5477,7 @@ loading = false;
           console.log('✅ Timeline milestones loaded:', data.milestones.length);
           
           // Process milestones with enhanced status detection
-          const processedMilestones = processMilestonesWithStatus(data.milestones);
+          const processedMilestones = await processMilestonesWithStatus(data.milestones);
           
           console.log('📊 Processed milestones for timeline:', processedMilestones.map(m => ({
             title: m.title,
@@ -5374,9 +5504,66 @@ loading = false;
   }
   
   // Process milestones with enhanced status detection
-  function processMilestonesWithStatus(milestones) {
+  async function processMilestonesWithStatus(milestones) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    // Fetch submissions and attach usedBudget before calculating progress
+    if (selectedProject && selectedProject.id) {
+      try {
+        const token = localStorage.getItem('token');
+        const submissionsRes = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${selectedProject.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (submissionsRes.ok) {
+          const submissionsData = await submissionsRes.json();
+          if (submissionsData.success && submissionsData.submissions) {
+            // Create a map of milestoneId -> latest approved submission's usedBudget
+            const milestoneBudgetMap = {};
+            submissionsData.submissions
+              .filter(s => s.status === 'approved' || s.status === 'iu_approved')
+              .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0))
+              .forEach(submission => {
+                if (!milestoneBudgetMap[submission.milestoneId] && submission.usedBudget) {
+                  milestoneBudgetMap[submission.milestoneId] = parseFloat(submission.usedBudget || 0);
+                }
+              });
+            
+            // Attach usedBudget and submissions array to milestones
+            milestones.forEach(milestone => {
+              if (milestoneBudgetMap[milestone.id] !== undefined) {
+                milestone.usedBudget = milestoneBudgetMap[milestone.id];
+              }
+              milestone.submissions = submissionsData.submissions.filter(s => s.milestoneId === milestone.id);
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not fetch submissions to attach usedBudget:', error);
+      }
+    }
+    
+    // Fetch progress data for calculation
+    let progressData = null;
+    if (selectedProject) {
+      try {
+        const token = localStorage.getItem('token');
+        const timestamp = new Date().getTime();
+        const progressResponse = await fetch(`${API_URL}/projects/progress/${selectedProject.id}?_t=${timestamp}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (progressResponse.ok) {
+          const progressResult = await progressResponse.json();
+          if (progressResult.success) {
+            progressData = progressResult.data;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching progress data in processMilestonesWithStatus:', error);
+      }
+    }
     
     return milestones.map(milestone => {
       let status = milestone.status || 'pending';
@@ -5392,11 +5579,8 @@ loading = false;
         }
       }
       
-      // Calculate overall milestone progress
-      const timelineProgress = milestone.timelineProgress || 0;
-      const budgetProgress = milestone.budgetProgress || 0;
-      const physicalProgress = milestone.physicalProgress || 0;
-      const overallProgress = (timelineProgress + budgetProgress + physicalProgress) / 3;
+      // Calculate overall milestone progress using the same function as displayMilestones
+      const overallProgress = calculateMilestoneProgress(milestone, progressData);
       
       return { 
         ...milestone, 

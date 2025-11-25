@@ -991,6 +991,73 @@ loading = false;
   .animate-shimmer {
     animation: shimmer 1.5s ease-in-out infinite;
   }
+
+  /* Modern Modal Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  /* Question Mark Animation */
+  @keyframes questionMarkPulse {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    25% {
+      transform: scale(1.1) rotate(-5deg);
+      opacity: 0.9;
+    }
+    50% {
+      transform: scale(1.15) rotate(5deg);
+      opacity: 1;
+    }
+    75% {
+      transform: scale(1.1) rotate(-3deg);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes questionMarkBounce {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-10px) scale(1.1);
+    }
+  }
+
+  .question-mark-icon {
+    animation: questionMarkPulse 2s ease-in-out infinite;
+  }
+
+  .question-mark-container:hover .question-mark-icon {
+    animation: questionMarkBounce 0.6s ease-in-out;
+  }
+
+  /* Check Mark Animation */
+  @keyframes drawCheck {
+    0% {
+      stroke-dashoffset: 100;
+    }
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  #checkIcon {
+    animation: drawCheck 0.6s ease-in-out forwards;
+  }
 </style>
 
 <Layout title="Submissions & Tracker | MPMEC Secretariat">
@@ -1880,6 +1947,70 @@ loading = false;
         buttonClass: 'btn-primary'
       }}
     />
+
+    <!-- Modern Confirmation Modal with Question Animation -->
+    <div id="approveConfirmModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
+        <div class="flex flex-col items-center">
+          <!-- Question Mark Animation -->
+          <div class="relative mb-6">
+            <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center question-mark-container">
+              <svg class="w-12 h-12 text-blue-600 question-mark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <!-- Pulsing ring animation -->
+            <div class="absolute inset-0 w-20 h-20 bg-blue-200 rounded-full animate-ping opacity-20"></div>
+          </div>
+          
+          <h3 class="text-2xl font-extrabold text-gray-800 mb-2">Confirm Approval</h3>
+          <p class="text-center text-gray-600 mb-6">Are you sure you want to approve this project?</p>
+          
+          <div class="flex gap-3 w-full">
+            <button 
+              id="approveConfirmCancel"
+              class="flex-1 py-3.5 rounded-xl bg-gray-200 text-gray-700 font-extrabold text-lg shadow-lg hover:bg-gray-300 transition-all duration-300 transform hover:scale-[1.02]"
+            >
+              Cancel
+            </button>
+            <button 
+              id="approveConfirmOk"
+              class="flex-1 py-3.5 rounded-xl bg-blue-600 text-white font-extrabold text-lg shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-[1.02]"
+            >
+              Approve
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modern Success Modal with Check Animation -->
+    <div id="approveSuccessModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
+        <div class="flex flex-col items-center">
+          <!-- Check Animation -->
+          <div class="relative mb-6">
+            <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+              <svg id="checkIcon" class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-dasharray: 100; stroke-dashoffset: 100;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <!-- Success rings animation -->
+            <div class="absolute inset-0 w-20 h-20 bg-green-200 rounded-full animate-ping opacity-20"></div>
+          </div>
+          
+          <h3 class="text-2xl font-extrabold text-gray-800 mb-2">Success!</h3>
+          <p id="approveSuccessMessage" class="text-center text-gray-600 mb-6">Project approved successfully!</p>
+          
+          <button 
+            id="closeApproveSuccessModal"
+            class="w-full py-3.5 rounded-xl bg-blue-600 text-white font-extrabold text-lg shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-[1.02]"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
   </SecretariatLayout>
 </Layout>
 
@@ -2723,35 +2854,124 @@ loading = false;
 
 
 
-  // Approve submission
-  async function approveSubmission(submissionId) {
-    if (confirm('Are you sure you want to approve this project?')) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          window.location.href = '/login/lgu-pmt';
-          return;
-        }
-
-        const response = await fetch(`${API_URL}/projects/${submissionId}/approve`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ approved: true })
-        });
-        
-        if (response.ok) {
-          alert('Project approved successfully!');
-          loadSubmissions();
-        } else {
-          alert('Error approving project. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error approving submission:', error);
-        alert('Error approving project. Please try again.');
+  // Show modern confirmation modal
+  function showApproveConfirmModal(submissionId) {
+    const modal = document.getElementById('approveConfirmModal');
+    if (!modal) return;
+    
+    modal.classList.remove('hidden');
+    
+    // Set up event listeners
+    const cancelBtn = document.getElementById('approveConfirmCancel');
+    const okBtn = document.getElementById('approveConfirmOk');
+    
+    // Remove existing listeners to prevent duplicates
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newOkBtn = okBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    
+    // Close on cancel
+    newCancelBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    
+    // Close on backdrop click
+    const backdropHandler = (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        modal.removeEventListener('click', backdropHandler);
       }
+    };
+    modal.addEventListener('click', backdropHandler);
+    
+    // Approve on OK
+    newOkBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.removeEventListener('click', backdropHandler);
+      approveSubmissionConfirmed(submissionId);
+    });
+  }
+
+  // Show modern success modal
+  function showApproveSuccessModal(message = 'Project approved successfully!') {
+    const modal = document.getElementById('approveSuccessModal');
+    const messageEl = document.getElementById('approveSuccessMessage');
+    if (!modal) return;
+    
+    if (messageEl) {
+      messageEl.textContent = message;
+    }
+    
+    modal.classList.remove('hidden');
+    
+    // Reset check animation
+    const checkIcon = document.getElementById('checkIcon');
+    if (checkIcon) {
+      checkIcon.style.strokeDashoffset = '100';
+      setTimeout(() => {
+        checkIcon.style.animation = 'none';
+        setTimeout(() => {
+          checkIcon.style.animation = 'drawCheck 0.6s ease-in-out forwards';
+        }, 10);
+      }, 10);
+    }
+    
+    // Set up close button
+    const closeBtn = document.getElementById('closeApproveSuccessModal');
+    if (closeBtn) {
+      const newCloseBtn = closeBtn.cloneNode(true);
+      closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+      
+      const closeHandler = () => {
+        modal.classList.add('hidden');
+      };
+      newCloseBtn.addEventListener('click', closeHandler);
+    }
+    
+    // Close on backdrop click
+    const backdropHandler = (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        modal.removeEventListener('click', backdropHandler);
+      }
+    };
+    modal.addEventListener('click', backdropHandler);
+  }
+
+  // Approve submission (with modern modal)
+  async function approveSubmission(submissionId) {
+    showApproveConfirmModal(submissionId);
+  }
+
+  // Approve submission confirmed (after user clicks OK in confirmation modal)
+  async function approveSubmissionConfirmed(submissionId) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login/lgu-pmt';
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/projects/${submissionId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ approved: true })
+      });
+      
+      if (response.ok) {
+        showApproveSuccessModal('Project approved successfully!');
+        loadSubmissions();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        showApproveSuccessModal('Error approving project. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      showApproveSuccessModal('Error approving project. Please try again.');
     }
   }
 
