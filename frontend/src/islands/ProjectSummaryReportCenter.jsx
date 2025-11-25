@@ -3675,6 +3675,72 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           animation: fillProgressTimeline 2s ease-out forwards;
         }
       `}</style>
+
+      {/* Photo Preview Modal for Timeline */}
+      <div id="photo-preview-modal-timeline" className="fixed inset-0 bg-black bg-opacity-75 z-50 hidden">
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <button 
+            onClick={() => {
+              const modal = document.getElementById('photo-preview-modal-timeline');
+              if (modal) modal.classList.add('hidden');
+            }}
+            className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold z-20 transition-colors shadow-lg"
+          >
+            ×
+          </button>
+          <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg z-20 shadow-lg">
+            <p id="modal-photo-title-timeline" className="text-sm font-medium"></p>
+          </div>
+          <div className="flex items-center justify-center w-full h-full">
+            <img 
+              id="modal-photo-timeline" 
+              src="" 
+              alt="Photo Preview" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              style={{ maxHeight: '85vh', maxWidth: '85vw', display: 'block', margin: 'auto' }}
+            />
+          </div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg z-20 shadow-lg">
+            <p className="text-xs text-center">Click outside or press Esc to close</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Video Preview Modal for Timeline */}
+      <div id="video-preview-modal-timeline" className="fixed inset-0 bg-black bg-opacity-75 z-50 hidden">
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <button 
+            onClick={() => {
+              const modal = document.getElementById('video-preview-modal-timeline');
+              const modalVideo = document.getElementById('modal-video-timeline');
+              if (modal) {
+                modal.classList.add('hidden');
+                if (modalVideo) {
+                  modalVideo.pause();
+                  modalVideo.src = '';
+                }
+              }
+            }}
+            className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold z-20 transition-colors shadow-lg"
+          >
+            ×
+          </button>
+          <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg z-20 shadow-lg">
+            <p id="modal-video-title-timeline" className="text-sm font-medium"></p>
+          </div>
+          <div className="flex items-center justify-center w-full h-full">
+            <video 
+              id="modal-video-timeline" 
+              controls
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              style={{ maxHeight: '85vh', maxWidth: '85vw', display: 'block', margin: 'auto' }}
+            />
+          </div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg z-20 shadow-lg">
+            <p className="text-xs text-center">Click outside or press Esc to close</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
