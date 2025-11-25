@@ -1267,12 +1267,18 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
 
   // Load milestones, audit trail, budget, and timeline when project is selected
   useEffect(() => {
-    if (selectedProject) {
+    if (selectedProject && selectedProject.id) {
       fetchMilestones(selectedProject.id);
       fetchAuditTrail(selectedProject.id);
+    }
+  }, [selectedProject, fetchMilestones, fetchAuditTrail]);
+
+  // Fetch download audit trail only when Download Summary tab is active
+  useEffect(() => {
+    if (activeTab === 'download' && selectedProject && selectedProject.id) {
       fetchDownloadAuditTrail(selectedProject.id);
     }
-  }, [selectedProject, fetchMilestones, fetchAuditTrail, fetchDownloadAuditTrail]);
+  }, [activeTab, selectedProject, fetchDownloadAuditTrail]);
 
   // Load budget and timeline data when milestones are available
   useEffect(() => {
@@ -1366,16 +1372,31 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
 
   // Fetch download audit trail
   const fetchDownloadAuditTrail = useCallback(async (projectId) => {
-    if (!projectId) return;
+    if (!projectId) {
+      setDownloadAuditTrail([]);
+      return;
+    }
     
     try {
       const token = getToken();
+      if (!token) {
+        setDownloadAuditTrail([]);
+        return;
+      }
+      
+      // Use AbortController for timeout (more compatible)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(`${API_URL}/projects/${projectId}/download-audit`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const result = await response.json();
@@ -1385,7 +1406,10 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         setDownloadAuditTrail([]);
       }
     } catch (err) {
-      console.warn('Could not fetch download audit trail:', err);
+      // Silently handle errors - endpoint might not exist yet
+      if (err.name !== 'AbortError') {
+        console.warn('Could not fetch download audit trail:', err);
+      }
       setDownloadAuditTrail([]);
     }
   }, []);
@@ -1396,7 +1420,13 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     
     try {
       const token = getToken();
-      const user = getCurrentUser();
+      if (!token) {
+        console.warn('No token available for recording download');
+        return;
+      }
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
       await fetch(`${API_URL}/projects/${projectId}/download-audit`, {
         method: 'POST',
@@ -1406,15 +1436,22 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         },
         body: JSON.stringify({
           format: format
-        })
+        }),
+        signal: controller.signal
       });
       
-      // Refresh download audit trail
-      fetchDownloadAuditTrail(projectId);
+      clearTimeout(timeoutId);
+      
+      // Refresh download audit trail only if we're on the download tab
+      if (activeTab === 'download') {
+        fetchDownloadAuditTrail(projectId);
+      }
     } catch (err) {
-      console.warn('Could not record download:', err);
+      if (err.name !== 'AbortError') {
+        console.warn('Could not record download:', err);
+      }
     }
-  }, [fetchDownloadAuditTrail]);
+  }, [fetchDownloadAuditTrail, activeTab]);
 
   // Load jsPDF library dynamically
   const loadJsPDFLibrary = async () => {
