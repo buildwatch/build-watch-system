@@ -560,9 +560,19 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         const activities = activityResult.activities || [];
         
         // Process activities and ensure proper formatting
+        const userIdsToFetch = new Set(); // Track user IDs that need profile pictures
+        
         activities.forEach(activity => {
           // Format activity for display - preserve all user data including profilePictureUrl
           const userData = activity.user || {};
+          const userId = userData.id || activity.userId;
+          const hasProfilePicture = !!(userData.profilePictureUrl || activity.profilePictureUrl);
+          
+          // Track users that need profile pictures fetched
+          if (userId && !hasProfilePicture) {
+            userIdsToFetch.add(userId);
+          }
+          
           const formattedActivity = {
             id: activity.id || `activity-${activity.entityId}-${activity.createdAt}`,
             action: activity.action || 'UNKNOWN_ACTION',
@@ -573,7 +583,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
               : (activity.details?.message || JSON.stringify(activity.details) || 'No details available'),
             createdAt: activity.createdAt || activity.timestamp || new Date().toISOString(),
             user: {
-              id: userData.id || activity.userId,
+              id: userId,
               name: userData.name || activity.userName || 'System',
               role: userData.role || activity.userRole || 'System',
               department: userData.department || activity.department || 'System',
@@ -585,6 +595,42 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           
           allActivities.push(formattedActivity);
         });
+        
+        // Fetch missing profile pictures from user API
+        if (userIdsToFetch.size > 0) {
+          console.log(`📸 Fetching profile pictures for ${userIdsToFetch.size} users...`);
+          const profilePicturePromises = Array.from(userIdsToFetch).map(async (userId) => {
+            try {
+              const userResponse = await fetch(`${API_URL}/users/${userId}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (userResponse.ok) {
+                const userResult = await userResponse.json();
+                const user = userResult.user || userResult;
+                const profilePictureUrl = user.profilePictureUrl || user.profilePicture || null;
+                
+                // Update activities with this user's profile picture
+                if (profilePictureUrl) {
+                  allActivities.forEach(activity => {
+                    if (activity.user?.id === userId && !activity.user.profilePictureUrl) {
+                      activity.user.profilePictureUrl = profilePictureUrl;
+                    }
+                  });
+                  console.log(`✅ Fetched profile picture for user ${userId}`);
+                }
+              }
+            } catch (err) {
+              console.warn(`⚠️ Could not fetch profile picture for user ${userId}:`, err);
+            }
+          });
+          
+          // Wait for all profile picture fetches to complete
+          await Promise.all(profilePicturePromises);
+        }
       }
       
       // Fetch milestone submissions directly from API

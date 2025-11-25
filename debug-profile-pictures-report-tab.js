@@ -26,17 +26,63 @@
   }
   console.log('✅ Token found:', token.substring(0, 20) + '...');
   
-  // Get selected project ID
-  const selectedProjectId = window.selectedProject?.id || 
-    document.querySelector('[data-project-id]')?.getAttribute('data-project-id') || 
-    new URLSearchParams(window.location.search).get('projectId');
+  // Get selected project ID - try multiple methods
+  let selectedProjectId = null;
+  
+  // Method 1: Try to get from React DevTools (if available)
+  if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+    console.log('💡 React DevTools detected, trying to find selectedProject...');
+  }
+  
+  // Method 2: Try to get from the project selector dropdown
+  const projectSelect = document.querySelector('select[value]');
+  if (projectSelect && projectSelect.value) {
+    selectedProjectId = projectSelect.value;
+    console.log('✅ Found project ID from dropdown:', selectedProjectId);
+  }
+  
+  // Method 3: Try to get from data attributes
+  if (!selectedProjectId) {
+    const projectElement = document.querySelector('[data-project-id]');
+    if (projectElement) {
+      selectedProjectId = projectElement.getAttribute('data-project-id');
+      console.log('✅ Found project ID from data attribute:', selectedProjectId);
+    }
+  }
+  
+  // Method 4: Try to get from URL params
+  if (!selectedProjectId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    selectedProjectId = urlParams.get('projectId');
+    if (selectedProjectId) {
+      console.log('✅ Found project ID from URL params:', selectedProjectId);
+    }
+  }
+  
+  // Method 5: Try to extract from audit trail data in the DOM
+  if (!selectedProjectId) {
+    // Look for any activity elements that might have project info
+    const activityElements = document.querySelectorAll('[data-activity-id], [data-entity-id]');
+    if (activityElements.length > 0) {
+      const firstActivity = activityElements[0];
+      const entityId = firstActivity.getAttribute('data-entity-id') || 
+                       firstActivity.getAttribute('data-project-id');
+      if (entityId && entityId.length > 10) { // UUIDs are typically long
+        selectedProjectId = entityId;
+        console.log('✅ Found project ID from activity element:', selectedProjectId);
+      }
+    }
+  }
   
   if (!selectedProjectId) {
     console.error('❌ No project ID found!');
     console.log('💡 Available project data:', {
       windowSelectedProject: window.selectedProject,
-      urlParams: new URLSearchParams(window.location.search).toString()
+      urlParams: new URLSearchParams(window.location.search).toString(),
+      projectSelectValue: projectSelect?.value,
+      projectSelectOptions: projectSelect ? Array.from(projectSelect.options).map(opt => ({ value: opt.value, text: opt.text })) : []
     });
+    console.log('💡 Please select a project from the dropdown first, then run this script again.');
     return;
   }
   console.log('✅ Project ID:', selectedProjectId);
