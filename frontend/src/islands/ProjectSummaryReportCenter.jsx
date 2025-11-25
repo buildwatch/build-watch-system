@@ -62,6 +62,49 @@ const getCurrentUser = () => {
   return null;
 };
 
+// Normalize profile picture URL - handles relative paths, API endpoints, and full URLs
+const normalizeProfilePictureUrl = (url) => {
+  if (!url) return null;
+  
+  // If it's already a data URL or blob URL, use it directly
+  if (url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  
+  // If it's a full URL (http/https), use it as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // If it's an API endpoint, construct full URL
+  if (url.startsWith('/api/') || url.includes('/api/profile/picture/')) {
+    const baseUrl = typeof window !== 'undefined' 
+      ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:3000'
+          : `${window.location.protocol}//${window.location.hostname}`)
+      : 'http://localhost:3000';
+    return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+  }
+  
+  // If it's a relative path (starts with /uploads), construct full URL
+  if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+    const baseUrl = typeof window !== 'undefined' 
+      ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:3000'
+          : `${window.location.protocol}//${window.location.hostname}`)
+      : 'http://localhost:3000';
+    return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+  }
+  
+  // Default: assume it's a relative path
+  const baseUrl = typeof window !== 'undefined' 
+    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : `${window.location.protocol}//${window.location.hostname}`)
+    : 'http://localhost:3000';
+  return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+};
+
 // Get theme colors based on user role
 const getThemeColors = (userRole) => {
   switch (userRole) {
@@ -144,6 +187,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
   const [budgetData, setBudgetData] = useState(null);
   const [timelineData, setTimelineData] = useState(null);
   const [downloadAuditTrail, setDownloadAuditTrail] = useState([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   const currentUser = getCurrentUser();
   const theme = getThemeColors(userRole || currentUser?.role);
@@ -1837,10 +1882,13 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       // Record download
       await recordDownload(selectedProject.id, 'PDF');
       
-      alert('PDF exported successfully!');
+      // Show success modal
+      setSuccessMessage('PDF exported successfully!');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error exporting to PDF:', error);
-      alert('Failed to export PDF. Please try again.');
+      setSuccessMessage('Failed to export PDF. Please try again.');
+      setShowSuccessModal(true);
     }
   };
 
@@ -2084,10 +2132,13 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       // Record download
       await recordDownload(selectedProject.id, 'HTML');
       
-      alert('HTML exported successfully!');
+      // Show success modal
+      setSuccessMessage('HTML exported successfully!');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error exporting to HTML:', error);
-      alert('Failed to export HTML. Please try again.');
+      setSuccessMessage('Failed to export HTML. Please try again.');
+      setShowSuccessModal(true);
     }
   };
 
@@ -3054,7 +3105,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     <span className="text-sm text-gray-500">by</span>
                                     {activity.user?.profilePictureUrl ? (
                                       <img 
-                                        src={activity.user.profilePictureUrl} 
+                                        src={normalizeProfilePictureUrl(activity.user.profilePictureUrl)} 
                                         alt={activity.user?.name || 'User'}
                                         className="w-6 h-6 rounded-full object-cover border-2 border-white shadow-sm"
                                         onError={(e) => {
@@ -3148,7 +3199,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     <div className="flex items-center gap-3">
                                       {record.user?.profilePictureUrl ? (
                                         <img 
-                                          src={record.user.profilePictureUrl} 
+                                          src={normalizeProfilePictureUrl(record.user.profilePictureUrl)} 
                                           alt={record.user?.name || 'User'}
                                           className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
                                           onError={(e) => {
@@ -3201,6 +3252,102 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           </div>
         )}
       </div>
+
+      {/* Success Modal with Check Animation */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-lg">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all animate-fadeInUp">
+            <div className="text-center">
+              {/* Check Animation */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-scaleIn">
+                    <svg 
+                      className="w-12 h-12 text-green-600 animate-drawCheck" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      style={{
+                        strokeDasharray: 50,
+                        strokeDashoffset: 50,
+                        animation: 'drawCheck 0.6s ease-out forwards'
+                      }}
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth="3" 
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  {/* Ripple effect */}
+                  <div className="absolute inset-0 bg-green-200 rounded-full animate-ping opacity-75"></div>
+                </div>
+              </div>
+              
+              {/* Message */}
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+              <p className="text-gray-600 mb-6">{successMessage}</p>
+              
+              {/* Close Button */}
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setSuccessMessage('');
+                }}
+                className={`w-full px-6 py-3 bg-gradient-to-r ${theme.primary} text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes scaleIn {
+          from {
+            transform: scale(0);
+          }
+          to {
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes drawCheck {
+          from {
+            stroke-dashoffset: 50;
+          }
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        
+        .animate-fadeInUp {
+          animation: fadeInUp 0.3s ease-out;
+        }
+        
+        .animate-scaleIn {
+          animation: scaleIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .animate-drawCheck {
+          animation: drawCheck 0.6s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 }
