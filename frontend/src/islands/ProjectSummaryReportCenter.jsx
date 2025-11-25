@@ -3027,6 +3027,270 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                               );
                             })}
                           </div>
+
+                          {/* Total Progress Bar */}
+                          <div className="mt-8 pt-6 border-t-2 border-gray-200">
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-lg font-semibold text-gray-900">Total Project Progress</h4>
+                              <span className="text-lg font-bold text-gray-900">
+                                {timelineData.timelineItems.reduce((sum, item) => sum + (item.progress || 0), 0).toFixed(1)}% / {timelineData.timelineItems.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0).toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                              {/* Total capacity bar (sum of all milestone weights) */}
+                              <div
+                                className="absolute top-0 left-0 h-full bg-gray-300 rounded-full"
+                                style={{ width: `${timelineData.timelineItems.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0)}%` }}
+                              />
+                              {/* Total progress fill with animation */}
+                              {(() => {
+                                const totalProgress = timelineData.timelineItems.reduce((sum, item) => sum + (item.progress || 0), 0);
+                                const totalWeight = timelineData.timelineItems.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
+                                const fillPercentage = totalWeight > 0 ? (totalProgress / totalWeight) * 100 : 0;
+                                return (
+                                  <div
+                                    className="absolute top-0 left-0 h-full rounded-full progress-bar-fill-timeline bg-gradient-to-r from-blue-500 to-green-500"
+                                    style={{ 
+                                      width: `${fillPercentage}%`,
+                                      maxWidth: `${totalWeight}%`
+                                    }}
+                                    data-progress={totalProgress}
+                                    data-weight={totalWeight}
+                                  />
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* Photos and Videos Proof Section */}
+                          <div className="mt-8 pt-6 border-t-2 border-gray-200">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Photos and Videos Proof
+                            </h4>
+                            
+                            {(() => {
+                              // Collect all photos and videos from milestone submissions
+                              const allPhotos = [];
+                              const allVideos = [];
+                              
+                              timelineData.timelineItems.forEach(item => {
+                                const milestoneId = item.id;
+                                const submissions = milestoneSubmissionsMap[milestoneId] || [];
+                                
+                                submissions.forEach(submission => {
+                                  // Get photos from various possible fields
+                                  let photos = [];
+                                  if (submission.photoEvidence && Array.isArray(submission.photoEvidence)) {
+                                    photos = submission.photoEvidence;
+                                  } else if (submission.physical?.photoEvidence) {
+                                    photos = Array.isArray(submission.physical.photoEvidence) 
+                                      ? submission.physical.photoEvidence 
+                                      : [{ url: submission.physical.photoEvidence, name: 'photo.jpg' }];
+                                  } else if (submission.files && Array.isArray(submission.files)) {
+                                    photos = submission.files.filter(file => 
+                                      file.type?.startsWith('image/') || file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+                                    );
+                                  } else if (submission.uploadedFiles && Array.isArray(submission.uploadedFiles)) {
+                                    photos = submission.uploadedFiles.filter(file => 
+                                      file.type?.startsWith('image/') || file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+                                    );
+                                  }
+                                  
+                                  // Get videos from various possible fields
+                                  let videos = [];
+                                  if (submission.videoEvidence && Array.isArray(submission.videoEvidence)) {
+                                    videos = submission.videoEvidence;
+                                  } else if (submission.physical?.videoEvidence) {
+                                    videos = Array.isArray(submission.physical.videoEvidence) 
+                                      ? submission.physical.videoEvidence 
+                                      : [{ url: submission.physical.videoEvidence, name: 'video.mp4' }];
+                                  } else if (submission.files && Array.isArray(submission.files)) {
+                                    videos = submission.files.filter(file => 
+                                      file.type?.startsWith('video/') || file.name?.match(/\.(mp4|avi|mov|wmv|flv|webm)$/i)
+                                    );
+                                  } else if (submission.uploadedFiles && Array.isArray(submission.uploadedFiles)) {
+                                    videos = submission.uploadedFiles.filter(file => 
+                                      file.type?.startsWith('video/') || file.name?.match(/\.(mp4|avi|mov|wmv|flv|webm)$/i)
+                                    );
+                                  }
+                                  
+                                  // Add milestone title to each photo/video
+                                  photos.forEach(photo => {
+                                    allPhotos.push({
+                                      ...photo,
+                                      milestoneTitle: item.title,
+                                      milestoneId: milestoneId,
+                                      submissionId: submission.id
+                                    });
+                                  });
+                                  
+                                  videos.forEach(video => {
+                                    allVideos.push({
+                                      ...video,
+                                      milestoneTitle: item.title,
+                                      milestoneId: milestoneId,
+                                      submissionId: submission.id
+                                    });
+                                  });
+                                });
+                              });
+                              
+                              // Helper function to normalize file URL
+                              const normalizeFileUrl = (file) => {
+                                let url = file.url || file.path || file.src || file.filePath || file;
+                                if (typeof url === 'string') {
+                                  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+                                    return url;
+                                  }
+                                  const baseUrl = typeof window !== 'undefined' 
+                                    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                                        ? 'http://localhost:3000'
+                                        : `${window.location.protocol}//${window.location.hostname}`)
+                                    : 'http://localhost:3000';
+                                  return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/uploads/${url}`;
+                                }
+                                return '';
+                              };
+                              
+                              if (allPhotos.length === 0 && allVideos.length === 0) {
+                                return (
+                                  <div className="text-center py-8 text-gray-500">
+                                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p>No photos or videos available yet.</p>
+                                    <p className="text-sm mt-2">Photos and videos will appear here once milestone submissions are made.</p>
+                                  </div>
+                                );
+                              }
+                              
+                              return (
+                                <div className="space-y-6">
+                                  {/* Photos Section */}
+                                  {allPhotos.length > 0 && (
+                                    <div>
+                                      <h5 className="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Photos ({allPhotos.length})
+                                      </h5>
+                                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {allPhotos.map((photo, idx) => {
+                                          const photoUrl = normalizeFileUrl(photo);
+                                          const photoName = photo.name || photo.filename || `Photo ${idx + 1}`;
+                                          return (
+                                            <div 
+                                              key={`photo-${idx}`} 
+                                              className="relative group cursor-pointer bg-gray-100 rounded-lg overflow-hidden aspect-square"
+                                              onClick={() => {
+                                                // Open photo in modal
+                                                const modal = document.getElementById('photo-preview-modal-timeline');
+                                                const modalImg = document.getElementById('modal-photo-timeline');
+                                                const modalTitle = document.getElementById('modal-photo-title-timeline');
+                                                if (modal && modalImg && modalTitle) {
+                                                  modalImg.src = photoUrl;
+                                                  modalTitle.textContent = `${photoName} - ${photo.milestoneTitle}`;
+                                                  modal.classList.remove('hidden');
+                                                }
+                                              }}
+                                            >
+                                              <img 
+                                                src={photoUrl}
+                                                alt={photoName}
+                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                onError={(e) => {
+                                                  e.target.style.display = 'none';
+                                                  e.target.parentElement.innerHTML = `
+                                                    <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                      </svg>
+                                                    </div>
+                                                  `;
+                                                }}
+                                              />
+                                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                                                <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                                </svg>
+                                              </div>
+                                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                                <p className="text-xs text-white truncate">{photoName}</p>
+                                                <p className="text-xs text-white/80 truncate">{photo.milestoneTitle}</p>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Videos Section */}
+                                  {allVideos.length > 0 && (
+                                    <div>
+                                      <h5 className="text-md font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        Videos ({allVideos.length})
+                                      </h5>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {allVideos.map((video, idx) => {
+                                          const videoUrl = normalizeFileUrl(video);
+                                          const videoName = video.name || video.filename || `Video ${idx + 1}`;
+                                          return (
+                                            <div 
+                                              key={`video-${idx}`} 
+                                              className="relative group cursor-pointer bg-gray-100 rounded-lg overflow-hidden aspect-video"
+                                              onClick={() => {
+                                                // Open video in modal
+                                                const modal = document.getElementById('video-preview-modal-timeline');
+                                                const modalVideo = document.getElementById('modal-video-timeline');
+                                                const modalTitle = document.getElementById('modal-video-title-timeline');
+                                                if (modal && modalVideo && modalTitle) {
+                                                  modalVideo.src = videoUrl;
+                                                  modalTitle.textContent = `${videoName} - ${video.milestoneTitle}`;
+                                                  modal.classList.remove('hidden');
+                                                }
+                                              }}
+                                            >
+                                              <video 
+                                                src={videoUrl}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                  e.target.style.display = 'none';
+                                                  e.target.parentElement.innerHTML = `
+                                                    <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                      </svg>
+                                                    </div>
+                                                  `;
+                                                }}
+                                              />
+                                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                                                <svg className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 24 24">
+                                                  <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                              </div>
+                                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                                <p className="text-xs text-white truncate">{videoName}</p>
+                                                <p className="text-xs text-white/80 truncate">{video.milestoneTitle}</p>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </>
                     ) : (
