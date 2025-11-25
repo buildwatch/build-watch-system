@@ -7789,11 +7789,7 @@ This compilation report has been generated automatically based on approved EIU m
   function submitToMPMECSecretariat() {
     if (!window.currentReviewSubmissionId) return;
     
-    const rpmesForm = document.getElementById('rpmesFormUpload');
-    if (!rpmesForm || !rpmesForm.files.length) {
-      alert('Please attach the RPMES form before submitting to the Secretariat.');
-      return;
-    }
+    // RPMES form validation removed - no longer required
     
     if (confirm('Are you sure you want to submit this milestone to the MPMEC Secretariat? This action cannot be undone.')) {
       // Update submission status
@@ -8531,11 +8527,7 @@ This compilation report has been generated automatically based on approved EIU m
    async function submitToMPMECSecretariatWithLifecycle() {
      if (!window.currentReviewSubmissionId) return;
      
-     const rpmesForm = document.getElementById('rpmesFormUpload');
-     if (!rpmesForm || !rpmesForm.files.length) {
-       await window.modernAlert('Please attach the RPMES form before submitting to the Secretariat.', 'warning');
-       return;
-     }
+     // RPMES form validation removed - no longer required
      
      const additionalNotes = document.getElementById('adminNotes')?.value || '';
      
