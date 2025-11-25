@@ -1286,7 +1286,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           }
           
           const weight = parseFloat(milestone.weight || 0);
-          cumulativeProgress += milestoneProgress * (weight / 100);
+          
+          // Only add to cumulative if milestone has actual progress
+          // Cumulative progress = sum of (milestone progress * milestone weight / 100) for all milestones with progress
+          if (milestoneProgress > 0) {
+            cumulativeProgress += milestoneProgress * (weight / 100);
+          }
           
           timelineItems.push({
             id: milestone.id,
@@ -1302,11 +1307,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           });
           
           // Build progress trend
+          // Cumulative should only increase when milestone has progress
           progressData.push({
             milestone: milestone.title || milestone.name || `M${index + 1}`,
             date: milestoneDue.toISOString(),
-            progress: milestoneProgress,
-            cumulative: cumulativeProgress
+            progress: milestoneProgress, // Individual milestone progress
+            cumulative: cumulativeProgress // Cumulative progress (only increases when milestone has progress > 0)
           });
         });
         
