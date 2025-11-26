@@ -2316,95 +2316,39 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           </div>
         </div>
 
-        {/* Project Selector - Enhanced Design */}
-        <div className={`bg-white border ${theme.border} rounded-2xl shadow-lg transition-all duration-500 ease-out hover:shadow-2xl p-6 mb-6 relative overflow-hidden group`}>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/3 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-gradient-to-br ${theme.primary} shadow-xl group-hover:scale-110 group-hover:rotate-3 relative overflow-hidden`}>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
-                <svg className="w-5 h-5 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                </svg>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900">
-                  Select Project
-          </label>
-                <p className="text-xs text-gray-500 mt-0.5">Choose a project to view its summary and reports</p>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
-          <select
-            value={selectedProject?.id || ''}
-            onChange={async (e) => {
-              const project = projects.find(p => p.id === e.target.value);
-              if (!project) return;
-              
-              // Fetch full project details to get amountSpent and targetCompletionDate
-              try {
-                const fullProjectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
-                  headers: {
-                    'Authorization': `Bearer ${getToken()}`,
-                    'Content-Type': 'application/json'
-                  }
-                });
-                
-                if (fullProjectResponse.ok) {
-                  const fullProjectResult = await fullProjectResponse.json();
-                  const fullProject = fullProjectResult.project || fullProjectResult;
-                  
-                  // Merge with amountSpent from progress if available
-                  if (fullProject.amountSpent) {
-                    // Already in project object
-                  } else if (fullProjectResult.progress?.amountSpent) {
-                    fullProject.amountSpent = fullProjectResult.progress.amountSpent;
-                  }
-                  
-                  // Normalize status (database uses 'complete', API should return 'completed')
-                  if (fullProject.status === 'complete') {
-                    fullProject.status = 'completed';
-                  }
-                  
-                  // Ensure overallProgress is set
-                  if (!fullProject.overallProgress || fullProject.overallProgress === 0) {
-                    if (fullProjectResult.progress?.overall) {
-                      fullProject.overallProgress = fullProjectResult.progress.overall;
-                    }
-                  }
-                  
-                  // Ensure targetCompletionDate is set
-                  if (!fullProject.targetCompletionDate && fullProject.endDate) {
-                    fullProject.targetCompletionDate = fullProject.endDate;
-                  }
-                  
-                  setSelectedProject(fullProject);
-                } else {
-                  setSelectedProject(project);
-                }
-              } catch (error) {
-                console.error('Error fetching full project details:', error);
-                setSelectedProject(project);
-              }
-            }}
-                className={`w-full px-4 py-3 bg-white border-2 ${theme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${theme.accent}-500 text-gray-900 font-medium transition-all duration-200 hover:border-${theme.accent}-400`}
-          >
-                <option value="">-- Select a project --</option>
-            {projects.map(project => (
-              <option key={project.id} value={project.id}>
-                {project.name || project.projectTitle} - {project.projectCode || 'N/A'}
-              </option>
-            ))}
-          </select>
-            </div>
-          </div>
-        </div>
-
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
             {error}
           </div>
         )}
+
+        {/* Project Selector - Always Visible (without "Select Project" label) */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`icon-container bg-gradient-to-br ${theme.primary} shadow-xl`}>
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-gray-600">Choose a project to view its summary and reports</p>
+            </div>
+          </div>
+          <select
+            value={selectedProject?.id || ''}
+            onChange={(e) => {
+              const project = projects.find(p => p.id === e.target.value);
+              setSelectedProject(project || null);
+            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-offset-2 focus:outline-none bg-white text-gray-900 font-medium"
+          >
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.name || project.projectCode} - {project.projectCode || project.id}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {selectedProject ? (
           <>
@@ -3851,6 +3795,16 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         .progress-bar-fill-timeline {
           transform-origin: left;
           animation: fillProgressTimeline 2s ease-out forwards;
+        }
+        
+        .icon-container {
+          width: 3.5rem;
+          height: 3.5rem;
+          border-radius: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
         }
       `}</style>
 
