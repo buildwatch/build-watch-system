@@ -89,8 +89,8 @@ loading = false;
 
 <Layout title="LGU-IU Dashboard | Implementing Office">
   <IUImplementingOfficeLayout>
-    <section class="p-8 bg-gradient-to-br from-gray-50 via-amber-50 to-white min-h-screen">
-      <DashboardCenter client:load theme="orange" role="LGU-IU" />
+    <section class="p-8 bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen">
+      <DashboardCenter client:load theme="blue" role="LGU-IU" />
       
       <!-- Project Cards Section - Rendered by Astro, will be injected into DashboardCenter -->
       {projects.length > 0 && (
@@ -106,7 +106,7 @@ loading = false;
       )}
 
       <!-- Footer inside dashboard module -->
-      <LGUFooter theme="orange" />
+      <LGUFooter theme="blue" />
     </section>
 
     <!-- Project Details Modal -->
@@ -138,7 +138,7 @@ loading = false;
 
   /* Enhanced focus states */
   button:focus, a:focus {
-    outline: 2px solid #f59e0b;
+    outline: 2px solid #0D7DB5;
     outline-offset: 2px;
   }
 
@@ -153,12 +153,12 @@ loading = false;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #f59e0b, #d97706);
+    background: linear-gradient(to bottom, #0D7DB5, #0A6A9A);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, #d97706, #b45309);
+    background: linear-gradient(to bottom, #0A6A9A, #075A85);
   }
 </style>
 
