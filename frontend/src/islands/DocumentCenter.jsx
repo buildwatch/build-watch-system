@@ -570,8 +570,8 @@ export default function DocumentCenter({
 
       // Add folders to each portal
       sharedFolders.forEach(folder => {
-        const userId = folder.createdBy?.id || folder.createdById;
-        if (portalsMap[userId]) {
+        const userId = folder.createdBy?.id || folder.createdById || folder.created_by_id;
+        if (userId && portalsMap[userId]) {
           if (!portalsMap[userId].folders) {
             portalsMap[userId].folders = [];
           }
@@ -3273,51 +3273,127 @@ export default function DocumentCenter({
 
           <div className="space-y-6">
             {/* Documents */}
-            <div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">Documents ({selectedPortal.documents.length})</h4>
-              {selectedPortal.documents.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {selectedPortal.documents.map((doc, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={() => {
-                        setPreviewFile(doc);
-                        setShowPreviewModal(true);
-                      }}
-                      className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                    >
-                      <p className="text-sm font-medium text-gray-800 truncate">{doc.name || doc.fileName}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt, true)}</p>
-                    </div>
-                  ))}
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                Documents ({selectedPortal.documents.length + (selectedPortal.folders?.filter(f => f.type === 'documents').length || 0)})
+              </h4>
+              {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'documents').length > 0) || selectedPortal.documents.length > 0) ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {/* Display folders first */}
+                  {selectedPortal.folders && selectedPortal.folders
+                    .filter(f => f.type === 'documents')
+                    .map((folder, idx) => (
+                      <div 
+                        key={`folder-${folder.id}`} 
+                        className="group relative bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-blue-300 hover:border-blue-500 transform hover:-translate-y-1"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 truncate mb-1" title={folder.name}>{folder.name}</p>
+                        <p className="text-xs text-gray-600">{formatDate(folder.createdAt || folder.created_at)}</p>
+                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                  {/* Then display files */}
+                  {selectedPortal.documents.map((doc, idx) => {
+                    const isPDF = doc.fileType?.includes('pdf') || doc.name?.toLowerCase().endsWith('.pdf');
+                    const isWord = doc.fileType?.includes('word') || doc.name?.toLowerCase().match(/\.(doc|docx)$/);
+                    const isExcel = doc.fileType?.includes('excel') || doc.name?.toLowerCase().match(/\.(xls|xlsx)$/);
+                    const isPowerPoint = doc.fileType?.includes('powerpoint') || doc.name?.toLowerCase().match(/\.(ppt|pptx)$/);
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        onClick={() => {
+                          setPreviewFile(doc);
+                          setShowPreviewModal(true);
+                        }}
+                        className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                      >
+                        <div className="flex items-center justify-center h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded mb-2 relative">
+                          {isPDF ? (
+                            <svg className="w-10 h-10 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                          ) : isWord ? (
+                            <svg className="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                          ) : isExcel ? (
+                            <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                          ) : isPowerPoint ? (
+                            <svg className="w-10 h-10 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-xs font-medium text-gray-800 truncate" title={doc.name || doc.fileName}>
+                          {doc.name || doc.fileName || 'Document'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt, true)}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="text-center text-gray-500 py-4">No documents uploaded yet</p>
+                <p className="text-center text-gray-500 py-8 bg-white rounded-lg">No documents uploaded yet</p>
               )}
             </div>
 
             {/* Photos */}
             <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
                 Photos ({selectedPortal.photos.length + (selectedPortal.folders?.filter(f => f.type === 'photos').length || 0)})
               </h4>
               {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'photos').length > 0) || selectedPortal.photos.length > 0) ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {/* Display folders first */}
                   {selectedPortal.folders && selectedPortal.folders
                     .filter(f => f.type === 'photos')
                     .map((folder, idx) => (
-                      <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border-2 border-green-200 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className="flex items-center justify-between mb-2">
-                          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                      <div 
+                        key={`folder-${folder.id}`} 
+                        className="group relative bg-gradient-to-br from-green-50 via-green-100 to-green-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-green-300 hover:border-green-500 transform hover:-translate-y-1"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 truncate mb-1" title={folder.name}>{folder.name}</p>
+                        <p className="text-xs text-gray-600">{formatDate(folder.createdAt || folder.created_at)}</p>
+                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                           </svg>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800 truncate" title={folder.name}>{folder.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
                       </div>
                     ))}
                   {/* Then display files */}
@@ -3332,18 +3408,20 @@ export default function DocumentCenter({
                         }}
                         className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
                       >
-                        <div className="relative h-32 bg-gray-100 rounded mb-2 overflow-hidden">
+                        <div className="relative h-24 bg-gray-100 rounded mb-2 overflow-hidden">
                           <img 
                             src={photoUrl}
                             alt={photo.name || 'Photo'}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             onError={(e) => {
                               e.target.style.display = 'none';
-                              e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
+                              e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gray-100"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
                             }}
                           />
                         </div>
-                        <p className="text-sm font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>{photo.name || photo.fileName}</p>
+                        <p className="text-xs font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>
+                          {photo.name || photo.fileName || 'Photo'}
+                        </p>
                         <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt, true)}</p>
                       </div>
                     );
@@ -3357,25 +3435,37 @@ export default function DocumentCenter({
             {/* Videos */}
             <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
+                <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
                 Videos ({selectedPortal.videos.length + (selectedPortal.folders?.filter(f => f.type === 'videos').length || 0)})
               </h4>
               {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'videos').length > 0) || selectedPortal.videos.length > 0) ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {/* Display folders first */}
                   {selectedPortal.folders && selectedPortal.folders
                     .filter(f => f.type === 'videos')
                     .map((folder, idx) => (
-                      <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-3 border-2 border-red-200 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className="flex items-center justify-between mb-2">
-                          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                      <div 
+                        key={`folder-${folder.id}`} 
+                        className="group relative bg-gradient-to-br from-red-50 via-red-100 to-red-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-red-300 hover:border-red-500 transform hover:-translate-y-1"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 truncate mb-1" title={folder.name}>{folder.name}</p>
+                        <p className="text-xs text-gray-600">{formatDate(folder.createdAt || folder.created_at)}</p>
+                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                           </svg>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800 truncate" title={folder.name}>{folder.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
                       </div>
                     ))}
                   {/* Then display files */}
@@ -3390,7 +3480,7 @@ export default function DocumentCenter({
                         }}
                         className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
                       >
-                        <div className="relative h-32 bg-gradient-to-br from-red-50 to-red-100 rounded mb-2 flex items-center justify-center overflow-hidden">
+                        <div className="relative h-24 bg-gradient-to-br from-red-50 to-red-100 rounded mb-2 flex items-center justify-center overflow-hidden">
                           <video 
                             src={videoUrl}
                             className="w-full h-full object-cover"
@@ -3399,12 +3489,14 @@ export default function DocumentCenter({
                             }}
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                            <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M8 5v14l11-7z"/>
                             </svg>
                           </div>
                         </div>
-                        <p className="text-sm font-medium text-gray-800 truncate" title={video.name || video.fileName}>{video.name || video.fileName}</p>
+                        <p className="text-xs font-medium text-gray-800 truncate" title={video.name || video.fileName}>
+                          {video.name || video.fileName || 'Video'}
+                        </p>
                         <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt, true)}</p>
                       </div>
                     );
