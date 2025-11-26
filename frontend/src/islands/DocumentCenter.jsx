@@ -814,6 +814,27 @@ export default function DocumentCenter({
   }, [itemToDelete, deleteType, resolvedApiUrl, token, fetchSharedDocuments]);
 
   // Fetch download history for current user
+  // Record file download
+  const recordDownload = useCallback(async (fileId, fileName) => {
+    try {
+      await fetch(`${resolvedApiUrl}/documents/download`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ fileId, fileName })
+      });
+      // Refresh download history if modal is open
+      if (showDownloadHistory) {
+        setTimeout(() => fetchDownloadHistory(), 500);
+      }
+    } catch (err) {
+      console.error('Error recording download:', err);
+      // Don't block download if recording fails
+    }
+  }, [resolvedApiUrl, token, showDownloadHistory, fetchDownloadHistory]);
+
   const fetchDownloadHistory = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
@@ -3204,31 +3225,118 @@ export default function DocumentCenter({
   // Render Download History Modal
   function renderDownloadHistoryModal() {
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowDownloadHistory(false)}>
-        <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-900">Download History</h3>
-            <button onClick={() => setShowDownloadHistory(false)} className="text-gray-400 hover:text-gray-600">
+      <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn" onClick={() => setShowDownloadHistory(false)}>
+        <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-2xl transform transition-all animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className={`bg-gradient-to-br ${colors.gradient} p-3 rounded-lg`}>
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Download History</h3>
+                <p className="text-sm text-gray-500 mt-1">Track who downloaded your shared files</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowDownloadHistory(false)} 
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
           </div>
-          <div className="space-y-2">
+
+          {/* Content */}
+          <div className="overflow-y-auto max-h-[calc(85vh-140px)]">
             {downloadHistory.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No download history yet</p>
-            ) : (
-              downloadHistory.map((record, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900">{record.fileName || 'File'}</p>
-                      <p className="text-sm text-gray-600">{formatDate(record.downloadedAt)}</p>
-                    </div>
-                    <span className="text-sm text-gray-500">{record.downloadedBy?.name || 'You'}</span>
-                  </div>
+              <div className="text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
                 </div>
-              ))
+                <p className="text-gray-500 text-lg font-medium">No download history yet</p>
+                <p className="text-gray-400 text-sm mt-2">Downloads of your shared files will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {downloadHistory.map((record, idx) => {
+                  const downloader = record.downloadedBy || {};
+                  const isPhoto = record.fileType?.toLowerCase().includes('photo') || record.fileType?.toLowerCase().includes('image');
+                  const isVideo = record.fileType?.toLowerCase().includes('video');
+                  const isDocument = !isPhoto && !isVideo;
+                  
+                  return (
+                    <div key={idx} className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-200 hover:shadow-lg transition-all">
+                      <div className="flex items-center gap-4">
+                        {/* File Icon */}
+                        <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+                          isPhoto ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                          isVideo ? 'bg-gradient-to-br from-red-500 to-red-600' :
+                          'bg-gradient-to-br from-blue-500 to-blue-600'
+                        }`}>
+                          {isPhoto ? (
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                          ) : isVideo ? (
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          )}
+                        </div>
+                        
+                        {/* File Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 truncate" title={record.fileName || 'File'}>
+                            {record.fileName || 'File'}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <div className="flex items-center gap-2">
+                              {downloader.profilePictureUrl ? (
+                                <img 
+                                  src={downloader.profilePictureUrl.startsWith('http') ? downloader.profilePictureUrl : `${resolvedApiUrl.replace('/api', '')}${downloader.profilePictureUrl}`}
+                                  alt={downloader.name || 'User'}
+                                  className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white text-xs font-bold ${downloader.profilePictureUrl ? 'hidden' : ''}`}>
+                                {(downloader.name || downloader.fullName || 'U').charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-sm text-gray-600">
+                                {downloader.name || downloader.fullName || 'Unknown User'}
+                              </span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-xs text-gray-500">{formatDate(record.downloadedAt, true)}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Download Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -3661,7 +3769,13 @@ export default function DocumentCenter({
                 href={fileUrl}
                 download={previewFile.name || previewFile.fileName}
                 className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Record download if file has an ID
+                  if (previewFile.id) {
+                    recordDownload(previewFile.id, previewFile.name || previewFile.fileName);
+                  }
+                }}
               >
                 Download
               </a>

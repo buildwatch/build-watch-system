@@ -401,33 +401,67 @@ router.post('/shared/folders', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/documents/download-history/:userId - Get download history
+// GET /api/documents/download-history/:userId - Get download history of files uploaded by user
 router.get('/download-history/:userId', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Only allow users to see their own download history
+    // Only allow users to see download history of their own uploaded files
     if (String(userId) !== String(req.userId)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     const DownloadHistory = db.DocumentDownload;
+    const SharedDocument = db.SharedDocument;
     
     let history = [];
-    if (DownloadHistory) {
+    if (DownloadHistory && SharedDocument) {
       try {
-        history = await DownloadHistory.findAll({
-          where: { userId },
-          include: [{
-            model: db.User,
-            as: 'downloadedBy',
-            attributes: ['id', 'name', 'email']
-          }],
-          order: [['downloadedAt', 'DESC']]
+        // Get downloads of files uploaded by this user
+        // First get all files uploaded by this user
+        const userFiles = await SharedDocument.findAll({
+          where: { uploadedById: userId },
+          attributes: ['id']
         });
+        const userFileIds = userFiles.map(f => f.id);
+        
+        if (userFileIds.length > 0) {
+          history = await DownloadHistory.findAll({
+            where: { fileId: { [Op.in]: userFileIds } },
+            include: [{
+              model: db.User,
+              as: 'downloadedBy',
+              attributes: ['id', 'name', 'fullName', 'email', 'profilePictureUrl']
+            }],
+            order: [['downloadedAt', 'DESC']]
+          });
+        } else {
+          history = [];
+        }
       } catch (modelError) {
-        console.error('Error fetching download history:', modelError);
-        history = [];
+        // If associations don't work, try a different approach
+        try {
+          const allDownloads = await DownloadHistory.findAll({
+            include: [{
+              model: db.User,
+              as: 'downloadedBy',
+              attributes: ['id', 'name', 'fullName', 'email', 'profilePictureUrl']
+            }],
+            order: [['downloadedAt', 'DESC']]
+          });
+          
+          // Filter downloads where fileId matches files uploaded by this user
+          const userFiles = await SharedDocument.findAll({
+            where: { uploadedById: userId },
+            attributes: ['id']
+          });
+          const userFileIds = userFiles.map(f => f.id);
+          
+          history = allDownloads.filter(d => userFileIds.includes(d.fileId));
+        } catch (fallbackError) {
+          console.error('Error fetching download history:', fallbackError);
+          history = [];
+        }
       }
     } else {
       history = [];
@@ -437,9 +471,11 @@ router.get('/download-history/:userId', authenticateToken, async (req, res) => {
       success: true,
       history: history.map(record => ({
         id: record.id,
-        fileName: record.fileName || record.file?.name,
+        fileId: record.fileId,
+        fileName: record.fileName || record.file?.name || record.file?.fileName || 'Unknown File',
+        fileType: record.file?.fileType || 'unknown',
         downloadedAt: record.downloadedAt || record.createdAt,
-        downloadedBy: record.downloadedBy || { id: userId, name: 'You' }
+        downloadedBy: record.downloadedBy || { id: record.userId, name: 'Unknown User' }
       }))
     });
   } catch (error) {

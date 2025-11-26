@@ -9,6 +9,13 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'userId',
         as: 'downloadedBy'
       });
+      
+      // Associate with SharedDocument (file that was downloaded)
+      DocumentDownload.belongsTo(models.SharedDocument, {
+        foreignKey: 'fileId',
+        as: 'file',
+        allowNull: true
+      });
     }
   }
   
