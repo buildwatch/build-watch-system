@@ -100,15 +100,16 @@ const themes = {
     cardHover: 'hover:border-orange-400 hover:shadow-orange-100'
   },
   blue: {
-    primary: 'bg-blue-600',
-    primaryHover: 'hover:bg-blue-700',
-    accent: 'text-blue-600',
-    border: 'border-blue-200',
-    gradient: 'from-blue-600 to-blue-500',
-    gradientText: 'from-blue-600 to-blue-500',
-    gradientIcon: 'from-blue-600 to-blue-500',
-    button: 'bg-blue-600 hover:bg-blue-700',
-    cardHover: 'hover:border-blue-400 hover:shadow-blue-100'
+    primary: 'bg-[#0D7DB5]',
+    primaryHover: 'hover:bg-[#0A6A9A]',
+    primaryLight: 'bg-[#0D7DB5]/10',
+    accent: 'text-[#0D7DB5]',
+    border: 'border-[#0D7DB5]/20',
+    gradient: 'from-[#0D7DB5] via-[#0A6A9A] to-[#075A85]',
+    gradientText: 'from-[#0D7DB5] to-[#0A6A9A]',
+    gradientIcon: 'from-[#0D7DB5] to-[#0A6A9A]',
+    button: 'bg-[#0D7DB5] hover:bg-[#0A6A9A]',
+    cardHover: 'hover:border-[#0D7DB5]/40 hover:shadow-[#0D7DB5]/10'
   },
   black: {
     primary: 'bg-gray-900',
