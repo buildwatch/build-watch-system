@@ -152,6 +152,7 @@ router.post('/shared/upload', authenticateToken, upload.array('files', 10), asyn
     }
 
     const fileType = req.body.fileType || 'documents';
+    const folderId = req.body.folderId || null;
     const uploadedFiles = [];
 
     for (const file of req.files) {
@@ -162,6 +163,7 @@ router.post('/shared/upload', authenticateToken, upload.array('files', 10), asyn
         url: `/uploads/shared-documents/${file.filename}`,
         fileSize: file.size,
         uploadedById: req.userId,
+        folderId: folderId,
         uploadedAt: new Date()
       };
 

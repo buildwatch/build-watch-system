@@ -398,10 +398,19 @@ export default function DocumentCenter({
   };
 
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = (dateString, includeTime = false) => {
     if (!dateString) return 'Unknown date';
     try {
       const date = new Date(dateString);
+      if (includeTime) {
+        return date.toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
       return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 
@@ -2428,6 +2437,10 @@ export default function DocumentCenter({
       );
     }
 
+    // Get current folder type if inside a folder
+    const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
+    const currentFolderType = currentFolder?.type || null;
+
     const myDocuments = sharedDocuments.filter(doc => {
       const isOwner = doc.uploadedBy?.id === currentUser.id || doc.uploadedById === currentUser.id;
       // If in a folder, only show documents in that folder
@@ -2534,7 +2547,8 @@ export default function DocumentCenter({
 
         {/* Documents, Photos, Videos Sections */}
         <div className="space-y-6">
-          {/* Documents Section */}
+          {/* Documents Section - Only show if not in a folder or if folder type is documents */}
+          {(!currentFolderType || currentFolderType === 'documents') && (
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -2545,15 +2559,17 @@ export default function DocumentCenter({
                 </div>
                 Documents ({myDocs.length + (currentFolders.filter(f => f.type === 'documents').length)})
               </h4>
-              <button
-                onClick={() => {
-                  setSelectedFolder('documents');
-                  setShowFolderModal(true);
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                + Create Folder
-              </button>
+              {!currentFolderId && (
+                <button
+                  onClick={() => {
+                    setSelectedFolder('documents');
+                    setShowFolderModal(true);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  + Create Folder
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {/* Display folders first */}
@@ -2638,7 +2654,7 @@ export default function DocumentCenter({
                     <p className="text-xs font-medium text-gray-800 truncate" title={doc.name || doc.fileName}>
                       {doc.name || doc.fileName || 'Document'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt)}</p>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt, true)}</p>
                   </div>
                 );
               })}
@@ -2649,25 +2665,31 @@ export default function DocumentCenter({
               )}
             </div>
           </div>
+          )}
 
-          {/* Photos Section */}
+          {/* Photos Section - Only show if not in a folder or if folder type is photos */}
+          {(!currentFolderType || currentFolderType === 'photos') && (
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Photos ({myPhotos.length})
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                Photos ({myPhotos.length + (currentFolders.filter(f => f.type === 'photos').length)})
               </h4>
-              <button
-                onClick={() => {
-                  setSelectedFolder('photos');
-                  setShowFolderModal(true);
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                + Create Folder
-              </button>
+              {!currentFolderId && (
+                <button
+                  onClick={() => {
+                    setSelectedFolder('photos');
+                    setShowFolderModal(true);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  + Create Folder
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {/* Display folders first */}
@@ -2736,7 +2758,7 @@ export default function DocumentCenter({
                     <p className="text-xs font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>
                       {photo.name || photo.fileName || 'Photo'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt, true)}</p>
                   </div>
                 );
               })}
@@ -2747,25 +2769,31 @@ export default function DocumentCenter({
               )}
             </div>
           </div>
+          )}
 
-          {/* Videos Section */}
+          {/* Videos Section - Only show if not in a folder or if folder type is videos */}
+          {(!currentFolderType || currentFolderType === 'videos') && (
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-                Videos ({myVideos.length})
+                <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                Videos ({myVideos.length + (currentFolders.filter(f => f.type === 'videos').length)})
               </h4>
-              <button
-                onClick={() => {
-                  setSelectedFolder('videos');
-                  setShowFolderModal(true);
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                + Create Folder
-              </button>
+              {!currentFolderId && (
+                <button
+                  onClick={() => {
+                    setSelectedFolder('videos');
+                    setShowFolderModal(true);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  + Create Folder
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {/* Display folders first */}
@@ -2837,7 +2865,7 @@ export default function DocumentCenter({
                     <p className="text-xs font-medium text-gray-800 truncate" title={video.name || video.fileName}>
                       {video.name || video.fileName || 'Video'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt, true)}</p>
                   </div>
                 );
               })}
@@ -2848,6 +2876,7 @@ export default function DocumentCenter({
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
     );
@@ -3210,7 +3239,7 @@ export default function DocumentCenter({
                   {selectedPortal.documents.map((doc, idx) => (
                     <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
                       <p className="text-sm font-medium text-gray-800 truncate">{doc.name || doc.fileName}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt)}</p>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt, true)}</p>
                     </div>
                   ))}
                 </div>
@@ -3260,7 +3289,7 @@ export default function DocumentCenter({
                           />
                         </div>
                         <p className="text-sm font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>{photo.name || photo.fileName}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt, true)}</p>
                       </div>
                     );
                   })}
@@ -3314,7 +3343,7 @@ export default function DocumentCenter({
                           </div>
                         </div>
                         <p className="text-sm font-medium text-gray-800 truncate" title={video.name || video.fileName}>{video.name || video.fileName}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt, true)}</p>
                       </div>
                     );
                   })}
