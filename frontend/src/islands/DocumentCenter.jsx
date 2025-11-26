@@ -814,6 +814,23 @@ export default function DocumentCenter({
   }, [itemToDelete, deleteType, resolvedApiUrl, token, fetchSharedDocuments]);
 
   // Fetch download history for current user
+  const fetchDownloadHistory = useCallback(async () => {
+    if (!currentUser?.id) return;
+    try {
+      const response = await fetch(`${resolvedApiUrl}/documents/download-history/${currentUser.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setDownloadHistory(data.history || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching download history:', err);
+    }
+  }, [resolvedApiUrl, token, currentUser?.id]);
+
   // Record file download
   const recordDownload = useCallback(async (fileId, fileName) => {
     try {
@@ -834,23 +851,6 @@ export default function DocumentCenter({
       // Don't block download if recording fails
     }
   }, [resolvedApiUrl, token, showDownloadHistory, fetchDownloadHistory]);
-
-  const fetchDownloadHistory = useCallback(async () => {
-    if (!currentUser?.id) return;
-    try {
-      const response = await fetch(`${resolvedApiUrl}/documents/download-history/${currentUser.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setDownloadHistory(data.history || []);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching download history:', err);
-    }
-  }, [resolvedApiUrl, token, currentUser?.id]);
 
   const organizedData = organizeFiles();
   const filteredFiles = getFilteredFiles();
