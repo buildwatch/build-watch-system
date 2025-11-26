@@ -512,6 +512,7 @@ export default function DocumentCenter({
       }
 
       // Fetch shared folders
+      let fetchedFolders = [];
       try {
         const foldersResponse = await fetch(`${resolvedApiUrl}/documents/shared/folders`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -519,7 +520,8 @@ export default function DocumentCenter({
         if (foldersResponse.ok) {
           const foldersData = await foldersResponse.json();
           if (foldersData.success && foldersData.folders) {
-            setSharedFolders(foldersData.folders || []);
+            fetchedFolders = foldersData.folders || [];
+            setSharedFolders(fetchedFolders);
           } else {
             setSharedFolders([]);
           }
@@ -581,14 +583,27 @@ export default function DocumentCenter({
         }
       });
 
-      // Add folders to each portal
-      sharedFolders.forEach(folder => {
+      // Add folders to each portal - use fetchedFolders from API response, not state
+      console.log('📁 Processing folders for portals:', {
+        totalFolders: fetchedFolders.length,
+        folders: fetchedFolders.map(f => ({
+          id: f.id,
+          name: f.name,
+          type: f.type,
+          createdById: f.createdBy?.id || f.createdById || f.created_by_id
+        }))
+      });
+      
+      fetchedFolders.forEach(folder => {
         const userId = folder.createdBy?.id || folder.createdById || folder.created_by_id;
         if (userId && portalsMap[userId]) {
           if (!portalsMap[userId].folders) {
             portalsMap[userId].folders = [];
           }
           portalsMap[userId].folders.push(folder);
+          console.log(`✅ Added folder "${folder.name}" to portal for user ${userId}`);
+        } else {
+          console.warn(`⚠️ Could not add folder "${folder.name}" - userId: ${userId}, portal exists: ${!!portalsMap[userId]}`);
         }
       });
 
@@ -3008,7 +3023,12 @@ export default function DocumentCenter({
                 return (
                   <div
                     key={idx}
-                    onClick={() => setSelectedPortal(portal)}
+                    onClick={() => {
+                      setSelectedPortal(portal);
+                      // Reset folder navigation when opening a portal
+                      setPortalModalFolderId(null);
+                      setPortalModalFolderPath([]);
+                    }}
                     className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer relative"
                   >
                     {hasNewUpload && (
@@ -3423,11 +3443,24 @@ export default function DocumentCenter({
     const currentPortalFolder = portalModalFolderPath.length > 0 ? portalModalFolderPath[portalModalFolderPath.length - 1] : null;
     const currentPortalFolderType = currentPortalFolder?.type || null;
     
+    // Debug logging
+    console.log('🔍 Portal Detail Modal Debug:', {
+      portalUserId: selectedPortal.user?.id,
+      totalDocuments: selectedPortal.documents?.length || 0,
+      totalPhotos: selectedPortal.photos?.length || 0,
+      totalVideos: selectedPortal.videos?.length || 0,
+      totalFolders: selectedPortal.folders?.length || 0,
+      folders: selectedPortal.folders,
+      portalModalFolderId,
+      portalModalFolderPath: portalModalFolderPath.length
+    });
+    
     // Filter files based on folder context
     const portalDocuments = selectedPortal.documents.filter(doc => {
       // If in a folder, only show documents in that folder
       if (portalModalFolderId) {
-        return doc.folderId === portalModalFolderId || doc.folder_id === portalModalFolderId;
+        const matches = doc.folderId === portalModalFolderId || doc.folder_id === portalModalFolderId;
+        return matches;
       }
       // If not in a folder, only show documents not in any folder
       return !doc.folderId && !doc.folder_id;
@@ -3436,7 +3469,8 @@ export default function DocumentCenter({
     const portalPhotos = selectedPortal.photos.filter(photo => {
       // If in a folder, only show photos in that folder
       if (portalModalFolderId) {
-        return photo.folderId === portalModalFolderId || photo.folder_id === portalModalFolderId;
+        const matches = photo.folderId === portalModalFolderId || photo.folder_id === portalModalFolderId;
+        return matches;
       }
       // If not in a folder, only show photos not in any folder
       return !photo.folderId && !photo.folder_id;
@@ -3445,7 +3479,8 @@ export default function DocumentCenter({
     const portalVideos = selectedPortal.videos.filter(video => {
       // If in a folder, only show videos in that folder
       if (portalModalFolderId) {
-        return video.folderId === portalModalFolderId || video.folder_id === portalModalFolderId;
+        const matches = video.folderId === portalModalFolderId || video.folder_id === portalModalFolderId;
+        return matches;
       }
       // If not in a folder, only show videos not in any folder
       return !video.folderId && !video.folder_id;
@@ -3457,6 +3492,13 @@ export default function DocumentCenter({
         return false; // No nested folders yet
       }
       return true; // Show all folders at root level
+    });
+    
+    console.log('📊 Filtered Portal Data:', {
+      portalDocuments: portalDocuments.length,
+      portalPhotos: portalPhotos.length,
+      portalVideos: portalVideos.length,
+      portalFolders: portalFolders.length
     });
     
     return (
