@@ -40,6 +40,7 @@ const profileRoutes = require('./routes/profile');
 const messageRoutes = require('./routes/messages');
 const projectCommentRoutes = require('./routes/project-comments');
 const testEmailRoutes = require('./routes/test-email');
+const documentRoutes = require('./routes/documents');
 const { checkAndPublishScheduledAnnouncements, checkAndExpireAnnouncements } = require('./services/scheduledAnnouncements');
 
 const app = express();
@@ -703,6 +704,7 @@ app.use('/api/policies', policyRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/project-comments', projectCommentRoutes);
+app.use('/api/documents', documentRoutes);
 
 // OPTIONS handler for profile pictures
 app.options('/uploads/profile-pictures/:filename', (req, res) => {

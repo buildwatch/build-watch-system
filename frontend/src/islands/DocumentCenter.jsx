@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 /**
  * DocumentCenter - Centralized files & documents repository management component
@@ -62,6 +62,22 @@ export default function DocumentCenter({
     pendingApprovals: 0,
     lastUpdated: new Date().toISOString()
   });
+
+  // Document Sharing states
+  const [documentSharingTab, setDocumentSharingTab] = useState('my-portal'); // 'my-portal' or 'shared-portals'
+  const [sharedDocuments, setSharedDocuments] = useState([]);
+  const [userPortals, setUserPortals] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [selectedPortal, setSelectedPortal] = useState(null);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showDownloadHistory, setShowDownloadHistory] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [downloadHistory, setDownloadHistory] = useState([]);
+  const [uploadFiles, setUploadFiles] = useState([]);
+  const [uploadFileType, setUploadFileType] = useState('documents');
+  const [folderName, setFolderName] = useState('');
 
   // Theme color mappings
   const themeColors = {
@@ -404,6 +420,149 @@ export default function DocumentCenter({
     return () => clearInterval(interval);
   }, [fetchEvidenceFiles, token]);
 
+  // Fetch current user
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setCurrentUser(user);
+        } else {
+          // Fetch from API
+          const response = await fetch(`${resolvedApiUrl}/auth/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              setCurrentUser(data.user);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+      }
+    };
+    fetchCurrentUser();
+  }, [resolvedApiUrl, token]);
+
+  // Fetch all users and shared documents
+  const fetchSharedDocuments = useCallback(async () => {
+    try {
+      // Fetch all users first (using documents/users endpoint which doesn't require admin)
+      const usersResponse = await fetch(`${resolvedApiUrl}/documents/users`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      let allUsers = [];
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        if (usersData.success) {
+          allUsers = usersData.users || [];
+        }
+      }
+
+      // Fetch shared documents
+      const response = await fetch(`${resolvedApiUrl}/documents/shared`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      let sharedDocs = [];
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          sharedDocs = data.documents || [];
+          setSharedDocuments(sharedDocs);
+        }
+      }
+
+      // Create portals for ALL users, even if they haven't uploaded anything
+      // Exclude current user from shared portals (they have their own "My Portal Documents" tab)
+      const portalsMap = {};
+      
+      // Initialize portals for all users (except current user)
+      allUsers.forEach(user => {
+        // Skip current user in shared portals
+        if (currentUser && String(user.id) === String(currentUser.id)) {
+          return;
+        }
+        portalsMap[user.id] = {
+          user: user,
+          documents: [],
+          photos: [],
+          videos: [],
+          lastUpload: null
+        };
+      });
+
+      // Organize documents by user
+      sharedDocs.forEach(doc => {
+        const userId = doc.uploadedBy?.id || doc.uploadedById;
+        // Skip if this is the current user's document (they have their own tab)
+        if (currentUser && String(userId) === String(currentUser.id)) {
+          return;
+        }
+        if (!portalsMap[userId]) {
+          portalsMap[userId] = {
+            user: doc.uploadedBy || { id: userId, name: 'Unknown User' },
+            documents: [],
+            photos: [],
+            videos: [],
+            lastUpload: null
+          };
+        }
+        const fileType = doc.fileType?.toLowerCase() || 'documents';
+        if (fileType.includes('photo') || fileType.includes('image')) {
+          portalsMap[userId].photos.push(doc);
+        } else if (fileType.includes('video')) {
+          portalsMap[userId].videos.push(doc);
+        } else {
+          portalsMap[userId].documents.push(doc);
+        }
+        if (!portalsMap[userId].lastUpload || new Date(doc.uploadedAt) > new Date(portalsMap[userId].lastUpload)) {
+          portalsMap[userId].lastUpload = doc.uploadedAt;
+        }
+      });
+
+      // Sort portals: users with recent uploads first, then by name
+      const portals = Object.values(portalsMap).sort((a, b) => {
+        if (a.lastUpload && b.lastUpload) {
+          return new Date(b.lastUpload) - new Date(a.lastUpload);
+        }
+        if (a.lastUpload && !b.lastUpload) return -1;
+        if (!a.lastUpload && b.lastUpload) return 1;
+        return (a.user.name || a.user.fullName || '').localeCompare(b.user.name || b.user.fullName || '');
+      });
+      
+      setUserPortals(portals);
+    } catch (err) {
+      console.error('Error fetching shared documents:', err);
+    }
+  }, [resolvedApiUrl, token, currentUser]);
+
+  useEffect(() => {
+    fetchSharedDocuments();
+  }, [fetchSharedDocuments, currentUser]);
+
+  // Fetch download history for current user
+  const fetchDownloadHistory = useCallback(async () => {
+    if (!currentUser?.id) return;
+    try {
+      const response = await fetch(`${resolvedApiUrl}/documents/download-history/${currentUser.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setDownloadHistory(data.history || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching download history:', err);
+    }
+  }, [resolvedApiUrl, token, currentUser?.id]);
+
   const organizedData = organizeFiles();
   const filteredFiles = getFilteredFiles();
 
@@ -573,6 +732,21 @@ export default function DocumentCenter({
 
       {/* Content Area - Rendered based on current navigation path */}
       {!loading && !error && renderContent()}
+
+      {/* Document Sharing Section */}
+      {!loading && !error && renderDocumentSharing()}
+
+      {/* Upload Modal */}
+      {showUploadModal && renderUploadModal()}
+
+      {/* Folder Creation Modal */}
+      {showFolderModal && renderFolderModal()}
+
+      {/* Download History Modal */}
+      {showDownloadHistory && renderDownloadHistoryModal()}
+
+      {/* Portal Detail Modal */}
+      {selectedPortal && renderPortalDetailModal()}
     </div>
   );
 
@@ -1898,6 +2072,670 @@ export default function DocumentCenter({
               </div>
             );
           })}
+        </div>
+      </div>
+    );
+  }
+
+  // Render Document Sharing Section
+  function renderDocumentSharing() {
+    return (
+      <div className="mt-12">
+        {/* Document Sharing Header */}
+        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`bg-gradient-to-br ${colors.gradient} p-3 rounded-lg shadow-lg`}>
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-black">Document Sharing</h2>
+              <p className="text-sm text-gray-600">Share and access documents across all user accounts</p>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-gray-200">
+            <button
+              onClick={() => setDocumentSharingTab('my-portal')}
+              className={`px-6 py-3 font-semibold text-sm rounded-t-lg transition-all ${
+                documentSharingTab === 'my-portal'
+                  ? `bg-gradient-to-r ${colors.gradient} text-white shadow-sm`
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              My Portal Documents
+            </button>
+            <button
+              onClick={() => setDocumentSharingTab('shared-portals')}
+              className={`px-6 py-3 font-semibold text-sm rounded-t-lg transition-all ${
+                documentSharingTab === 'shared-portals'
+                  ? `bg-gradient-to-r ${colors.gradient} text-white shadow-sm`
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Shared Document Portal
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {documentSharingTab === 'my-portal' ? renderMyPortal() : renderSharedPortals()}
+      </div>
+    );
+  }
+
+  // Render My Portal Documents
+  function renderMyPortal() {
+    if (!currentUser) {
+      return (
+        <div className="bg-white rounded-xl p-12 text-center shadow-lg border border-gray-200">
+          <p className="text-gray-600">Loading user information...</p>
+        </div>
+      );
+    }
+
+    const myDocuments = sharedDocuments.filter(doc => doc.uploadedBy?.id === currentUser.id || doc.uploadedById === currentUser.id);
+    const myDocs = myDocuments.filter(d => !d.fileType?.toLowerCase().includes('photo') && !d.fileType?.toLowerCase().includes('video'));
+    const myPhotos = myDocuments.filter(d => d.fileType?.toLowerCase().includes('photo') || d.fileType?.toLowerCase().includes('image'));
+    const myVideos = myDocuments.filter(d => d.fileType?.toLowerCase().includes('video'));
+
+    return (
+      <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+        {/* My Portal Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            {currentUser.profilePictureUrl ? (
+              <img 
+                src={currentUser.profilePictureUrl.startsWith('http') ? currentUser.profilePictureUrl : `${resolvedApiUrl.replace('/api', '')}${currentUser.profilePictureUrl}`}
+                alt={currentUser.name || 'User'}
+                className="w-16 h-16 rounded-full object-cover border-4 border-gray-200 shadow-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white text-2xl font-bold shadow-lg ${currentUser.profilePictureUrl ? 'hidden' : ''}`}>
+              {(currentUser.name || currentUser.fullName || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">{currentUser.name || currentUser.fullName || 'My Portal'}</h3>
+              <p className="text-sm text-gray-600">{currentUser.email || ''}</p>
+              <p className="text-xs text-gray-500">{currentUser.group || currentUser.role || ''}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowDownloadHistory(true)}
+              className={`px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold text-gray-700 transition-colors`}
+            >
+              Download History
+            </button>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all`}
+            >
+              Upload File
+            </button>
+          </div>
+        </div>
+
+        {/* Documents, Photos, Videos Sections */}
+        <div className="space-y-6">
+          {/* Documents Section */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Documents ({myDocs.length})
+              </h4>
+              <button
+                onClick={() => {
+                  setSelectedFolder('documents');
+                  setShowFolderModal(true);
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Create Folder
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {myDocs.map((doc, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFile(doc.id);
+                      }}
+                      className="text-red-600 hover:text-red-800 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="text-xs font-medium text-gray-800 truncate" title={doc.name || doc.fileName}>
+                    {doc.name || doc.fileName || 'Document'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt)}</p>
+                </div>
+              ))}
+              {myDocs.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No documents uploaded yet
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Photos Section */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Photos ({myPhotos.length})
+              </h4>
+              <button
+                onClick={() => {
+                  setSelectedFolder('photos');
+                  setShowFolderModal(true);
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Create Folder
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {myPhotos.map((photo, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <img 
+                      src={photo.url?.startsWith('http') ? photo.url : `${resolvedApiUrl.replace('/api', '')}${photo.url}`}
+                      alt={photo.name || 'Photo'}
+                      className="w-8 h-8 object-cover rounded"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFile(photo.id);
+                      }}
+                      className="text-red-600 hover:text-red-800 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="text-xs font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>
+                    {photo.name || photo.fileName || 'Photo'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
+                </div>
+              ))}
+              {myPhotos.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No photos uploaded yet
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Videos Section */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                Videos ({myVideos.length})
+              </h4>
+              <button
+                onClick={() => {
+                  setSelectedFolder('videos');
+                  setShowFolderModal(true);
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Create Folder
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {myVideos.map((video, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFile(video.id);
+                      }}
+                      className="text-red-600 hover:text-red-800 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="text-xs font-medium text-gray-800 truncate" title={video.name || video.fileName}>
+                    {video.name || video.fileName || 'Video'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
+                </div>
+              ))}
+              {myVideos.length === 0 && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No videos uploaded yet
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Shared Portals
+  function renderSharedPortals() {
+    // Group portals by user group
+    const portalsByGroup = {};
+    userPortals.forEach(portal => {
+      const group = portal.user.group || portal.user.role || 'Other';
+      if (!portalsByGroup[group]) {
+        portalsByGroup[group] = [];
+      }
+      portalsByGroup[group].push(portal);
+    });
+
+    return (
+      <div className="space-y-6">
+        {Object.keys(portalsByGroup).map(group => (
+          <div key={group} className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">{group}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {portalsByGroup[group].map((portal, idx) => {
+                const hasNewUpload = portal.lastUpload && new Date(portal.lastUpload) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedPortal(portal)}
+                    className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer relative"
+                  >
+                    {hasNewUpload && (
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    )}
+                    <div className="flex flex-col items-center text-center">
+                      {portal.user.profilePictureUrl ? (
+                        <img 
+                          src={portal.user.profilePictureUrl.startsWith('http') ? portal.user.profilePictureUrl : `${resolvedApiUrl.replace('/api', '')}${portal.user.profilePictureUrl}`}
+                          alt={portal.user.name || 'User'}
+                          className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg mb-3"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white text-xl font-bold shadow-lg mb-3 ${portal.user.profilePictureUrl ? 'hidden' : ''}`}>
+                        {(portal.user.name || portal.user.fullName || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                      </svg>
+                      <h4 className="font-bold text-gray-900 text-sm mb-1">{portal.user.name || portal.user.fullName || 'Unknown User'}</h4>
+                      <p className="text-xs text-gray-600 mb-2">{portal.user.email || ''}</p>
+                      <div className="flex gap-2 text-xs text-gray-500">
+                        <span>{portal.documents.length} Docs</span>
+                        <span>•</span>
+                        <span>{portal.photos.length} Photos</span>
+                        <span>•</span>
+                        <span>{portal.videos.length} Videos</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {Object.keys(portalsByGroup).length === 0 && (
+          <div className="bg-white rounded-xl p-12 text-center shadow-lg border border-gray-200">
+            <p className="text-gray-600">No users found</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Handle file deletion (only for uploader)
+  const handleDeleteFile = async (fileId) => {
+    if (!window.confirm('Are you sure you want to delete this file?')) return;
+    try {
+      const response = await fetch(`${resolvedApiUrl}/documents/shared/${fileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setSharedDocuments(prev => prev.filter(d => d.id !== fileId));
+          fetchSharedDocuments();
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting file:', err);
+      alert('Failed to delete file. Please try again.');
+    }
+  };
+
+  // Render Upload Modal
+  function renderUploadModal() {
+    const handleUpload = async () => {
+      if (uploadFiles.length === 0) return;
+      setUploading(true);
+      try {
+        const formData = new FormData();
+        uploadFiles.forEach(file => {
+          formData.append('files', file);
+        });
+        formData.append('fileType', uploadFileType);
+
+        const response = await fetch(`${resolvedApiUrl}/documents/shared/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setShowUploadModal(false);
+            setUploadFiles([]);
+            fetchSharedDocuments();
+            alert('Files uploaded successfully!');
+          }
+        }
+      } catch (err) {
+        console.error('Error uploading files:', err);
+        alert('Failed to upload files. Please try again.');
+      } finally {
+        setUploading(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowUploadModal(false)}>
+        <div className="bg-white rounded-xl p-6 max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">Upload Files</h3>
+            <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">File Type</label>
+              <select
+                value={uploadFileType}
+                onChange={(e) => setUploadFileType(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="documents">Documents</option>
+                <option value="photos">Photos</option>
+                <option value="videos">Videos</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Select Files</label>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => setUploadFiles(Array.from(e.target.files || []))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadFiles([]);
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={uploadFiles.length === 0 || uploading}
+                className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg hover:shadow-lg disabled:opacity-50`}
+              >
+                {uploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Folder Creation Modal
+  function renderFolderModal() {
+    const handleCreateFolder = async () => {
+      if (!folderName.trim()) return;
+      try {
+        const response = await fetch(`${resolvedApiUrl}/documents/shared/folders`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: folderName,
+            type: selectedFolder
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setShowFolderModal(false);
+            setFolderName('');
+            fetchSharedDocuments();
+            alert('Folder created successfully!');
+          }
+        }
+      } catch (err) {
+        console.error('Error creating folder:', err);
+        alert('Failed to create folder. Please try again.');
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowFolderModal(false)}>
+        <div className="bg-white rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">Create Folder</h3>
+            <button onClick={() => setShowFolderModal(false)} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Folder Name</label>
+              <input
+                type="text"
+                value={folderName}
+                onChange={(e) => setFolderName(e.target.value)}
+                placeholder="Enter folder name"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowFolderModal(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateFolder}
+                disabled={!folderName.trim()}
+                className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg hover:shadow-lg disabled:opacity-50`}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch download history when modal opens
+  useEffect(() => {
+    if (showDownloadHistory && currentUser?.id) {
+      fetchDownloadHistory();
+    }
+  }, [showDownloadHistory, currentUser?.id, fetchDownloadHistory]);
+
+  // Render Download History Modal
+  function renderDownloadHistoryModal() {
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowDownloadHistory(false)}>
+        <div className="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">Download History</h3>
+            <button onClick={() => setShowDownloadHistory(false)} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div className="space-y-2">
+            {downloadHistory.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No download history yet</p>
+            ) : (
+              downloadHistory.map((record, idx) => (
+                <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-900">{record.fileName || 'File'}</p>
+                      <p className="text-sm text-gray-600">{formatDate(record.downloadedAt)}</p>
+                    </div>
+                    <span className="text-sm text-gray-500">{record.downloadedBy?.name || 'You'}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Portal Detail Modal
+  function renderPortalDetailModal() {
+    if (!selectedPortal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPortal(null)}>
+        <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              {selectedPortal.user.profilePictureUrl ? (
+                <img 
+                  src={selectedPortal.user.profilePictureUrl.startsWith('http') ? selectedPortal.user.profilePictureUrl : `${resolvedApiUrl.replace('/api', '')}${selectedPortal.user.profilePictureUrl}`}
+                  alt={selectedPortal.user.name || 'User'}
+                  className="w-16 h-16 rounded-full object-cover border-4 border-gray-200"
+                />
+              ) : (
+                <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white text-2xl font-bold`}>
+                  {(selectedPortal.user.name || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{selectedPortal.user.name || selectedPortal.user.fullName || 'User'}</h3>
+                <p className="text-sm text-gray-600">{selectedPortal.user.email || ''}</p>
+              </div>
+            </div>
+            <button onClick={() => setSelectedPortal(null)} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {/* Documents */}
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Documents ({selectedPortal.documents.length})</h4>
+              {selectedPortal.documents.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {selectedPortal.documents.map((doc, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                      <p className="text-sm font-medium text-gray-800 truncate">{doc.name || doc.fileName}</p>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">No documents uploaded yet</p>
+              )}
+            </div>
+
+            {/* Photos */}
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Photos ({selectedPortal.photos.length})</h4>
+              {selectedPortal.photos.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {selectedPortal.photos.map((photo, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                      <img 
+                        src={photo.url?.startsWith('http') ? photo.url : `${resolvedApiUrl.replace('/api', '')}${photo.url}`}
+                        alt={photo.name || 'Photo'}
+                        className="w-full h-24 object-cover rounded mb-2"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <p className="text-sm font-medium text-gray-800 truncate">{photo.name || photo.fileName}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">No photos uploaded yet</p>
+              )}
+            </div>
+
+            {/* Videos */}
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Videos ({selectedPortal.videos.length})</h4>
+              {selectedPortal.videos.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {selectedPortal.videos.map((video, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                      <p className="text-sm font-medium text-gray-800 truncate">{video.name || video.fileName}</p>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">No videos uploaded yet</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     );
