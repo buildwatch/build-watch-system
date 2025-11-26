@@ -76,6 +76,8 @@ export default function DocumentCenter({
   const [showDownloadHistory, setShowDownloadHistory] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState('file'); // 'file' or 'folder'
@@ -518,6 +520,7 @@ export default function DocumentCenter({
           documents: [],
           photos: [],
           videos: [],
+          folders: [],
           lastUpload: null
         };
       });
@@ -535,6 +538,7 @@ export default function DocumentCenter({
             documents: [],
             photos: [],
             videos: [],
+            folders: [],
             lastUpload: null
           };
         }
@@ -548,6 +552,17 @@ export default function DocumentCenter({
         }
         if (!portalsMap[userId].lastUpload || new Date(doc.uploadedAt) > new Date(portalsMap[userId].lastUpload)) {
           portalsMap[userId].lastUpload = doc.uploadedAt;
+        }
+      });
+
+      // Add folders to each portal
+      sharedFolders.forEach(folder => {
+        const userId = folder.createdBy?.id || folder.createdById;
+        if (portalsMap[userId]) {
+          if (!portalsMap[userId].folders) {
+            portalsMap[userId].folders = [];
+          }
+          portalsMap[userId].folders.push(folder);
         }
       });
 
@@ -570,6 +585,81 @@ export default function DocumentCenter({
   useEffect(() => {
     fetchSharedDocuments();
   }, [fetchSharedDocuments, currentUser]);
+
+  // Handle file deletion (only for uploader) - Define before use in JSX
+  const handleDeleteFile = useCallback((fileId) => {
+    setItemToDelete(fileId);
+    setDeleteType('file');
+    setShowDeleteConfirmModal(true);
+  }, []);
+
+  // Handle folder deletion - Define before use in JSX
+  const handleDeleteFolder = useCallback((folderId) => {
+    setItemToDelete(folderId);
+    setDeleteType('folder');
+    setShowDeleteConfirmModal(true);
+  }, []);
+
+  // Confirm and execute deletion
+  const confirmDelete = useCallback(async () => {
+    if (!itemToDelete) return;
+    
+    const apiUrl = resolvedApiUrl; // Capture in closure
+    
+    try {
+      if (deleteType === 'file') {
+        const response = await fetch(`${apiUrl}/documents/shared/${itemToDelete}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setSharedDocuments(prev => prev.filter(d => d.id !== itemToDelete));
+            fetchSharedDocuments();
+            setShowDeleteConfirmModal(false);
+            setSuccessMessage('File deleted successfully!');
+            setShowSuccessModal(true);
+            setTimeout(() => setShowSuccessModal(false), 3000);
+          }
+        }
+      } else if (deleteType === 'folder') {
+        const response = await fetch(`${apiUrl}/documents/shared/folders/${itemToDelete}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setSharedFolders(prev => prev.filter(f => f.id !== itemToDelete));
+            fetchSharedDocuments(); // Refresh to update folder list
+            setShowDeleteConfirmModal(false);
+            setSuccessMessage('Folder deleted successfully!');
+            setShowSuccessModal(true);
+            setTimeout(() => setShowSuccessModal(false), 3000);
+          } else {
+            setShowDeleteConfirmModal(false);
+            setSuccessMessage(data.error || 'Failed to delete folder. Please try again.');
+            setShowSuccessModal(true);
+            setTimeout(() => setShowSuccessModal(false), 3000);
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          setShowDeleteConfirmModal(false);
+          setSuccessMessage(errorData.error || 'Failed to delete folder. Please try again.');
+          setShowSuccessModal(true);
+          setTimeout(() => setShowSuccessModal(false), 3000);
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting:', err);
+      setShowDeleteConfirmModal(false);
+      setSuccessMessage('Failed to delete. Please try again.');
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+    }
+    setItemToDelete(null);
+  }, [itemToDelete, deleteType, resolvedApiUrl, token, fetchSharedDocuments]);
 
   // Fetch download history for current user
   const fetchDownloadHistory = useCallback(async () => {
@@ -779,6 +869,9 @@ export default function DocumentCenter({
       
       {/* Delete Confirmation Modal */}
       {renderDeleteConfirmModal()}
+      
+      {/* Warning Modal */}
+      {renderWarningModal()}
 
       {/* CSS Animations */}
       <style>{`
@@ -2289,28 +2382,54 @@ export default function DocumentCenter({
                   </div>
                 ))}
               {/* Then display files */}
-              {myDocs.map((doc, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFile(doc.id);
-                      }}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      ×
-                    </button>
+              {myDocs.map((doc, idx) => {
+                const isPDF = doc.fileType?.includes('pdf') || doc.name?.toLowerCase().endsWith('.pdf');
+                const isWord = doc.fileType?.includes('word') || doc.name?.toLowerCase().match(/\.(doc|docx)$/);
+                const isExcel = doc.fileType?.includes('excel') || doc.name?.toLowerCase().match(/\.(xls|xlsx)$/);
+                const isPowerPoint = doc.fileType?.includes('powerpoint') || doc.name?.toLowerCase().match(/\.(ppt|pptx)$/);
+                
+                return (
+                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div className="flex items-center justify-center h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded mb-2 relative">
+                      {isPDF ? (
+                        <svg className="w-10 h-10 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                      ) : isWord ? (
+                        <svg className="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                      ) : isExcel ? (
+                        <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                      ) : isPowerPoint ? (
+                        <svg className="w-10 h-10 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteFile(doc.id);
+                        }}
+                        className="absolute top-1 right-1 text-red-600 hover:text-red-800 text-sm font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete file"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <p className="text-xs font-medium text-gray-800 truncate" title={doc.name || doc.fileName}>
+                      {doc.name || doc.fileName || 'Document'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt)}</p>
                   </div>
-                  <p className="text-xs font-medium text-gray-800 truncate" title={doc.name || doc.fileName}>
-                    {doc.name || doc.fileName || 'Document'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt)}</p>
-                </div>
-              ))}
+                );
+              })}
               {myDocs.length === 0 && (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   No documents uploaded yet
@@ -2366,33 +2485,38 @@ export default function DocumentCenter({
                   </div>
                 ))}
               {/* Then display files */}
-              {myPhotos.map((photo, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <img 
-                      src={photo.url?.startsWith('http') ? photo.url : `${resolvedApiUrl.replace('/api', '')}${photo.url}`}
-                      alt={photo.name || 'Photo'}
-                      className="w-8 h-8 object-cover rounded"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFile(photo.id);
-                      }}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      ×
-                    </button>
+              {myPhotos.map((photo, idx) => {
+                const photoUrl = photo.url?.startsWith('http') ? photo.url : `${resolvedApiUrl.replace('/api', '')}${photo.url}`;
+                return (
+                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div className="relative h-24 bg-gray-100 rounded mb-2 overflow-hidden">
+                      <img 
+                        src={photoUrl}
+                        alt={photo.name || 'Photo'}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gray-100"><svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
+                        }}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteFile(photo.id);
+                        }}
+                        className="absolute top-1 right-1 text-red-600 hover:text-red-800 text-sm font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete photo"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <p className="text-xs font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>
+                      {photo.name || photo.fileName || 'Photo'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
                   </div>
-                  <p className="text-xs font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>
-                    {photo.name || photo.fileName || 'Photo'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
-                </div>
-              ))}
+                );
+              })}
               {myPhotos.length === 0 && (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   No photos uploaded yet
@@ -2448,28 +2572,41 @@ export default function DocumentCenter({
                   </div>
                 ))}
               {/* Then display files */}
-              {myVideos.map((video, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFile(video.id);
-                      }}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      ×
-                    </button>
+              {myVideos.map((video, idx) => {
+                const videoUrl = video.url?.startsWith('http') ? video.url : `${resolvedApiUrl.replace('/api', '')}${video.url}`;
+                return (
+                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div className="relative h-24 bg-gradient-to-br from-red-50 to-red-100 rounded mb-2 flex items-center justify-center overflow-hidden">
+                      <video 
+                        src={videoUrl}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteFile(video.id);
+                        }}
+                        className="absolute top-1 right-1 text-red-600 hover:text-red-800 text-sm font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete video"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <p className="text-xs font-medium text-gray-800 truncate" title={video.name || video.fileName}>
+                      {video.name || video.fileName || 'Video'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
                   </div>
-                  <p className="text-xs font-medium text-gray-800 truncate" title={video.name || video.fileName}>
-                    {video.name || video.fileName || 'Video'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
-                </div>
-              ))}
+                );
+              })}
               {myVideos.length === 0 && (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   No videos uploaded yet
@@ -2554,83 +2691,83 @@ export default function DocumentCenter({
     );
   }
 
-  // Handle file deletion (only for uploader)
-  const handleDeleteFile = (fileId) => {
-    setItemToDelete(fileId);
-    setDeleteType('file');
-    setShowDeleteConfirmModal(true);
-  };
 
-  // Handle folder deletion
-  const handleDeleteFolder = (folderId) => {
-    setItemToDelete(folderId);
-    setDeleteType('folder');
-    setShowDeleteConfirmModal(true);
-  };
-
-  // Confirm and execute deletion
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
+  // Validate file type based on selected category
+  const validateFileType = (file, category) => {
+    const fileType = file.type.toLowerCase();
+    const fileName = file.name.toLowerCase();
     
-    try {
-      if (deleteType === 'file') {
-        const response = await fetch(`${resolvedApiUrl}/documents/shared/${itemToDelete}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setSharedDocuments(prev => prev.filter(d => d.id !== itemToDelete));
-            fetchSharedDocuments();
-            setShowDeleteConfirmModal(false);
-            setSuccessMessage('File deleted successfully!');
-            setShowSuccessModal(true);
-            setTimeout(() => setShowSuccessModal(false), 3000);
-          }
-        }
-      } else if (deleteType === 'folder') {
-        const response = await fetch(`${resolvedApiUrl}/documents/shared/folders/${itemToDelete}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setSharedFolders(prev => prev.filter(f => f.id !== itemToDelete));
-            fetchSharedDocuments(); // Refresh to update folder list
-            setShowDeleteConfirmModal(false);
-            setSuccessMessage('Folder deleted successfully!');
-            setShowSuccessModal(true);
-            setTimeout(() => setShowSuccessModal(false), 3000);
-          } else {
-            setShowDeleteConfirmModal(false);
-            setSuccessMessage(data.error || 'Failed to delete folder. Please try again.');
-            setShowSuccessModal(true);
-            setTimeout(() => setShowSuccessModal(false), 3000);
-          }
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          setShowDeleteConfirmModal(false);
-          setSuccessMessage(errorData.error || 'Failed to delete folder. Please try again.');
-          setShowSuccessModal(true);
-          setTimeout(() => setShowSuccessModal(false), 3000);
-        }
-      }
-    } catch (err) {
-      console.error('Error deleting:', err);
-      setShowDeleteConfirmModal(false);
-      setSuccessMessage('Failed to delete. Please try again.');
-      setShowSuccessModal(true);
-      setTimeout(() => setShowSuccessModal(false), 3000);
+    if (category === 'documents') {
+      // Allow: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain',
+        'application/rtf'
+      ];
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
+      return allowedTypes.some(type => fileType.includes(type)) || 
+             allowedExtensions.some(ext => fileName.endsWith(ext));
+    } else if (category === 'photos') {
+      // Allow: Images only
+      return fileType.startsWith('image/');
+    } else if (category === 'videos') {
+      // Allow: Videos only
+      return fileType.startsWith('video/');
     }
-    setItemToDelete(null);
+    return false;
   };
 
   // Render Upload Modal
   function renderUploadModal() {
+    const handleFileChange = (e) => {
+      const files = Array.from(e.target.files || []);
+      const invalidFiles = [];
+      const validFiles = [];
+      
+      files.forEach(file => {
+        if (validateFileType(file, uploadFileType)) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(file);
+        }
+      });
+      
+      if (invalidFiles.length > 0) {
+        const categoryName = uploadFileType === 'documents' ? 'documents' : 
+                            uploadFileType === 'photos' ? 'photos' : 'videos';
+        setWarningMessage(
+          `${invalidFiles.length} file(s) have wrong file type. Please upload ${categoryName} only. ` +
+          `Invalid files: ${invalidFiles.map(f => f.name).join(', ')}`
+        );
+        setShowWarningModal(true);
+        setTimeout(() => setShowWarningModal(false), 5000);
+      }
+      
+      setUploadFiles(validFiles);
+    };
+
     const handleUpload = async () => {
       if (uploadFiles.length === 0) return;
+      
+      // Double-check validation before upload
+      const invalidFiles = uploadFiles.filter(file => !validateFileType(file, uploadFileType));
+      if (invalidFiles.length > 0) {
+        const categoryName = uploadFileType === 'documents' ? 'documents' : 
+                            uploadFileType === 'photos' ? 'photos' : 'videos';
+        setWarningMessage(
+          `Please upload ${categoryName} only. Invalid files detected.`
+        );
+        setShowWarningModal(true);
+        setTimeout(() => setShowWarningModal(false), 5000);
+        return;
+      }
+      
       setUploading(true);
       try {
         const formData = new FormData();
@@ -2694,7 +2831,10 @@ export default function DocumentCenter({
               <label className="block text-sm font-semibold text-gray-700 mb-2">File Type</label>
               <select
                 value={uploadFileType}
-                onChange={(e) => setUploadFileType(e.target.value)}
+                onChange={(e) => {
+                  setUploadFileType(e.target.value);
+                  setUploadFiles([]); // Clear selected files when changing type
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               >
                 <option value="documents">Documents</option>
@@ -2708,9 +2848,12 @@ export default function DocumentCenter({
                 <input
                   type="file"
                   multiple
-                  onChange={(e) => setUploadFiles(Array.from(e.target.files || []))}
+                  onChange={handleFileChange}
                   className="hidden"
                   id="file-upload"
+                  accept={uploadFileType === 'documents' ? '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf' :
+                          uploadFileType === 'photos' ? 'image/*' :
+                          'video/*'}
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2961,24 +3104,45 @@ export default function DocumentCenter({
                 <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                Photos ({selectedPortal.photos.length})
+                Photos ({selectedPortal.photos.length + (selectedPortal.folders?.filter(f => f.type === 'photos').length || 0)})
               </h4>
-              {selectedPortal.photos.length > 0 ? (
+              {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'photos').length > 0) || selectedPortal.photos.length > 0) ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {selectedPortal.photos.map((photo, idx) => (
-                    <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-all cursor-pointer group">
-                      <img 
-                        src={photo.url?.startsWith('http') ? photo.url : `${apiUrl.replace('/api', '')}${photo.url}`}
-                        alt={photo.name || 'Photo'}
-                        className="w-full h-24 object-cover rounded mb-2"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                      <p className="text-sm font-medium text-gray-800 truncate">{photo.name || photo.fileName}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
-                    </div>
-                  ))}
+                  {/* Display folders first */}
+                  {selectedPortal.folders && selectedPortal.folders
+                    .filter(f => f.type === 'photos')
+                    .map((folder, idx) => (
+                      <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border-2 border-green-200 hover:shadow-md transition-shadow cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                          </svg>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-800 truncate" title={folder.name}>{folder.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
+                      </div>
+                    ))}
+                  {/* Then display files */}
+                  {selectedPortal.photos.map((photo, idx) => {
+                    const photoUrl = photo.url?.startsWith('http') ? photo.url : `${apiUrl.replace('/api', '')}${photo.url}`;
+                    return (
+                      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                        <div className="relative h-32 bg-gray-100 rounded mb-2 overflow-hidden">
+                          <img 
+                            src={photoUrl}
+                            alt={photo.name || 'Photo'}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
+                            }}
+                          />
+                        </div>
+                        <p className="text-sm font-medium text-gray-800 truncate" title={photo.name || photo.fileName}>{photo.name || photo.fileName}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(photo.uploadedAt)}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-center text-gray-500 py-8 bg-white rounded-lg">No photos uploaded yet</p>
@@ -2991,21 +3155,48 @@ export default function DocumentCenter({
                 <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                 </svg>
-                Videos ({selectedPortal.videos.length})
+                Videos ({selectedPortal.videos.length + (selectedPortal.folders?.filter(f => f.type === 'videos').length || 0)})
               </h4>
-              {selectedPortal.videos.length > 0 ? (
+              {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'videos').length > 0) || selectedPortal.videos.length > 0) ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {selectedPortal.videos.map((video, idx) => (
-                    <div key={idx} className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all cursor-pointer group">
-                      <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <p className="text-sm font-medium text-gray-800 truncate flex-1">{video.name || video.fileName}</p>
+                  {/* Display folders first */}
+                  {selectedPortal.folders && selectedPortal.folders
+                    .filter(f => f.type === 'videos')
+                    .map((folder, idx) => (
+                      <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-3 border-2 border-red-200 hover:shadow-md transition-shadow cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                          </svg>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-800 truncate" title={folder.name}>{folder.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
                       </div>
-                      <p className="text-xs text-gray-500">{formatDate(video.uploadedAt)}</p>
-                    </div>
-                  ))}
+                    ))}
+                  {/* Then display files */}
+                  {selectedPortal.videos.map((video, idx) => {
+                    const videoUrl = video.url?.startsWith('http') ? video.url : `${apiUrl.replace('/api', '')}${video.url}`;
+                    return (
+                      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                        <div className="relative h-32 bg-gradient-to-br from-red-50 to-red-100 rounded mb-2 flex items-center justify-center overflow-hidden">
+                          <video 
+                            src={videoUrl}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                            <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium text-gray-800 truncate" title={video.name || video.fileName}>{video.name || video.fileName}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(video.uploadedAt)}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-center text-gray-500 py-8 bg-white rounded-lg">No videos uploaded yet</p>
@@ -3078,6 +3269,33 @@ export default function DocumentCenter({
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Warning Modal
+  function renderWarningModal() {
+    if (!showWarningModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn">
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all animate-scaleIn">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mb-4 animate-bounce">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Wrong File Type</h3>
+            <p className="text-gray-600 mb-6">{warningMessage}</p>
+            <button
+              onClick={() => setShowWarningModal(false)}
+              className={`px-6 py-3 bg-gradient-to-r ${colors.gradient} text-white rounded-lg font-semibold hover:shadow-lg transition-all`}
+            >
+              OK
+            </button>
           </div>
         </div>
       </div>
