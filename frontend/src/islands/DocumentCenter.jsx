@@ -101,6 +101,8 @@ export default function DocumentCenter({
   const [folderPath, setFolderPath] = useState([]); // Track folder navigation path
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
+  const [portalModalFolderId, setPortalModalFolderId] = useState(null); // Track which folder is open in portal modal
+  const [portalModalFolderPath, setPortalModalFolderPath] = useState([]); // Track folder navigation path in portal modal
 
   // Theme color mappings
   const themeColors = {
@@ -3417,8 +3419,52 @@ export default function DocumentCenter({
 
     const apiUrl = resolvedApiUrl; // Capture in closure to avoid "re" error
     
+    // Get current folder type if inside a folder in portal modal
+    const currentPortalFolder = portalModalFolderPath.length > 0 ? portalModalFolderPath[portalModalFolderPath.length - 1] : null;
+    const currentPortalFolderType = currentPortalFolder?.type || null;
+    
+    // Filter files based on folder context
+    const portalDocuments = selectedPortal.documents.filter(doc => {
+      // If in a folder, only show documents in that folder
+      if (portalModalFolderId) {
+        return doc.folderId === portalModalFolderId || doc.folder_id === portalModalFolderId;
+      }
+      // If not in a folder, only show documents not in any folder
+      return !doc.folderId && !doc.folder_id;
+    });
+    
+    const portalPhotos = selectedPortal.photos.filter(photo => {
+      // If in a folder, only show photos in that folder
+      if (portalModalFolderId) {
+        return photo.folderId === portalModalFolderId || photo.folder_id === portalModalFolderId;
+      }
+      // If not in a folder, only show photos not in any folder
+      return !photo.folderId && !photo.folder_id;
+    });
+    
+    const portalVideos = selectedPortal.videos.filter(video => {
+      // If in a folder, only show videos in that folder
+      if (portalModalFolderId) {
+        return video.folderId === portalModalFolderId || video.folder_id === portalModalFolderId;
+      }
+      // If not in a folder, only show videos not in any folder
+      return !video.folderId && !video.folder_id;
+    });
+    
+    // Filter folders - only show folders at root level (not nested)
+    const portalFolders = (selectedPortal.folders || []).filter(f => {
+      if (portalModalFolderId) {
+        return false; // No nested folders yet
+      }
+      return true; // Show all folders at root level
+    });
+    
     return (
-      <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn" onClick={() => setSelectedPortal(null)}>
+      <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn" onClick={() => {
+        setSelectedPortal(null);
+        setPortalModalFolderId(null);
+        setPortalModalFolderPath([]);
+      }}>
         <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl transform transition-all animate-scaleIn" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
             <div className="flex items-center gap-4">
@@ -3439,15 +3485,50 @@ export default function DocumentCenter({
                 <p className="text-xs text-gray-500">{selectedPortal.user.group || selectedPortal.user.role || ''}</p>
               </div>
             </div>
-            <button onClick={() => setSelectedPortal(null)} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
+            <button onClick={() => {
+              setSelectedPortal(null);
+              setPortalModalFolderId(null);
+              setPortalModalFolderPath([]);
+            }} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
           </div>
 
+          {/* Folder Navigation Breadcrumb */}
+          {portalModalFolderPath.length > 0 && (
+            <div className="mb-4 flex items-center gap-2 text-sm">
+              <button
+                onClick={() => {
+                  setPortalModalFolderId(null);
+                  setPortalModalFolderPath([]);
+                }}
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                {selectedPortal.user.name || selectedPortal.user.fullName || 'Portal'}
+              </button>
+              {portalModalFolderPath.map((folder, idx) => (
+                <React.Fragment key={folder.id}>
+                  <span className="text-gray-400">/</span>
+                  <button
+                    onClick={() => {
+                      const newPath = portalModalFolderPath.slice(0, idx + 1);
+                      setPortalModalFolderPath(newPath);
+                      setPortalModalFolderId(folder.id);
+                    }}
+                    className="text-gray-600 hover:text-gray-900 font-medium"
+                  >
+                    {folder.name}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-6">
-            {/* Documents */}
+            {/* Documents - Only show if not in a folder or if folder type is documents */}
+            {(!currentPortalFolderType || currentPortalFolderType === 'documents') && (
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
@@ -3455,16 +3536,20 @@ export default function DocumentCenter({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                 </div>
-                Documents ({selectedPortal.documents.length + (selectedPortal.folders?.filter(f => f.type === 'documents').length || 0)})
+                Documents ({portalDocuments.length + (portalFolders.filter(f => f.type === 'documents').length)})
               </h4>
-              {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'documents').length > 0) || selectedPortal.documents.length > 0) ? (
+              {((portalFolders.filter(f => f.type === 'documents').length > 0) || portalDocuments.length > 0) ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {/* Display folders first */}
-                  {selectedPortal.folders && selectedPortal.folders
+                  {portalFolders
                     .filter(f => f.type === 'documents')
                     .map((folder, idx) => (
                       <div 
-                        key={`folder-${folder.id}`} 
+                        key={`folder-${folder.id}`}
+                        onClick={() => {
+                          setPortalModalFolderId(folder.id);
+                          setPortalModalFolderPath([...portalModalFolderPath, folder]);
+                        }}
                         className="group relative bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-blue-300 hover:border-blue-500 transform hover:-translate-y-1"
                       >
                         <div className="flex items-center justify-between mb-3">
@@ -3484,7 +3569,7 @@ export default function DocumentCenter({
                       </div>
                     ))}
                   {/* Then display files */}
-                  {selectedPortal.documents.map((doc, idx) => {
+                  {portalDocuments.map((doc, idx) => {
                     const isPDF = doc.fileType?.includes('pdf') || doc.name?.toLowerCase().endsWith('.pdf');
                     const isWord = doc.fileType?.includes('word') || doc.name?.toLowerCase().match(/\.(doc|docx)$/);
                     const isExcel = doc.fileType?.includes('excel') || doc.name?.toLowerCase().match(/\.(xls|xlsx)$/);
@@ -3534,8 +3619,10 @@ export default function DocumentCenter({
                 <p className="text-center text-gray-500 py-8 bg-white rounded-lg">No documents uploaded yet</p>
               )}
             </div>
+            )}
 
-            {/* Photos */}
+            {/* Photos - Only show if not in a folder or if folder type is photos */}
+            {(!currentPortalFolderType || currentPortalFolderType === 'photos') && (
             <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md">
@@ -3543,16 +3630,20 @@ export default function DocumentCenter({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
                 </div>
-                Photos ({selectedPortal.photos.length + (selectedPortal.folders?.filter(f => f.type === 'photos').length || 0)})
+                Photos ({portalPhotos.length + (portalFolders.filter(f => f.type === 'photos').length)})
               </h4>
-              {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'photos').length > 0) || selectedPortal.photos.length > 0) ? (
+              {((portalFolders.filter(f => f.type === 'photos').length > 0) || portalPhotos.length > 0) ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {/* Display folders first */}
-                  {selectedPortal.folders && selectedPortal.folders
+                  {portalFolders
                     .filter(f => f.type === 'photos')
                     .map((folder, idx) => (
                       <div 
-                        key={`folder-${folder.id}`} 
+                        key={`folder-${folder.id}`}
+                        onClick={() => {
+                          setPortalModalFolderId(folder.id);
+                          setPortalModalFolderPath([...portalModalFolderPath, folder]);
+                        }}
                         className="group relative bg-gradient-to-br from-green-50 via-green-100 to-green-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-green-300 hover:border-green-500 transform hover:-translate-y-1"
                       >
                         <div className="flex items-center justify-between mb-3">
@@ -3572,7 +3663,7 @@ export default function DocumentCenter({
                       </div>
                     ))}
                   {/* Then display files */}
-                  {selectedPortal.photos.map((photo, idx) => {
+                  {portalPhotos.map((photo, idx) => {
                     const photoUrl = photo.url?.startsWith('http') ? photo.url : `${apiUrl.replace('/api', '')}${photo.url}`;
                     return (
                       <div 
@@ -3606,8 +3697,10 @@ export default function DocumentCenter({
                 <p className="text-center text-gray-500 py-8 bg-white rounded-lg">No photos uploaded yet</p>
               )}
             </div>
+            )}
 
-            {/* Videos */}
+            {/* Videos - Only show if not in a folder or if folder type is videos */}
+            {(!currentPortalFolderType || currentPortalFolderType === 'videos') && (
             <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
@@ -3615,16 +3708,20 @@ export default function DocumentCenter({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                   </svg>
                 </div>
-                Videos ({selectedPortal.videos.length + (selectedPortal.folders?.filter(f => f.type === 'videos').length || 0)})
+                Videos ({portalVideos.length + (portalFolders.filter(f => f.type === 'videos').length)})
               </h4>
-              {((selectedPortal.folders && selectedPortal.folders.filter(f => f.type === 'videos').length > 0) || selectedPortal.videos.length > 0) ? (
+              {((portalFolders.filter(f => f.type === 'videos').length > 0) || portalVideos.length > 0) ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {/* Display folders first */}
-                  {selectedPortal.folders && selectedPortal.folders
+                  {portalFolders
                     .filter(f => f.type === 'videos')
                     .map((folder, idx) => (
                       <div 
-                        key={`folder-${folder.id}`} 
+                        key={`folder-${folder.id}`}
+                        onClick={() => {
+                          setPortalModalFolderId(folder.id);
+                          setPortalModalFolderPath([...portalModalFolderPath, folder]);
+                        }}
                         className="group relative bg-gradient-to-br from-red-50 via-red-100 to-red-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-red-300 hover:border-red-500 transform hover:-translate-y-1"
                       >
                         <div className="flex items-center justify-between mb-3">
@@ -3644,7 +3741,7 @@ export default function DocumentCenter({
                       </div>
                     ))}
                   {/* Then display files */}
-                  {selectedPortal.videos.map((video, idx) => {
+                  {portalVideos.map((video, idx) => {
                     const videoUrl = video.url?.startsWith('http') ? video.url : `${apiUrl.replace('/api', '')}${video.url}`;
                     return (
                       <div 
@@ -3681,6 +3778,7 @@ export default function DocumentCenter({
                 <p className="text-center text-gray-500 py-8 bg-white rounded-lg">No videos uploaded yet</p>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>
