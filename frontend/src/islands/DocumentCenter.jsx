@@ -86,6 +86,8 @@ export default function DocumentCenter({
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploadFileType, setUploadFileType] = useState('documents');
   const [folderName, setFolderName] = useState('');
+  const [currentFolderId, setCurrentFolderId] = useState(null); // Track which folder is open
+  const [folderPath, setFolderPath] = useState([]); // Track folder navigation path
 
   // Theme color mappings
   const themeColors = {
@@ -585,6 +587,145 @@ export default function DocumentCenter({
   useEffect(() => {
     fetchSharedDocuments();
   }, [fetchSharedDocuments, currentUser]);
+
+  // Validate file type based on selected category - Define with useCallback
+  const validateFileType = useCallback((file, category) => {
+    const fileType = file.type.toLowerCase();
+    const fileName = file.name.toLowerCase();
+    
+    if (category === 'documents') {
+      // Allow: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain',
+        'application/rtf'
+      ];
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
+      return allowedTypes.some(type => fileType.includes(type)) || 
+             allowedExtensions.some(ext => fileName.endsWith(ext));
+    } else if (category === 'photos') {
+      // Allow: Images only
+      return fileType.startsWith('image/');
+    } else if (category === 'videos') {
+      // Allow: Videos only
+      return fileType.startsWith('video/');
+    }
+    return false;
+  }, []);
+
+  // Handle file change - Define with useCallback
+  const handleFileChange = useCallback((e) => {
+    const files = Array.from(e.target.files || []);
+    const invalidFiles = [];
+    const validFiles = [];
+    
+    files.forEach(file => {
+      if (validateFileType(file, uploadFileType)) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file);
+      }
+    });
+    
+    if (invalidFiles.length > 0) {
+      const categoryName = uploadFileType === 'documents' ? 'documents' : 
+                          uploadFileType === 'photos' ? 'photos' : 'videos';
+      setWarningMessage(
+        `${invalidFiles.length} file(s) have wrong file type. Please upload ${categoryName} only. ` +
+        `Invalid files: ${invalidFiles.map(f => f.name).join(', ')}`
+      );
+      setShowWarningModal(true);
+      setTimeout(() => setShowWarningModal(false), 5000);
+    }
+    
+    setUploadFiles(validFiles);
+  }, [uploadFileType, validateFileType]);
+
+  // Handle upload - Define with useCallback
+  const handleUpload = useCallback(async () => {
+    if (uploadFiles.length === 0) return;
+    
+    const apiUrl = resolvedApiUrl; // Capture in closure
+    
+    // Double-check validation before upload
+    const invalidFiles = uploadFiles.filter(file => !validateFileType(file, uploadFileType));
+    if (invalidFiles.length > 0) {
+      const categoryName = uploadFileType === 'documents' ? 'documents' : 
+                          uploadFileType === 'photos' ? 'photos' : 'videos';
+      setWarningMessage(
+        `Please upload ${categoryName} only. Invalid files detected.`
+      );
+      setShowWarningModal(true);
+      setTimeout(() => setShowWarningModal(false), 5000);
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      uploadFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('fileType', uploadFileType);
+      if (currentFolderId) {
+        formData.append('folderId', currentFolderId);
+      }
+
+      const response = await fetch(`${apiUrl}/documents/shared/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setShowUploadModal(false);
+          setUploadFiles([]);
+          fetchSharedDocuments();
+          setSuccessMessage('Files uploaded successfully!');
+          setShowSuccessModal(true);
+          setTimeout(() => setShowSuccessModal(false), 3000);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSuccessMessage(errorData.error || 'Failed to upload files. Please try again.');
+        setShowSuccessModal(true);
+        setTimeout(() => setShowSuccessModal(false), 3000);
+      }
+    } catch (err) {
+      console.error('Error uploading files:', err);
+      setSuccessMessage('Failed to upload files. Please try again.');
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+    } finally {
+      setUploading(false);
+    }
+  }, [uploadFiles, uploadFileType, currentFolderId, resolvedApiUrl, token, validateFileType, fetchSharedDocuments]);
+
+  // Navigate into folder
+  const navigateToFolder = useCallback((folder) => {
+    setCurrentFolderId(folder.id);
+    setFolderPath(prev => [...prev, folder]);
+  }, []);
+
+  // Navigate back from folder
+  const navigateBackFromFolder = useCallback(() => {
+    if (folderPath.length > 0) {
+      const newPath = folderPath.slice(0, -1);
+      setFolderPath(newPath);
+      setCurrentFolderId(newPath.length > 0 ? newPath[newPath.length - 1].id : null);
+    } else {
+      setCurrentFolderId(null);
+      setFolderPath([]);
+    }
+  }, [folderPath]);
 
   // Handle file deletion (only for uploader) - Define before use in JSX
   const handleDeleteFile = useCallback((fileId) => {
@@ -2287,13 +2428,62 @@ export default function DocumentCenter({
       );
     }
 
-    const myDocuments = sharedDocuments.filter(doc => doc.uploadedBy?.id === currentUser.id || doc.uploadedById === currentUser.id);
+    const myDocuments = sharedDocuments.filter(doc => {
+      const isOwner = doc.uploadedBy?.id === currentUser.id || doc.uploadedById === currentUser.id;
+      // If in a folder, only show documents in that folder
+      if (currentFolderId) {
+        return isOwner && (doc.folderId === currentFolderId || doc.folder_id === currentFolderId);
+      }
+      // If not in a folder, only show documents not in any folder
+      return isOwner && !doc.folderId && !doc.folder_id;
+    });
     const myDocs = myDocuments.filter(d => !d.fileType?.toLowerCase().includes('photo') && !d.fileType?.toLowerCase().includes('video'));
     const myPhotos = myDocuments.filter(d => d.fileType?.toLowerCase().includes('photo') || d.fileType?.toLowerCase().includes('image'));
     const myVideos = myDocuments.filter(d => d.fileType?.toLowerCase().includes('video'));
 
+    // Filter folders based on current folder context
+    const currentFolders = sharedFolders.filter(f => {
+      const isOwner = f.createdById === currentUser.id || f.created_by_id === currentUser.id;
+      // If in a folder, show subfolders (for future nested folder support)
+      // For now, only show folders at root level
+      if (currentFolderId) {
+        return false; // No nested folders yet
+      }
+      return isOwner;
+    });
+
     return (
       <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+        {/* Folder Navigation Breadcrumb */}
+        {folderPath.length > 0 && (
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <button
+              onClick={() => {
+                setCurrentFolderId(null);
+                setFolderPath([]);
+              }}
+              className="text-gray-600 hover:text-gray-900 font-medium"
+            >
+              My Portal
+            </button>
+            {folderPath.map((folder, idx) => (
+              <React.Fragment key={folder.id}>
+                <span className="text-gray-400">/</span>
+                <button
+                  onClick={() => {
+                    const newPath = folderPath.slice(0, idx + 1);
+                    setFolderPath(newPath);
+                    setCurrentFolderId(folder.id);
+                  }}
+                  className="text-gray-600 hover:text-gray-900 font-medium"
+                >
+                  {folder.name}
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
         {/* My Portal Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -2325,10 +2515,19 @@ export default function DocumentCenter({
               Download History
             </button>
             <button
-              onClick={() => setShowUploadModal(true)}
+              onClick={() => {
+                if (currentFolderId) {
+                  // Set upload file type based on current folder type
+                  const currentFolder = folderPath[folderPath.length - 1];
+                  if (currentFolder) {
+                    setUploadFileType(currentFolder.type || 'documents');
+                  }
+                }
+                setShowUploadModal(true);
+              }}
               className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all`}
             >
-              Upload File
+              {currentFolderId ? 'Upload to Folder' : 'Upload File'}
             </button>
           </div>
         </div>
@@ -2339,10 +2538,12 @@ export default function DocumentCenter({
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Documents ({myDocs.length})
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                Documents ({myDocs.length + (currentFolders.filter(f => f.type === 'documents').length)})
               </h4>
               <button
                 onClick={() => {
@@ -2356,29 +2557,40 @@ export default function DocumentCenter({
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {/* Display folders first */}
-              {sharedFolders
-                .filter(f => f.type === 'documents' && (f.createdById === currentUser.id || f.created_by_id === currentUser.id))
+              {currentFolders
+                .filter(f => f.type === 'documents')
                 .map((folder, idx) => (
-                  <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-blue-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                      </svg>
+                  <div 
+                    key={`folder-${folder.id}`} 
+                    onClick={() => navigateToFolder(folder)}
+                    className="group relative bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-blue-300 hover:border-blue-500 transform hover:-translate-y-1"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                        </svg>
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteFolder(folder.id);
                         }}
-                        className="text-red-600 hover:text-red-800 text-xs font-bold"
+                        className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-all"
                         title="Delete folder"
                       >
                         ×
                       </button>
                     </div>
-                    <p className="text-xs font-semibold text-gray-800 truncate" title={folder.name}>
+                    <p className="text-sm font-bold text-gray-900 truncate mb-1" title={folder.name}>
                       {folder.name}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
+                    <p className="text-xs text-gray-600">{formatDate(folder.createdAt || folder.created_at)}</p>
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
                   </div>
                 ))}
               {/* Then display files */}
@@ -2459,29 +2671,40 @@ export default function DocumentCenter({
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {/* Display folders first */}
-              {sharedFolders
-                .filter(f => f.type === 'photos' && (f.createdById === currentUser.id || f.created_by_id === currentUser.id))
+              {currentFolders
+                .filter(f => f.type === 'photos')
                 .map((folder, idx) => (
-                  <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-green-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                      </svg>
+                  <div 
+                    key={`folder-${folder.id}`} 
+                    onClick={() => navigateToFolder(folder)}
+                    className="group relative bg-gradient-to-br from-green-50 via-green-100 to-green-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-green-300 hover:border-green-500 transform hover:-translate-y-1"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                        </svg>
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteFolder(folder.id);
                         }}
-                        className="text-red-600 hover:text-red-800 text-xs font-bold"
+                        className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-all"
                         title="Delete folder"
                       >
                         ×
                       </button>
                     </div>
-                    <p className="text-xs font-semibold text-gray-800 truncate" title={folder.name}>
+                    <p className="text-sm font-bold text-gray-900 truncate mb-1" title={folder.name}>
                       {folder.name}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
+                    <p className="text-xs text-gray-600">{formatDate(folder.createdAt || folder.created_at)}</p>
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
                   </div>
                 ))}
               {/* Then display files */}
@@ -2547,28 +2770,39 @@ export default function DocumentCenter({
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {/* Display folders first */}
               {sharedFolders
-                .filter(f => f.type === 'videos' && (f.createdById === currentUser.id || f.created_by_id === currentUser.id))
+                .filter(f => f.type === 'videos')
                 .map((folder, idx) => (
-                  <div key={`folder-${folder.id}`} className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                      </svg>
+                  <div 
+                    key={`folder-${folder.id}`} 
+                    onClick={() => navigateToFolder(folder)}
+                    className="group relative bg-gradient-to-br from-red-50 via-red-100 to-red-50 rounded-xl p-4 hover:shadow-xl transition-all cursor-pointer border-2 border-red-300 hover:border-red-500 transform hover:-translate-y-1"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                        </svg>
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteFolder(folder.id);
                         }}
-                        className="text-red-600 hover:text-red-800 text-xs font-bold"
+                        className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 text-sm font-bold bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-all"
                         title="Delete folder"
                       >
                         ×
                       </button>
                     </div>
-                    <p className="text-xs font-semibold text-gray-800 truncate" title={folder.name}>
+                    <p className="text-sm font-bold text-gray-900 truncate mb-1" title={folder.name}>
                       {folder.name}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(folder.createdAt || folder.created_at)}</p>
+                    <p className="text-xs text-gray-600">{formatDate(folder.createdAt || folder.created_at)}</p>
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
                   </div>
                 ))}
               {/* Then display files */}
@@ -2692,121 +2926,8 @@ export default function DocumentCenter({
   }
 
 
-  // Validate file type based on selected category
-  const validateFileType = (file, category) => {
-    const fileType = file.type.toLowerCase();
-    const fileName = file.name.toLowerCase();
-    
-    if (category === 'documents') {
-      // Allow: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'text/plain',
-        'application/rtf'
-      ];
-      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf'];
-      return allowedTypes.some(type => fileType.includes(type)) || 
-             allowedExtensions.some(ext => fileName.endsWith(ext));
-    } else if (category === 'photos') {
-      // Allow: Images only
-      return fileType.startsWith('image/');
-    } else if (category === 'videos') {
-      // Allow: Videos only
-      return fileType.startsWith('video/');
-    }
-    return false;
-  };
-
   // Render Upload Modal
   function renderUploadModal() {
-    const handleFileChange = (e) => {
-      const files = Array.from(e.target.files || []);
-      const invalidFiles = [];
-      const validFiles = [];
-      
-      files.forEach(file => {
-        if (validateFileType(file, uploadFileType)) {
-          validFiles.push(file);
-        } else {
-          invalidFiles.push(file);
-        }
-      });
-      
-      if (invalidFiles.length > 0) {
-        const categoryName = uploadFileType === 'documents' ? 'documents' : 
-                            uploadFileType === 'photos' ? 'photos' : 'videos';
-        setWarningMessage(
-          `${invalidFiles.length} file(s) have wrong file type. Please upload ${categoryName} only. ` +
-          `Invalid files: ${invalidFiles.map(f => f.name).join(', ')}`
-        );
-        setShowWarningModal(true);
-        setTimeout(() => setShowWarningModal(false), 5000);
-      }
-      
-      setUploadFiles(validFiles);
-    };
-
-    const handleUpload = async () => {
-      if (uploadFiles.length === 0) return;
-      
-      // Double-check validation before upload
-      const invalidFiles = uploadFiles.filter(file => !validateFileType(file, uploadFileType));
-      if (invalidFiles.length > 0) {
-        const categoryName = uploadFileType === 'documents' ? 'documents' : 
-                            uploadFileType === 'photos' ? 'photos' : 'videos';
-        setWarningMessage(
-          `Please upload ${categoryName} only. Invalid files detected.`
-        );
-        setShowWarningModal(true);
-        setTimeout(() => setShowWarningModal(false), 5000);
-        return;
-      }
-      
-      setUploading(true);
-      try {
-        const formData = new FormData();
-        uploadFiles.forEach(file => {
-          formData.append('files', file);
-        });
-        formData.append('fileType', uploadFileType);
-
-        const response = await fetch(`${resolvedApiUrl}/documents/shared/upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setShowUploadModal(false);
-            setUploadFiles([]);
-            fetchSharedDocuments();
-            setSuccessMessage('Files uploaded successfully!');
-            setShowSuccessModal(true);
-            setTimeout(() => setShowSuccessModal(false), 3000);
-          }
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          setSuccessMessage(errorData.error || 'Failed to upload files. Please try again.');
-          setShowSuccessModal(true);
-          setTimeout(() => setShowSuccessModal(false), 3000);
-        }
-      } catch (err) {
-        console.error('Error uploading files:', err);
-        setSuccessMessage('Failed to upload files. Please try again.');
-        setShowSuccessModal(true);
-        setTimeout(() => setShowSuccessModal(false), 3000);
-      } finally {
-        setUploading(false);
-      }
-    };
 
     return (
       <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn" onClick={() => setShowUploadModal(false)}>
