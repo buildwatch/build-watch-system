@@ -68,7 +68,18 @@ export default function DocumentCenter({
   const [sharedDocuments, setSharedDocuments] = useState([]);
   const [sharedFolders, setSharedFolders] = useState([]);
   const [userPortals, setUserPortals] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+  // Initialize currentUser from localStorage synchronously
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        return JSON.parse(userStr);
+      }
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+    }
+    return null;
+  });
   const [selectedPortal, setSelectedPortal] = useState(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -2579,7 +2590,16 @@ export default function DocumentCenter({
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowDownloadHistory(true)}
+              onClick={() => {
+                setShowDownloadHistory(true);
+                // Fetch history immediately - currentUser should be available from synchronous initialization
+                if (currentUser?.id) {
+                  console.log('🔄 Download History button clicked, fetching history for user:', currentUser.id);
+                  fetchDownloadHistory();
+                } else {
+                  console.warn('⚠️ currentUser not available when clicking Download History button');
+                }
+              }}
               className={`px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold text-gray-700 transition-colors`}
             >
               Download History
