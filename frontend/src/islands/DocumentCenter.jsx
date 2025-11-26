@@ -833,8 +833,12 @@ export default function DocumentCenter({
 
   // Record file download
   const recordDownload = useCallback(async (fileId, fileName) => {
+    if (!fileId) {
+      console.warn('⚠️ Cannot record download: fileId is missing', { fileId, fileName });
+      return;
+    }
     try {
-      await fetch(`${resolvedApiUrl}/documents/download`, {
+      const response = await fetch(`${resolvedApiUrl}/documents/download`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -842,12 +846,25 @@ export default function DocumentCenter({
         },
         body: JSON.stringify({ fileId, fileName })
       });
-      // Refresh download history if modal is open
-      if (showDownloadHistory) {
-        setTimeout(() => fetchDownloadHistory(), 500);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Failed to record download:', response.status, errorData.error || 'Unknown error');
+        return;
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ Download recorded successfully:', { fileId, fileName });
+        // Refresh download history if modal is open
+        if (showDownloadHistory) {
+          setTimeout(() => fetchDownloadHistory(), 500);
+        }
+      } else {
+        console.error('❌ Download recording failed:', data.error || 'Unknown error');
       }
     } catch (err) {
-      console.error('Error recording download:', err);
+      console.error('❌ Error recording download:', err);
       // Don't block download if recording fails
     }
   }, [resolvedApiUrl, token, showDownloadHistory, fetchDownloadHistory]);
@@ -3847,7 +3864,13 @@ export default function DocumentCenter({
                   href={fileUrl}
                   download={previewFile.name || previewFile.fileName}
                   className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Record download if file has an ID
+                    if (previewFile.id) {
+                      recordDownload(previewFile.id, previewFile.name || previewFile.fileName);
+                    }
+                  }}
                 >
                   Download to View
                 </a>
