@@ -425,6 +425,12 @@ router.get('/download-history/:userId', authenticateToken, async (req, res) => {
         });
         const userFileIds = userFiles.map(f => f.id);
         
+        console.log('📊 Download history query:', {
+          userId,
+          userFilesCount: userFiles.length,
+          userFileIds: userFileIds.slice(0, 5) // Log first 5 IDs
+        });
+        
         if (userFileIds.length > 0) {
           history = await DownloadHistory.findAll({
             where: { fileId: { [Op.in]: userFileIds } },
@@ -435,7 +441,9 @@ router.get('/download-history/:userId', authenticateToken, async (req, res) => {
             }],
             order: [['downloadedAt', 'DESC']]
           });
+          console.log('✅ Found download history records:', history.length);
         } else {
+          console.log('⚠️ No files found for user, returning empty history');
           history = [];
         }
       } catch (modelError) {
@@ -527,20 +535,39 @@ router.post('/download', authenticateToken, async (req, res) => {
   try {
     const { fileId, fileName } = req.body;
 
+    console.log('📥 Download recording request:', {
+      fileId,
+      fileName,
+      userId: req.userId
+    });
+
     const DownloadHistory = db.DocumentDownload;
     
     if (DownloadHistory) {
       try {
-        await DownloadHistory.create({
+        const downloadRecord = await DownloadHistory.create({
           fileId,
           fileName,
           userId: req.userId,
           downloadedAt: new Date()
         });
+        console.log('✅ Download recorded successfully:', {
+          id: downloadRecord.id,
+          fileId: downloadRecord.fileId,
+          userId: downloadRecord.userId
+        });
       } catch (modelError) {
-        console.error('Error recording download:', modelError);
+        console.error('❌ Error recording download:', modelError);
+        console.error('   Error details:', {
+          message: modelError.message,
+          fileId,
+          fileName,
+          userId: req.userId
+        });
         // Continue even if recording fails
       }
+    } else {
+      console.warn('⚠️ DownloadHistory model not available');
     }
 
     res.json({
@@ -548,7 +575,7 @@ router.post('/download', authenticateToken, async (req, res) => {
       message: 'Download recorded'
     });
   } catch (error) {
-    console.error('Error recording download:', error);
+    console.error('❌ Error recording download:', error);
     res.status(500).json({ success: false, error: 'Failed to record download' });
   }
 });

@@ -101,8 +101,13 @@
       }
       
       const sharedData = await sharedResponse.json();
-      if (!sharedData.success || !sharedData.documents || sharedData.documents.length === 0) {
+      if (!sharedData.success) {
+        console.error('❌ Failed to fetch shared documents:', sharedData.error || 'Unknown error');
+        return;
+      }
+      if (!sharedData.documents || sharedData.documents.length === 0) {
         console.warn('⚠️ No shared documents found to test with');
+        console.log('   Response data:', sharedData);
         return;
       }
       
@@ -254,23 +259,34 @@
   console.log('\n🚀 Running all tests...\n');
   
   async function runAllTests() {
-    await testDownloadRecording();
-    await new Promise(resolve => setTimeout(resolve, 500));
-    await testDownloadHistory();
-    
-    console.log('\n\n📊 ========== TEST SUMMARY ==========');
-    console.log('✅ Tests completed');
-    console.log('\n💡 Next Steps:');
-    console.log('   1. If download recording test passed but history is empty, check backend query');
-    console.log('   2. If download recording failed, check backend endpoint');
-    console.log('   3. If preview modal download button doesn\'t call recordDownload, fix the onClick handler');
-    console.log('   4. Make sure document downloads also call recordDownload (not just photos/videos)');
-    
-    console.log('\n🔍 ========== DEBUG SCRIPT COMPLETE ==========');
+    try {
+      console.log('⏳ Starting testDownloadRecording...');
+      await testDownloadRecording();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('\n⏳ Starting testDownloadHistory...');
+      await testDownloadHistory();
+      
+      console.log('\n\n📊 ========== TEST SUMMARY ==========');
+      console.log('✅ Tests completed');
+      console.log('\n💡 Next Steps:');
+      console.log('   1. If download recording test passed but history is empty, check backend query');
+      console.log('   2. If download recording failed, check backend endpoint');
+      console.log('   3. If preview modal download button doesn\'t call recordDownload, fix the onClick handler');
+      console.log('   4. Make sure document downloads also call recordDownload (not just photos/videos)');
+      console.log('   5. Check the console for "📄 Preview File Details" when opening a file');
+      console.log('   6. Check the console for "✅ Download recorded successfully" when downloading');
+      
+      console.log('\n🔍 ========== DEBUG SCRIPT COMPLETE ==========');
+    } catch (error) {
+      console.error('❌ Error running tests:', error);
+      console.error('Stack:', error.stack);
+    }
   }
   
   runAllTests().catch(error => {
-    console.error('❌ Error running tests:', error);
+    console.error('❌ Fatal error running tests:', error);
+    console.error('Stack:', error.stack);
   });
 })();
 

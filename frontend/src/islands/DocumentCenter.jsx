@@ -3735,6 +3735,17 @@ export default function DocumentCenter({
   function renderPreviewModal() {
     if (!showPreviewModal || !previewFile) return null;
 
+    // Log file details for debugging
+    if (previewFile) {
+      console.log('📄 Preview File Details:', {
+        id: previewFile.id,
+        name: previewFile.name || previewFile.fileName,
+        fileType: previewFile.fileType,
+        url: previewFile.url,
+        uploadedBy: previewFile.uploadedBy?.name || previewFile.uploadedBy?.fullName || 'Unknown'
+      });
+    }
+
     const fileUrl = previewFile.url?.startsWith('http') 
       ? previewFile.url 
       : `${resolvedApiUrl.replace('/api', '')}${previewFile.url}`;
