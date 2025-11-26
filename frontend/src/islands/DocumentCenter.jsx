@@ -88,6 +88,8 @@ export default function DocumentCenter({
   const [folderName, setFolderName] = useState('');
   const [currentFolderId, setCurrentFolderId] = useState(null); // Track which folder is open
   const [folderPath, setFolderPath] = useState([]); // Track folder navigation path
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewFile, setPreviewFile] = useState(null);
 
   // Theme color mappings
   const themeColors = {
@@ -1022,6 +1024,9 @@ export default function DocumentCenter({
       
       {/* Warning Modal */}
       {renderWarningModal()}
+      
+      {/* Preview Modal */}
+      {renderPreviewModal()}
 
       {/* CSS Animations */}
       <style>{`
@@ -2535,6 +2540,9 @@ export default function DocumentCenter({
                   if (currentFolder) {
                     setUploadFileType(currentFolder.type || 'documents');
                   }
+                } else {
+                  // Reset to documents when not in a folder
+                  setUploadFileType('documents');
                 }
                 setShowUploadModal(true);
               }}
@@ -2617,7 +2625,14 @@ export default function DocumentCenter({
                 const isPowerPoint = doc.fileType?.includes('powerpoint') || doc.name?.toLowerCase().match(/\.(ppt|pptx)$/);
                 
                 return (
-                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      setPreviewFile(doc);
+                      setShowPreviewModal(true);
+                    }}
+                    className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                  >
                     <div className="flex items-center justify-center h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded mb-2 relative">
                       {isPDF ? (
                         <svg className="w-10 h-10 text-red-600" fill="currentColor" viewBox="0 0 24 24">
@@ -2733,7 +2748,14 @@ export default function DocumentCenter({
               {myPhotos.map((photo, idx) => {
                 const photoUrl = photo.url?.startsWith('http') ? photo.url : `${resolvedApiUrl.replace('/api', '')}${photo.url}`;
                 return (
-                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      setPreviewFile(photo);
+                      setShowPreviewModal(true);
+                    }}
+                    className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                  >
                     <div className="relative h-24 bg-gray-100 rounded mb-2 overflow-hidden">
                       <img 
                         src={photoUrl}
@@ -2837,7 +2859,14 @@ export default function DocumentCenter({
               {myVideos.map((video, idx) => {
                 const videoUrl = video.url?.startsWith('http') ? video.url : `${resolvedApiUrl.replace('/api', '')}${video.url}`;
                 return (
-                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      setPreviewFile(video);
+                      setShowPreviewModal(true);
+                    }}
+                    className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                  >
                     <div className="relative h-24 bg-gradient-to-br from-red-50 to-red-100 rounded mb-2 flex items-center justify-center overflow-hidden">
                       <video 
                         src={videoUrl}
@@ -2957,6 +2986,10 @@ export default function DocumentCenter({
 
   // Render Upload Modal
   function renderUploadModal() {
+    // Get current folder type if inside a folder
+    const currentFolder = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
+    const isInsideFolder = currentFolderId && currentFolder;
+    const folderType = currentFolder?.type || null;
 
     return (
       <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn" onClick={() => setShowUploadModal(false)}>
@@ -2982,15 +3015,23 @@ export default function DocumentCenter({
               <select
                 value={uploadFileType}
                 onChange={(e) => {
-                  setUploadFileType(e.target.value);
-                  setUploadFiles([]); // Clear selected files when changing type
+                  if (!isInsideFolder) {
+                    setUploadFileType(e.target.value);
+                    setUploadFiles([]); // Clear selected files when changing type
+                  }
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                disabled={isInsideFolder}
+                className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${isInsideFolder ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               >
                 <option value="documents">Documents</option>
                 <option value="photos">Photos</option>
                 <option value="videos">Videos</option>
               </select>
+              {isInsideFolder && (
+                <p className="text-xs text-gray-500 mt-1">
+                  File type is set to <span className="font-semibold capitalize">{folderType}</span> because you're inside a {folderType} folder
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Select Files</label>
@@ -3237,7 +3278,14 @@ export default function DocumentCenter({
               {selectedPortal.documents.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {selectedPortal.documents.map((doc, idx) => (
-                    <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        setPreviewFile(doc);
+                        setShowPreviewModal(true);
+                      }}
+                      className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                    >
                       <p className="text-sm font-medium text-gray-800 truncate">{doc.name || doc.fileName}</p>
                       <p className="text-xs text-gray-500 mt-1">{formatDate(doc.uploadedAt, true)}</p>
                     </div>
@@ -3276,7 +3324,14 @@ export default function DocumentCenter({
                   {selectedPortal.photos.map((photo, idx) => {
                     const photoUrl = photo.url?.startsWith('http') ? photo.url : `${apiUrl.replace('/api', '')}${photo.url}`;
                     return (
-                      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                      <div 
+                        key={idx} 
+                        onClick={() => {
+                          setPreviewFile(photo);
+                          setShowPreviewModal(true);
+                        }}
+                        className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                      >
                         <div className="relative h-32 bg-gray-100 rounded mb-2 overflow-hidden">
                           <img 
                             src={photoUrl}
@@ -3327,7 +3382,14 @@ export default function DocumentCenter({
                   {selectedPortal.videos.map((video, idx) => {
                     const videoUrl = video.url?.startsWith('http') ? video.url : `${apiUrl.replace('/api', '')}${video.url}`;
                     return (
-                      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                      <div 
+                        key={idx} 
+                        onClick={() => {
+                          setPreviewFile(video);
+                          setShowPreviewModal(true);
+                        }}
+                        className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
+                      >
                         <div className="relative h-32 bg-gradient-to-br from-red-50 to-red-100 rounded mb-2 flex items-center justify-center overflow-hidden">
                           <video 
                             src={videoUrl}
@@ -3446,6 +3508,145 @@ export default function DocumentCenter({
             >
               OK
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Preview Modal
+  function renderPreviewModal() {
+    if (!showPreviewModal || !previewFile) return null;
+
+    const fileUrl = previewFile.url?.startsWith('http') 
+      ? previewFile.url 
+      : `${resolvedApiUrl.replace('/api', '')}${previewFile.url}`;
+    
+    const isPhoto = previewFile.fileType?.toLowerCase().includes('photo') || 
+                    previewFile.fileType?.toLowerCase().includes('image');
+    const isVideo = previewFile.fileType?.toLowerCase().includes('video');
+    const isDocument = !isPhoto && !isVideo;
+
+    const isPDF = previewFile.fileType?.includes('pdf') || previewFile.name?.toLowerCase().endsWith('.pdf');
+    const isWord = previewFile.fileType?.includes('word') || previewFile.name?.toLowerCase().match(/\.(doc|docx)$/);
+    const isExcel = previewFile.fileType?.includes('excel') || previewFile.name?.toLowerCase().match(/\.(xls|xlsx)$/);
+    const isPowerPoint = previewFile.fileType?.includes('powerpoint') || previewFile.name?.toLowerCase().match(/\.(ppt|pptx)$/);
+
+    return (
+      <div 
+        className="fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4 animate-fadeIn"
+        onClick={() => setShowPreviewModal(false)}
+      >
+        <div 
+          className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl transform transition-all animate-scaleIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className={`bg-gradient-to-br ${colors.gradient} p-2 rounded-lg`}>
+                {isPhoto ? (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                ) : isVideo ? (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                )}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{previewFile.name || previewFile.fileName || 'File'}</h3>
+                <p className="text-sm text-gray-500">{formatDate(previewFile.uploadedAt, true)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={fileUrl}
+                download={previewFile.name || previewFile.fileName}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Download
+              </a>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-auto max-h-[calc(90vh-120px)]">
+            {isPhoto ? (
+              <div className="flex items-center justify-center">
+                <img 
+                  src={fileUrl}
+                  alt={previewFile.name || 'Photo'}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<div class="text-center py-12"><p class="text-gray-500">Failed to load image</p></div>';
+                  }}
+                />
+              </div>
+            ) : isVideo ? (
+              <div className="flex items-center justify-center">
+                <video 
+                  src={fileUrl}
+                  controls
+                  className="max-w-full max-h-[70vh] rounded-lg"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<div class="text-center py-12"><p class="text-gray-500">Failed to load video</p></div>';
+                  }}
+                />
+              </div>
+            ) : isDocument ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="mb-6">
+                  {isPDF ? (
+                    <svg className="w-24 h-24 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  ) : isWord ? (
+                    <svg className="w-24 h-24 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  ) : isExcel ? (
+                    <svg className="w-24 h-24 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  ) : isPowerPoint ? (
+                    <svg className="w-24 h-24 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-24 h-24 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  )}
+                </div>
+                <h4 className="text-xl font-bold text-gray-900 mb-2">{previewFile.name || previewFile.fileName || 'Document'}</h4>
+                <p className="text-gray-600 mb-4">This document cannot be previewed in the browser.</p>
+                <a
+                  href={fileUrl}
+                  download={previewFile.name || previewFile.fileName}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Download to View
+                </a>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
