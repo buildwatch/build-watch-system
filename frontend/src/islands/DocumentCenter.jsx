@@ -815,19 +815,33 @@ export default function DocumentCenter({
 
   // Fetch download history for current user
   const fetchDownloadHistory = useCallback(async () => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id) {
+      console.warn('⚠️ Cannot fetch download history: currentUser.id is missing', { currentUser });
+      return;
+    }
+    console.log('📥 Fetching download history for user:', currentUser.id);
     try {
       const response = await fetch(`${resolvedApiUrl}/documents/download-history/${currentUser.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Download history response:', {
+          success: data.success,
+          historyCount: data.history?.length || 0,
+          history: data.history
+        });
         if (data.success) {
           setDownloadHistory(data.history || []);
+          console.log('✅ Download history state updated:', data.history?.length || 0, 'records');
+        } else {
+          console.error('❌ Download history fetch failed:', data.error);
         }
+      } else {
+        console.error('❌ Download history fetch failed:', response.status, response.statusText);
       }
     } catch (err) {
-      console.error('Error fetching download history:', err);
+      console.error('❌ Error fetching download history:', err);
     }
   }, [resolvedApiUrl, token, currentUser?.id]);
 
@@ -3234,13 +3248,29 @@ export default function DocumentCenter({
 
   // Fetch download history when modal opens
   useEffect(() => {
+    console.log('🔄 Download history useEffect triggered:', {
+      showDownloadHistory,
+      currentUserId: currentUser?.id,
+      downloadHistoryLength: downloadHistory.length
+    });
     if (showDownloadHistory && currentUser?.id) {
+      console.log('✅ Calling fetchDownloadHistory...');
       fetchDownloadHistory();
+    } else {
+      console.warn('⚠️ Not fetching download history:', {
+        showDownloadHistory,
+        hasCurrentUser: !!currentUser,
+        currentUserId: currentUser?.id
+      });
     }
   }, [showDownloadHistory, currentUser?.id, fetchDownloadHistory]);
 
   // Render Download History Modal
   function renderDownloadHistoryModal() {
+    console.log('🎨 Rendering Download History Modal:', {
+      downloadHistoryLength: downloadHistory.length,
+      downloadHistory: downloadHistory
+    });
     return (
       <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fadeIn" onClick={() => setShowDownloadHistory(false)}>
         <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-2xl transform transition-all animate-scaleIn" onClick={(e) => e.stopPropagation()}>
