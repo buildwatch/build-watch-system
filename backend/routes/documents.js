@@ -280,6 +280,45 @@ router.delete('/shared/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/documents/shared/folders - Get all shared folders
+router.get('/shared/folders', authenticateToken, async (req, res) => {
+  try {
+    const SharedFolder = db.SharedFolder;
+    
+    let folders = [];
+    if (SharedFolder) {
+      try {
+        folders = await SharedFolder.findAll({
+          include: [{
+            model: db.User,
+            as: 'createdBy',
+            attributes: ['id', 'name', 'fullName', 'email']
+          }],
+          order: [['createdAt', 'DESC']]
+        });
+      } catch (modelError) {
+        console.log('Error fetching shared folders:', modelError);
+        folders = [];
+      }
+    }
+
+    res.json({
+      success: true,
+      folders: folders.map(folder => ({
+        id: folder.id,
+        name: folder.name,
+        type: folder.type,
+        createdAt: folder.createdAt || folder.created_at,
+        createdById: folder.createdById || folder.created_by_id,
+        createdBy: folder.createdBy || { id: folder.createdById, name: 'Unknown User' }
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching shared folders:', error);
+    res.json({ success: true, folders: [] }); // Return empty array on error
+  }
+});
+
 // POST /api/documents/shared/folders - Create folder
 router.post('/shared/folders', authenticateToken, async (req, res) => {
   try {
@@ -404,6 +443,44 @@ router.get('/download-history/:userId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching download history:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch download history' });
+  }
+});
+
+// DELETE /api/documents/shared/folders/:id - Delete folder (only by creator)
+router.delete('/shared/folders/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const SharedFolder = db.SharedFolder;
+
+    let folder = null;
+    if (SharedFolder) {
+      try {
+        folder = await SharedFolder.findByPk(id);
+      } catch (modelError) {
+        console.log('Could not find folder in database:', modelError.message);
+      }
+    }
+
+    if (folder) {
+      const createdById = folder.createdById || folder.created_by_id;
+      if (createdById && String(createdById) !== String(req.userId)) {
+        return res.status(403).json({ success: false, error: 'Only the creator can delete this folder' });
+      }
+      
+      try {
+        await folder.destroy();
+      } catch (destroyError) {
+        console.error('Error destroying folder from database:', destroyError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Folder deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete folder: ' + error.message });
   }
 });
 
