@@ -352,8 +352,24 @@ const ProjectAnalyticsDashboard = ({
             callbacks: {
               title: function(context) {
                 const label = context[0].label || '';
-                const value = context[0].parsed || 0;
-                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                const statusProjects = statusGroups[label] || [];
+                
+                if (statusProjects.length === 0) {
+                  const value = context[0].parsed || 0;
+                  return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                }
+                
+                // Show first project's title and code in the title
+                const firstProject = statusProjects[0];
+                const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                const code = firstProject.projectCode || '';
+                
+                if (statusProjects.length === 1) {
+                  return code ? `${name} (${code})` : name;
+                }
+                
+                // If multiple projects, show first one and indicate there are more
+                return code ? `${name} (${code})` : `${name} (+${statusProjects.length - 1} more)`;
               },
               label: function(context) {
                 const label = context.label || '';
@@ -372,7 +388,7 @@ const ProjectAnalyticsDashboard = ({
                   : '';
                 
                 return [
-                  `${percentage}%`,
+                  `${percentage}% (${statusProjects.length} project${statusProjects.length !== 1 ? 's' : ''})`,
                   ...displayProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';
@@ -444,8 +460,24 @@ const ProjectAnalyticsDashboard = ({
             callbacks: {
               title: function(context) {
                 const label = context[0].label || '';
-                const value = context[0].parsed || 0;
-                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                const categoryProjects = categoryGroups[label] || [];
+                
+                if (categoryProjects.length === 0) {
+                  const value = context[0].parsed || 0;
+                  return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                }
+                
+                // Show first project's title and code in the title
+                const firstProject = categoryProjects[0];
+                const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                const code = firstProject.projectCode || '';
+                
+                if (categoryProjects.length === 1) {
+                  return code ? `${name} (${code})` : name;
+                }
+                
+                // If multiple projects, show first one and indicate there are more
+                return code ? `${name} (${code})` : `${name} (+${categoryProjects.length - 1} more)`;
               },
               label: function(context) {
                 const label = context.label || '';
@@ -458,7 +490,7 @@ const ProjectAnalyticsDashboard = ({
                 }
                 
                 return [
-                  `${percentage}%`,
+                  `${percentage}% (${categoryProjects.length} project${categoryProjects.length !== 1 ? 's' : ''})`,
                   ...categoryProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';
@@ -530,9 +562,26 @@ const ProjectAnalyticsDashboard = ({
           tooltip: {
             callbacks: {
               title: function(context) {
+                const index = context[0].dataIndex;
+                const monthProjects = cumulativeProjects[index] || [];
                 const label = context[0].label || '';
-                const value = context[0].parsed.y || 0;
-                return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                
+                if (monthProjects.length === 0) {
+                  const value = context[0].parsed.y || 0;
+                  return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                }
+                
+                // Show first project's title and code in the title
+                const firstProject = monthProjects[0];
+                const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                const code = firstProject.projectCode || '';
+                
+                if (monthProjects.length === 1) {
+                  return code ? `${name} (${code})` : name;
+                }
+                
+                // If multiple projects, show first one and indicate there are more
+                return code ? `${name} (${code})` : `${name} (+${monthProjects.length - 1} more)`;
               },
               label: function(context) {
                 const index = context.dataIndex;
@@ -549,6 +598,7 @@ const ProjectAnalyticsDashboard = ({
                   : '';
                 
                 return [
+                  `${monthProjects.length} project${monthProjects.length !== 1 ? 's' : ''}`,
                   ...displayProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';
@@ -908,8 +958,37 @@ const ProjectAnalyticsDashboard = ({
                 const index = context[0].dataIndex;
                 const monthInfo = monthlyProjects[index];
                 const datasetLabel = context[0].dataset.label || '';
-                const value = context[0].parsed.y || 0;
-                return `${monthInfo?.month || ''}: ${datasetLabel} - ${value} project${value !== 1 ? 's' : ''}`;
+                
+                if (!monthInfo) {
+                  const value = context[0].parsed.y || 0;
+                  return `${datasetLabel} - ${value} project${value !== 1 ? 's' : ''}`;
+                }
+                
+                let relevantProjects = [];
+                if (datasetLabel === 'Total Projects') {
+                  relevantProjects = monthInfo.total || [];
+                } else if (datasetLabel === 'Completed') {
+                  relevantProjects = monthInfo.completed || [];
+                } else if (datasetLabel === 'Ongoing') {
+                  relevantProjects = monthInfo.ongoing || [];
+                }
+                
+                if (relevantProjects.length === 0) {
+                  const value = context[0].parsed.y || 0;
+                  return `${monthInfo?.month || ''}: ${datasetLabel} - ${value} project${value !== 1 ? 's' : ''}`;
+                }
+                
+                // Show first project's title and code in the title
+                const firstProject = relevantProjects[0];
+                const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                const code = firstProject.projectCode || '';
+                
+                if (relevantProjects.length === 1) {
+                  return code ? `${name} (${code})` : name;
+                }
+                
+                // If multiple projects, show first one and indicate there are more
+                return code ? `${name} (${code})` : `${name} (+${relevantProjects.length - 1} more)`;
               },
               label: function(context) {
                 const index = context.dataIndex;
@@ -940,6 +1019,7 @@ const ProjectAnalyticsDashboard = ({
                   : '';
                 
                 return [
+                  `${relevantProjects.length} project${relevantProjects.length !== 1 ? 's' : ''}`,
                   ...displayProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';

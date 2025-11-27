@@ -613,7 +613,7 @@ loading = false;
 
       /* Button Styles */
       .btn-primary {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+        background: linear-gradient(135deg, #0D7DB5, #0A6A9A);
         color: white;
         border: none;
         border-radius: 0.75rem;
@@ -624,7 +624,7 @@ loading = false;
       }
 
       .btn-primary:hover {
-        background: linear-gradient(135deg, #d97706, #b45309);
+        background: linear-gradient(135deg, #0A6A9A, #075A85);
         transform: translateY(-1px);
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       }
@@ -674,13 +674,13 @@ loading = false;
       }
 
       input[type="text"]:hover, input[type="search"]:hover, select:hover {
-        border-color: #f59e0b;
-        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        border-color: #0D7DB5;
+        box-shadow: 0 0 0 3px rgba(13, 125, 181, 0.1);
       }
 
       input[type="text"]:focus, input[type="search"]:focus, select:focus {
-        border-color: #f59e0b;
-        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        border-color: #0D7DB5;
+        box-shadow: 0 0 0 3px rgba(13, 125, 181, 0.2);
         outline: none;
       }
 
@@ -690,7 +690,7 @@ loading = false;
       }
 
       label:hover {
-        color: #f59e0b;
+        color: #0D7DB5;
       }
 
       /* Enhanced Tab Button Hover Effects */
@@ -735,7 +735,7 @@ loading = false;
 
       /* Enhanced focus states */
       button:focus, a:focus, input:focus, select:focus {
-        outline: 2px solid #f59e0b;
+        outline: 2px solid #0D7DB5;
         outline-offset: 2px;
       }
 
@@ -750,12 +750,12 @@ loading = false;
       }
 
       ::-webkit-scrollbar-thumb {
-        background: linear-gradient(to bottom, #f59e0b, #d97706);
+        background: linear-gradient(to bottom, #0D7DB5, #0A6A9A);
         border-radius: 4px;
       }
 
       ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(to bottom, #d97706, #b45309);
+        background: linear-gradient(to bottom, #0A6A9A, #075A85);
       }
 
       /* Enhanced loading animation */
@@ -1197,7 +1197,7 @@ loading = false;
       }
       
       .btn-edit {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+        background: linear-gradient(135deg, #0D7DB5, #0A6A9A);
         color: white;
         border: none;
         padding: 0.375rem 0.75rem;
@@ -1227,7 +1227,7 @@ loading = false;
       }
       
       .btn-edit:hover {
-        background: linear-gradient(135deg, #d97706, #b45309);
+        background: linear-gradient(135deg, #0A6A9A, #075A85);
         transform: translateY(-1px);
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       }
@@ -1466,9 +1466,9 @@ loading = false;
             <div>
                 <p class="text-sm text-gray-600">Pending Projects</p>
                 <p class="text-2xl font-bold text-black" id="pendingProjectsCount">{projects.filter(p => p.status === 'pending').length}</p>
-                <p class="text-xs text-yellow-600 mt-1">Awaiting approval</p>
+                <p class="text-xs text-[#0D7DB5] mt-1">Awaiting approval</p>
             </div>
-              <div class="icon-container bg-gradient-to-br from-yellow-500 to-yellow-600">
+              <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -2060,7 +2060,7 @@ loading = false;
                     </button>
                     <button
                       onclick={`if(window.projectNotesCenter) window.projectNotesCenter.openModal(${JSON.stringify(project)})`}
-                      class="px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-xs font-medium transition-all"
+                      class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-[#0D7DB5] rounded-lg text-xs font-medium transition-all"
                       title="Add Notes & Annotations"
                     >
                       Notes
@@ -2266,7 +2266,7 @@ loading = false;
                             </button>
                             <button 
                               onclick={`if(window.projectNotesCenter) window.projectNotesCenter.openModal(${JSON.stringify(project)})`} 
-                              class="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
+                              class="px-2 py-1 bg-[#0D7DB5] hover:bg-[#0A6A9A] text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
                               title="Add Notes & Annotations"
                             >
                               Notes
@@ -2971,7 +2971,7 @@ loading = false;
             </div>
 
             <!-- Physical Accomplishment Info -->
-            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border border-[#0D7DB5]/20 shadow-lg mt-8">
+            <div class="bg-gradient-to-br from-blue-50 to-[#0D7DB5]/10 rounded-2xl p-8 border border-[#0D7DB5]/20 shadow-lg mt-8">
               <div class="flex items-center gap-4 mb-6">
                 <div class="bg-[#0D7DB5] p-3 rounded-xl">
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3059,9 +3059,9 @@ loading = false;
             <!-- Step 3: Project Milestones Configuration -->
             <div id="step3" class="step-content hidden">
             <!-- Project Milestones Configuration -->
-            <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-8 border border-orange-100 shadow-lg">
+            <div class="bg-gradient-to-br from-blue-50 to-[#0D7DB5]/10 rounded-2xl p-8 border border-[#0D7DB5]/20 shadow-lg">
               <div class="flex items-center gap-4 mb-6">
-                <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-3 rounded-xl">
+                <div class="bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] p-3 rounded-xl">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                   </svg>
@@ -4258,7 +4258,7 @@ loading = false;
     
     const proofTypeHtml = `
       <div class="flex items-center gap-2">
-        <select name="milestones[${milestoneId}][physicalProofTypes][]" class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500">
+        <select name="milestones[${milestoneId}][physicalProofTypes][]" class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0D7DB5]">
           <option value="form">Form</option>
           <option value="video">Video</option>
           <option value="image">Image</option>
@@ -4624,7 +4624,7 @@ loading = false;
             </div>
 
           <!-- Physical Division -->
-          <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-[#0D7DB5]/20 shadow-lg">
+          <div class="bg-gradient-to-br from-blue-50 to-[#0D7DB5]/10 rounded-2xl p-6 border border-[#0D7DB5]/20 shadow-lg">
             <div class="flex items-center gap-3 mb-4">
               <div class="bg-[#0D7DB5] p-2 rounded-lg">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4636,13 +4636,13 @@ loading = false;
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Weight (%)</label>
-                <input type="number" name="milestones[${window.milestoneCounter}][physicalWeight]" min="0" max="100" step="0.01" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500 bg-gray-50" placeholder="0.00" value="0.00" readonly>
+                <input type="number" name="milestones[${window.milestoneCounter}][physicalWeight]" min="0" max="100" step="0.01" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0D7DB5] bg-gray-50" placeholder="0.00" value="0.00" readonly>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Proof Types</label>
                 <div id="proofTypes-${window.milestoneCounter}" class="space-y-2">
                   <div class="flex items-center gap-2">
-                    <select name="milestones[${window.milestoneCounter}][physicalProofTypes][]" class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500">
+                    <select name="milestones[${window.milestoneCounter}][physicalProofTypes][]" class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0D7DB5]">
                       <option value="form">Form</option>
                       <option value="video">Video</option>
                       <option value="image">Image</option>
@@ -4652,7 +4652,7 @@ loading = false;
                       <option value="presentation">Presentation</option>
                       <option value="certificate">Certificate</option>
                     </select>
-                    <button type="button" onclick="window.addProofType(${window.milestoneCounter})" class="px-2 py-1 text-xs bg-[#0D7DB5] text-white rounded hover:bg-orange-600 transition-colors">
+                    <button type="button" onclick="window.addProofType(${window.milestoneCounter})" class="px-2 py-1 text-xs bg-[#0D7DB5] text-white rounded hover:bg-[#0A6A9A] transition-colors">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                   </svg>
@@ -4662,7 +4662,7 @@ loading = false;
             </div>
                 <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Description *</label>
-                <textarea name="milestones[${window.milestoneCounter}][physicalDescription]" id="milestone-${window.milestoneCounter}-physical-description" rows="2" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500" placeholder="Physical progress requirements..." required></textarea>
+                <textarea name="milestones[${window.milestoneCounter}][physicalDescription]" id="milestone-${window.milestoneCounter}-physical-description" rows="2" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0D7DB5]" placeholder="Physical progress requirements..." required></textarea>
                 <div class="flex items-center justify-between mt-1">
                   <span class="text-xs text-gray-500">Maximum 500 characters</span>
                   <span class="text-xs text-gray-400" id="milestone-${window.milestoneCounter}-physical-description-count">0/500</span>
@@ -5642,8 +5642,8 @@ loading = false;
       modal.innerHTML = `
         <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
           <div class="flex items-center mb-4">
-            <div class="bg-yellow-100 p-3 rounded-full mr-4">
-              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-blue-100 p-3 rounded-full mr-4">
+              <svg class="w-6 h-6 text-[#0D7DB5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
               </svg>
             </div>
@@ -6354,7 +6354,7 @@ loading = false;
         counter.style.color = '#dc2626'; // Red
         counter.classList.add('font-bold');
       } else if (currentLength >= maxLength * 0.7) {
-        counter.style.color = '#d97706'; // Orange
+          counter.style.color = '#0D7DB5'; // Blue
         counter.classList.remove('font-bold');
       } else {
         counter.style.color = '#6b7280'; // Gray
@@ -7920,7 +7920,7 @@ loading = false;
                 <div>
                   <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Ongoing Projects</label>
                   <p class="text-sm text-gray-700">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-[#0A6A9A]">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-[#0A6A9A]">
                       ${ongoingProjectsCount} ${ongoingProjectsCount === 1 ? 'Project' : 'Projects'}
                     </span>
                   </p>
@@ -9170,7 +9170,7 @@ loading = false;
     confirmModal.innerHTML = `
       <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
         <div class="flex items-center gap-4 mb-6">
-          <div class="bg-yellow-500 p-3 rounded-xl">
+          <div class="bg-[#0D7DB5] p-3 rounded-xl">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
             </svg>
@@ -9489,7 +9489,7 @@ loading = false;
         noDataModal.innerHTML = `
           <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <div class="flex items-center gap-4 mb-6">
-              <div class="bg-yellow-500 p-3 rounded-xl">
+              <div class="bg-[#0D7DB5] p-3 rounded-xl">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                 </svg>
@@ -10427,7 +10427,7 @@ loading = false;
         if (currentLength >= maxLength) {
           counter.className = 'text-xs text-red-500 font-medium';
         } else if (currentLength >= maxLength * 0.8) {
-          counter.className = 'text-xs text-orange-500 font-medium';
+          counter.className = 'text-xs text-[#0D7DB5] font-medium';
         } else {
           counter.className = 'text-xs text-gray-400';
         }
@@ -11715,7 +11715,7 @@ loading = false;
 <div id="projectAnalyticsModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
   <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 my-8">
     <!-- Modal Header -->
-    <div class="bg-gradient-to-r from-amber-50 to-orange-100 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
+    <div class="bg-gradient-to-r from-blue-50 to-[#0D7DB5]/10 px-6 py-5 border-b border-gray-200 rounded-t-2xl flex-shrink-0">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] rounded-xl flex items-center justify-center shadow-md">
@@ -11771,7 +11771,7 @@ loading = false;
         </div>
         <div class="profile-card p-4">
           <div class="text-sm text-gray-600 mb-1">Pending Projects</div>
-          <div class="text-2xl font-bold text-yellow-600" id="analyticsPendingProjects">0</div>
+          <div class="text-2xl font-bold text-[#0D7DB5]" id="analyticsPendingProjects">0</div>
         </div>
         <div class="profile-card p-4">
           <div class="text-sm text-gray-600 mb-1">Delayed Projects</div>
@@ -11799,7 +11799,7 @@ loading = false;
       <div id="projectAnalyticsLoading" class="hidden flex items-center justify-center py-12">
         <div class="relative w-16 h-16">
           <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-          <div class="absolute inset-0 border-4 border-amber-600 rounded-full border-t-transparent animate-spin"></div>
+          <div class="absolute inset-0 border-4 border-[#0D7DB5] rounded-full border-t-transparent animate-spin"></div>
         </div>
       </div>
       

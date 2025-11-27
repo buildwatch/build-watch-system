@@ -120,13 +120,13 @@ const getThemeColors = (userRole) => {
       };
     case 'LGU-IU':
       return {
-        primary: 'from-orange-500 to-orange-600',
-        secondary: 'from-orange-400 to-orange-500',
-        accent: 'orange',
-        bg: 'from-orange-50 to-white',
-        text: 'text-orange-700',
-        border: 'border-orange-200',
-        hover: 'hover:bg-orange-50'
+        primary: 'from-[#0D7DB5] to-[#0A6A9A]',
+        secondary: 'from-[#0A6A9A] to-[#075A85]',
+        accent: 'blue',
+        bg: 'from-blue-50 to-white',
+        text: 'text-[#0D7DB5]',
+        border: 'border-[#0D7DB5]/20',
+        hover: 'hover:bg-blue-50'
       };
     case 'MPMEC':
       return {
@@ -191,7 +191,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
   const [successMessage, setSuccessMessage] = useState('');
   
   const currentUser = getCurrentUser();
-  const theme = getThemeColors(userRole || currentUser?.role);
+  const resolvedUserRole = userRole || currentUser?.role;
+  const theme = getThemeColors(resolvedUserRole);
   const socketRef = useRef(null);
   const notificationCheckInterval = useRef(null);
   
@@ -2247,7 +2248,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
     if (action.includes('CREATED')) return 'text-green-600 bg-green-100';
     if (action.includes('UPDATED') || action.includes('UPDATE')) return 'text-blue-600 bg-blue-100';
     if (action.includes('APPROVED') || action.includes('APPROVAL')) return 'text-purple-600 bg-purple-100';
-    if (action.includes('EXPORT')) return 'text-orange-600 bg-orange-100';
+    if (action.includes('EXPORT')) {
+      // Use theme color for LGU-IU
+      const currentUserRole = getCurrentUser()?.role;
+      if (currentUserRole === 'LGU-IU') {
+        return 'text-[#0D7DB5] bg-blue-100';
+      }
+      return 'text-orange-600 bg-orange-100';
+    }
     if (action.includes('COMPLETED')) return 'text-indigo-600 bg-indigo-100';
     return 'text-gray-600 bg-gray-100';
   };
@@ -2663,12 +2671,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       data: budgetData.budgetTrend.map(item => item.cumulative),
                                       borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
-                                                   theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
+                                                   theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(13, 125, 181, 0.8)' : 'rgba(59, 130, 246, 0.8)') :
                                                    theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.8)' :
                                                    'rgba(99, 102, 241, 0.8)',
                                       backgroundColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.2)' :
                                                         theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.2)' :
-                                                        theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.2)' :
+                                                        theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(13, 125, 181, 0.2)' : 'rgba(59, 130, 246, 0.2)') :
                                                         theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
                                                         'rgba(99, 102, 241, 0.2)',
                                       fill: true,
@@ -2679,7 +2687,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       data: budgetData.budgetTrend.map(item => item.individualUtilization || 0),
                                       borderColor: theme.accent === 'green' ? 'rgba(5, 150, 105, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(234, 88, 12, 0.8)' :
-                                                   theme.accent === 'blue' ? 'rgba(37, 99, 235, 0.8)' :
+                                                   theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(10, 106, 154, 0.8)' : 'rgba(37, 99, 235, 0.8)') :
                                                    theme.accent === 'sky' ? 'rgba(2, 132, 199, 0.8)' :
                                                    'rgba(79, 70, 229, 0.8)',
                                       backgroundColor: 'transparent',
@@ -2757,12 +2765,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       data: budgetData.budgetTrend.map(item => item.individualUtilization || 0),
                                       borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
-                                                   theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
+                                                   theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(13, 125, 181, 0.8)' : 'rgba(59, 130, 246, 0.8)') :
                                                    theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.8)' :
                                                    'rgba(99, 102, 241, 0.8)',
                                       backgroundColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.2)' :
                                                         theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.2)' :
-                                                        theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.2)' :
+                                                        theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(13, 125, 181, 0.2)' : 'rgba(59, 130, 246, 0.2)') :
                                                         theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
                                                         'rgba(99, 102, 241, 0.2)',
                                       fill: true,
@@ -2905,12 +2913,12 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       data: timelineData.progressData.map(item => item.progress),
                                       borderColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.8)' :
-                                                   theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.8)' :
+                                                   theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(13, 125, 181, 0.8)' : 'rgba(59, 130, 246, 0.8)') :
                                                    theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.8)' :
                                                    'rgba(99, 102, 241, 0.8)',
                                       backgroundColor: theme.accent === 'green' ? 'rgba(16, 185, 129, 0.2)' :
                                                         theme.accent === 'orange' ? 'rgba(249, 115, 22, 0.2)' :
-                                                        theme.accent === 'blue' ? 'rgba(59, 130, 246, 0.2)' :
+                                                        theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(13, 125, 181, 0.2)' : 'rgba(59, 130, 246, 0.2)') :
                                                         theme.accent === 'sky' ? 'rgba(14, 165, 233, 0.2)' :
                                                         'rgba(99, 102, 241, 0.2)',
                                       fill: true,
@@ -2923,7 +2931,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       data: timelineData.progressData.map(item => item.cumulative),
                                       borderColor: theme.accent === 'green' ? 'rgba(5, 150, 105, 0.8)' :
                                                    theme.accent === 'orange' ? 'rgba(234, 88, 12, 0.8)' :
-                                                   theme.accent === 'blue' ? 'rgba(37, 99, 235, 0.8)' :
+                                                   theme.accent === 'blue' ? (resolvedUserRole === 'LGU-IU' ? 'rgba(10, 106, 154, 0.8)' : 'rgba(37, 99, 235, 0.8)') :
                                                    theme.accent === 'sky' ? 'rgba(2, 132, 199, 0.8)' :
                                                    'rgba(79, 70, 229, 0.8)',
                                       backgroundColor: 'transparent',
