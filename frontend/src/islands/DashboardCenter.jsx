@@ -1785,16 +1785,37 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                       <div 
                         className={`absolute bottom-full mb-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${isLeftColumn ? 'left-0' : 'right-0'}`}
                         style={{ 
-                          maxWidth: 'calc(100vw - 2rem)'
+                          maxWidth: 'min(400px, calc(100vw - 2rem))',
+                          transform: isLeftColumn ? 'translateX(0)' : 'translateX(0)'
                         }}
                       >
-                        <div className="bg-white text-gray-800 text-xs rounded-lg shadow-2xl border border-gray-200 p-4" style={{ minWidth: '280px', maxWidth: '320px' }}>
-                          <div className="font-semibold mb-3 text-gray-800 border-b border-gray-200 pb-2 flex items-center gap-2">
-                            <span className="text-lg">{dayEvents.length} Event{dayEvents.length > 1 ? 's' : ''}</span>
+                        <div 
+                          className="bg-white text-gray-800 text-xs rounded-xl shadow-2xl border border-gray-200 overflow-hidden" 
+                          style={{ 
+                            minWidth: '300px', 
+                            maxWidth: 'min(400px, calc(100vw - 2rem))',
+                            maxHeight: '70vh',
+                            display: 'flex',
+                            flexDirection: 'column'
+                          }}
+                        >
+                          {/* Fixed Header */}
+                          <div className="font-semibold px-4 pt-4 pb-3 text-gray-800 border-b border-gray-200 flex items-center gap-2 flex-shrink-0">
+                            <span className="text-lg font-bold">{dayEvents.length} Event{dayEvents.length > 1 ? 's' : ''}</span>
                             <span className="text-gray-500 text-sm">on {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                           </div>
-                          <div className="space-y-2" dangerouslySetInnerHTML={{ __html: tooltipContent }} />
-                          <div className={`absolute top-full -mt-1 ${isLeftColumn ? 'left-4' : 'right-4'}`}>
+                          {/* Scrollable Content */}
+                          <div 
+                            className="space-y-2 px-4 py-3 overflow-y-auto custom-scrollbar" 
+                            dangerouslySetInnerHTML={{ __html: tooltipContent }}
+                            style={{
+                              maxHeight: 'calc(70vh - 80px)',
+                              scrollbarWidth: 'thin',
+                              scrollbarColor: '#cbd5e1 #f1f5f9'
+                            }}
+                          />
+                          {/* Arrow Indicator */}
+                          <div className={`absolute top-full -mt-1 ${isLeftColumn ? 'left-6' : 'right-6'}`}>
                             <div className="w-3 h-3 bg-white border-r border-b border-gray-200 transform rotate-45"></div>
                           </div>
                         </div>

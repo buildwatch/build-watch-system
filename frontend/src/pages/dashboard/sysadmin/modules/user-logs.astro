@@ -1170,6 +1170,20 @@ const statusColors = {
         async function loadProfilePictures() {
           const uniqueUserIds = [...new Set(logsData.filter(log => log.userId).map(log => log.userId))];
           
+          // Helper function to format profile picture URL
+          const formatProfilePictureUrl = (url) => {
+            if (!url) return null;
+            // If already absolute URL, return as is
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+              return url;
+            }
+            // If relative URL, prepend API base URL
+            const apiUrl = window.getApiUrl();
+            // Remove /api from the end if present, then add the relative path
+            const baseUrl = apiUrl.replace(/\/api$/, '');
+            return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+          };
+          
           for (const userId of uniqueUserIds) {
             try {
               const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || '';
@@ -1181,31 +1195,77 @@ const statusColors = {
               if (response.ok) {
                 const result = await response.json();
                 if (result.success && result.profilePictureUrl) {
+                  // Format the profile picture URL
+                  const formattedUrl = formatProfilePictureUrl(result.profilePictureUrl);
+                  
                   // Update all profile pictures for this user in the table
                   const profileImgs = document.querySelectorAll(`img[id^="profile-picture-${userId}"]`);
                   profileImgs.forEach(img => {
                     const fallback = img.nextElementSibling;
-                    img.src = result.profilePictureUrl;
-                    img.onerror = function() {
-                      this.style.display = 'none';
-                      if (fallback) fallback.style.display = 'flex';
-                    };
+                    if (formattedUrl) {
+                      img.src = formattedUrl;
+                      img.style.display = 'block';
+                      if (fallback) fallback.style.display = 'none';
+                      img.onerror = function() {
+                        this.style.display = 'none';
+                        if (fallback) fallback.style.display = 'flex';
+                      };
+                      img.onload = function() {
+                        this.style.display = 'block';
+                        if (fallback) fallback.style.display = 'none';
+                      };
+                    }
                   });
                   
                   // Update profile picture in modal
                   const modalImgs = document.querySelectorAll(`img[id^="modal-profile-picture-${userId}"]`);
                   modalImgs.forEach(img => {
                     const fallback = img.nextElementSibling;
-                    img.src = result.profilePictureUrl;
-                    img.onerror = function() {
-                      this.style.display = 'none';
-                      if (fallback) fallback.style.display = 'flex';
-                    };
+                    if (formattedUrl) {
+                      img.src = formattedUrl;
+                      img.style.display = 'block';
+                      if (fallback) fallback.style.display = 'none';
+                      img.onerror = function() {
+                        this.style.display = 'none';
+                        if (fallback) fallback.style.display = 'flex';
+                      };
+                      img.onload = function() {
+                        this.style.display = 'block';
+                        if (fallback) fallback.style.display = 'none';
+                      };
+                    }
                   });
                 }
+              } else {
+                // If API call fails, ensure fallback is shown
+                const profileImgs = document.querySelectorAll(`img[id^="profile-picture-${userId}"]`);
+                profileImgs.forEach(img => {
+                  const fallback = img.nextElementSibling;
+                  img.style.display = 'none';
+                  if (fallback) fallback.style.display = 'flex';
+                });
+                const modalImgs = document.querySelectorAll(`img[id^="modal-profile-picture-${userId}"]`);
+                modalImgs.forEach(img => {
+                  const fallback = img.nextElementSibling;
+                  img.style.display = 'none';
+                  if (fallback) fallback.style.display = 'flex';
+                });
               }
             } catch (error) {
               console.log(`Failed to load profile picture for user ${userId}:`, error);
+              // On error, show fallback
+              const profileImgs = document.querySelectorAll(`img[id^="profile-picture-${userId}"]`);
+              profileImgs.forEach(img => {
+                const fallback = img.nextElementSibling;
+                img.style.display = 'none';
+                if (fallback) fallback.style.display = 'flex';
+              });
+              const modalImgs = document.querySelectorAll(`img[id^="modal-profile-picture-${userId}"]`);
+              modalImgs.forEach(img => {
+                const fallback = img.nextElementSibling;
+                img.style.display = 'none';
+                if (fallback) fallback.style.display = 'flex';
+              });
             }
           }
         }
