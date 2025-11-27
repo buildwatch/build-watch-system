@@ -59,24 +59,51 @@ try {
         stats.totalBudget = projectService.formatBudget(totalBudget);
         
         // Use calculated progress from ProgressCalculationService for utilized budget
-        // Only calculate for projects that are not in pending status AND have actual budget utilization
-        const utilizedBudget = projects.reduce((sum, project) => {
-          // Skip pending projects - they shouldn't contribute to utilized budget
-          if (project.status === 'pending') {
-            return sum;
+        // Fetch actual amountSpent from progress API for each project (most accurate)
+        let utilizedBudget = 0;
+        
+        // Fetch progress data for each project to get accurate amountSpent
+        const progressPromises = projects.map(async (project) => {
+          try {
+            // Skip pending projects - they shouldn't contribute to utilized budget
+            if (project.status === 'pending') {
+              return 0;
+            }
+            
+            const progressRes = await fetch(`${API_URL}/projects/progress/${project.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (progressRes.ok) {
+              const progressData = await progressRes.json();
+              if (progressData.success && progressData.data?.progress?.amountSpent !== undefined) {
+                // amountSpent is calculated by ProgressCalculationService from approved milestone submissions
+                return parseFloat(progressData.data.progress.amountSpent || 0);
+              }
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch progress for project ${project.id}:`, error);
           }
           
+          // Fallback: Use budget progress percentage if amountSpent not available
           const budget = parseFloat(project.totalBudget) || 0;
-          // Use budget division progress for utilized budget calculation (only approved divisions)
           const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
-          
-          // Only add to utilized budget if there's actual progress (greater than 0)
           if (budgetProgress > 0 && budget > 0) {
-            return sum + (budget * budgetProgress / 100);
+            return budget * budgetProgress / 100;
           }
           
-          return sum;
-        }, 0);
+          return 0;
+        });
+        
+        const projectBudgets = await Promise.all(progressPromises);
+        utilizedBudget = projectBudgets.reduce((sum, budget) => sum + budget, 0);
+        
+        console.log('💰 [LGU-IU Dashboard] Utilized budget calculated:', {
+          totalProjects: projects.length,
+          utilizedBudget,
+          projectBudgets
+        });
+        
         stats.utilizedBudget = projectService.formatBudget(utilizedBudget);
         
         // Calculate average progress using ProgressCalculationService results

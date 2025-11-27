@@ -548,43 +548,82 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                 console.log('💰 EIU user has no projects - utilized budget set to 0');
               }
             } else {
-              // For other roles, use the original logic (fetch from /api/home/stats)
-              try {
-                const statsResponse = await fetch(`${API_URL}/home/stats`, {
-                  headers: getAuthHeaders()
-                });
-                if (statsResponse.ok) {
-                  const statsData = await statsResponse.json();
-                  if (statsData.success && statsData.utilizedBudget !== undefined) {
-                    utilizedBudget = parseFloat(statsData.utilizedBudget) || 0;
-                    console.log('💰 Utilized budget from /api/home/stats:', utilizedBudget);
-                  }
-                }
-              } catch (statsError) {
-                console.warn('⚠️ Failed to fetch utilized budget from /api/home/stats, using fallback calculation:', statsError);
-              }
-              
-              // Fallback: Calculate from milestone data if available in projects
-              if (utilizedBudget === 0) {
-                for (const project of projectsList) {
-                  if (project.milestones && Array.isArray(project.milestones)) {
-                    project.milestones.forEach(milestone => {
-                      const usedBudget = parseFloat(milestone.usedBudget || 0);
-                      if (usedBudget > 0) {
-                        utilizedBudget += usedBudget;
+              // For LGU-IU and other roles, calculate from actual projects only (not global stats)
+              // Fetch amountSpent for each project in parallel (ProgressCalculationService calculates this accurately)
+              if (projectsList.length > 0) {
+                try {
+                  const projectBudgetPromises = projectsList.map(async (project) => {
+                    try {
+                      // Fetch project with progress data to get accurate amountSpent
+                      const projectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                        headers: getAuthHeaders()
+                      });
+                      if (projectResponse.ok) {
+                        const projectData = await projectResponse.json();
+                        if (projectData.success && projectData.progress?.amountSpent !== undefined) {
+                          // amountSpent is calculated by ProgressCalculationService from approved milestone submissions
+                          return parseFloat(projectData.progress.amountSpent || 0);
+                        } else if (projectData.success && projectData.project?.amountSpent !== undefined) {
+                          return parseFloat(projectData.project.amountSpent || 0);
+                        }
                       }
-                    });
+                    } catch (err) {
+                      console.warn(`⚠️ Failed to fetch budget for project ${project.id}:`, err);
+                    }
+                    return 0;
+                  });
+                  
+                  const projectBudgets = await Promise.all(projectBudgetPromises);
+                  utilizedBudget = projectBudgets.reduce((sum, budget) => sum + budget, 0);
+                  console.log('💰 Utilized budget calculated from user projects only:', utilizedBudget, 'from', projectsList.length, 'projects');
+                } catch (budgetError) {
+                  console.warn('⚠️ Error fetching project budgets, using fallback:', budgetError);
+                  
+                  // Fallback: Calculate from milestone data if available in projects
+                  for (const project of projectsList) {
+                    if (project.milestones && Array.isArray(project.milestones)) {
+                      project.milestones.forEach(milestone => {
+                        // Get usedBudget from approved submissions
+                        if (milestone.submissions && Array.isArray(milestone.submissions)) {
+                          const approvedSubmission = milestone.submissions.find(s => 
+                            s.status === 'approved' || s.status === 'iu_approved'
+                          );
+                          if (approvedSubmission) {
+                            const usedBudget = parseFloat(approvedSubmission.usedBudget || 0);
+                            if (usedBudget > 0) {
+                              utilizedBudget += usedBudget;
+                            }
+                          }
+                        } else {
+                          // Fallback to milestone usedBudget if no submissions
+                          const usedBudget = parseFloat(milestone.usedBudget || 0);
+                          if (usedBudget > 0) {
+                            utilizedBudget += usedBudget;
+                          }
+                        }
+                      });
+                    }
+                  }
+                  
+                  // Final fallback: Calculate from budget progress percentage (least accurate)
+                  if (utilizedBudget === 0) {
+                    utilizedBudget = projectsList.reduce((sum, p) => {
+                      // Skip pending projects
+                      if (p.status === 'pending') return sum;
+                      const budget = parseFloat(p.totalBudget || 0);
+                      const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+                      // Only add if there's actual progress
+                      if (budgetProgress > 0 && budget > 0) {
+                        return sum + (budget * budgetProgress / 100);
+                      }
+                      return sum;
+                    }, 0);
                   }
                 }
-              }
-              
-              // Final fallback: Calculate from budget progress percentage (least accurate)
-              if (utilizedBudget === 0) {
-                utilizedBudget = projectsList.reduce((sum, p) => {
-                  const budget = parseFloat(p.totalBudget || 0);
-                  const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
-                  return sum + (budget * budgetProgress / 100);
-                }, 0);
+              } else {
+                // User has no projects - utilized budget should be 0
+                utilizedBudget = 0;
+                console.log('💰 User has no projects - utilized budget set to 0');
               }
             }
             
