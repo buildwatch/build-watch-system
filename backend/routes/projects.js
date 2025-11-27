@@ -3159,12 +3159,35 @@ router.put('/:id', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req,
       });
     }
 
-    // Only allow updates if project is in draft status
-    if (project.workflowStatus !== 'draft') {
+    // Check if this is an EIU reassignment (only eiuPersonnelId and hasExternalPartner are being updated)
+    const isEIUReassignment = Object.keys(updateData).every(key => 
+      key === 'eiuPersonnelId' || 
+      key === 'hasExternalPartner' ||
+      key === 'updatedAt' ||
+      key === 'id' ||
+      key === 'createdAt' ||
+      key === 'implementingOfficeId'
+    ) && (updateData.eiuPersonnelId !== undefined || updateData.hasExternalPartner !== undefined);
+
+    // Only allow updates if project is in draft status, OR if it's an EIU reassignment
+    if (project.workflowStatus !== 'draft' && !isEIUReassignment) {
       return res.status(400).json({
         success: false,
-        error: 'Cannot update project that is not in draft status'
+        error: 'Cannot update project that is not in draft status. EIU reassignment is allowed for approved projects.'
       });
+    }
+
+    // For EIU reassignment on non-draft projects, only allow updating EIU-related fields
+    if (isEIUReassignment && project.workflowStatus !== 'draft') {
+      // Only update EIU-related fields, preserve all other project data
+      const allowedFields = ['eiuPersonnelId', 'hasExternalPartner'];
+      const filteredUpdateData = {};
+      allowedFields.forEach(field => {
+        if (updateData[field] !== undefined) {
+          filteredUpdateData[field] = updateData[field];
+        }
+      });
+      updateData = filteredUpdateData;
     }
 
     // Validate milestones if provided

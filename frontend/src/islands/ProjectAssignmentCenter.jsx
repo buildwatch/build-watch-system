@@ -342,19 +342,37 @@ export default function ProjectAssignmentCenter({
         }
       }
 
-      // 🔍 DEBUG: Log update payload
-      const updatePayload = {
-        ...getData.project,
-        eiuPersonnelId: finalEiuPersonnelId,
-        hasExternalPartner: true
-      };
+      // 🔍 DEBUG: Check if this is a reassignment (project already has an EIU)
+      const isReassignment = project.eiuPersonnelId && project.eiuPersonnelId !== finalEiuPersonnelId;
+      const isNonDraftProject = getData.project.workflowStatus !== 'draft';
+      
+      // For non-draft projects, only send EIU-related fields to allow reassignment
+      // For draft projects, we can send the full project object
+      let updatePayload;
+      if (isNonDraftProject) {
+        // Only send EIU-related fields for non-draft projects (reassignment allowed)
+        updatePayload = {
+          eiuPersonnelId: finalEiuPersonnelId,
+          hasExternalPartner: true
+        };
+        console.log('🔍 [EIU ASSIGNMENT DEBUG] Non-draft project detected - sending only EIU fields for reassignment');
+      } else {
+        // For draft projects, send full project object
+        updatePayload = {
+          ...getData.project,
+          eiuPersonnelId: finalEiuPersonnelId,
+          hasExternalPartner: true
+        };
+        console.log('🔍 [EIU ASSIGNMENT DEBUG] Draft project - sending full project object');
+      }
+      
       console.log('🔍 [EIU ASSIGNMENT DEBUG] Update Payload:', {
-        id: updatePayload.id,
-        status: updatePayload.status,
-        workflowStatus: updatePayload.workflowStatus,
-        eiuPersonnelId: updatePayload.eiuPersonnelId,
-        hasExternalPartner: updatePayload.hasExternalPartner,
-        name: updatePayload.name
+        isReassignment,
+        isNonDraftProject,
+        workflowStatus: getData.project.workflowStatus,
+        currentEiuPersonnelId: project.eiuPersonnelId,
+        newEiuPersonnelId: finalEiuPersonnelId,
+        payloadFields: Object.keys(updatePayload)
       });
 
       // Update EIU assignment
