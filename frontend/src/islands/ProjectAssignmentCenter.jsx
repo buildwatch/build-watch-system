@@ -22,6 +22,10 @@ export default function ProjectAssignmentCenter({
   const [loadingEIUAccounts, setLoadingEIUAccounts] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [pendingEIUId, setPendingEIUId] = useState(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Dynamic API URL helper
   const getApiUrl = () => {
@@ -332,14 +336,29 @@ export default function ProjectAssignmentCenter({
       });
 
       if (!updateResponse.ok) {
-        const errorData = await updateResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to update project');
+        let errorData;
+        try {
+          errorData = await updateResponse.json();
+        } catch (e) {
+          errorData = { error: 'Failed to update project' };
+        }
+        
+        // Extract error message
+        const errorMsg = errorData.error || errorData.message || 'Failed to update project';
+        
+        // Check for specific error messages
+        if (errorMsg.includes('draft status') || errorMsg.includes('Cannot update project')) {
+          throw new Error('Cannot update project that is not in draft status. Please ensure the project is in draft status before assigning an EIU.');
+        }
+        
+        throw new Error(errorMsg);
       }
 
       const updateData = await updateResponse.json();
       
       if (updateData.success) {
-        alert(`Successfully ${project.eiuPersonnelId ? 'reassigned' : 'assigned'} EIU: ${eiuValidation.name}`);
+        setSuccessMessage(`Successfully ${project.eiuPersonnelId ? 'reassigned' : 'assigned'} EIU: ${eiuValidation.name}`);
+        setShowSuccessModal(true);
         
         // Call callback if provided
         if (onAssign && typeof onAssign === 'function') {
@@ -351,16 +370,30 @@ export default function ProjectAssignmentCenter({
           });
         }
 
-        // Close modals and refresh page
+        // Close modals
         setShowModal(false);
         setShowWarningModal(false);
-        window.location.reload();
+        
+        // Reload page after a short delay to show success message
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         throw new Error(updateData.error || 'Failed to update project');
       }
     } catch (error) {
       console.error('Error assigning EIU:', error);
-      alert('Error assigning EIU: ' + error.message);
+      
+      // Parse error message from response if available
+      let errorMsg = error.message || 'An unexpected error occurred';
+      
+      // Check if error message contains specific project status error
+      if (errorMsg.includes('draft status') || errorMsg.includes('Cannot update project')) {
+        errorMsg = 'Cannot update project that is not in draft status. Please ensure the project is in draft status before assigning an EIU.';
+      }
+      
+      setErrorMessage(errorMsg);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -399,11 +432,14 @@ export default function ProjectAssignmentCenter({
     };
   }, []);
 
-  if (!showModal) {
+  // Render error and success modals even if main modal is closed
+  if (!showModal && !showErrorModal && !showSuccessModal) {
     return null;
   }
 
   return (
+    <>
+      {showModal && (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
         {/* Header */}
@@ -583,6 +619,80 @@ export default function ProjectAssignmentCenter({
         </div>
       )}
     </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Error Assigning EIU</h3>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-sm text-gray-700">{errorMessage}</p>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowErrorModal(false);
+                    setErrorMessage('');
+                  }}
+                  className={`px-6 py-2 ${colors.button} text-white rounded-lg font-semibold transition-all`}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Success</h3>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-sm text-gray-700">{successMessage}</p>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setSuccessMessage('');
+                  }}
+                  className={`px-6 py-2 ${colors.button} text-white rounded-lg font-semibold transition-all`}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

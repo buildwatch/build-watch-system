@@ -5970,6 +5970,59 @@ try {
           }, 4000);
         };
 
+        // Function to show session expired modal
+        window.showSessionExpiredModal = function() {
+          const sessionExpiredModalHTML = `
+            <div id="sessionExpiredModal" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+              <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100 animate-in fade-in zoom-in" onclick="event.stopPropagation()">
+                <div class="p-8 text-center">
+                  <div class="flex justify-center mb-6">
+                    <div class="relative">
+                      <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center relative overflow-hidden">
+                        <svg class="w-12 h-12 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                      </div>
+                      <div class="absolute inset-0 w-20 h-20 bg-yellow-200 rounded-full animate-ping opacity-20"></div>
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 mb-2">Session Expired</h3>
+                  <p class="text-gray-600 mb-6">Your session has expired. Please refresh the page and log in again.</p>
+                  <button id="closeSessionExpiredModal" class="btn-action w-full px-6 py-3 rounded-lg bg-yellow-600 text-white hover:bg-yellow-700 hover:shadow-yellow-500/25">Refresh Page</button>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Remove any existing session expired modal
+          const existingModal = document.getElementById('sessionExpiredModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          // Add modal to page
+          document.body.insertAdjacentHTML('beforeend', sessionExpiredModalHTML);
+          const sessionExpiredModal = document.getElementById('sessionExpiredModal');
+          
+          // Close modal function
+          const closeSessionExpiredModal = () => {
+            if (sessionExpiredModal) {
+              sessionExpiredModal.remove();
+            }
+            window.location.reload();
+          };
+          
+          // Close on button click
+          document.getElementById('closeSessionExpiredModal').addEventListener('click', closeSessionExpiredModal);
+          
+          // Close on background click
+          sessionExpiredModal.addEventListener('click', (e) => {
+            if (e.target === sessionExpiredModal) {
+              closeSessionExpiredModal();
+            }
+          });
+        };
+
         // Function to show UUID reveal success modal
         window.showUuidRevealSuccessModal = function() {
           const successModalHTML = `
@@ -6235,13 +6288,24 @@ try {
               
               console.log('Password verification response status:', response.status);
               
-              // Handle 401 Unauthorized
+              // Handle 401 Unauthorized - check if it's session expired or wrong password
               if (response.status === 401) {
                 const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }));
                 console.error('❌ Authentication failed:', errorData.error);
-                alert('Session expired. Please refresh the page and log in again.');
-                window.location.reload();
-                return;
+                
+                const errorMessage = errorData.error || errorData.message || '';
+                const isSessionExpired = errorMessage.toLowerCase().includes('session') || 
+                                      errorMessage.toLowerCase().includes('expired') ||
+                                      errorMessage.toLowerCase().includes('token') ||
+                                      (!errorMessage.toLowerCase().includes('password') && !errorMessage.toLowerCase().includes('invalid'));
+                
+                if (isSessionExpired) {
+                  // Show session expired modal instead of alert
+                  closeModal();
+                  window.showSessionExpiredModal();
+                  return;
+                }
+                // If it's wrong password, continue to wrong password modal below
               }
               
               if (response.ok) {
@@ -8791,9 +8855,10 @@ try {
             const apiUrl = window.getApiUrl();
             const updateUrl = `${apiUrl}/users/${userId}`;
             console.log('🔍 [EDIT USER SUBMIT DEBUG] API URL:', apiUrl);
+            console.log('🔍 [EDIT USER SUBMIT DEBUG] Update URL:', updateUrl);
             console.log('🔍 [EDIT USER SUBMIT DEBUG] Sending PUT request...');
             
-            const res = await fetch(apiUrl, {
+            const res = await fetch(updateUrl, {
               method: 'PUT',
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -8804,14 +8869,15 @@ try {
             console.log('🔍 [EDIT USER SUBMIT DEBUG] Response status:', res.status);
             console.log('🔍 [EDIT USER SUBMIT DEBUG] Response ok:', res.ok);
             
+            // Read response as text first, then parse as JSON if possible
+            const responseText = await res.text();
             let data;
             try {
-              data = await res.json();
+              data = JSON.parse(responseText);
               console.log('🔍 [EDIT USER SUBMIT DEBUG] Response data:', data);
             } catch (jsonError) {
               console.error('❌ [EDIT USER SUBMIT DEBUG] ERROR: Failed to parse JSON response:', jsonError);
-              const textResponse = await res.text();
-              console.error('❌ [EDIT USER SUBMIT DEBUG] Raw response:', textResponse);
+              console.error('❌ [EDIT USER SUBMIT DEBUG] Raw response:', responseText.substring(0, 500));
               editUserError.textContent = 'Error: Invalid response from server. Please check the console for details.';
               editUserError.classList.remove('hidden');
               editUserForm.dataset.submitting = 'false';
