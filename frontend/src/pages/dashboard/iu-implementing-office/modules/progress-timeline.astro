@@ -4776,11 +4776,73 @@ This compilation report has been generated automatically based on approved EIU m
     const pendingSubmissions = projectsData.filter(p => p.hasPendingSubmissions || p.status === 'pending_submission').length;
     const completedReviews = projectsData.filter(p => p.status === 'completed' || p.status === 'approved').length;
     const delayedProjects = projectsData.filter(p => p.status === 'delayed' || p.hasDelayedMilestones).length;
+    
+    // Calculate ongoing projects - includes both 'ongoing' status AND delayed projects (since delayed projects are still ongoing)
+    const ongoingProjects = projectsData.filter(p => {
+      const status = p.status || '';
+      const isOngoing = status === 'ongoing' || status === 'in_progress' || p.approvedBySecretariat === true;
+      const isDelayed = status === 'delayed' || p.hasDelayedMilestones;
+      // Include projects that are ongoing OR delayed (delayed projects are still ongoing)
+      return isOngoing || isDelayed;
+    }).length;
+    
+    // Calculate active projects (non-pending, non-completed) - same as ongoing but includes delayed
+    const activeProjects = projectsData.filter(p => {
+      const status = p.status || '';
+      return status !== 'pending' && 
+             status !== 'completed' && 
+             status !== 'complete' &&
+             status !== 'cancelled';
+    }).length;
+    
+    // Calculate needs revision
+    const needsRevision = projectsData.filter(p => 
+      p.status === 'needs_revision' || 
+      p.status === 'revision_request' ||
+      p.hasRevisionRequests
+    ).length;
+    
+    // Calculate average progress
+    const totalProgress = projectsData.reduce((sum, p) => {
+      return sum + (parseFloat(p.progress?.overall || p.progress?.overallProgress || p.overallProgress || 0));
+    }, 0);
+    const averageProgress = projectsData.length > 0 ? Math.round(totalProgress / projectsData.length) : 0;
+    
+    // Calculate total budget monitored
+    const totalBudget = projectsData.reduce((sum, p) => sum + (parseFloat(p.totalBudget) || 0), 0);
+    const totalBudgetFormatted = totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    document.getElementById('totalProjectsCount').textContent = totalProjects;
-    document.getElementById('pendingSubmissionsCount').textContent = pendingSubmissions;
-    document.getElementById('completedReviewsCount').textContent = completedReviews;
-    document.getElementById('delayedProjectsCount').textContent = delayedProjects;
+    // Update all summary cards
+    const totalProjectsEl = document.getElementById('totalProjectsCount');
+    const pendingSubmissionsEl = document.getElementById('pendingSubmissionsCount');
+    const completedReviewsEl = document.getElementById('completedReviewsCount');
+    const delayedProjectsEl = document.getElementById('delayedProjectsCount');
+    const ongoingProjectsEl = document.getElementById('ongoingProjectsCount');
+    const needsRevisionEl = document.getElementById('needsRevisionCount');
+    const averageProgressEl = document.getElementById('averageProgressPercent');
+    const headerProjectCountEl = document.getElementById('headerProjectCount');
+    
+    if (totalProjectsEl) totalProjectsEl.textContent = totalProjects;
+    if (pendingSubmissionsEl) pendingSubmissionsEl.textContent = pendingSubmissions;
+    if (completedReviewsEl) completedReviewsEl.textContent = completedReviews;
+    if (delayedProjectsEl) delayedProjectsEl.textContent = delayedProjects;
+    if (ongoingProjectsEl) ongoingProjectsEl.textContent = ongoingProjects;
+    if (needsRevisionEl) needsRevisionEl.textContent = needsRevision;
+    if (averageProgressEl) averageProgressEl.textContent = averageProgress;
+    if (headerProjectCountEl) {
+      headerProjectCountEl.textContent = `${activeProjects} ${activeProjects === 1 ? 'Project' : 'Projects'} Available`;
+    }
+    
+    console.log('📊 [STATS UPDATE] Summary Cards Updated:', {
+      totalProjects,
+      pendingSubmissions,
+      completedReviews,
+      delayedProjects,
+      ongoingProjects,
+      activeProjects,
+      needsRevision,
+      averageProgress
+    });
   }
 
   // Search and filter functionality

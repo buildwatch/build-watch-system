@@ -282,16 +282,37 @@ export default function ProjectAssignmentCenter({
     try {
       const token = localStorage.getItem('token');
 
+      // 🔍 DEBUG: Log initial state
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] ========== STARTING ASSIGNMENT ==========');
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] Project ID:', project.id);
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] Current EIU:', currentEIU);
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] EIU Personnel ID:', eiuPersonnelId);
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] Project Status:', project.status);
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] API URL:', getApiUrl());
+
       // First get the project to preserve other fields
       const getResponse = await fetch(`${getApiUrl()}/projects/${project.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] GET Response Status:', getResponse.status);
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] GET Response OK:', getResponse.ok);
+
       if (!getResponse.ok) {
+        const errorText = await getResponse.text();
+        console.error('❌ [EIU ASSIGNMENT DEBUG] GET Request Failed:', errorText);
         throw new Error('Failed to fetch project');
       }
 
       const getData = await getResponse.json();
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] GET Response Data:', {
+        success: getData.success,
+        projectStatus: getData.project?.status,
+        projectWorkflowStatus: getData.project?.workflowStatus,
+        projectId: getData.project?.id,
+        currentEiuPersonnelId: getData.project?.eiuPersonnelId
+      });
+
       if (!getData.success || !getData.project) {
         throw new Error('Project not found');
       }
@@ -321,6 +342,21 @@ export default function ProjectAssignmentCenter({
         }
       }
 
+      // 🔍 DEBUG: Log update payload
+      const updatePayload = {
+        ...getData.project,
+        eiuPersonnelId: finalEiuPersonnelId,
+        hasExternalPartner: true
+      };
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] Update Payload:', {
+        id: updatePayload.id,
+        status: updatePayload.status,
+        workflowStatus: updatePayload.workflowStatus,
+        eiuPersonnelId: updatePayload.eiuPersonnelId,
+        hasExternalPartner: updatePayload.hasExternalPartner,
+        name: updatePayload.name
+      });
+
       // Update EIU assignment
       const updateResponse = await fetch(`${getApiUrl()}/projects/${project.id}`, {
         method: 'PUT',
@@ -328,12 +364,11 @@ export default function ProjectAssignmentCenter({
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...getData.project,
-          eiuPersonnelId: finalEiuPersonnelId,
-          hasExternalPartner: true
-        })
+        body: JSON.stringify(updatePayload)
       });
+
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] PUT Response Status:', updateResponse.status);
+      console.log('🔍 [EIU ASSIGNMENT DEBUG] PUT Response OK:', updateResponse.ok);
 
       if (!updateResponse.ok) {
         // Read response as text first to avoid "body stream already read" error
@@ -431,6 +466,54 @@ export default function ProjectAssignmentCenter({
           setEiuPersonnelId('');
           setEiuValidation({ valid: false, name: '', email: '' });
           setCurrentEIU(null);
+        },
+        // Debug function to check project status and EIU assignment
+        debugProjectStatus: async (projectId) => {
+          try {
+            const token = localStorage.getItem('token');
+            const apiUrl = getApiUrl();
+            
+            console.log('🔍 [DEBUG] Checking project status for:', projectId);
+            console.log('🔍 [DEBUG] API URL:', apiUrl);
+            
+            const response = await fetch(`${apiUrl}/projects/${projectId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('❌ [DEBUG] Failed to fetch project:', errorText);
+              return { error: 'Failed to fetch project', status: response.status };
+            }
+            
+            const data = await response.json();
+            if (!data.success || !data.project) {
+              console.error('❌ [DEBUG] Project not found in response');
+              return { error: 'Project not found' };
+            }
+            
+            const project = data.project;
+            const debugInfo = {
+              id: project.id,
+              name: project.name,
+              status: project.status,
+              workflowStatus: project.workflowStatus,
+              approvedBySecretariat: project.approvedBySecretariat,
+              eiuPersonnelId: project.eiuPersonnelId,
+              hasExternalPartner: project.hasExternalPartner,
+              canAssignEIU: project.status === 'draft' || project.status === 'pending',
+              isDraft: project.status === 'draft',
+              isPending: project.status === 'pending',
+              isOngoing: project.status === 'ongoing',
+              isApproved: project.approvedBySecretariat === true
+            };
+            
+            console.log('✅ [DEBUG] Project Status Information:', debugInfo);
+            return debugInfo;
+          } catch (error) {
+            console.error('❌ [DEBUG] Error:', error);
+            return { error: error.message };
+          }
         }
       };
     }
