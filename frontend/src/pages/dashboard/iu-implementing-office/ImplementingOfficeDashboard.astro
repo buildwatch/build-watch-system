@@ -59,7 +59,13 @@ try {
         stats.totalBudget = projectService.formatBudget(totalBudget);
         
         // Use calculated progress from ProgressCalculationService for utilized budget
+        // Only calculate for projects that are not in pending status
         const utilizedBudget = projects.reduce((sum, project) => {
+          // Skip pending projects - they shouldn't contribute to utilized budget
+          if (project.status === 'pending') {
+            return sum;
+          }
+          
           const budget = parseFloat(project.totalBudget) || 0;
           // Use budget division progress for utilized budget calculation (only approved divisions)
           const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
@@ -68,13 +74,19 @@ try {
         stats.utilizedBudget = projectService.formatBudget(utilizedBudget);
         
         // Calculate average progress using ProgressCalculationService results
-        const totalProgress = projects.reduce((sum, project) => {
+        // Only calculate for projects that are not in pending status
+        const activeProjects = projects.filter(p => p.status !== 'pending');
+        const totalProgress = activeProjects.reduce((sum, project) => {
           return sum + (parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0));
         }, 0);
-        stats.averageProgress = projects.length > 0 ? Math.round(totalProgress / projects.length) : 0;
+        stats.averageProgress = activeProjects.length > 0 ? Math.round(totalProgress / activeProjects.length) : 0;
         
         // Calculate budget utilization percentage for progress bar
-        const budgetUtilizationPercentage = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
+        // Only if there are active (non-pending) projects with budget
+        const activeProjectsWithBudget = projects.filter(p => p.status !== 'pending' && (parseFloat(p.totalBudget) || 0) > 0);
+        const budgetUtilizationPercentage = (activeProjectsWithBudget.length > 0 && totalBudget > 0) 
+          ? (utilizedBudget / totalBudget) * 100 
+          : 0;
         stats.budgetUtilizationPercentage = Math.round(budgetUtilizationPercentage);
       }
     }

@@ -6288,9 +6288,18 @@ try {
               
               console.log('Password verification response status:', response.status);
               
+              // Read response as text first to avoid "body stream already read" error
+              const responseText = await response.text();
+              let errorData = {};
+              
+              try {
+                errorData = JSON.parse(responseText);
+              } catch (e) {
+                errorData = { error: 'Unknown error occurred' };
+              }
+              
               // Handle 401 Unauthorized - check if it's session expired or wrong password
               if (response.status === 401) {
-                const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }));
                 console.error('❌ Authentication failed:', errorData.error);
                 
                 const errorMessage = errorData.error || errorData.message || '';
@@ -6332,7 +6341,6 @@ try {
                 }
               } else {
                 console.log('❌ Password verification failed with status:', response.status);
-                const errorData = await response.json();
                 console.log('Error data:', errorData);
                 
                 // Check if it's a session/auth error vs wrong password

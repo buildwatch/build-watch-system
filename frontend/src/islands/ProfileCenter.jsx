@@ -1382,33 +1382,65 @@ export default function ProfileCenter({
             </div>
 
             {/* Quick Actions */}
-            <div className={`profile-card-modern ${currentTheme.primaryLight} rounded-2xl p-6 border ${currentTheme.border}`}>
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+            <div className={`profile-card-modern ${currentTheme.primaryLight} rounded-2xl p-6 border ${currentTheme.border} shadow-lg`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`${currentTheme.primary} rounded-xl p-2.5`}>
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Quick Actions</h3>
+                  <p className="text-xs text-gray-600">Manage your profile settings</p>
+                </div>
+              </div>
               <div className="space-y-3">
                 <button
                   onClick={() => setEditing(!editing)}
-                  className={`btn-modern-primary w-full text-white rounded-xl font-semibold shadow-md ${
+                  className={`group w-full text-white rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl ${
                     editing 
                       ? 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800' 
-                      : currentTheme.primary + ' ' + currentTheme.primaryHover
+                      : `bg-gradient-to-r ${currentTheme.primary} hover:shadow-2xl`
                   }`}
+                  style={!editing ? {
+                    background: currentTheme.accent === 'blue' 
+                      ? 'linear-gradient(135deg, #0D7DB5 0%, #0A6A9A 100%)'
+                      : currentTheme.accent === 'emerald'
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : currentTheme.accent === 'sky'
+                      ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
+                      : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                  } : {}}
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={editing ? "M6 18L18 6M6 6l12 12" : "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"}></path>
-                    </svg>
-                    {editing ? 'Cancel Editing' : 'Edit Profile'}
+                  <span className="flex items-center justify-center gap-3 py-3.5 px-4">
+                    <div className={`p-1.5 rounded-lg ${editing ? 'bg-white/20' : 'bg-white/20'} group-hover:bg-white/30 transition-colors`}>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={editing ? "M6 18L18 6M6 6l12 12" : "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"}></path>
+                      </svg>
+                    </div>
+                    <span className="text-base">{editing ? 'Cancel Editing' : 'Edit Profile'}</span>
                   </span>
                 </button>
                 <button
                   onClick={() => setShowChangePasswordModal(true)}
-                  className={`btn-modern-primary w-full ${currentTheme.primary} ${currentTheme.primaryHover} text-white rounded-xl font-semibold shadow-md`}
+                  className={`group w-full bg-gradient-to-r ${currentTheme.primary} text-white rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-2xl`}
+                  style={{
+                    background: currentTheme.accent === 'blue' 
+                      ? 'linear-gradient(135deg, #0D7DB5 0%, #0A6A9A 100%)'
+                      : currentTheme.accent === 'emerald'
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : currentTheme.accent === 'sky'
+                      ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
+                      : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                  }}
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                    </svg>
-                    Change Password
+                  <span className="flex items-center justify-center gap-3 py-3.5 px-4">
+                    <div className="p-1.5 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                      </svg>
+                    </div>
+                    <span className="text-base">Change Password</span>
                   </span>
                 </button>
               </div>

@@ -336,9 +336,12 @@ export default function ProjectAssignmentCenter({
       });
 
       if (!updateResponse.ok) {
-        let errorData;
+        // Read response as text first to avoid "body stream already read" error
+        const responseText = await updateResponse.text();
+        let errorData = {};
+        
         try {
-          errorData = await updateResponse.json();
+          errorData = JSON.parse(responseText);
         } catch (e) {
           errorData = { error: 'Failed to update project' };
         }
@@ -354,7 +357,14 @@ export default function ProjectAssignmentCenter({
         throw new Error(errorMsg);
       }
 
-      const updateData = await updateResponse.json();
+      // Read response as text first, then parse
+      const updateResponseText = await updateResponse.text();
+      let updateData = {};
+      try {
+        updateData = JSON.parse(updateResponseText);
+      } catch (e) {
+        throw new Error('Failed to parse response from server');
+      }
       
       if (updateData.success) {
         setSuccessMessage(`Successfully ${project.eiuPersonnelId ? 'reassigned' : 'assigned'} EIU: ${eiuValidation.name}`);
