@@ -387,8 +387,9 @@ const ProjectAnalyticsDashboard = ({
                   ? ` and ${statusProjects.length - maxProjects} more...` 
                   : '';
                 
+                // Return project list - this replaces the default "Projects: X" label
                 return [
-                  `${percentage}% (${statusProjects.length} project${statusProjects.length !== 1 ? 's' : ''})`,
+                  `${statusProjects.length} project${statusProjects.length !== 1 ? 's' : ''} (${percentage}%)`,
                   ...displayProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';
@@ -396,8 +397,14 @@ const ProjectAnalyticsDashboard = ({
                   }),
                   moreText ? moreText : ''
                 ].filter(Boolean);
+              },
+              // Disable default label format
+              afterLabel: function() {
+                return null;
               }
-            }
+            },
+            // Disable default dataset label display
+            displayColors: false
           }
         }
       }
@@ -489,15 +496,25 @@ const ProjectAnalyticsDashboard = ({
                   return `${percentage}%`;
                 }
                 
+                // Return project list - this replaces the default "Projects: X" label
                 return [
-                  `${percentage}% (${categoryProjects.length} project${categoryProjects.length !== 1 ? 's' : ''})`,
+                  `${categoryProjects.length} project${categoryProjects.length !== 1 ? 's' : ''} (${percentage}%)`,
                   ...categoryProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';
                     return code ? `• ${name} (${code})` : `• ${name}`;
                   })
                 ];
+              },
+              // Disable default label format
+              afterLabel: function() {
+                return null;
               }
+            },
+            // Disable default dataset label display
+            displayColors: false,
+            filter: function(tooltipItem) {
+              return true;
             }
           }
         }
@@ -733,7 +750,7 @@ const ProjectAnalyticsDashboard = ({
       data: {
         labels: Object.keys(progressCounts),
         datasets: [{
-          label: 'Projects',
+          label: '', // Empty label to prevent default "Projects: X" display
           data: Object.values(progressCounts),
           backgroundColor: [
             'rgba(239, 68, 68, 0.8)',
@@ -817,7 +834,7 @@ const ProjectAnalyticsDashboard = ({
       data: {
         labels: Object.keys(priorityCounts),
         datasets: [{
-          label: 'Projects',
+          label: '', // Empty label to prevent default "Projects: X" display
           data: Object.values(priorityCounts),
           backgroundColor: [
             'rgba(239, 68, 68, 0.8)',
@@ -836,8 +853,24 @@ const ProjectAnalyticsDashboard = ({
             callbacks: {
               title: function(context) {
                 const label = context[0].label || '';
-                const value = context[0].parsed.y || 0;
-                return `${label} Priority: ${value} project${value !== 1 ? 's' : ''}`;
+                const priorityProjects = priorityGroups[label] || [];
+                
+                if (priorityProjects.length === 0) {
+                  const value = context[0].parsed.y || 0;
+                  return `${label} Priority: ${value} project${value !== 1 ? 's' : ''}`;
+                }
+                
+                // Show first project's title and code in the title
+                const firstProject = priorityProjects[0];
+                const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                const code = firstProject.projectCode || '';
+                
+                if (priorityProjects.length === 1) {
+                  return code ? `${name} (${code})` : name;
+                }
+                
+                // If multiple projects, show first one and indicate there are more
+                return code ? `${name} (${code})` : `${name} (+${priorityProjects.length - 1} more)`;
               },
               label: function(context) {
                 const label = context.label || '';
@@ -853,7 +886,9 @@ const ProjectAnalyticsDashboard = ({
                   ? ` and ${priorityProjects.length - maxProjects} more...` 
                   : '';
                 
+                // Return project list - this replaces the default "Projects: X" label
                 return [
+                  `${priorityProjects.length} project${priorityProjects.length !== 1 ? 's' : ''}`,
                   ...displayProjects.map(p => {
                     const name = p.name || p.projectName || p.title || 'Unnamed Project';
                     const code = p.projectCode || '';
@@ -861,6 +896,10 @@ const ProjectAnalyticsDashboard = ({
                   }),
                   moreText ? moreText : ''
                 ].filter(Boolean);
+              },
+              // Disable default label format
+              afterLabel: function() {
+                return null;
               }
             }
           }

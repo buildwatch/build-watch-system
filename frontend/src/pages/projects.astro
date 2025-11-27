@@ -982,6 +982,27 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
     // 1. Project Status Distribution (Pie Chart)
     const statusCtx = document.getElementById('projectStatusChart');
     if (statusCtx) {
+      // Group projects by status for tooltips
+      const statusGroups = {
+        'Not Started': [],
+        'Ongoing': [],
+        'Delayed': [],
+        'Completed': []
+      };
+      
+      (window.projectsData || []).forEach(project => {
+        const status = (project.status || '').toLowerCase();
+        if (status === 'not started' || status === 'not_started' || status === 'pending') {
+          statusGroups['Not Started'].push(project);
+        } else if (status === 'completed' || status === 'done' || status === 'finished') {
+          statusGroups['Completed'].push(project);
+        } else if (status === 'delayed') {
+          statusGroups['Delayed'].push(project);
+        } else if (status === 'ongoing' || status === 'in_progress' || status === 'active' || !status) {
+          statusGroups['Ongoing'].push(project);
+        }
+      });
+      
       window.projectStatisticsCharts.status = new Chart(statusCtx, {
         type: 'pie',
         data: {
@@ -1000,12 +1021,53 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
             legend: { position: 'bottom' },
             tooltip: {
               callbacks: {
+                title: function(context) {
+                  const label = context[0].label || '';
+                  const statusProjects = statusGroups[label] || [];
+                  
+                  if (statusProjects.length === 0) {
+                    const value = context[0].parsed || 0;
+                    return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                  }
+                  
+                  // Show first project's title and code in the title
+                  const firstProject = statusProjects[0];
+                  const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                  const code = firstProject.code || firstProject.projectCode || '';
+                  
+                  if (statusProjects.length === 1) {
+                    return code ? `${name} (${code})` : name;
+                  }
+                  
+                  // If multiple projects, show first one and indicate there are more
+                  return code ? `${name} (${code})` : `${name} (+${statusProjects.length - 1} more)`;
+                },
                 label: function(context) {
                   const label = context.label || '';
-                  const value = context.parsed || 0;
+                  const statusProjects = statusGroups[label] || [];
                   const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                  return `${label}: ${value} (${percentage}%)`;
+                  const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                  
+                  if (statusProjects.length === 0) {
+                    return `${percentage}%`;
+                  }
+                  
+                  const maxProjects = 5;
+                  const displayProjects = statusProjects.slice(0, maxProjects);
+                  const moreText = statusProjects.length > maxProjects 
+                    ? ` and ${statusProjects.length - maxProjects} more...` 
+                    : '';
+                  
+                  // Return project list - this replaces the default "Projects: X" label
+                  return [
+                    `${statusProjects.length} project${statusProjects.length !== 1 ? 's' : ''} (${percentage}%)`,
+                    ...displayProjects.map(p => {
+                      const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                      const code = p.code || p.projectCode || '';
+                      return code ? `• ${name} (${code})` : `• ${name}`;
+                    }),
+                    moreText ? moreText : ''
+                  ].filter(Boolean);
                 }
               }
             }
@@ -1021,12 +1083,22 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
       
+      // Group projects by category for tooltips
+      const categoryGroups = {};
+      (window.projectsData || []).forEach(project => {
+        const cat = project.category || 'Uncategorized';
+        if (!categoryGroups[cat]) {
+          categoryGroups[cat] = [];
+        }
+        categoryGroups[cat].push(project);
+      });
+      
       window.projectStatisticsCharts.category = new Chart(categoryCtx, {
         type: 'bar',
         data: {
           labels: categoryData.map(([name]) => name),
           datasets: [{
-            label: 'Projects',
+            label: '',
             data: categoryData.map(([, count]) => count),
             backgroundColor: colors.primary,
             borderRadius: 8
@@ -1036,7 +1108,57 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  const label = context[0].label || '';
+                  const categoryProjects = categoryGroups[label] || [];
+                  
+                  if (categoryProjects.length === 0) {
+                    const value = context[0].parsed.y || 0;
+                    return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                  }
+                  
+                  // Show first project's title and code in the title
+                  const firstProject = categoryProjects[0];
+                  const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                  const code = firstProject.code || firstProject.projectCode || '';
+                  
+                  if (categoryProjects.length === 1) {
+                    return code ? `${name} (${code})` : name;
+                  }
+                  
+                  // If multiple projects, show first one and indicate there are more
+                  return code ? `${name} (${code})` : `${name} (+${categoryProjects.length - 1} more)`;
+                },
+                label: function(context) {
+                  const label = context.label || '';
+                  const categoryProjects = categoryGroups[label] || [];
+                  
+                  if (categoryProjects.length === 0) {
+                    return 'No projects';
+                  }
+                  
+                  const maxProjects = 5;
+                  const displayProjects = categoryProjects.slice(0, maxProjects);
+                  const moreText = categoryProjects.length > maxProjects 
+                    ? ` and ${categoryProjects.length - maxProjects} more...` 
+                    : '';
+                  
+                  // Return project list - this replaces the default "Projects: X" label
+                  return [
+                    `${categoryProjects.length} project${categoryProjects.length !== 1 ? 's' : ''}`,
+                    ...displayProjects.map(p => {
+                      const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                      const code = p.code || p.projectCode || '';
+                      return code ? `• ${name} (${code})` : `• ${name}`;
+                    }),
+                    moreText ? moreText : ''
+                  ].filter(Boolean);
+                }
+              }
+            }
           },
           scales: {
             y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -1056,6 +1178,16 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
         'Not Specified': colors.notStarted
       };
       
+      // Group projects by priority for tooltips
+      const priorityGroups = {};
+      (window.projectsData || []).forEach(project => {
+        const priority = project.priority || 'Not Specified';
+        if (!priorityGroups[priority]) {
+          priorityGroups[priority] = [];
+        }
+        priorityGroups[priority].push(project);
+      });
+      
       window.projectStatisticsCharts.priority = new Chart(priorityCtx, {
         type: 'doughnut',
         data: {
@@ -1073,7 +1205,57 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'bottom' }
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  const label = context[0].label || '';
+                  const priorityProjects = priorityGroups[label] || [];
+                  
+                  if (priorityProjects.length === 0) {
+                    const value = context[0].parsed || 0;
+                    return `${label} Priority: ${value} project${value !== 1 ? 's' : ''}`;
+                  }
+                  
+                  // Show first project's title and code in the title
+                  const firstProject = priorityProjects[0];
+                  const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                  const code = firstProject.code || firstProject.projectCode || '';
+                  
+                  if (priorityProjects.length === 1) {
+                    return code ? `${name} (${code})` : name;
+                  }
+                  
+                  // If multiple projects, show first one and indicate there are more
+                  return code ? `${name} (${code})` : `${name} (+${priorityProjects.length - 1} more)`;
+                },
+                label: function(context) {
+                  const label = context.label || '';
+                  const priorityProjects = priorityGroups[label] || [];
+                  
+                  if (priorityProjects.length === 0) {
+                    return 'No projects';
+                  }
+                  
+                  const maxProjects = 5;
+                  const displayProjects = priorityProjects.slice(0, maxProjects);
+                  const moreText = priorityProjects.length > maxProjects 
+                    ? ` and ${priorityProjects.length - maxProjects} more...` 
+                    : '';
+                  
+                  // Return project list - this replaces the default "Projects: X" label
+                  return [
+                    `${priorityProjects.length} project${priorityProjects.length !== 1 ? 's' : ''}`,
+                    ...displayProjects.map(p => {
+                      const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                      const code = p.code || p.projectCode || '';
+                      return code ? `• ${name} (${code})` : `• ${name}`;
+                    }),
+                    moreText ? moreText : ''
+                  ].filter(Boolean);
+                }
+              }
+            }
           }
         }
       });
@@ -1086,12 +1268,24 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
       
+      // Group projects by department for tooltips
+      const departmentGroups = {};
+      (window.projectsData || []).forEach(project => {
+        const dept = project.implementingUnitName || project.implementingOfficeName || project.department;
+        if (dept) {
+          if (!departmentGroups[dept]) {
+            departmentGroups[dept] = [];
+          }
+          departmentGroups[dept].push(project);
+        }
+      });
+      
       window.projectStatisticsCharts.department = new Chart(deptCtx, {
         type: 'bar',
         data: {
           labels: deptData.map(([name]) => name),
           datasets: [{
-            label: 'Projects',
+            label: '',
             data: deptData.map(([, count]) => count),
             backgroundColor: colors.secondary,
             borderRadius: 8
@@ -1102,7 +1296,57 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  const label = context[0].label || '';
+                  const deptProjects = departmentGroups[label] || [];
+                  
+                  if (deptProjects.length === 0) {
+                    const value = context[0].parsed.x || 0;
+                    return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                  }
+                  
+                  // Show first project's title and code in the title
+                  const firstProject = deptProjects[0];
+                  const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                  const code = firstProject.code || firstProject.projectCode || '';
+                  
+                  if (deptProjects.length === 1) {
+                    return code ? `${name} (${code})` : name;
+                  }
+                  
+                  // If multiple projects, show first one and indicate there are more
+                  return code ? `${name} (${code})` : `${name} (+${deptProjects.length - 1} more)`;
+                },
+                label: function(context) {
+                  const label = context.label || '';
+                  const deptProjects = departmentGroups[label] || [];
+                  
+                  if (deptProjects.length === 0) {
+                    return 'No projects';
+                  }
+                  
+                  const maxProjects = 5;
+                  const displayProjects = deptProjects.slice(0, maxProjects);
+                  const moreText = deptProjects.length > maxProjects 
+                    ? ` and ${deptProjects.length - maxProjects} more...` 
+                    : '';
+                  
+                  // Return project list - this replaces the default "Projects: X" label
+                  return [
+                    `${deptProjects.length} project${deptProjects.length !== 1 ? 's' : ''}`,
+                    ...displayProjects.map(p => {
+                      const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                      const code = p.code || p.projectCode || '';
+                      return code ? `• ${name} (${code})` : `• ${name}`;
+                    }),
+                    moreText ? moreText : ''
+                  ].filter(Boolean);
+                }
+              }
+            }
           },
           scales: {
             x: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -1114,12 +1358,36 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
     // 5. Progress Distribution (Bar Chart)
     const progressCtx = document.getElementById('projectProgressChart');
     if (progressCtx) {
+      // Group projects by progress range for tooltips
+      const progressRanges = {
+        '0%': [],
+        '1-49%': [],
+        '50-74%': [],
+        '75-99%': [],
+        '100%': []
+      };
+      
+      (window.projectsData || []).forEach(project => {
+        const progress = Number(project.progress || 0);
+        if (progress === 0) {
+          progressRanges['0%'].push(project);
+        } else if (progress > 0 && progress < 50) {
+          progressRanges['1-49%'].push(project);
+        } else if (progress >= 50 && progress < 75) {
+          progressRanges['50-74%'].push(project);
+        } else if (progress >= 75 && progress < 100) {
+          progressRanges['75-99%'].push(project);
+        } else if (progress >= 100) {
+          progressRanges['100%'].push(project);
+        }
+      });
+      
       window.projectStatisticsCharts.progress = new Chart(progressCtx, {
         type: 'bar',
         data: {
           labels: ['0%', '1-49%', '50-74%', '75-99%', '100%'],
           datasets: [{
-            label: 'Projects',
+            label: '',
             data: [
               stats.progressDistribution.zero,
               stats.progressDistribution.low,
@@ -1141,7 +1409,58 @@ import ProjectAnalyticsDashboard from "../islands/ProjectAnalyticsDashboard.jsx"
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  const label = context[0].label || '';
+                  const rangeProjects = progressRanges[label] || [];
+                  
+                  if (rangeProjects.length === 0) {
+                    const value = context[0].parsed.y || 0;
+                    return `${label}: ${value} project${value !== 1 ? 's' : ''}`;
+                  }
+                  
+                  // Show first project's title and code in the title
+                  const firstProject = rangeProjects[0];
+                  const name = firstProject.name || firstProject.projectName || firstProject.title || 'Unnamed Project';
+                  const code = firstProject.code || firstProject.projectCode || '';
+                  
+                  if (rangeProjects.length === 1) {
+                    return code ? `${name} (${code})` : name;
+                  }
+                  
+                  // If multiple projects, show first one and indicate there are more
+                  return code ? `${name} (${code})` : `${name} (+${rangeProjects.length - 1} more)`;
+                },
+                label: function(context) {
+                  const label = context.label || '';
+                  const rangeProjects = progressRanges[label] || [];
+                  
+                  if (rangeProjects.length === 0) {
+                    return 'No projects';
+                  }
+                  
+                  const maxProjects = 5;
+                  const displayProjects = rangeProjects.slice(0, maxProjects);
+                  const moreText = rangeProjects.length > maxProjects 
+                    ? ` and ${rangeProjects.length - maxProjects} more...` 
+                    : '';
+                  
+                  // Return project list - this replaces the default "Projects: X" label
+                  return [
+                    `${rangeProjects.length} project${rangeProjects.length !== 1 ? 's' : ''}`,
+                    ...displayProjects.map(p => {
+                      const name = p.name || p.projectName || p.title || 'Unnamed Project';
+                      const code = p.code || p.projectCode || '';
+                      const progress = Number(p.progress || 0).toFixed(1);
+                      return code ? `• ${name} (${code}) - ${progress}%` : `• ${name} - ${progress}%`;
+                    }),
+                    moreText ? moreText : ''
+                  ].filter(Boolean);
+                }
+              }
+            }
           },
           scales: {
             y: { beginAtZero: true, ticks: { stepSize: 1 } }
