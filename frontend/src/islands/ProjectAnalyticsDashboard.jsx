@@ -1121,13 +1121,18 @@ const ProjectAnalyticsDashboard = ({
 
         {/* Modal Content */}
         <div className="p-6 overflow-y-auto flex-1">
-          {/* Time Range Selector */}
-          <div className="mb-6 flex items-center gap-3">
-            <label className="text-sm font-semibold text-gray-700">Time Range:</label>
+          {/* Enhanced Time Range Selector */}
+          <div className="mb-6 flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-200">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <label className="text-sm font-semibold text-gray-700">Time Range:</label>
+            </div>
             <select 
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className={`px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-${theme.primaryColor}-500 focus:border-transparent transition-all`}
+              className={`px-4 py-2.5 border-2 border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:border-${theme.primaryColor}-400 focus:outline-none focus:ring-2 focus:ring-${theme.primaryColor}-500 focus:border-transparent transition-all shadow-sm`}
             >
               <option value="all">All Time</option>
               <option value="30">Last 30 Days</option>
@@ -1136,55 +1141,137 @@ const ProjectAnalyticsDashboard = ({
             </select>
             <button 
               onClick={handleRefresh}
-              className={`${theme.buttonClass} flex items-center gap-2 px-4 py-2 text-sm`}
+              className={`${theme.buttonClass} flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
-              Refresh
+              Refresh Data
             </button>
           </div>
           
-          {/* Statistics Cards */}
+          {/* Enhanced Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Total Projects</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                  <p className="text-xs text-gray-500 mt-1">All projects</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Ongoing Projects</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.ongoing}</div>
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Ongoing Projects</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.ongoing}</p>
+                  <p className="text-xs text-blue-600 mt-1">Currently active</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Completed Projects</div>
-              <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Completed Projects</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+                  <p className="text-xs text-green-600 mt-1">Successfully finished</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Pending Projects</div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Pending Projects</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+                  <p className="text-xs text-yellow-600 mt-1">Awaiting action</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Delayed Projects</div>
-              <div className="text-2xl font-bold text-red-600">{stats.delayed}</div>
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Delayed Projects</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.delayed}</p>
+                  <p className="text-xs text-red-600 mt-1">Behind schedule</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Average Progress</div>
-              <div className="text-2xl font-bold text-purple-600">{stats.avgProgress.toFixed(1)}%</div>
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Average Progress</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.avgProgress.toFixed(1)}%</p>
+                  <p className="text-xs text-purple-600 mt-1">Overall completion</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Budget Statistics */}
+          {/* Enhanced Budget Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Total Budget</div>
-              <div className="text-2xl font-bold text-gray-900">
-                ₱{stats.totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Budget</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ₱{stats.totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Allocated budget</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
               </div>
             </div>
-            <div className="profile-card p-4">
-              <div className="text-sm text-gray-600 mb-1">Utilized Budget</div>
-              <div className={`text-2xl font-bold text-${theme.primaryColor}-600`}>
-                ₱{stats.utilizedBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="profile-card p-6 cursor-pointer hover:shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Utilized Budget</p>
+                  <p className={`text-2xl font-bold text-${theme.primaryColor}-600`}>
+                    ₱{stats.utilizedBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className={`text-xs text-${theme.primaryColor}-600 mt-1`}>
+                    {stats.totalBudget > 0 ? `${((stats.utilizedBudget / stats.totalBudget) * 100).toFixed(1)}% utilized` : '0% utilized'}
+                  </p>
+                </div>
+                <div className={`w-12 h-12 bg-gradient-to-br from-${theme.primaryColor}-500 to-${theme.primaryColor}-600 rounded-xl flex items-center justify-center shadow-md`}>
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3-3-3h1m1 0h6m-6 0a3 3 0 110-6H9l3-3-3 3h1m1 0h6"></path>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>

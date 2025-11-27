@@ -22,7 +22,20 @@ export default function ProjectNotesCenter({
   const [currentUserId, setCurrentUserId] = useState('current-user-id');
   const [currentUserName, setCurrentUserName] = useState('Current User');
   const [loading, setLoading] = useState(false);
-  const API_URL = 'http://localhost:3000/api';
+  
+  // Dynamic API URL helper
+  const getApiUrl = () => {
+    if (typeof window !== 'undefined') {
+      if (window.getApiUrl) {
+        return window.getApiUrl();
+      }
+      const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      return isProd 
+        ? `${window.location.protocol}//${window.location.hostname}/api`
+        : 'http://localhost:3000/api';
+    }
+    return '/api';
+  };
 
   // Theme colors
   const themeColors = {
@@ -67,7 +80,7 @@ export default function ProjectNotesCenter({
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch(`${API_URL}/projects/${selectedProject.id}/notes`, {
+        const response = await fetch(`${getApiUrl()}/projects/${selectedProject.id}/notes`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -119,7 +132,7 @@ export default function ProjectNotesCenter({
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${projectId}/notes`, {
+      const response = await fetch(`${getApiUrl()}/projects/${projectId}/notes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -166,7 +179,7 @@ export default function ProjectNotesCenter({
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/notes`, {
+      const response = await fetch(`${getApiUrl()}/projects/${selectedProject.id}/notes`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -213,7 +226,7 @@ export default function ProjectNotesCenter({
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/notes/${editingNote.id}`, {
+      const response = await fetch(`${getApiUrl()}/projects/${selectedProject.id}/notes/${editingNote.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -262,7 +275,7 @@ export default function ProjectNotesCenter({
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/notes/${noteId}`, {
+      const response = await fetch(`${getApiUrl()}/projects/${selectedProject.id}/notes/${noteId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -302,7 +315,7 @@ export default function ProjectNotesCenter({
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/notes/${noteId}/replies`, {
+      const response = await fetch(`${getApiUrl()}/projects/${selectedProject.id}/notes/${noteId}/replies`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -346,7 +359,7 @@ export default function ProjectNotesCenter({
         return;
       }
 
-      const response = await fetch(`${API_URL}/projects/${selectedProject.id}/notes/${noteId}/reactions`, {
+      const response = await fetch(`${getApiUrl()}/projects/${selectedProject.id}/notes/${noteId}/reactions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -420,7 +433,7 @@ export default function ProjectNotesCenter({
             const token = localStorage.getItem('token');
             if (!token) return [];
 
-            const response = await fetch(`${API_URL}/projects/${projectId}/notes`, {
+            const response = await fetch(`${getApiUrl()}/projects/${projectId}/notes`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
