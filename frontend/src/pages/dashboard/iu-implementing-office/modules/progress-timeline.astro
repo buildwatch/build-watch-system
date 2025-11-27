@@ -2084,11 +2084,21 @@ loading = false;
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
           
-          <!-- Floating Status Badge -->
-          <div class="absolute top-3 right-3">
+          <!-- Floating Status Badge and Notification Badge -->
+          <div class="absolute top-3 right-3 flex items-center gap-2">
             <span class="px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusColor(project.status)}">
               ${project.status || 'Not Started'}
             </span>
+            ${(project.pendingSubmissionsCount || 0) > 0 ? `
+              <span class="relative">
+                <span class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white z-10 animate-pulse">
+                  ${project.pendingSubmissionsCount > 99 ? '99+' : project.pendingSubmissionsCount}
+                </span>
+                <svg class="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path>
+                </svg>
+              </span>
+            ` : ''}
           </div>
 
           <!-- Category Badge -->
@@ -2314,6 +2324,51 @@ loading = false;
   
   console.log('Global functions defined');
 
+  // Fetch pending milestone submissions for all projects
+  async function fetchPendingSubmissionsForProjects(projectIds) {
+    const pendingSubmissionsMap = {};
+    
+    try {
+      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      if (!token) return pendingSubmissionsMap;
+      
+      // Fetch submissions for all projects in parallel
+      const submissionPromises = projectIds.map(async (projectId) => {
+        try {
+          const response = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.submissions) {
+              // Count pending submissions (submitted by EIU, awaiting LGU-IU review)
+              // Status values: 'pending_review', 'under_review' are pending
+              // 'approved', 'needs_revision', 'rejected' are not pending
+              const pendingCount = data.submissions.filter(s => 
+                s.status === 'pending_review' || 
+                s.status === 'under_review'
+              ).length;
+              
+              if (pendingCount > 0) {
+                pendingSubmissionsMap[projectId] = pendingCount;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching submissions for project ${projectId}:`, error);
+        }
+      });
+      
+      await Promise.all(submissionPromises);
+      console.log('📋 Pending submissions map:', pendingSubmissionsMap);
+    } catch (error) {
+      console.error('Error fetching pending submissions:', error);
+    }
+    
+    return pendingSubmissionsMap;
+  }
+
   // Load projects data
   async function loadProjects() {
     try {
@@ -2332,6 +2387,33 @@ loading = false;
         if (data.success) {
           projects = data.projects;
           console.log('Projects loaded:', projects.length);
+          
+          // Fetch pending submissions for all projects
+          const projectIds = projects.map(p => p.id);
+          const pendingSubmissionsMap = await fetchPendingSubmissionsForProjects(projectIds);
+          
+          // Add pending submissions count to each project
+          projects.forEach(project => {
+            project.pendingSubmissionsCount = pendingSubmissionsMap[project.id] || 0;
+          });
+          
+          // Sort projects: those with pending submissions first
+          projects.sort((a, b) => {
+            const aHasPending = (a.pendingSubmissionsCount || 0) > 0;
+            const bHasPending = (b.pendingSubmissionsCount || 0) > 0;
+            
+            if (aHasPending && !bHasPending) return -1;
+            if (!aHasPending && bHasPending) return 1;
+            
+            // If both have or don't have pending, sort by count (descending)
+            if (aHasPending && bHasPending) {
+              return (b.pendingSubmissionsCount || 0) - (a.pendingSubmissionsCount || 0);
+            }
+            
+            // Otherwise maintain original order
+            return 0;
+          });
+          
           allProjects = projects; // Store for filtering
     renderProjectsGrid(projects);
     updateSummaryCards(projects);
@@ -2359,13 +2441,40 @@ loading = false;
     if (window.initialProjectsData && window.initialProjectsData.length > 0) {
       console.log('Using server-side projects:', window.initialProjectsData.length);
       projects = window.initialProjectsData;
-      allProjects = window.initialProjectsData;
       
-      // Render projects immediately
-      renderProjectsGrid(window.initialProjectsData);
-      updateSummaryCards(window.initialProjectsData);
-      initializeSearchAndFilter();
-      initializeStatusLifecycleMonitoring();
+      // Fetch pending submissions for server-side projects
+      const projectIds = projects.map(p => p.id);
+      fetchPendingSubmissionsForProjects(projectIds).then(pendingSubmissionsMap => {
+        // Add pending submissions count to each project
+        projects.forEach(project => {
+          project.pendingSubmissionsCount = pendingSubmissionsMap[project.id] || 0;
+        });
+        
+        // Sort projects: those with pending submissions first
+        projects.sort((a, b) => {
+          const aHasPending = (a.pendingSubmissionsCount || 0) > 0;
+          const bHasPending = (b.pendingSubmissionsCount || 0) > 0;
+          
+          if (aHasPending && !bHasPending) return -1;
+          if (!aHasPending && bHasPending) return 1;
+          
+          // If both have or don't have pending, sort by count (descending)
+          if (aHasPending && bHasPending) {
+            return (b.pendingSubmissionsCount || 0) - (a.pendingSubmissionsCount || 0);
+          }
+          
+          // Otherwise maintain original order
+          return 0;
+        });
+        
+        allProjects = projects;
+        
+        // Render projects with pending submission counts
+        renderProjectsGrid(projects);
+        updateSummaryCards(projects);
+        initializeSearchAndFilter();
+        initializeStatusLifecycleMonitoring();
+      });
       
       // Export enhanced timeline functions to window
       window.toggleProjectSection = toggleProjectSection;
@@ -4776,7 +4885,7 @@ This compilation report has been generated automatically based on approved EIU m
     const pendingSubmissions = projectsData.filter(p => p.hasPendingSubmissions || p.status === 'pending_submission').length;
     const completedReviews = projectsData.filter(p => p.status === 'completed' || p.status === 'approved').length;
     const delayedProjects = projectsData.filter(p => p.status === 'delayed' || p.hasDelayedMilestones).length;
-    
+
     // Calculate ongoing projects - includes both 'ongoing' status AND delayed projects (since delayed projects are still ongoing)
     const ongoingProjects = projectsData.filter(p => {
       const status = p.status || '';
@@ -4879,6 +4988,23 @@ This compilation report has been generated automatically based on approved EIU m
       const matchesPriority = !priorityFilter || project.priority === priorityFilter;
       
       return matchesSearch && matchesStatus && matchesPriority;
+    });
+    
+    // Sort filtered projects: those with pending submissions first
+    filteredProjects.sort((a, b) => {
+      const aHasPending = (a.pendingSubmissionsCount || 0) > 0;
+      const bHasPending = (b.pendingSubmissionsCount || 0) > 0;
+      
+      if (aHasPending && !bHasPending) return -1;
+      if (!aHasPending && bHasPending) return 1;
+      
+      // If both have or don't have pending, sort by count (descending)
+      if (aHasPending && bHasPending) {
+        return (b.pendingSubmissionsCount || 0) - (a.pendingSubmissionsCount || 0);
+      }
+      
+      // Otherwise maintain original order
+      return 0;
     });
     
     renderProjectsGrid(filteredProjects);

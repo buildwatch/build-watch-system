@@ -5,9 +5,10 @@ interface Props {
   onClick?: string; // JavaScript function name to call when clicked
   showModal?: boolean; // Whether to show modal or redirect to project page
   showClickForDetails?: boolean; // Whether to show "Click for details" with arrow instead of "View Details" button
+  pendingSubmissionsCount?: number; // Number of pending milestone submissions for notification badge
 }
 
-const { project, userTheme = 'public', onClick, showModal = true, showClickForDetails = false } = Astro.props;
+const { project, userTheme = 'public', onClick, showModal = true, showClickForDetails = false, pendingSubmissionsCount = 0 } = Astro.props;
 
 // Theme-based hover colors
 const themeColors = {
@@ -190,10 +191,21 @@ const handleClick = () => {
     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
     
     <!-- Floating Status Badge -->
-    <div class="absolute top-3 right-3">
+    <div class="absolute top-3 right-3 flex items-center gap-2">
       <span class={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusColor(getActualStatus(project))}`}>
         {getActualStatus(project) || 'Not Started'}
       </span>
+      <!-- Pending Submissions Notification Badge -->
+      {pendingSubmissionsCount > 0 && (
+        <span class="relative">
+          <span class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white z-10 animate-pulse">
+            {pendingSubmissionsCount > 99 ? '99+' : pendingSubmissionsCount}
+          </span>
+          <svg class="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path>
+          </svg>
+        </span>
+      )}
     </div>
 
     <!-- Category Badge -->
