@@ -59,7 +59,7 @@ try {
         stats.totalBudget = projectService.formatBudget(totalBudget);
         
         // Use calculated progress from ProgressCalculationService for utilized budget
-        // Only calculate for projects that are not in pending status
+        // Only calculate for projects that are not in pending status AND have actual budget utilization
         const utilizedBudget = projects.reduce((sum, project) => {
           // Skip pending projects - they shouldn't contribute to utilized budget
           if (project.status === 'pending') {
@@ -69,7 +69,13 @@ try {
           const budget = parseFloat(project.totalBudget) || 0;
           // Use budget division progress for utilized budget calculation (only approved divisions)
           const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
-          return sum + (budget * budgetProgress / 100);
+          
+          // Only add to utilized budget if there's actual progress (greater than 0)
+          if (budgetProgress > 0 && budget > 0) {
+            return sum + (budget * budgetProgress / 100);
+          }
+          
+          return sum;
         }, 0);
         stats.utilizedBudget = projectService.formatBudget(utilizedBudget);
         
@@ -82,9 +88,15 @@ try {
         stats.averageProgress = activeProjects.length > 0 ? Math.round(totalProgress / activeProjects.length) : 0;
         
         // Calculate budget utilization percentage for progress bar
-        // Only if there are active (non-pending) projects with budget
-        const activeProjectsWithBudget = projects.filter(p => p.status !== 'pending' && (parseFloat(p.totalBudget) || 0) > 0);
-        const budgetUtilizationPercentage = (activeProjectsWithBudget.length > 0 && totalBudget > 0) 
+        // Only if there are active (non-pending) projects with budget AND actual utilization
+        const activeProjectsWithBudget = projects.filter(p => {
+          if (p.status === 'pending') return false;
+          const budget = parseFloat(p.totalBudget) || 0;
+          const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
+          return budget > 0 && budgetProgress > 0;
+        });
+        
+        const budgetUtilizationPercentage = (activeProjectsWithBudget.length > 0 && totalBudget > 0 && utilizedBudget > 0) 
           ? (utilizedBudget / totalBudget) * 100 
           : 0;
         stats.budgetUtilizationPercentage = Math.round(budgetUtilizationPercentage);
