@@ -895,16 +895,16 @@ loading = false;
     background: linear-gradient(90deg, #ca8a04, #a16207);
   }
 
-  /* Gold Button Theme for LGU-IU IOO */
+  /* Blue Button Theme for LGU-IU IOO */
   .btn-gold {
-    background: linear-gradient(135deg, rgb(234, 179, 8), rgb(202, 138, 4));
+    background: linear-gradient(135deg, #0D7DB5, #0A6A9A);
     color: white;
-    border: 1px solid rgb(202, 138, 4);
+    border: 1px solid #0A6A9A;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-weight: 500;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
+    box-shadow: 0 2px 4px rgba(13, 125, 181, 0.3);
     position: relative;
     overflow: hidden;
   }
@@ -931,10 +931,10 @@ loading = false;
   }
 
   .btn-gold:hover {
-    background: linear-gradient(135deg, rgb(202, 138, 4), rgb(161, 98, 7));
-    border-color: rgb(161, 98, 7);
+    background: linear-gradient(135deg, #0A6A9A, #075A85);
+    border-color: #075A85;
     transform: translateY(-1px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+    box-shadow: 0 4px 12px rgba(13, 125, 181, 0.4);
   }
 
   .btn-sm {
@@ -1076,13 +1076,13 @@ loading = false;
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-3">
-            <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600 shadow-xl">
+            <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] shadow-xl">
               <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
             </div>
             <div>
-              <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-amber-600 bg-clip-text text-transparent">Progress Timeline and Submission Update</h1>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-[#0D7DB5] bg-clip-text text-transparent">Progress Timeline and Submission Update</h1>
               <p class="text-sm text-gray-600">Implementing Office - Project Progress Monitoring and EIU Submission Review</p>
             </div>
           </div>
@@ -1092,12 +1092,12 @@ loading = false;
             <p class="text-sm text-gray-600">Active Projects</p>
             <p class="text-xs text-black font-semibold" id="headerProjectCount">0 Projects Available</p>
           </div>
-          <div class="w-4 h-4 bg-amber-500 rounded-full animate-pulse shadow-lg"></div>
+          <div class="w-4 h-4 bg-[#0D7DB5] rounded-full animate-pulse shadow-lg"></div>
         </div>
       </div>
     </div>
 
-    <main class="bg-gradient-to-br from-gray-50 via-amber-50 to-white min-h-screen px-8 py-8">
+    <main class="bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen px-8 py-8">
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 mb-8">
         <button onclick="exportProgressReport()" class="btn-success btn-sm inline-flex items-center gap-2">
@@ -1124,9 +1124,9 @@ loading = false;
               <div>
                 <p class="text-sm text-gray-600">Total Projects</p>
                 <p class="text-2xl font-bold text-black" id="totalProjectsCount">0</p>
-                <p class="text-xs text-amber-600 mt-1">All assigned projects</p>
+                <p class="text-xs text-[#0D7DB5] mt-1">All assigned projects</p>
               </div>
-              <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
+              <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
@@ -1140,9 +1140,9 @@ loading = false;
               <div>
                 <p class="text-sm text-gray-600">Pending Submissions</p>
                 <p class="text-2xl font-bold text-black" id="pendingSubmissionsCount">0</p>
-                <p class="text-xs text-orange-600 mt-1">Awaiting review</p>
+                <p class="text-xs text-[#0D7DB5] mt-1">Awaiting review</p>
               </div>
-              <div class="icon-container bg-gradient-to-br from-orange-500 to-orange-600">
+              <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -1223,9 +1223,9 @@ loading = false;
               <div>
                 <p class="text-sm text-gray-600">Average Progress (%)</p>
                 <p class="text-2xl font-bold text-black" id="averageProgressPercent">0</p>
-                <p class="text-xs text-amber-600 mt-1">Overall completion</p>
+                <p class="text-xs text-[#0D7DB5] mt-1">Overall completion</p>
               </div>
-              <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
+              <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
@@ -1256,7 +1256,7 @@ loading = false;
         <!-- Enhanced Filters Section -->
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-6">
-            <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+            <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
               </svg>
@@ -1273,7 +1273,7 @@ loading = false;
                     type="text" 
                     id="projectSearchInput" 
                     placeholder="Search by project name..." 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-[#0D7DB5] focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
                   >
                   <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -1285,7 +1285,7 @@ loading = false;
                 <label class="block text-sm font-semibold text-gray-700">Status</label>
                 <select 
                   id="statusFilter" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-[#0D7DB5] focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
                 >
                   <option value="">All Status</option>
                   <option value="pending">Pending</option>
@@ -1299,7 +1299,7 @@ loading = false;
                 <label class="block text-sm font-semibold text-gray-700">Priority</label>
                 <select 
                   id="priorityFilter" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-[#0D7DB5] focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
                 >
                   <option value="">All Priorities</option>
                   <option value="high">High</option>
@@ -1312,7 +1312,7 @@ loading = false;
                 <label class="block text-sm font-semibold text-gray-700">Sort By</label>
                 <select 
                   id="sortFilter" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-[#0D7DB5] focus:border-transparent transition-all duration-200 bg-white hover:shadow-md"
                 >
                   <option value="name">Project Name</option>
                   <option value="date">Due Date</option>
@@ -1342,7 +1342,7 @@ loading = false;
         <!-- Project Selection Section -->
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-6">
-            <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+            <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
               </svg>
@@ -1353,10 +1353,10 @@ loading = false;
             </div>
           </div>
           
-          <div class="bg-gradient-to-br from-amber-50 to-gray-50 rounded-2xl p-6 border border-amber-200">
+          <div class="bg-gradient-to-br from-blue-50 to-gray-50 rounded-2xl p-6 border border-[#0D7DB5]/20">
             <!-- Horizontal Scrolling Project Cards -->
             <div class="relative">
-              <div class="flex overflow-x-auto gap-6 pb-4 scrollbar-thin scrollbar-thumb-amber-300 scrollbar-track-amber-100" id="projectsGrid">
+              <div class="flex overflow-x-auto gap-6 pb-4 scrollbar-thin scrollbar-thumb-[#0D7DB5] scrollbar-track-blue-100" id="projectsGrid">
                 <!-- Project cards will be inserted here by JavaScript -->
               </div>
               <!-- Scroll indicators -->
@@ -1407,7 +1407,7 @@ loading = false;
         <!-- Project Management Dashboard -->
         <div id="projectManagementDashboard" class="profile-card mb-8" style="display: none;">
           <!-- Dashboard Header -->
-          <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6 rounded-t-2xl">
+          <div class="bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] text-white p-6 rounded-t-2xl">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <div class="icon-container-small bg-white/20 hover:bg-white/30">
@@ -1504,17 +1504,17 @@ loading = false;
               </div>
 
               <!-- Physical Progress -->
-              <div class="bg-gradient-to-br from-orange-50 to-red-100 rounded-xl p-6 border border-orange-200 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer">
+              <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-[#0D7DB5]/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer">
                 <div class="flex items-center justify-between mb-4">
-                  <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                  <div class="w-12 h-12 bg-[#0D7DB5] rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                   </div>
-                  <span class="text-2xl font-bold text-orange-800" id="physicalProgress">0.0%</span>
+                  <span class="text-2xl font-bold text-[#0A6A9A]" id="physicalProgress">0.0%</span>
                 </div>
-                <h4 class="font-semibold text-orange-800 mb-1">Physical Progress</h4>
-                <p class="text-orange-600 text-sm">Physical completion</p>
+                <h4 class="font-semibold text-[#0A6A9A] mb-1">Physical Progress</h4>
+                <p class="text-[#0D7DB5] text-sm">Physical completion</p>
                 <div class="mt-3 bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div 
                     class="h-2 rounded-full transition-all duration-2000 ease-out dashboard-progress-bar-fill"
@@ -1532,7 +1532,7 @@ loading = false;
               <!-- Basic Information -->
               <div class="bg-gray-50 rounded-xl p-6">
                 <h4 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-[#0D7DB5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                   Project Information
@@ -1545,7 +1545,7 @@ loading = false;
               <!-- Status and Milestones -->
               <div class="bg-gray-50 rounded-xl p-6">
                 <h4 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-[#0D7DB5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                   </svg>
                   Status & Milestones
@@ -1587,18 +1587,18 @@ loading = false;
 
             <!-- Enhanced Project Timeline Section - Inside Dashboard -->
             <div class="mt-8 pt-6 border-t border-gray-200">
-              <div class="profile-card border border-yellow-200">
-                <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 px-6 py-4 border-b border-yellow-200 cursor-pointer hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 group" 
+              <div class="profile-card border border-[#0D7DB5]/20">
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-[#0D7DB5]/20 cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-all duration-300 group" 
                      onclick="toggleProjectSection('timeline')">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                      <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600 group-hover:from-yellow-600 group-hover:to-yellow-700">
+                      <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-yellow-600 group-hover:to-yellow-700">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                       </div>
                       <div>
-                        <h4 class="text-lg font-bold text-black group-hover:text-yellow-800 transition-colors duration-300">Project Timeline</h4>
+                        <h4 class="text-lg font-bold text-black group-hover:text-[#0A6A9A] transition-colors duration-300">Project Timeline</h4>
                         <p class="text-sm text-gray-600">Visual timeline representation of project milestones</p>
                       </div>
                     </div>
@@ -1609,7 +1609,7 @@ loading = false;
                         </svg>
                         Refresh
                       </button>
-                      <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600 toggle-chevron hover:from-amber-600 hover:to-amber-700 hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-amber-400 hover:border-amber-300 rounded-xl" data-section="timeline">
+                      <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] toggle-chevron hover:from-[#0A6A9A] hover:to-[#075A85] hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-[#0D7DB5]/40 hover:border-[#0D7DB5]/30 rounded-xl" data-section="timeline">
                         <svg class="w-4 h-4 text-white transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -1625,7 +1625,7 @@ loading = false;
                       <!-- Timeline Loading State -->
                       <div id="timelineLoading" class="flex items-center justify-center py-12">
                         <div class="flex items-center gap-3">
-                          <div class="animate-spin rounded-full h-6 w-6 border-2 border-yellow-500 border-t-transparent"></div>
+                          <div class="animate-spin rounded-full h-6 w-6 border-2 border-[#0D7DB5] border-t-transparent"></div>
                           <span class="text-gray-600 font-medium">Loading timeline...</span>
                         </div>
                       </div>
@@ -1646,7 +1646,7 @@ loading = false;
                           </div>
                           <div class="text-center">
                             <div id="projectNameDisplay" class="text-lg font-bold text-gray-900 mb-1">Loading...</div>
-                            <div id="projectProgressDisplay" class="text-sm font-semibold text-yellow-600">0.0%</div>
+                            <div id="projectProgressDisplay" class="text-sm font-semibold text-[#0D7DB5]">0.0%</div>
                           </div>
                           <div class="flex flex-col space-y-2 text-sm text-gray-600">
                             <div>
@@ -1661,7 +1661,7 @@ loading = false;
                         </div>
                         
                         <!-- Timeline SVG Container -->
-                        <div class="timeline-section-container relative bg-gradient-to-r from-gray-50 to-yellow-50 rounded-2xl p-8 border border-gray-200">
+                        <div class="timeline-section-container relative bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-8 border border-gray-200">
                           <!-- Date Ruler (Above Timeline) -->
                           <div class="relative mb-4">
                             <!-- Date Markers Container -->
@@ -1678,7 +1678,7 @@ loading = false;
                             <div class="absolute top-1/2 left-8 right-8 h-1 bg-gray-200 rounded-full transform -translate-y-1/2"></div>
                             
                             <!-- Animated Progress Line -->
-                            <div id="progressLine" class="absolute top-1/2 left-8 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full transform -translate-y-1/2 transition-all duration-1000 ease-out" style="width: 0%"></div>
+                            <div id="progressLine" class="absolute top-1/2 left-8 h-1 bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] rounded-full transform -translate-y-1/2 transition-all duration-1000 ease-out" style="width: 0%"></div>
                             
                             <!-- Timeline Milestones Container -->
                             <div id="timelineMilestonesContainer" class="absolute inset-0">
@@ -1719,7 +1719,7 @@ loading = false;
                             <span class="font-medium text-gray-700">Ongoing</span>
                           </div>
                           <div class="flex items-center gap-2">
-                            <div class="w-4 h-4 bg-yellow-500 rounded-full border-2 border-yellow-600 bg-transparent shadow-sm"></div>
+                            <div class="w-4 h-4 bg-[#0D7DB5] rounded-full border-2 border-[#0A6A9A] bg-transparent shadow-sm"></div>
                             <span class="font-medium text-gray-700">Pending</span>
                           </div>
                           <div class="flex items-center gap-2">
@@ -1734,22 +1734,22 @@ loading = false;
               </div>
 
               <!-- Milestone Summary Section - Collapsible -->
-              <div class="profile-card border border-yellow-200 mt-6">
-                <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 px-6 py-4 border-b border-yellow-200 cursor-pointer hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 group" 
+              <div class="profile-card border border-[#0D7DB5]/20 mt-6">
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-[#0D7DB5]/20 cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-all duration-300 group" 
                      onclick="toggleProjectSection('milestoneSummary')">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                      <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600 group-hover:from-yellow-600 group-hover:to-yellow-700">
+                      <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-yellow-600 group-hover:to-yellow-700">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
                       </div>
                       <div>
-                        <h4 class="text-lg font-bold text-black group-hover:text-yellow-800 transition-colors duration-300">Milestone Summary</h4>
+                        <h4 class="text-lg font-bold text-black group-hover:text-[#0A6A9A] transition-colors duration-300">Milestone Summary</h4>
                         <p class="text-sm text-gray-600">Overview of milestone status and budget allocation</p>
                       </div>
                     </div>
-                    <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600 toggle-chevron hover:from-amber-600 hover:to-amber-700 hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-amber-400 hover:border-amber-300 rounded-xl" data-section="milestoneSummary">
+                    <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] toggle-chevron hover:from-[#0A6A9A] hover:to-[#075A85] hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-[#0D7DB5]/40 hover:border-[#0D7DB5]/30 rounded-xl" data-section="milestoneSummary">
                       <svg class="w-4 h-4 text-white transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                       </svg>
@@ -1767,25 +1767,25 @@ loading = false;
                </div>
 
               <!-- Project Milestones Section - Collapsible -->
-              <div class="profile-card border border-yellow-200 mt-6">
-                <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 px-6 py-4 border-b border-yellow-200 cursor-pointer hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 group" 
+              <div class="profile-card border border-[#0D7DB5]/20 mt-6">
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-[#0D7DB5]/20 cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-all duration-300 group" 
                      onclick="toggleProjectSection('projectMilestones')">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-4">
-                      <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600 group-hover:from-yellow-600 group-hover:to-yellow-700">
+                      <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-yellow-600 group-hover:to-yellow-700">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                         </svg>
                       </div>
                       <div>
                         <div class="flex items-center gap-3">
-                          <h4 class="text-lg font-bold text-black group-hover:text-yellow-800 transition-colors duration-300">Project Milestones</h4>
-                          <span id="totalMilestonesCounter" class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl" style="display: none;">0</span>
+                          <h4 class="text-lg font-bold text-black group-hover:text-[#0A6A9A] transition-colors duration-300">Project Milestones</h4>
+                          <span id="totalMilestonesCounter" class="bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl" style="display: none;">0</span>
                         </div>
                         <p class="text-sm text-gray-600">View detailed information for all project milestones</p>
                       </div>
                     </div>
-                    <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600 toggle-chevron hover:from-amber-600 hover:to-amber-700 hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-amber-400 hover:border-amber-300 rounded-xl" data-section="projectMilestones">
+                    <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] toggle-chevron hover:from-[#0A6A9A] hover:to-[#075A85] hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-[#0D7DB5]/40 hover:border-[#0D7DB5]/30 rounded-xl" data-section="projectMilestones">
                       <svg class="w-4 h-4 text-white transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                       </svg>
@@ -1809,19 +1809,19 @@ loading = false;
 
 
         <!-- Submission Review Center -->
-        <div id="submissionReviewCenter" class="profile-card border border-yellow-200 mb-8" style="display: none;">
+        <div id="submissionReviewCenter" class="profile-card border border-[#0D7DB5]/20 mb-8" style="display: none;">
           <!-- Header -->
-          <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 px-6 py-4 border-b border-yellow-200 cursor-pointer hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 group" 
+          <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-[#0D7DB5]/20 cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-all duration-300 group" 
                onclick="toggleSubmissionReviewCenter()" data-section="submissionReview">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-4">
-                <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600 group-hover:from-amber-600 group-hover:to-amber-700">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-amber-600 group-hover:to-amber-700">
                   <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-xl font-bold text-black group-hover:text-amber-800 transition-colors duration-300 flex items-center gap-3">
+                  <h3 class="text-xl font-bold text-black group-hover:text-[#0A6A9A] transition-colors duration-300 flex items-center gap-3">
                     <span>Submission Review Center</span>
                     <span id="submissionNotificationBadge" class="hidden px-2 py-1 bg-red-500 text-white text-xs rounded-full font-medium animate-pulse">
                       <span id="submissionBadgeCount">0</span>
@@ -1831,7 +1831,7 @@ loading = false;
                 </div>
               </div>
               <div class="flex items-center gap-3">
-                <div class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-all duration-300 font-medium" id="submissionCount">
+                <div class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] hover:from-[#0A6A9A] hover:to-[#075A85] text-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-all duration-300 font-medium" id="submissionCount">
                   <div class="flex items-center gap-2">
                     <span class="bg-white/20 backdrop-blur-sm text-white text-sm font-bold px-3 py-1 rounded-full transition-all duration-300 hover:bg-white/30 min-w-[28px] text-center">0</span>
                     <span class="font-semibold text-sm">Submissions</span>
@@ -1843,7 +1843,7 @@ loading = false;
                   </svg>
                   Refresh
                 </button>
-                <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600 toggle-chevron hover:from-amber-600 hover:to-amber-700 transition-all duration-200" data-section="submissionReview">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] toggle-chevron hover:from-[#0A6A9A] hover:to-[#075A85] transition-all duration-200" data-section="submissionReview">
                   <svg class="w-5 h-5 text-white transition-transform duration-300 chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -1858,7 +1858,7 @@ loading = false;
               <!-- Filter Tabs - Single Row Design -->
               <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
-                  <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+                  <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                     </svg>
@@ -1898,9 +1898,9 @@ loading = false;
                 <!-- Loading State -->
                 <div id="submissionsLoading" class="flex items-center justify-center py-12">
                   <div class="text-center">
-                    <div class="inline-flex items-center px-6 py-4 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-2xl border border-amber-200 shadow-sm">
+                    <div class="inline-flex items-center px-6 py-4 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-2xl border border-[#0D7DB5]/20 shadow-sm">
                       <div class="animate-spin rounded-full h-6 w-6 border-2 border-amber-500 border-t-transparent mr-3"></div>
-                      <span class="text-amber-700 font-semibold">Loading milestone submissions...</span>
+                      <span class="text-[#0A6A9A] font-semibold">Loading milestone submissions...</span>
                     </div>
                   </div>
                 </div>
@@ -1913,7 +1913,7 @@ loading = false;
                   </div>
                   <h3 class="text-xl font-bold text-gray-700 mb-2">No Submissions Yet</h3>
                   <p class="text-gray-500 mb-4">EIU milestone submissions will appear here for your review</p>
-                  <div class="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3 max-w-md mx-auto">
+                  <div class="text-sm text-[#0D7DB5] bg-amber-50 border border-[#0D7DB5]/20 rounded-lg p-3 max-w-md mx-auto">
                     <strong>Tip:</strong> Submissions are automatically fetched when EIU personnel submit milestone updates
                   </div>
                 </div>
@@ -2034,7 +2034,7 @@ loading = false;
       }
 
       const projectCard = document.createElement('div');
-      projectCard.className = 'group project-card bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl hover:border-amber-400 hover:shadow-amber-100 flex-shrink-0 w-96';
+      projectCard.className = 'group project-card bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl hover:border-[#0D7DB5]/40 hover:shadow-[#0D7DB5]/10 flex-shrink-0 w-96';
       projectCard.setAttribute('data-project-id', project.id);
       
       // Format budget properly
@@ -2066,7 +2066,7 @@ loading = false;
           case 'delayed':
             return 'bg-red-100 text-red-700 border-red-200';
           case 'pending':
-            return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+            return 'bg-yellow-100 text-yellow-700 border-[#0D7DB5]/20';
           default:
             return 'bg-gray-100 text-gray-600 border-gray-200';
         }
@@ -2110,7 +2110,7 @@ loading = false;
                   class="h-2 rounded-full transition-all duration-2000 ease-out progress-bar-fill"
                   style="width: 0%"
                   data-progress="${overallProgress}"
-                  data-progress-color="${overallProgress >= 0 && overallProgress <= 25 ? 'bg-red-500' : overallProgress >= 26 && overallProgress <= 50 ? 'bg-yellow-500' : overallProgress >= 51 && overallProgress <= 75 ? 'bg-blue-500' : overallProgress >= 76 && overallProgress <= 100 ? 'bg-green-500' : 'bg-gray-500'}"
+                  data-progress-color="${overallProgress >= 0 && overallProgress <= 25 ? 'bg-red-500' : overallProgress >= 26 && overallProgress <= 50 ? 'bg-[#0D7DB5]' : overallProgress >= 51 && overallProgress <= 75 ? 'bg-blue-500' : overallProgress >= 76 && overallProgress <= 100 ? 'bg-green-500' : 'bg-gray-500'}"
                 ></div>
               </div>
             </div>
@@ -2163,15 +2163,15 @@ loading = false;
           <div class="space-y-2 mb-4">
             <div class="flex justify-between items-center text-xs">
               <span class="text-gray-600">Timeline:</span>
-              <span class="font-semibold text-amber-600">${timelineProgress.toFixed(1)}%</span>
+              <span class="font-semibold text-[#0D7DB5]">${timelineProgress.toFixed(1)}%</span>
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-gray-600">Budget:</span>
-              <span class="font-semibold text-amber-600">${budgetProgress.toFixed(1)}%</span>
+              <span class="font-semibold text-[#0D7DB5]">${budgetProgress.toFixed(1)}%</span>
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-gray-600">Physical:</span>
-              <span class="font-semibold text-amber-600">${physicalProgress.toFixed(1)}%</span>
+              <span class="font-semibold text-[#0D7DB5]">${physicalProgress.toFixed(1)}%</span>
             </div>
           </div>
 
@@ -2199,7 +2199,7 @@ loading = false;
               <span class="font-medium">⚡ Priority:</span> 
               <span class="font-semibold ${
                 project.priority === 'high' ? 'text-red-600' : 
-                project.priority === 'medium' ? 'text-yellow-600' : 
+                project.priority === 'medium' ? 'text-[#0D7DB5]' : 
                 'text-green-600'
               }">
                 ${project.priority?.toUpperCase() || 'MEDIUM'}
@@ -2209,7 +2209,7 @@ loading = false;
 
           <!-- Select Project Button -->
           <button 
-            class="w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 bg-amber-50 text-amber-600 hover:bg-amber-100"
+            class="w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-300 bg-amber-50 text-[#0D7DB5] hover:bg-amber-100"
             onclick="event.stopPropagation()"
           >
             Select Project
@@ -2260,7 +2260,7 @@ loading = false;
 
           const card = document.querySelector(`[data-project-id="${project.id}"]`);
           if (card) {
-            const overallBar = card.querySelector('.bg-gradient-to-r.from-amber-500');
+            const overallBar = card.querySelector('.bg-gradient-to-r.from-blue-500');
             const timelineBar = card.querySelector('.bg-gradient-to-r.from-blue-500');
             const budgetBar = card.querySelector('.bg-gradient-to-r.from-green-500');
             const physicalBar = card.querySelector('.bg-gradient-to-r.from-purple-500');
@@ -2847,7 +2847,7 @@ loading = false;
       if (response.ok) {
         const data = await response.json();
         console.log('Separate milestones API response:', data);
-          if (data.success && data.milestones && data.milestones.length > 0) {
+        if (data.success && data.milestones && data.milestones.length > 0) {
           console.log('Milestones fetched separately:', data.milestones);
           
           // Fetch milestone submissions and attach usedBudget to milestones
@@ -3150,7 +3150,7 @@ loading = false;
           if (calculatedProgress > 0) {
             console.log(`✅ Calculated milestone progress from division contributions: ${calculatedProgress.toFixed(2)}% (Timeline: ${actualTimelineProgress.toFixed(2)}%, Budget: ${actualBudgetProgress.toFixed(2)}%, Physical: ${actualPhysicalProgress.toFixed(2)}%)`);
             return calculatedProgress;
-          }
+        }
       }
       
       // If completed but no specific progress, use 100% as fallback
@@ -3437,9 +3437,9 @@ loading = false;
             <span class="text-purple-600 block text-xs font-medium">Actual Completion Date</span>
             <span class="font-semibold text-purple-800">${milestone.completionDate || milestone.actualCompletionDate || '–'}</span>
           </div>
-          <div class="bg-orange-50 p-3 rounded-lg border border-orange-200">
-            <span class="text-orange-600 block text-xs font-medium">Expected Days</span>
-            <span class="font-semibold text-orange-800">${milestone.expectedDaysOfCompletion ? milestone.expectedDaysOfCompletion + ' days' : '–'}</span>
+          <div class="bg-blue-50 p-3 rounded-lg border border-[#0D7DB5]/20">
+            <span class="text-[#0D7DB5] block text-xs font-medium">Expected Days</span>
+            <span class="font-semibold text-[#0A6A9A]">${milestone.expectedDaysOfCompletion ? milestone.expectedDaysOfCompletion + ' days' : '–'}</span>
           </div>
         </div>
 
@@ -3498,12 +3498,12 @@ loading = false;
             </div>
 
             <!-- Physical Division -->
-            <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
+            <div class="border border-[#0D7DB5]/20 rounded-lg p-4 bg-blue-50">
               <div class="flex items-center mb-2">
-                <svg class="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-[#0D7DB5] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                <h6 class="font-semibold text-orange-800">Physical Division</h6>
+                <h6 class="font-semibold text-[#0A6A9A]">Physical Division</h6>
               </div>
               <div class="space-y-2 text-sm">
                 <div><span class="text-gray-600">Weight:</span> <span class="font-medium">${milestone.physicalWeight || 33.33}%</span></div>
@@ -3759,12 +3759,12 @@ loading = false;
           </div>
 
           <!-- Physical Division -->
-          <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
+          <div class="border border-[#0D7DB5]/20 rounded-lg p-4 bg-blue-50">
             <div class="flex items-center mb-3">
-              <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-[#0D7DB5] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
               </svg>
-              <h6 class="font-semibold text-orange-800">Physical Division</h6>
+              <h6 class="font-semibold text-[#0A6A9A]">Physical Division</h6>
             </div>
             <div class="space-y-2 text-sm">
               ${milestoneData.physical?.description ? `
@@ -3789,7 +3789,7 @@ loading = false;
                           </span>
                         </div>
                         <button onclick="downloadFile('${file.filename || file.name}', '${file.originalName || file.name}')" 
-                                class="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors">
+                                class="px-2 py-1 text-xs bg-[#0A6A9A] text-white rounded hover:bg-orange-700 transition-colors">
                           Download
                         </button>
                       </div>
@@ -4920,7 +4920,7 @@ This compilation report has been generated automatically based on approved EIU m
         <span class="text-gray-600">Priority:</span>
         <span class="font-medium ${
           project.priority === 'high' ? 'text-red-600' : 
-          project.priority === 'medium' ? 'text-yellow-600' : 
+          project.priority === 'medium' ? 'text-[#0D7DB5]' : 
           'text-green-600'
         }">${project.priority?.toUpperCase() || 'MEDIUM'}</span>
       </div>
@@ -5105,7 +5105,7 @@ This compilation report has been generated automatically based on approved EIU m
       case 'delayed':
         return 'bg-red-100 text-red-700 border-red-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'bg-yellow-100 text-yellow-700 border-[#0D7DB5]/20';
       default:
         return 'bg-gray-100 text-gray-600 border-gray-200';
     }
@@ -5318,7 +5318,7 @@ This compilation report has been generated automatically based on approved EIU m
     
     // Enhanced status colors with better visual hierarchy
     const statusColors = {
-      'pending_review': 'bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border-yellow-300 shadow-yellow-100',
+      'pending_review': 'bg-gradient-to-r from-yellow-50 to-blue-50 text-[#0A6A9A] border-yellow-300 shadow-yellow-100',
       'under_review': 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-800 border-purple-300 shadow-purple-100',
       'approved': 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border-green-300 shadow-green-100',
       'needs_revision': 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border-red-300 shadow-red-100',
@@ -5361,9 +5361,9 @@ This compilation report has been generated automatically based on approved EIU m
     const contentId = `submission-content-${submission.id}`;
     
     return `
-      <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 group hover:border-amber-200" id="${cardId}">
+      <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 group hover:border-[#0D7DB5]/20" id="${cardId}">
         <!-- Enhanced Header with Photo Evidence -->
-        <div class="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-b border-amber-100 relative overflow-hidden">
+        <div class="bg-gradient-to-br from-blue-50 via-yellow-50 to-orange-50 border-b border-amber-100 relative overflow-hidden">
           <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           
           <!-- Photo Evidence Section - Moved to Milestone Update Details as Background Slideshow -->
@@ -5374,14 +5374,14 @@ This compilation report has been generated automatically based on approved EIU m
             <div class="flex items-start justify-between">
               <div class="flex-1">
                 <div class="flex items-center gap-4 mb-4">
-                  <div class="icon-container bg-gradient-to-br from-amber-500 to-orange-600 shadow-xl">
+                  <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] shadow-xl">
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                   </div>
                   <div class="flex-1">
                     <div class="flex items-center gap-2">
-                      <h3 class="text-xl font-bold text-gray-800 group-hover:text-amber-700 transition-colors duration-300 mb-1">
+                      <h3 class="text-xl font-bold text-gray-800 group-hover:text-[#0A6A9A] transition-colors duration-300 mb-1">
                         ${project.name || 'Project Name Not Available'}
                       </h3>
                       ${isApproved ? `
@@ -5508,7 +5508,7 @@ This compilation report has been generated automatically based on approved EIU m
           </div>
 
           <!-- Milestone Update Section - Enhanced with Photo Slideshow Background -->
-          <div class="relative rounded-xl p-5 border-2 border-amber-200 shadow-sm overflow-hidden" id="milestone-section-${submission.id}">
+          <div class="relative rounded-xl p-5 border-2 border-[#0D7DB5]/20 shadow-sm overflow-hidden" id="milestone-section-${submission.id}">
             <!-- Photo Evidence Slideshow Background -->
             ${(() => {
               // Check multiple possible sources for photo evidence
@@ -5567,16 +5567,16 @@ This compilation report has been generated automatically based on approved EIU m
                       `;
                     }).join('')}
                   </div>
-                  <div class="absolute inset-0 bg-gradient-to-r from-amber-50/90 to-yellow-50/90"></div>
+                  <div class="absolute inset-0 bg-gradient-to-r from-blue-50/90 to-blue-50/90"></div>
                 `;
               } else {
-                return '<div class="absolute inset-0 bg-gradient-to-r from-amber-50 to-yellow-50"></div>';
+                return '<div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-50"></div>';
               }
             })()}
             
             <div class="relative z-10">
-              <h4 class="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h4 class="text-lg font-bold text-[#0A6A9A] mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-[#0D7DB5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                 </svg>
                 Milestone Update Details
@@ -5615,26 +5615,26 @@ This compilation report has been generated automatically based on approved EIU m
                 })()}
               </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-white rounded-lg p-4 border border-amber-200 shadow-sm">
-                <label class="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Milestone Name (Item of Work)</label>
+              <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20 shadow-sm">
+                <label class="block text-xs font-bold text-[#0D7DB5] uppercase tracking-wide mb-2">Milestone Name (Item of Work)</label>
                 <div class="text-sm font-bold text-gray-800 bg-amber-50 rounded-lg p-3 border border-amber-100">
                   ${milestone.title || milestone.name || 'Milestone name not specified'}
                 </div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-amber-200 shadow-sm">
-                <label class="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Due Date</label>
+              <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20 shadow-sm">
+                <label class="block text-xs font-bold text-[#0D7DB5] uppercase tracking-wide mb-2">Due Date</label>
                 <div class="text-sm font-semibold text-gray-800">${formatDate(milestone.dueDate)}</div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-amber-200 shadow-sm">
-                <label class="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Planned Budget</label>
+              <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20 shadow-sm">
+                <label class="block text-xs font-bold text-[#0D7DB5] uppercase tracking-wide mb-2">Planned Budget</label>
                 <div class="text-lg font-bold text-green-600">${formatCurrency(milestone.plannedBudget || milestone.budget)}</div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-amber-200 shadow-sm">
-                <label class="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Weight</label>
+              <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20 shadow-sm">
+                <label class="block text-xs font-bold text-[#0D7DB5] uppercase tracking-wide mb-2">Weight</label>
                 <div class="text-sm font-semibold text-gray-800">${milestone.weight || '–'}%</div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-amber-200 shadow-sm col-span-full">
-                <label class="block text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Description</label>
+              <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20 shadow-sm col-span-full">
+                <label class="block text-xs font-bold text-[#0D7DB5] uppercase tracking-wide mb-2">Description</label>
                 <div class="text-sm text-gray-700 bg-amber-50 rounded-lg p-3 border border-amber-100 leading-relaxed">
                   ${milestone.description || submission.additionalNotes || 'No description provided'}
                 </div>
@@ -5690,7 +5690,7 @@ This compilation report has been generated automatically based on approved EIU m
                     Reject
                   </span>
                 </button>
-                <button onclick="openMilestoneSubmissionModal('${submission.id}')" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
+                <button onclick="openMilestoneSubmissionModal('${submission.id}')" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-500 text-white rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
                   <span class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -5722,7 +5722,7 @@ This compilation report has been generated automatically based on approved EIU m
     // Create modal content
     modal.innerHTML = `
       <div class="relative max-w-4xl max-h-full bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div class="bg-gradient-to-r from-amber-500 to-yellow-500 p-4 flex items-center justify-between">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-500 p-4 flex items-center justify-between">
           <h3 class="text-white font-bold text-lg">Photo Evidence</h3>
           <button onclick="this.closest('.fixed').remove()" class="text-white hover:text-gray-200 transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -6202,9 +6202,9 @@ This compilation report has been generated automatically based on approved EIU m
           <label class="text-sm font-semibold text-green-700 mb-1 block">Budget Division</label>
           <p class="font-bold text-green-600 text-xl">${calculatedBudgetWeight.toFixed(2)}%</p>
         </div>
-        <div class="info-card bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-xl border border-orange-200">
+        <div class="info-card bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-xl border border-[#0D7DB5]/20">
           <label class="text-sm font-semibold text-orange-700 mb-1 block">Physical Division</label>
-          <p class="font-bold text-orange-600 text-xl">${calculatedPhysicalWeight.toFixed(2)}%</p>
+          <p class="font-bold text-[#0D7DB5] text-xl">${calculatedPhysicalWeight.toFixed(2)}%</p>
         </div>
       `;
     }
@@ -6351,7 +6351,7 @@ This compilation report has been generated automatically based on approved EIU m
           </div>
           <div class="info-card bg-white/60 p-4 rounded-xl border border-green-100">
             <label class="text-sm font-semibold text-green-700 mb-1 block">Remaining Budget</label>
-            <p class="font-bold text-orange-600 text-xl">₱${formatCurrency(remainingBudget)}</p>
+            <p class="font-bold text-[#0D7DB5] text-xl">₱${formatCurrency(remainingBudget)}</p>
           </div>
           <div class="info-card bg-white/60 p-4 rounded-xl border border-green-100 relative division-utilized-card">
             <label class="text-sm font-semibold text-green-700 mb-2 block flex items-center gap-2">
@@ -6470,7 +6470,7 @@ This compilation report has been generated automatically based on approved EIU m
             
             <!-- Photo Evidence -->
             <div class="mb-4">
-              <h5 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+              <h5 class="font-semibold text-[#0A6A9A] mb-2 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
@@ -6524,7 +6524,7 @@ This compilation report has been generated automatically based on approved EIU m
                   return `
                     <div class="relative group cursor-pointer" onclick="previewPhoto('${photoUrl}', '${photoName}')">
                       <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjOTlBM0FFIi8+Cjwvc3ZnPgo=" alt="${photoName}" 
-                           class="w-full h-20 object-cover rounded-lg border border-orange-200 group-hover:opacity-75 transition-opacity"
+                           class="w-full h-20 object-cover rounded-lg border border-[#0D7DB5]/20 group-hover:opacity-75 transition-opacity"
                            data-photo-url="${photoUrl}" data-photo-name="${photoName}">
                       <div class="w-full h-20 bg-red-50 border border-red-200 rounded-lg flex flex-col items-center justify-center" style="display: none;">
                         <svg class="w-6 h-6 text-red-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -6542,7 +6542,7 @@ This compilation report has been generated automatically based on approved EIU m
                       <div class="absolute bottom-1 left-1 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs">
                         ${photoName}
                       </div>
-                      <div class="absolute top-1 right-1 bg-orange-500 text-white px-2 py-1 rounded text-xs opacity-75">
+                      <div class="absolute top-1 right-1 bg-[#0D7DB5] text-white px-2 py-1 rounded text-xs opacity-75">
                         Loading...
                       </div>
                     </div>
@@ -6553,7 +6553,7 @@ This compilation report has been generated automatically based on approved EIU m
 
             <!-- Video Evidence -->
             <div class="mb-4">
-              <h5 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+              <h5 class="font-semibold text-[#0A6A9A] mb-2 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                 </svg>
@@ -6606,7 +6606,7 @@ This compilation report has been generated automatically based on approved EIU m
                   console.log('🎥 Rendering video:', { videoUrl, videoName, video, originalVideo: video });
                   const videoId = `video-${index}-${Date.now()}`;
                   return `
-                    <div class="relative group bg-gray-100 rounded-lg border border-orange-200 overflow-hidden hover:bg-gray-200 transition-colors cursor-pointer" onclick="previewVideo('${videoUrl}', '${videoName}')">
+                    <div class="relative group bg-gray-100 rounded-lg border border-[#0D7DB5]/20 overflow-hidden hover:bg-gray-200 transition-colors cursor-pointer" onclick="previewVideo('${videoUrl}', '${videoName}')">
                       <div class="w-full h-24 relative bg-gray-800">
                         <video id="${videoId}" class="w-full h-full object-cover" muted preload="metadata" crossorigin="anonymous" onloadedmetadata="this.currentTime=1" data-video-url="${videoUrl}" data-video-name="${videoName}">
                           <source type="video/mp4">
@@ -6625,7 +6625,7 @@ This compilation report has been generated automatically based on approved EIU m
                           <span class="text-red-500 text-xs text-center">Video not found</span>
                           <span class="text-gray-400 text-xs">${videoName}</span>
                         </div>
-                        <div class="absolute top-1 right-1 bg-orange-500 text-white px-2 py-1 rounded text-xs opacity-75">
+                        <div class="absolute top-1 right-1 bg-[#0D7DB5] text-white px-2 py-1 rounded text-xs opacity-75">
                           Loading...
                         </div>
                       </div>
@@ -6645,7 +6645,7 @@ This compilation report has been generated automatically based on approved EIU m
 
             <!-- Document Files -->
             <div class="mb-4">
-              <h5 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+              <h5 class="font-semibold text-[#0A6A9A] mb-2 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -6685,7 +6685,7 @@ This compilation report has been generated automatically based on approved EIU m
                   
                   // Get appropriate icon based on file type
                   let iconSvg = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>`;
-                  let iconColor = 'text-orange-600';
+                  let iconColor = 'text-[#0D7DB5]';
                   
                   if (fileExtension === 'xlsx' || fileExtension === 'xls') {
                     iconColor = 'text-green-600';
@@ -6699,7 +6699,7 @@ This compilation report has been generated automatically based on approved EIU m
                   }
                   
                   return `
-                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-100 hover:border-orange-200 transition-colors">
+                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-100 hover:border-[#0D7DB5]/20 transition-colors">
                       <svg class="w-5 h-5 ${iconColor} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         ${iconSvg}
                       </svg>
@@ -6710,7 +6710,7 @@ This compilation report has been generated automatically based on approved EIU m
                       <button 
                          id="download-btn-${index}"
                          onclick="event.stopPropagation(); window.open('${docUrl}', '_blank'); console.log('📄 Opening file:', '${docUrl}');"
-                         class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium flex items-center gap-2 flex-shrink-0 cursor-pointer border-none outline-none"
+                         class="px-4 py-2 bg-blue-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium flex items-center gap-2 flex-shrink-0 cursor-pointer border-none outline-none"
                          style="pointer-events: auto; z-index: 10; position: relative;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -7052,7 +7052,7 @@ This compilation report has been generated automatically based on approved EIU m
       // Map status to user-friendly text with appropriate styling
       if (status === 'pending_review' || status === 'pending') {
         statusText = 'Under Approval of LGU-IU';
-        statusClass = 'px-2 py-1 rounded-full bg-amber-100 text-amber-700';
+        statusClass = 'px-2 py-1 rounded-full bg-amber-100 text-[#0A6A9A]';
       } else if (status === 'approved') {
         statusText = 'Approved & Forwarded to MPMEC';
         statusClass = 'px-2 py-1 rounded-full bg-green-100 text-green-700';
@@ -7061,7 +7061,7 @@ This compilation report has been generated automatically based on approved EIU m
         statusClass = 'px-2 py-1 rounded-full bg-red-100 text-red-700';
       } else if (status === 'delayed') {
         statusText = 'Delayed Submission';
-        statusClass = 'px-2 py-1 rounded-full bg-orange-100 text-orange-700';
+        statusClass = 'px-2 py-1 rounded-full bg-blue-100 text-orange-700';
       } else {
         statusText = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
         statusClass = 'px-2 py-1 rounded-full bg-gray-100 text-gray-700';
@@ -7884,7 +7884,7 @@ This compilation report has been generated automatically based on approved EIU m
                      style="height: ${height}%"></div>
               </div>
               <span class="text-xs text-gray-600">${date}</span>
-              <span class="text-xs font-semibold text-orange-600">${count}</span>
+              <span class="text-xs font-semibold text-[#0D7DB5]">${count}</span>
             </div>
           `;
         }).join('')}
@@ -7972,7 +7972,7 @@ This compilation report has been generated automatically based on approved EIU m
       
       return `
         <div class="flex items-start space-x-4">
-          <div class="flex-shrink-0 w-4 h-4 bg-orange-500 rounded-full border-4 border-white shadow-md relative z-10"></div>
+          <div class="flex-shrink-0 w-4 h-4 bg-[#0D7DB5] rounded-full border-4 border-white shadow-md relative z-10"></div>
           <div class="flex-1 ${statusColor} rounded-lg p-4 border">
             <div class="flex items-center justify-between mb-2">
               <h4 class="font-semibold text-gray-800">${submission.milestone?.title || 'Milestone Update'}</h4>
@@ -7982,7 +7982,7 @@ This compilation report has been generated automatically based on approved EIU m
             <div class="flex items-center justify-between">
               <span class="text-xs px-2 py-1 rounded-full ${
                 submission.status === 'approved' ? 'bg-green-200 text-green-800' :
-                submission.status === 'pending_review' ? 'bg-yellow-200 text-yellow-800' :
+                submission.status === 'pending_review' ? 'bg-yellow-200 text-[#0A6A9A]' :
                 submission.status === 'under_review' ? 'bg-blue-200 text-blue-800' :
                 'bg-red-200 text-red-800'
               }">
@@ -8104,15 +8104,15 @@ This compilation report has been generated automatically based on approved EIU m
     container.innerHTML = sortedSubmissions.map((submission, index) => {
       const date = new Date(submission.submittedAt);
       const statusColors = {
-        'pending_review': 'from-orange-500 to-orange-600',
-        'under_review': 'from-amber-500 to-amber-600',
+        'pending_review': 'from-[#0D7DB5] to-[#0A6A9A]',
+        'under_review': 'from-[#0D7DB5] to-[#0A6A9A]',
         'approved': 'from-green-500 to-green-600',
         'rejected': 'from-red-500 to-red-600'
       };
       
       return `
         <div class="flex items-start gap-6 relative">
-          <div class="icon-container bg-gradient-to-br ${statusColors[submission.status] || 'from-amber-500 to-amber-600'} flex-shrink-0 z-10">
+          <div class="icon-container bg-gradient-to-br ${statusColors[submission.status] || 'from-[#0D7DB5] to-[#0A6A9A]'} flex-shrink-0 z-10">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -8120,14 +8120,14 @@ This compilation report has been generated automatically based on approved EIU m
           <div class="flex-1 profile-card p-6">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-3">
-                <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                   <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                   </svg>
                 </div>
                 <h5 class="text-lg font-bold text-black">${submission.milestoneName || 'Milestone Update'}</h5>
               </div>
-              <div class="text-xs text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full border border-amber-200">${date.toLocaleDateString('en-US', { 
+              <div class="text-xs text-[#0D7DB5] font-medium bg-amber-50 px-3 py-1 rounded-full border border-[#0D7DB5]/20">${date.toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'short', 
                 day: 'numeric',
@@ -8141,8 +8141,8 @@ This compilation report has been generated automatically based on approved EIU m
               <strong>Status:</strong> <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 submission.status === 'approved' ? 'bg-green-100 text-green-800' :
                 submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                submission.status === 'under_review' ? 'bg-amber-100 text-amber-800' :
-                'bg-orange-100 text-orange-800'
+                submission.status === 'under_review' ? 'bg-amber-100 text-[#0A6A9A]' :
+                'bg-blue-100 text-[#0A6A9A]'
               }">${submission.status || 'Pending'}</span>
             </div>
           </div>
@@ -8633,7 +8633,7 @@ This compilation report has been generated automatically based on approved EIU m
          });
 
          // RPMES form is no longer required - removed formData preparation
-         
+
          // Get authentication token
          const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
          
@@ -10014,9 +10014,9 @@ This compilation report has been generated automatically based on approved EIU m
     const totalBudget = parseFloat(selectedProject?.totalBudget || 0);
 
     const summaryHTML = `
-      <div class="bg-gradient-to-r from-yellow-50 to-gray-50 rounded-xl p-6 border border-yellow-200">
+      <div class="bg-gradient-to-r from-yellow-50 to-gray-50 rounded-xl p-6 border border-[#0D7DB5]/20">
         <h4 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-3">
-          <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600">
+          <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
@@ -10031,7 +10031,7 @@ This compilation report has been generated automatically based on approved EIU m
             <div class="text-xs text-gray-500">${pendingWeight.toFixed(1)}% weight</div>
           </div>
           <div class="text-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105">
-            <div class="text-2xl font-bold text-yellow-600 mb-1">${underApprovalMilestones.length}</div>
+            <div class="text-2xl font-bold text-[#0D7DB5] mb-1">${underApprovalMilestones.length}</div>
             <div class="text-sm font-medium text-gray-700 mb-1">Under Approval</div>
             <div class="text-xs text-gray-500">${underApprovalWeight.toFixed(1)}% weight</div>
           </div>
@@ -10041,7 +10041,7 @@ This compilation report has been generated automatically based on approved EIU m
             <div class="text-xs text-gray-500">${delayedWeight.toFixed(1)}% weight</div>
           </div>
           <div class="text-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105">
-            <div class="text-2xl font-bold text-orange-600 mb-1">${revisionRequestMilestones.length}</div>
+            <div class="text-2xl font-bold text-[#0D7DB5] mb-1">${revisionRequestMilestones.length}</div>
             <div class="text-sm font-medium text-gray-700 mb-1">Revision</div>
             <div class="text-xs text-gray-500">${revisionRequestWeight.toFixed(1)}% weight</div>
           </div>
@@ -10054,7 +10054,7 @@ This compilation report has been generated automatically based on approved EIU m
         
         <div class="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
           <div class="text-center">
-            <div class="text-xl font-bold text-yellow-600 mb-1">₱${totalBudget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div class="text-xl font-bold text-[#0D7DB5] mb-1">₱${totalBudget.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             <div class="text-sm font-medium text-gray-700 mb-1">Total Budget</div>
             <div class="text-xs text-gray-500">${totalWeight.toFixed(1)}% total weight</div>
           </div>
@@ -10280,18 +10280,18 @@ This compilation report has been generated automatically based on approved EIU m
 
       return `
         <!-- Individual Milestone Collapsible Card -->
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:border-yellow-200 hover:-translate-y-1 mb-4 overflow-hidden">
-          <div class="bg-gradient-to-r from-yellow-50 to-gray-50 px-6 py-4 border-b border-yellow-200 cursor-pointer hover:from-yellow-100 hover:to-gray-100 transition-all duration-300 group" 
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:border-[#0D7DB5]/20 hover:-translate-y-1 mb-4 overflow-hidden">
+          <div class="bg-gradient-to-r from-yellow-50 to-gray-50 px-6 py-4 border-b border-[#0D7DB5]/20 cursor-pointer hover:from-yellow-100 hover:to-gray-100 transition-all duration-300 group" 
                onclick="toggleMilestoneCard('milestone-${milestone.id}')">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-4">
-                <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600 group-hover:from-yellow-600 group-hover:to-yellow-700">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-yellow-600 group-hover:to-yellow-700">
                   <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                   </svg>
                 </div>
                 <div>
-                  <h4 class="font-bold text-black group-hover:text-yellow-800 transition-colors duration-300">${milestone.title}</h4>
+                  <h4 class="font-bold text-black group-hover:text-[#0A6A9A] transition-colors duration-300">${milestone.title}</h4>
                   <div class="flex flex-wrap items-center gap-3 mt-2">
                     <span class="px-3 py-1 text-xs font-medium rounded-full bg-${statusConfig.bgColor} text-${statusConfig.textColor}">${statusConfig.message}</span>
                     <span class="text-sm text-gray-600 bg-white/70 px-2 py-1 rounded-lg">Weight: ${milestone.weight || 0}%</span>
@@ -10302,7 +10302,7 @@ This compilation report has been generated automatically based on approved EIU m
               <div class="flex items-center gap-4">
                 <div class="text-right">
                   <div class="text-sm text-gray-500 mb-1">Progress</div>
-                  <div class="text-xl font-bold text-yellow-600">${(() => {
+                  <div class="text-xl font-bold text-[#0D7DB5]">${(() => {
                     // Use calculateMilestoneProgress to get actual progress
                     // Always ensure progressData has overall progress from selectedProject
                     const currentSelectedProject = typeof selectedProject !== 'undefined' ? selectedProject : (typeof window !== 'undefined' && window.selectedProject ? window.selectedProject : null);
@@ -10347,9 +10347,9 @@ This compilation report has been generated automatically based on approved EIU m
           <div id="milestone-${milestone.id}-content" class="section-content">
             <div class="p-6">
               <!-- General Information Section -->
-              <div class="bg-gradient-to-r from-yellow-50 to-gray-100 rounded-xl p-6 mb-6 border border-yellow-200">
+              <div class="bg-gradient-to-r from-yellow-50 to-gray-100 rounded-xl p-6 mb-6 border border-[#0D7DB5]/20">
                 <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-3">
-                  <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600">
+                  <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -10359,36 +10359,36 @@ This compilation report has been generated automatically based on approved EIU m
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
                   <div class="space-y-3">
-                    <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                    <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                       <label class="block text-sm font-medium text-yellow-700 mb-1">Project Name</label>
                       <div class="text-lg font-bold text-gray-900">${selectedProject?.name || 'N/A'}</div>
                     </div>
-                    <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                    <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                       <label class="block text-sm font-medium text-yellow-700 mb-1">Project Code</label>
                       <div class="text-sm font-semibold text-gray-700">${selectedProject?.projectCode || 'N/A'}</div>
                     </div>
                   </div>
                   <div class="space-y-3">
-                    <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                    <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                       <label class="block text-sm font-medium text-yellow-700 mb-1">Total Budget Allocation (₱)</label>
-                      <div class="text-lg font-bold text-yellow-600">${parseFloat(selectedProject?.totalBudget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                      <div class="text-lg font-bold text-[#0D7DB5]">${parseFloat(selectedProject?.totalBudget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                      <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                      <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                         <label class="block text-sm font-medium text-yellow-700 mb-1">Start Date</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.startDate ? new Date(selectedProject.startDate).toLocaleDateString() : 'Not set'}</div>
                       </div>
-                      <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                      <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                         <label class="block text-sm font-medium text-yellow-700 mb-1">Target Completion Date</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.targetCompletionDate || selectedProject?.targetDateOfCompletion || selectedProject?.endDate ? new Date(selectedProject.targetCompletionDate || selectedProject.targetDateOfCompletion || selectedProject.endDate).toLocaleDateString() : 'Not set'}</div>
                       </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3 mt-3">
-                      <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                      <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                         <label class="block text-sm font-medium text-yellow-700 mb-1">Actual Completion Date</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.completionDate || selectedProject?.actualCompletionDate ? new Date(selectedProject.completionDate || selectedProject.actualCompletionDate).toLocaleDateString() : '–'}</div>
                       </div>
-                      <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                      <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                         <label class="block text-sm font-medium text-yellow-700 mb-1">Expected Days</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.expectedDaysOfCompletion ? selectedProject.expectedDaysOfCompletion + ' days' : '–'}</div>
                       </div>
@@ -10433,9 +10433,9 @@ This compilation report has been generated automatically based on approved EIU m
               </div>
 
               <!-- Milestone Information Section -->
-              <div class="bg-gradient-to-r from-yellow-50 to-gray-100 rounded-xl p-6 mb-6 border border-yellow-200">
+              <div class="bg-gradient-to-r from-yellow-50 to-gray-100 rounded-xl p-6 mb-6 border border-[#0D7DB5]/20">
                 <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-3">
-                  <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-yellow-600">
+                  <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
@@ -10444,30 +10444,30 @@ This compilation report has been generated automatically based on approved EIU m
                 </h5>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                  <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                     <label class="block text-sm font-medium text-yellow-700 mb-1">Milestone Name (Item of Work)</label>
                     <div class="text-lg font-bold text-gray-900">${milestone.title || 'N/A'}</div>
                   </div>
-                  <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                     <label class="block text-sm font-medium text-yellow-700 mb-1">Status</label>
                     <div class="text-sm font-semibold">
                       <span class="px-3 py-1 text-xs font-medium rounded-full bg-${statusConfig.bgColor} text-${statusConfig.textColor}">${statusConfig.message}</span>
                     </div>
                   </div>
-                  <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                     <label class="block text-sm font-medium text-yellow-700 mb-1">Weight</label>
-                    <div class="text-lg font-bold text-yellow-600">${milestone.weight || 0}%</div>
+                    <div class="text-lg font-bold text-[#0D7DB5]">${milestone.weight || 0}%</div>
                   </div>
-                  <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                     <label class="block text-sm font-medium text-yellow-700 mb-1">Planned Budget</label>
-                    <div class="text-lg font-bold text-yellow-600">₱${parseFloat(milestone.plannedBudget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="text-lg font-bold text-[#0D7DB5]">₱${parseFloat(milestone.plannedBudget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                   </div>
-                  <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                     <label class="block text-sm font-medium text-yellow-700 mb-1">Due Date</label>
                     <div class="text-sm font-semibold text-gray-700">${milestone.dueDate || 'Not set'}</div>
                   </div>
                 </div>
-                <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
                   <label class="block text-sm font-medium text-yellow-700 mb-1">Description</label>
                   <div class="text-sm text-gray-600 leading-relaxed">${milestone.description || 'No description available'}</div>
                 </div>
@@ -11002,7 +11002,7 @@ This compilation report has been generated automatically based on approved EIU m
 
       // Determine color based on progress percentage
       const colorClass = progress >= 0 && progress <= 25 ? 'bg-red-500' : 
-                        progress >= 26 && progress <= 50 ? 'bg-yellow-500' : 
+                        progress >= 26 && progress <= 50 ? 'bg-[#0D7DB5]' : 
                         progress >= 51 && progress <= 75 ? 'bg-blue-500' : 
                         progress >= 76 && progress <= 100 ? 'bg-green-500' : 'bg-gray-500';
 

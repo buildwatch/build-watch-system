@@ -701,15 +701,15 @@ export default function MessagingCenter({ theme = 'green' }) {
       borderColor: 'border-green-500'
     },
     orange: {
-      primary: 'bg-orange-600',
-      primaryHover: 'hover:bg-orange-700',
-      primaryLight: 'bg-orange-50',
-      primaryBorder: 'border-orange-200',
-      primaryText: 'text-orange-700',
-      primaryBg: 'from-orange-50 to-orange-100',
-      accent: 'text-orange-600',
-      focusRing: 'focus:ring-orange-500',
-      borderColor: 'border-orange-500'
+      primary: 'bg-[#0D7DB5]',
+      primaryHover: 'hover:bg-[#0A6A9A]',
+      primaryLight: 'bg-[#0D7DB5]/10',
+      primaryBorder: 'border-[#0D7DB5]/20',
+      primaryText: 'text-[#0A6A9A]',
+      primaryBg: 'from-blue-50 to-blue-100',
+      accent: 'text-[#0D7DB5]',
+      focusRing: 'focus:ring-[#0D7DB5]',
+      borderColor: 'border-[#0D7DB5]'
     },
     'light-blue': {
       primary: 'bg-sky-600',

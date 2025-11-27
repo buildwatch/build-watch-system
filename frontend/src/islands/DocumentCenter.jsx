@@ -128,11 +128,11 @@ export default function DocumentCenter({
       bg: 'bg-green-50'
     },
     orange: {
-      primary: 'orange',
-      gradient: 'from-orange-500 to-orange-600',
-      ring: 'ring-orange-500',
-      text: 'text-orange-600',
-      bg: 'bg-orange-50'
+      primary: 'blue',
+      gradient: 'from-[#0D7DB5] to-[#0A6A9A]',
+      ring: 'ring-[#0D7DB5]',
+      text: 'text-[#0D7DB5]',
+      bg: 'bg-[#0D7DB5]/10'
     }
   };
 
@@ -1871,13 +1871,13 @@ export default function DocumentCenter({
                 iconText: 'text-purple-600'
               },
               orange: {
-                bg: 'from-orange-50 via-white to-orange-50',
-                border: 'border-orange-200 hover:border-orange-400',
-                borderHover: 'hover:border-orange-400',
-                bgDecoration: 'from-orange-100/60',
-                iconBg: 'bg-orange-100',
-                text: 'text-orange-700',
-                iconText: 'text-orange-600'
+                bg: 'from-blue-50 via-white to-blue-50',
+                border: 'border-[#0D7DB5]/20 hover:border-[#0D7DB5]/40',
+                borderHover: 'hover:border-[#0D7DB5]/40',
+                bgDecoration: 'from-[#0D7DB5]/10',
+                iconBg: 'bg-[#0D7DB5]/10',
+                text: 'text-[#0A6A9A]',
+                iconText: 'text-[#0D7DB5]'
               }
             };
             

@@ -179,21 +179,21 @@ export default function ProfileCenter({
       hoverShineLight: 'rgba(34, 197, 94, 0.05)' // green-600 with lower opacity
     },
     orange: {
-      primary: 'bg-orange-600',
-      primaryHover: 'hover:bg-orange-700',
-      primaryLight: 'bg-orange-50',
-      accent: 'text-orange-600',
-      border: 'border-orange-200',
-      infoField: 'from-amber-50 to-amber-100 border-amber-200',
-      profileBorder: 'border-orange-600',
-      gradient: 'from-orange-600 to-orange-500',
-      gradientHover: 'hover:from-orange-700 hover:to-orange-600',
-      gradientText: 'from-orange-600 to-orange-500',
-      gradientIcon: 'from-orange-600 to-orange-500',
-      borderHover: 'border-orange-600/20',
-      hoverShine: 'rgba(234, 88, 12, 0.08)', // orange-600 with opacity
-      hoverBorder: 'rgba(234, 88, 12, 0.2)', // orange-600 with opacity
-      hoverShineLight: 'rgba(234, 88, 12, 0.05)' // orange-600 with lower opacity
+      primary: 'bg-[#0D7DB5]',
+      primaryHover: 'hover:bg-[#0A6A9A]',
+      primaryLight: 'bg-[#0D7DB5]/10',
+      accent: 'text-[#0D7DB5]',
+      border: 'border-[#0D7DB5]/20',
+      infoField: 'from-blue-50 to-blue-100 border-[#0D7DB5]/20',
+      profileBorder: 'border-[#0D7DB5]',
+      gradient: 'from-[#0D7DB5] to-[#0A6A9A]',
+      gradientHover: 'hover:from-[#0A6A9A] hover:to-[#075A85]',
+      gradientText: 'from-[#0D7DB5] to-[#0A6A9A]',
+      gradientIcon: 'from-[#0D7DB5] to-[#0A6A9A]',
+      borderHover: 'border-[#0D7DB5]/40',
+      hoverShine: 'rgba(13, 125, 181, 0.08)', // #0D7DB5 with opacity
+      hoverBorder: 'rgba(13, 125, 181, 0.2)', // #0D7DB5 with opacity
+      hoverShineLight: 'rgba(13, 125, 181, 0.05)' // #0D7DB5 with lower opacity
     },
     blue: {
       primary: 'bg-blue-600',

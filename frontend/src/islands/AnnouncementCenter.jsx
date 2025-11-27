@@ -110,7 +110,7 @@ const getThemeByRole = (role) => {
     case 'SYS.AD':
       return 'black';
     case 'LGU-IU':
-      return 'orange';
+      return 'blue';
     case 'EIU':
       return 'green';
     case 'MPMEC Secretariat':
@@ -445,17 +445,17 @@ export default function AnnouncementCenter({
       borderHover: 'border-black/20'
     },
     orange: {
-      // LGU-IU - Professional orange (vibrant orange to match sidebar/topbar)
-      primary: 'bg-orange-600',
-      primaryHover: 'hover:bg-orange-700',
-      primaryLight: 'bg-orange-50',
-      primaryText: 'text-orange-600',
-      gradient: 'from-orange-600 to-orange-500',
-      gradientHover: 'hover:from-orange-700 hover:to-orange-600',
-      gradientText: 'from-orange-600 to-orange-500',
-      gradientIcon: 'from-orange-600 to-orange-500',
-      border: 'border-orange-200',
-      borderHover: 'border-orange-600/20'
+      // LGU-IU - Professional blue (updated from orange to match sidebar/topbar)
+      primary: 'bg-[#0D7DB5]',
+      primaryHover: 'hover:bg-[#0A6A9A]',
+      primaryLight: 'bg-[#0D7DB5]/10',
+      primaryText: 'text-[#0D7DB5]',
+      gradient: 'from-[#0D7DB5] to-[#0A6A9A]',
+      gradientHover: 'hover:from-[#0A6A9A] hover:to-[#075A85]',
+      gradientText: 'from-[#0D7DB5] to-[#0A6A9A]',
+      gradientIcon: 'from-[#0D7DB5] to-[#0A6A9A]',
+      border: 'border-[#0D7DB5]/20',
+      borderHover: 'border-[#0D7DB5]/40'
     },
     green: {
       // EIU - Professional green (matching sidebar/topbar green)
