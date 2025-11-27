@@ -3160,14 +3160,24 @@ router.put('/:id', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req,
     }
 
     // Check if this is an EIU reassignment (only eiuPersonnelId and hasExternalPartner are being updated)
-    const isEIUReassignment = Object.keys(updateData).every(key => 
-      key === 'eiuPersonnelId' || 
-      key === 'hasExternalPartner' ||
-      key === 'updatedAt' ||
-      key === 'id' ||
-      key === 'createdAt' ||
-      key === 'implementingOfficeId'
-    ) && (updateData.eiuPersonnelId !== undefined || updateData.hasExternalPartner !== undefined);
+    const updateKeys = Object.keys(updateData);
+    const isEIUReassignment = updateKeys.length > 0 && 
+      updateKeys.every(key => 
+        key === 'eiuPersonnelId' || 
+        key === 'hasExternalPartner' ||
+        key === 'updatedAt' ||
+        key === 'id' ||
+        key === 'createdAt' ||
+        key === 'implementingOfficeId'
+      ) && (updateData.eiuPersonnelId !== undefined || updateData.hasExternalPartner !== undefined);
+
+    console.log('🔍 [BACKEND EIU DEBUG] EIU Reassignment Check:', {
+      workflowStatus: project.workflowStatus,
+      isEIUReassignment,
+      updateKeys,
+      hasEiuPersonnelId: updateData.eiuPersonnelId !== undefined,
+      hasExternalPartner: updateData.hasExternalPartner !== undefined
+    });
 
     // Only allow updates if project is in draft status, OR if it's an EIU reassignment
     if (project.workflowStatus !== 'draft' && !isEIUReassignment) {
@@ -3178,16 +3188,40 @@ router.put('/:id', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req,
     }
 
     // For EIU reassignment on non-draft projects, only allow updating EIU-related fields
+    let finalUpdateData = updateData;
     if (isEIUReassignment && project.workflowStatus !== 'draft') {
+      // Validate EIU Personnel ID if provided
+      if (updateData.eiuPersonnelId) {
+        const eiuUser = await User.findOne({
+          where: {
+            id: updateData.eiuPersonnelId,
+            role: 'EIU',
+            status: 'active'
+          }
+        });
+
+        if (!eiuUser) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid EIU Personnel ID. Please verify the account exists and is active.'
+          });
+        }
+        console.log('✅ [BACKEND EIU DEBUG] EIU user validated:', {
+          id: eiuUser.id,
+          userId: eiuUser.userId,
+          name: eiuUser.fullName
+        });
+      }
+
       // Only update EIU-related fields, preserve all other project data
       const allowedFields = ['eiuPersonnelId', 'hasExternalPartner'];
-      const filteredUpdateData = {};
+      finalUpdateData = {};
       allowedFields.forEach(field => {
         if (updateData[field] !== undefined) {
-          filteredUpdateData[field] = updateData[field];
+          finalUpdateData[field] = updateData[field];
         }
       });
-      updateData = filteredUpdateData;
+      console.log('🔍 [BACKEND EIU DEBUG] Filtered update data for non-draft project:', finalUpdateData);
     }
 
     // Validate milestones if provided
@@ -3220,7 +3254,16 @@ router.put('/:id', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req,
     }
 
     // Update project
-    await project.update(updateData);
+    try {
+      await project.update(finalUpdateData);
+      console.log('✅ [BACKEND EIU DEBUG] Project updated successfully:', {
+        projectId: project.id,
+        updatedFields: Object.keys(finalUpdateData)
+      });
+    } catch (updateError) {
+      console.error('❌ [BACKEND EIU DEBUG] Error updating project:', updateError);
+      throw updateError;
+    }
 
     // Handle milestone updates if provided
     if (milestones) {
@@ -3283,10 +3326,13 @@ router.put('/:id', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req,
     });
 
   } catch (error) {
-    console.error('Update project error:', error);
+    console.error('❌ [BACKEND EIU DEBUG] Update project error:', error);
+    console.error('❌ [BACKEND EIU DEBUG] Error stack:', error.stack);
+    console.error('❌ [BACKEND EIU DEBUG] Error message:', error.message);
     res.status(500).json({
       success: false,
-      error: 'Failed to update project'
+      error: error.message || 'Failed to update project',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
