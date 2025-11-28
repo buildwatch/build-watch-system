@@ -25,7 +25,6 @@ let userData = null;
 let submissions = [];
 let stats = {
   totalSubmissions: 0,
-  pendingReview: 0,
   approved: 0,
   overdue: 0,
   completed: 0,
@@ -85,8 +84,7 @@ try {
         } else {
           // Fallback calculation if stats not provided
           stats.totalSubmissions = submissions.length;
-          stats.pendingReview = submissions.filter(p => p.workflowStatus === 'submitted').length;
-          stats.approved = submissions.filter(p => p.workflowStatus === 'secretariat_approved' || p.workflowStatus === 'ongoing').length;
+          stats.approved = submissions.filter(p => p.workflowStatus === 'secretariat_approved' || p.workflowStatus === 'ongoing' || p.status === 'ongoing').length;
           
           // Calculate delayed projects and milestones with milestone-level detection
           const today = new Date();
@@ -146,7 +144,6 @@ try {
           
           console.log('📊 Calculated stats:', {
             totalSubmissions: stats.totalSubmissions,
-            pendingReview: stats.pendingReview,
             approved: stats.approved,
             overdue: stats.overdue,
             completed: stats.completed,
@@ -1198,22 +1195,6 @@ loading = false;
             </div>
           </div>
 
-          <!-- Pending Review - Professional Light Gold -->
-          <div class="profile-card p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">P.Review</p>
-                <p class="text-2xl font-bold text-black" id="pendingReview">{stats.pendingReview}</p>
-                <p class="text-xs text-amber-600 mt-1">Awaiting decision</p>
-              </div>
-              <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-
           <!-- Delayed - Professional Light Red -->
           <div class="profile-card p-6">
             <div class="flex items-center justify-between">
@@ -1727,7 +1708,6 @@ loading = false;
                 <tbody class="bg-white divide-y divide-gray-200" id="submissionsTable">
                 {submissions.map(submission => {
                   const progress = parseFloat(submission.progress?.overallProgress || submission.overallProgress || 0);
-                  const isOverdue = submission.status === 'pending' && submission.endDate && new Date(submission.endDate) < new Date();
                   
                   return (
                     <tr data-submission-id={submission.id} class="group hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 transform hover:scale-[1.01] cursor-pointer">
@@ -1761,12 +1741,10 @@ loading = false;
                         <span class={`px-2 py-1 text-xs font-medium rounded-full ${
                           submission.status === 'complete' ? 'bg-green-100 text-green-700' :
                           submission.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-                          submission.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                           submission.status === 'delayed' ? 'bg-red-100 text-red-700 animate-pulse' :
                           'bg-gray-100 text-gray-700'
                         }`}>
                           {submission.status}
-                          {isOverdue && <span class="ml-1 text-red-600">(Overdue)</span>}
                         </span>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
@@ -1794,28 +1772,6 @@ loading = false;
                             </svg>
                             View
                           </button>
-                          {submission.status === 'pending' && (
-                            <>
-                              <button 
-                                onclick={`approveSubmission('${submission.id}')`} 
-                                class="btn-success btn-sm inline-flex items-center gap-1 px-3 py-1.5 text-xs"
-                              >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Approve
-                              </button>
-                              <button 
-                                onclick={`rejectSubmission('${submission.id}')`} 
-                                class="btn-danger btn-sm inline-flex items-center gap-1 px-3 py-1.5 text-xs"
-                              >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                Reject
-                              </button>
-                            </>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -1948,69 +1904,6 @@ loading = false;
       }}
     />
 
-    <!-- Modern Confirmation Modal with Question Animation -->
-    <div id="approveConfirmModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
-        <div class="flex flex-col items-center">
-          <!-- Question Mark Animation -->
-          <div class="relative mb-6">
-            <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center question-mark-container">
-              <svg class="w-12 h-12 text-blue-600 question-mark-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <!-- Pulsing ring animation -->
-            <div class="absolute inset-0 w-20 h-20 bg-blue-200 rounded-full animate-ping opacity-20"></div>
-          </div>
-          
-          <h3 class="text-2xl font-extrabold text-gray-800 mb-2">Confirm Approval</h3>
-          <p class="text-center text-gray-600 mb-6">Are you sure you want to approve this project?</p>
-          
-          <div class="flex gap-3 w-full">
-            <button 
-              id="approveConfirmCancel"
-              class="flex-1 py-3.5 rounded-xl bg-gray-200 text-gray-700 font-extrabold text-lg shadow-lg hover:bg-gray-300 transition-all duration-300 transform hover:scale-[1.02]"
-            >
-              Cancel
-            </button>
-            <button 
-              id="approveConfirmOk"
-              class="flex-1 py-3.5 rounded-xl bg-blue-600 text-white font-extrabold text-lg shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-[1.02]"
-            >
-              Approve
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modern Success Modal with Check Animation -->
-    <div id="approveSuccessModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div class="w-full max-w-md rounded-[32px] shadow-2xl border border-white/30 p-8 bg-white/95 backdrop-blur-xl animate-fade-in-up">
-        <div class="flex flex-col items-center">
-          <!-- Check Animation -->
-          <div class="relative mb-6">
-            <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
-              <svg id="checkIcon" class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-dasharray: 100; stroke-dashoffset: 100;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-              </svg>
-            </div>
-            <!-- Success rings animation -->
-            <div class="absolute inset-0 w-20 h-20 bg-green-200 rounded-full animate-ping opacity-20"></div>
-          </div>
-          
-          <h3 class="text-2xl font-extrabold text-gray-800 mb-2">Success!</h3>
-          <p id="approveSuccessMessage" class="text-center text-gray-600 mb-6">Project approved successfully!</p>
-          
-          <button 
-            id="closeApproveSuccessModal"
-            class="w-full py-3.5 rounded-xl bg-blue-600 text-white font-extrabold text-lg shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-[1.02]"
-          >
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
   </SecretariatLayout>
 </Layout>
 
@@ -2201,7 +2094,6 @@ loading = false;
       const totalProjects = projects.length;
       const completedProjects = projects.filter(p => p.status === 'complete').length;
       const ongoingProjects = projects.filter(p => p.status === 'ongoing').length;
-      const pendingProjects = projects.filter(p => p.status === 'pending').length;
       const delayedProjects = projects.filter(p => p.status === 'delayed').length;
       const avgProgress = projects.reduce((sum, p) => sum + (parseFloat(p.progress?.overallProgress || p.overallProgress || 0)), 0) / totalProjects;
       const totalBudget = projects.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
@@ -2210,7 +2102,6 @@ loading = false;
         totalProjects,
         completedProjects,
         ongoingProjects,
-        pendingProjects,
         delayedProjects,
         avgProgress: Math.round(avgProgress * 10) / 10,
         totalBudget
@@ -2391,20 +2282,6 @@ loading = false;
                 </div>
               </div>
               
-              <!-- Pending Projects Card -->
-              <div class="group bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-yellow-200/50 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Pending</p>
-                    <p class="text-2xl font-bold text-yellow-600">${stats.pendingProjects || 0}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -2854,159 +2731,7 @@ loading = false;
 
 
 
-  // Show modern confirmation modal
-  function showApproveConfirmModal(submissionId) {
-    const modal = document.getElementById('approveConfirmModal');
-    if (!modal) return;
-    
-    modal.classList.remove('hidden');
-    
-    // Set up event listeners
-    const cancelBtn = document.getElementById('approveConfirmCancel');
-    const okBtn = document.getElementById('approveConfirmOk');
-    
-    // Remove existing listeners to prevent duplicates
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    const newOkBtn = okBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-    
-    // Close on cancel
-    newCancelBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-    });
-    
-    // Close on backdrop click
-    const backdropHandler = (e) => {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
-        modal.removeEventListener('click', backdropHandler);
-      }
-    };
-    modal.addEventListener('click', backdropHandler);
-    
-    // Approve on OK
-    newOkBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-      modal.removeEventListener('click', backdropHandler);
-      approveSubmissionConfirmed(submissionId);
-    });
-  }
 
-  // Show modern success modal
-  function showApproveSuccessModal(message = 'Project approved successfully!') {
-    const modal = document.getElementById('approveSuccessModal');
-    const messageEl = document.getElementById('approveSuccessMessage');
-    if (!modal) return;
-    
-    if (messageEl) {
-      messageEl.textContent = message;
-    }
-    
-    modal.classList.remove('hidden');
-    
-    // Reset check animation
-    const checkIcon = document.getElementById('checkIcon');
-    if (checkIcon) {
-      checkIcon.style.strokeDashoffset = '100';
-      setTimeout(() => {
-        checkIcon.style.animation = 'none';
-        setTimeout(() => {
-          checkIcon.style.animation = 'drawCheck 0.6s ease-in-out forwards';
-        }, 10);
-      }, 10);
-    }
-    
-    // Set up close button
-    const closeBtn = document.getElementById('closeApproveSuccessModal');
-    if (closeBtn) {
-      const newCloseBtn = closeBtn.cloneNode(true);
-      closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-      
-      const closeHandler = () => {
-        modal.classList.add('hidden');
-      };
-      newCloseBtn.addEventListener('click', closeHandler);
-    }
-    
-    // Close on backdrop click
-    const backdropHandler = (e) => {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
-        modal.removeEventListener('click', backdropHandler);
-      }
-    };
-    modal.addEventListener('click', backdropHandler);
-  }
-
-  // Approve submission (with modern modal)
-  async function approveSubmission(submissionId) {
-    showApproveConfirmModal(submissionId);
-  }
-
-  // Approve submission confirmed (after user clicks OK in confirmation modal)
-  async function approveSubmissionConfirmed(submissionId) {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login/lgu-pmt';
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/projects/${submissionId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ approved: true })
-      });
-      
-      if (response.ok) {
-        showApproveSuccessModal('Project approved successfully!');
-        loadSubmissions();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        showApproveSuccessModal('Error approving project. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error approving submission:', error);
-      showApproveSuccessModal('Error approving project. Please try again.');
-    }
-  }
-
-  // Reject submission
-  async function rejectSubmission(submissionId) {
-    const comments = prompt('Please provide a reason for rejection:');
-    if (comments !== null) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          window.location.href = '/login/lgu-pmt';
-          return;
-        }
-
-        const response = await fetch(`${API_URL}/projects/${submissionId}/approve`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ approved: false, comments })
-        });
-        
-        if (response.ok) {
-          alert('Project rejected successfully!');
-          loadSubmissions();
-        } else {
-          alert('Error rejecting project. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error rejecting submission:', error);
-        alert('Error rejecting project. Please try again.');
-      }
-    }
-  }
 
 
 
@@ -3182,8 +2907,6 @@ loading = false;
     console.log('✅ [SECRETARIAT] window.allSubmissions set as fallback with', window.allSubmissions.length, 'submissions');
   }
   window.bulkAction = bulkAction;
-  window.approveSubmission = approveSubmission;
-  window.rejectSubmission = rejectSubmission;
   window.toggleDepartment = toggleDepartment;
   window.toggleAllDepartments = toggleAllDepartments;
   window.expandAllDepartments = expandAllDepartments;

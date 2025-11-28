@@ -1001,8 +1001,8 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       endDate: targetDate,
       targetCompletionDate: targetCompletionDate || targetDateOfCompletion || endDate,
       totalBudget,
-      status: 'pending',
-      workflowStatus: 'submitted'
+      status: 'ongoing',
+      workflowStatus: 'ongoing'
     });
     
     let project;
@@ -1017,8 +1017,8 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       priority,
       fundingSource,
       createdDate,
-      status: 'pending', // Starts as pending until approved
-      workflowStatus: 'submitted', // Automatically submitted to Secretariat
+      status: 'ongoing', // Projects start as ongoing immediately
+      workflowStatus: 'ongoing', // Projects are active immediately
       expectedOutputs,
       targetBeneficiaries: truncatedTargetBeneficiaries,
       hasExternalPartner: hasExternalPartner || false,
@@ -1057,14 +1057,14 @@ router.post('/', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req, r
       specialRequirements,
       initialPhoto: initialPhoto || '/projects-page-header-bg.png', // Use uploaded photo or default
       implementingOfficeId: req.user.id,
-      approvedBySecretariat: false,
+      approvedBySecretariat: true, // Auto-approved since no pending status
       approvedByMPMEC: false,
       approvedBy: null,
       approvalDate: null,
-      submittedToSecretariat: true, // Automatically submitted to Secretariat
-      submittedToSecretariatDate: new Date(), // Set submission date
-      secretariatApprovalDate: null,
-      secretariatApprovedBy: null,
+      submittedToSecretariat: false, // No longer needed
+      submittedToSecretariatDate: null,
+      secretariatApprovalDate: new Date(), // Set as approved immediately
+      secretariatApprovedBy: req.user.id, // Set creator as approver
       lastProgressUpdate: null
       });
       console.log('✅ Project created successfully:', {
@@ -2752,11 +2752,10 @@ router.get('/secretariat/submissions', authenticateToken, async (req, res) => {
 
     const offset = (page - 1) * limit;
     const whereClause = {
-      // Secretariat sees projects submitted for approval
+      // Secretariat sees all active projects (no pending status)
       [Op.or]: [
-        { workflowStatus: 'submitted' },
-        { workflowStatus: 'secretariat_approved' },
         { workflowStatus: 'ongoing' },
+        { workflowStatus: 'secretariat_approved' },
         { workflowStatus: 'completed' },
         { workflowStatus: 'compiled_for_secretariat' },
         { workflowStatus: 'validated_by_secretariat' }

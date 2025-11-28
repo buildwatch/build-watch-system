@@ -164,7 +164,7 @@ router.post('/', authenticateToken, async (req, res) => {
       contactNumber,
       specialRequirements,
       implementingOfficeId: req.user.id,
-      status: 'pending',
+      status: 'ongoing',
       timelineProgress: 0,
       budgetProgress: 0,
       physicalProgress: 0,
