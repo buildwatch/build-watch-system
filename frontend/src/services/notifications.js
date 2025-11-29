@@ -1,28 +1,53 @@
-import { getApiUrl } from '../config/api.js';
-
-const API_BASE_URL = getApiUrl();
-
 class NotificationService {
   constructor() {
     this.notificationCount = 0;
     this.notifications = [];
     this.updateCallbacks = [];
     this.pollingInterval = null;
-    this.startPolling();
+    // Only start polling on client side
+    if (typeof window !== 'undefined') {
+      this.startPolling();
+    }
   }
 
-  // Get auth token
+  // Get API URL dynamically (works for both localhost and production)
+  getApiUrl() {
+    if (typeof window === 'undefined') {
+      // Server-side: return default
+      return 'http://localhost:3000/api';
+    }
+    const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProd 
+      ? `${window.location.protocol}//${window.location.hostname}/api`
+      : 'http://localhost:3000/api';
+  }
+
+  // Get auth token (safe for SSR)
   getAuthToken() {
-    return localStorage.getItem('token');
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return null;
+    }
+    try {
+      return localStorage.getItem('token');
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
+      return null;
+    }
   }
 
   // Get notification count for Topbar badge
   async getNotificationCount() {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return 0;
+      }
+      
       const token = this.getAuthToken();
       if (!token) return 0;
 
-      const response = await fetch(`${API_BASE_URL}/notifications/count?isRead=false&_t=${Date.now()}`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/count?isRead=false&_t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -45,10 +70,16 @@ class NotificationService {
   // Get notifications list
   async getNotifications(page = 1, limit = 20) {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return { notifications: [], pagination: { total: 0, pages: 0 } };
+      }
+      
       const token = this.getAuthToken();
-      if (!token) return [];
+      if (!token) return { notifications: [], pagination: { total: 0, pages: 0 } };
 
-      const response = await fetch(`${API_BASE_URL}/notifications?page=${page}&limit=${limit}&_t=${Date.now()}`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications?page=${page}&limit=${limit}&_t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -70,10 +101,16 @@ class NotificationService {
   // Get recent activity notifications
   async getRecentActivity(limit = 10) {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return [];
+      }
+      
       const token = this.getAuthToken();
       if (!token) return [];
 
-      const response = await fetch(`${API_BASE_URL}/notifications/recent-activity?limit=${limit}`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/recent-activity?limit=${limit}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -93,10 +130,16 @@ class NotificationService {
   // Mark notification as read
   async markAsRead(notificationId) {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       const token = this.getAuthToken();
       if (!token) return false;
 
-      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -118,10 +161,16 @@ class NotificationService {
   // Mark all notifications as read
   async markAllAsRead() {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       const token = this.getAuthToken();
       if (!token) return false;
 
-      const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/read-all`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -143,10 +192,16 @@ class NotificationService {
   // Delete notification
   async deleteNotification(notificationId) {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       const token = this.getAuthToken();
       if (!token) return false;
 
-      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -168,10 +223,16 @@ class NotificationService {
   // Delete all read notifications
   async deleteAllRead() {
     try {
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       const token = this.getAuthToken();
       if (!token) return false;
 
-      const response = await fetch(`${API_BASE_URL}/notifications/delete-read`, {
+      const apiUrl = this.getApiUrl();
+      const response = await fetch(`${apiUrl}/notifications/delete-read`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -215,14 +276,22 @@ class NotificationService {
     });
   }
 
-  // Start polling for updates
+  // Start polling for updates (only on client side)
   startPolling() {
+    // Only start polling on client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
     }
 
     this.pollingInterval = setInterval(async () => {
-      await this.getNotificationCount();
+      // Double-check we're still on client side
+      if (typeof window !== 'undefined') {
+        await this.getNotificationCount();
+      }
     }, 10000); // Poll every 10 seconds for faster updates
   }
 
