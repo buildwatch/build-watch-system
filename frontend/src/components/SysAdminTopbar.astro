@@ -9,6 +9,7 @@ const currentTime = new Date().toLocaleString('en-PH', {
   hour: '2-digit',
   minute: '2-digit'
 });
+import NotificationPanel from '../islands/NotificationPanel.jsx';
 ---
 <header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-black via-neutral-900 to-gray-900 text-gray-100 shadow-lg border-b border-white/10 backdrop-blur-sm">
   <!-- Subtle overlay for depth -->
@@ -290,8 +291,16 @@ const currentTime = new Date().toLocaleString('en-PH', {
   </div>
 </header>
 
-<!-- Enhanced System Admin Notification Panel -->
-<div class="fixed top-0 right-0 h-full w-[420px] bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 shadow-2xl border-l border-white/20 z-[1100] backdrop-blur-xl transform translate-x-full transition-all duration-500 ease-out hidden" id="sysadmin-notification-dropdown">
+<!-- Centralized Notification Panel -->
+<NotificationPanel 
+  client:load 
+  role="sysadmin"
+  panelId="sysadmin-notification-panel"
+  overlayId="sysadmin-notification-overlay"
+/>
+
+<!-- Old notification panel removed - using centralized component above -->
+<div class="hidden" id="sysadmin-notification-dropdown" style="display: none !important;">
   <!-- Enhanced Header with System Admin Theme -->
   <div class="p-5 border-b border-white/15 bg-gradient-to-r from-neutral-800/50 via-neutral-700/70 to-neutral-800/50 backdrop-blur-md shadow-lg">
     <div class="flex items-center justify-between mb-4">
@@ -468,55 +477,27 @@ const currentTime = new Date().toLocaleString('en-PH', {
   }
 
   // Notification functionality
+  // Notification functionality - Updated for centralized NotificationPanel
   function initializeNotifications(notificationService) {
     const notificationBtn = document.getElementById('sysadmin-notification-btn');
-    const notificationDropdown = document.getElementById('sysadmin-notification-dropdown');
     const notificationBadge = document.getElementById('sysadmin-notification-badge');
-    const notificationList = document.getElementById('sysadmin-notification-list');
-    const markAllReadBtn = document.getElementById('sysadmin-mark-all-read');
 
-    // Check if all elements exist
-    if (!notificationBtn || !notificationDropdown) {
-      console.error('❌ Notification elements not found');
+    if (!notificationBtn) {
+      console.error('❌ System Admin Notification button not found');
       return;
     }
 
-    console.log('✅ Initializing notification functionality');
+    console.log('✅ Initializing System Admin notification functionality');
 
-    // Get overlay and close button
-    const notificationOverlay = document.getElementById('sysadmin-notification-overlay');
-    const closeNotificationBtn = document.getElementById('sysadmin-close-notifications');
-
-    // Toggle sidebar with slide animation
+    // Toggle notification panel using global function
     notificationBtn.addEventListener('click', (e) => {
-      console.log('🔔 Notification button clicked');
+      console.log('🔔 Toggling System Admin notification panel');
       e.preventDefault();
       e.stopPropagation();
       
-      const isHidden = notificationDropdown.classList.contains('hidden');
-      if (isHidden) {
-        console.log('📂 Opening notification sidebar');
-        // Show overlay
-        notificationOverlay.classList.remove('hidden');
-        notificationOverlay.style.opacity = '0';
-        
-        // Show sidebar
-        notificationDropdown.classList.remove('hidden');
-        notificationDropdown.style.visibility = 'visible';
-        notificationDropdown.style.opacity = '1';
-        notificationDropdown.style.transform = 'translateX(100%)';
-        
-        requestAnimationFrame(() => {
-          // Animate overlay
-          notificationOverlay.style.opacity = '1';
-          // Slide sidebar in
-          notificationDropdown.style.transform = 'translateX(0)';
-        });
-        
-        loadNotifications(notificationService);
-      } else {
-        console.log('📁 Closing notification sidebar');
-        closeSidebar();
+      // Use global function from NotificationPanel component
+      if (typeof window !== 'undefined' && window['sysadmin-notification-panel_toggle']) {
+        window['sysadmin-notification-panel_toggle']();
       }
     });
 

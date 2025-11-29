@@ -1,6 +1,7 @@
 ---
 // LGU-PMT Topbar Component
 // Theme Color: #FE5353
+import NotificationPanel from '../islands/NotificationPanel.jsx';
 ---
 
 <header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-[#3B82F6] via-[#2563EB] to-[#1D4ED8] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
@@ -283,8 +284,16 @@
 <!-- Overlay for notification sidebar -->
 <div class="fixed inset-0 bg-black/50 z-[1050] hidden transition-opacity duration-300" id="lgu-pmt-notification-overlay"></div>
 
-<!-- Enhanced MPMEC Notification Panel -->
-<div class="fixed top-0 right-0 h-full w-[420px] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 shadow-2xl border-l border-blue-400/30 z-[1200] backdrop-blur-xl transform translate-x-full transition-all duration-500 ease-out hidden" id="lgu-pmt-notification-dropdown">
+<!-- Centralized Notification Panel -->
+<NotificationPanel 
+  client:load 
+  role="mpmec"
+  panelId="lgu-pmt-notification-panel"
+  overlayId="lgu-pmt-notification-overlay"
+/>
+
+<!-- Old notification panel removed - using centralized component above -->
+<div class="hidden" id="lgu-pmt-notification-dropdown" style="display: none !important;">
   <!-- Enhanced Header with MPMEC Theme -->
   <div class="p-5 border-b border-blue-400/15 bg-gradient-to-r from-blue-800/50 via-blue-700/70 to-blue-800/50 backdrop-blur-md shadow-lg">
     <div class="flex items-center justify-between mb-4">
@@ -892,42 +901,29 @@
     };
   }
 
-  // Notification functionality
+  // Notification functionality - Updated for centralized NotificationPanel
   function initializeNotifications(notificationService) {
     const notificationBtn = document.getElementById('lgu-pmt-notification-btn');
-    const notificationDropdown = document.getElementById('lgu-pmt-notification-dropdown');
     const notificationBadge = document.getElementById('lgu-pmt-notification-badge');
-    const notificationList = document.getElementById('lgu-pmt-notification-list');
-    const markAllReadBtn = document.getElementById('lgu-pmt-mark-all-read');
     
-    if (!notificationBtn || !notificationDropdown) {
-      console.error('❌ LGU-PMT Notification elements not found');
+    if (!notificationBtn) {
+      console.error('❌ LGU-PMT Notification button not found');
       return;
     }
     
     console.log('✅ Initializing LGU-PMT notification functionality');
     
-    const notificationOverlay = document.getElementById('lgu-pmt-notification-overlay');
-    const closeNotificationBtn = document.getElementById('lgu-pmt-close-notifications');
-    
+    // Toggle notification panel using global function
     notificationBtn.addEventListener('click', (e) => {
-      console.log('🔔 LGU-PMT Notification button clicked');
+      console.log('🔔 Toggling LGU-PMT notification panel');
       e.preventDefault();
       e.stopPropagation();
       
-      if (!notificationOverlay) {
-        console.error('❌ LGU-PMT notification overlay not found!');
-        return;
+      // Use global function from NotificationPanel component
+      if (typeof window !== 'undefined' && window['lgu-pmt-notification-panel_toggle']) {
+        window['lgu-pmt-notification-panel_toggle']();
       }
-      
-      const isHidden = notificationDropdown.classList.contains('hidden');
-      if (isHidden) {
-        console.log('📂 Opening LGU-PMT notification sidebar');
-        console.log('🖤 Showing overlay with bg-black/50');
-        
-        // Show overlay first
-        notificationOverlay.classList.remove('hidden');
-        notificationOverlay.style.opacity = '0';
+    });
         
         // Show sidebar
         notificationDropdown.classList.remove('hidden');
@@ -936,90 +932,13 @@
         notificationDropdown.style.transform = 'translateX(100%)';
         
         // Animate both together
-        requestAnimationFrame(() => {
-          notificationOverlay.style.opacity = '1';
-          notificationDropdown.style.transform = 'translateX(0)';
-        });
-        
-        loadNotifications(notificationService);
-      } else {
-        console.log('📁 Closing LGU-PMT notification sidebar');
-        closeSidebar();
       }
     });
     
-    function closeSidebar() {
-      notificationDropdown.style.transform = 'translateX(100%)';
-      notificationOverlay.style.opacity = '0';
-      setTimeout(() => {
-        notificationDropdown.classList.add('hidden');
-        notificationOverlay.classList.add('hidden');
-        // Ensure proper visibility state
-        notificationDropdown.style.visibility = 'hidden';
-        notificationDropdown.style.opacity = '0';
-      }, 300);
-    }
-    
-    if (closeNotificationBtn) {
-      closeNotificationBtn.addEventListener('click', closeSidebar);
-    }
-    
-    if (notificationOverlay) {
-      notificationOverlay.addEventListener('click', closeSidebar);
-    }
-    
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !notificationDropdown.classList.contains('hidden')) {
-        closeSidebar();
-      }
-    });
-    
-    markAllReadBtn.addEventListener('click', async () => {
-      await notificationService.markAllAsRead();
-      updateNotificationBadge(notificationService);
-      loadNotifications(notificationService);
-    });
-    
-    const deleteAllReadBtn = document.getElementById('lgu-pmt-delete-all-read');
-    if (deleteAllReadBtn) {
-      deleteAllReadBtn.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to delete all read notifications?')) {
-          await notificationService.deleteAllRead();
-          updateNotificationBadge(notificationService);
-          loadNotifications(notificationService);
-        }
-      });
-    }
-
-    const deleteAllNotificationsBtn = document.getElementById('lgu-pmt-delete-all-notifications');
-    if (deleteAllNotificationsBtn) {
-      deleteAllNotificationsBtn.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to delete ALL notifications? This action cannot be undone and will clear both read and unread notifications.')) {
-          try {
-            const data = await notificationService.getNotifications();
-            const allNotifications = data.notifications || [];
-            
-            let deletedCount = 0;
-            for (const notification of allNotifications) {
-              const success = await notificationService.deleteNotification(notification.id);
-              if (success) deletedCount++;
-            }
-            
-            if (deletedCount > 0) {
-              updateNotificationBadge(notificationService);
-              loadNotifications(notificationService);
-              console.log(`🗑️ Successfully deleted ${deletedCount} notifications`);
-            }
-          } catch (error) {
-            console.error('Error deleting all notifications:', error);
-            alert('Failed to delete all notifications. Please try again.');
-          }
-        }
-      });
-    }
-    
+    // Load initial notification count
     updateNotificationBadge(notificationService);
     
+    // Subscribe to notification updates
     notificationService.onUpdate(({ count }) => {
       updateNotificationBadge(notificationService, count);
     });
@@ -1027,18 +946,11 @@
 
   async function updateNotificationBadge(notificationService, count) {
     const badge = document.getElementById('lgu-pmt-notification-badge');
-    const totalEl = document.getElementById('lgu-pmt-notification-total');
-    const unreadEl = document.getElementById('lgu-pmt-notification-unread');
-    const readEl = document.getElementById('lgu-pmt-notification-read');
     
-    if (!notificationService) return;
+    if (!notificationService || !badge) return;
     
     try {
       const currentCount = count !== undefined ? count : await notificationService.getNotificationCount();
-      const notifications = await notificationService.getNotifications();
-      const allNotifications = notifications.notifications || [];
-      const readCount = allNotifications.filter(n => n.isRead).length;
-      const unreadCount = allNotifications.length - readCount;
       
       // Update badge
       if (currentCount > 0) {
@@ -1047,18 +959,13 @@
       } else {
         badge.classList.add('hidden');
       }
-      
-      // Update stats
-      if (totalEl) totalEl.textContent = allNotifications.length;
-      if (unreadEl) unreadEl.textContent = unreadCount;
-      if (readEl) readEl.textContent = readCount;
-      
     } catch (error) {
       console.error('Error updating MPMEC notification badge:', error);
-      badge.classList.add('hidden');
+      if (badge) badge.classList.add('hidden');
     }
   }
 
+  // Removed loadNotifications function - now handled by NotificationPanel component
   async function loadNotifications(notificationService) {
     const notificationList = document.getElementById('lgu-pmt-notification-list');
     const loadingEl = document.getElementById('lgu-pmt-notification-loading');

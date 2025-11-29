@@ -9,6 +9,7 @@ const currentTime = new Date().toLocaleString('en-PH', {
   hour: '2-digit',
   minute: '2-digit'
 });
+import NotificationPanel from '../islands/NotificationPanel.jsx';
 ---
 <header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-[#1E40AF] via-[#3B82F6] to-[#2563EB] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
   <!-- Subtle overlay for depth -->
@@ -289,8 +290,16 @@ const currentTime = new Date().toLocaleString('en-PH', {
   </div>
 </header>
 
-<!-- Enhanced Executive Viewer Notification Panel -->
-<div class="fixed top-0 right-0 h-full w-[420px] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 shadow-2xl border-l border-blue-400/30 z-[1100] backdrop-blur-xl transform translate-x-full transition-all duration-500 ease-out hidden" id="executive-notification-dropdown">
+<!-- Centralized Notification Panel -->
+<NotificationPanel 
+  client:load 
+  role="executive"
+  panelId="executive-notification-panel"
+  overlayId="executive-notification-overlay"
+/>
+
+<!-- Old notification panel removed - using centralized component above -->
+<div class="hidden" id="executive-notification-dropdown" style="display: none !important;">
   <!-- Enhanced Header with Executive Viewer Theme -->
   <div class="p-5 border-b border-blue-400/15 bg-gradient-to-r from-blue-800/50 via-blue-700/70 to-blue-800/50 backdrop-blur-md shadow-lg">
     <div class="flex items-center justify-between mb-4">
@@ -497,55 +506,27 @@ const currentTime = new Date().toLocaleString('en-PH', {
   }
 
   // Notification functionality
+  // Notification functionality - Updated for centralized NotificationPanel
   function initializeNotifications(notificationService) {
     const notificationBtn = document.getElementById('executive-notification-btn');
-    const notificationDropdown = document.getElementById('executive-notification-dropdown');
     const notificationBadge = document.getElementById('executive-notification-badge');
-    const notificationList = document.getElementById('executive-notification-list');
-    const markAllReadBtn = document.getElementById('executive-mark-all-read');
 
-    // Check if all elements exist
-    if (!notificationBtn || !notificationDropdown) {
-      console.error('❌ Executive Notification elements not found');
+    if (!notificationBtn) {
+      console.error('❌ Executive Notification button not found');
       return;
     }
 
     console.log('✅ Initializing Executive notification functionality');
 
-    // Get overlay and close button
-    const notificationOverlay = document.getElementById('executive-notification-overlay');
-    const closeNotificationBtn = document.getElementById('executive-close-notifications');
-
-    // Toggle sidebar with slide animation
+    // Toggle notification panel using global function
     notificationBtn.addEventListener('click', (e) => {
-      console.log('🔔 Executive Notification button clicked');
+      console.log('🔔 Toggling Executive notification panel');
       e.preventDefault();
       e.stopPropagation();
       
-      const isHidden = notificationDropdown.classList.contains('hidden');
-      if (isHidden) {
-        console.log('📂 Opening Executive notification sidebar');
-        // Show overlay
-        notificationOverlay.classList.remove('hidden');
-        notificationOverlay.style.opacity = '0';
-        
-        // Show sidebar
-        notificationDropdown.classList.remove('hidden');
-        notificationDropdown.style.visibility = 'visible';
-        notificationDropdown.style.opacity = '1';
-        notificationDropdown.style.transform = 'translateX(100%)';
-        
-        requestAnimationFrame(() => {
-          // Animate overlay
-          notificationOverlay.style.opacity = '1';
-          // Slide sidebar in
-          notificationDropdown.style.transform = 'translateX(0)';
-        });
-        
-        loadNotifications(notificationService);
-      } else {
-        console.log('📁 Closing Executive notification sidebar');
-        closeSidebar();
+      // Use global function from NotificationPanel component
+      if (typeof window !== 'undefined' && window['executive-notification-panel_toggle']) {
+        window['executive-notification-panel_toggle']();
       }
     });
 

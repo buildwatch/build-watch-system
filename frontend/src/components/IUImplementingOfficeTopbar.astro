@@ -1,6 +1,7 @@
 ---
 // LGU-IU: Implementing Office-Officer Topbar Component
 // Theme Color: Professional Blue (#0D7DB5)
+import NotificationPanel from '../islands/NotificationPanel.jsx';
 ---
 
 <header class="relative z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-gradient-to-r from-[#0D7DB5] via-[#0A6A9A] to-[#075A85] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
@@ -280,107 +281,13 @@
   </div>
 </header>
 
-        <!-- Enhanced LGU-IU Notification Panel -->
-        <div class="fixed top-0 right-0 h-full w-[420px] bg-gradient-to-br from-[#0D7DB5]/50 via-[#0A6A9A]/70 to-[#075A85]/50 shadow-2xl border-l border-[#0D7DB5]/30 z-[1200] backdrop-blur-xl transform translate-x-full transition-all duration-500 ease-out hidden" id="iu-notification-dropdown">
-  <!-- Enhanced Header with LGU-IU Theme -->
-  <div class="p-5 border-b border-[#0D7DB5]/15 bg-gradient-to-r from-[#0D7DB5]/50 via-[#0A6A9A]/70 to-[#075A85]/50 backdrop-blur-md shadow-lg">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] flex items-center justify-center shadow-xl">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-xl font-bold text-white mb-1">LGU-IU Notifications</h3>
-          <p class="text-xs text-white/80 font-medium">Monitor project updates & implementation alerts</p>
-        </div>
-      </div>
-      <button class="text-white/80 hover:text-white transition-all duration-200 hover:scale-110 p-2.5 rounded-lg hover:bg-white/10 hover:shadow-lg" id="iu-close-notifications" title="Close notifications">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-    
-    <!-- Enhanced Action Buttons with Better Hover Behavior -->
-    <div class="flex items-center gap-3 mb-6">
-      <button class="group flex items-center gap-3 text-sm font-semibold text-white bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] hover:from-[#0A6A9A] hover:to-[#075A85] transition-all duration-300 ease-out px-4 py-3 rounded-xl border-2 border-[#0D7DB5]/50 hover:border-[#0D7DB5]/70 hover:shadow-2xl shadow-lg hover:-translate-y-1 transform" id="iu-mark-all-read">
-        <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        Mark all read
-      </button>
-      <button class="group flex items-center gap-3 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 ease-out px-4 py-3 rounded-xl border-2 border-red-400/50 hover:border-red-400/70 hover:shadow-2xl shadow-lg hover:-translate-y-1 transform" id="iu-delete-all-read">
-        <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-        </svg>
-        Delete read
-      </button>
-      <button class="group flex items-center gap-3 text-sm font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 transition-all duration-300 ease-out px-4 py-3 rounded-xl border-2 border-red-500/50 hover:border-red-500/70 hover:shadow-2xl shadow-lg hover:-translate-y-1 transform" id="iu-delete-all-notifications">
-        <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-        </svg>
-        Delete all
-      </button>
-    </div>
-    
-    <!-- Enhanced Minimalist Notification Stats Bar -->
-    <div class="p-4 bg-gradient-to-r from-blue-500/8 via-blue-400/10 to-blue-500/8 rounded-xl border border-blue-400/15 shadow-md">
-            <div class="flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2">
-                <span class="text-white font-medium">Total:</span>
-                <span id="iu-notification-total" class="text-white font-bold text-base">0</span>
-              </div>
-              <div class="w-px h-5 bg-gradient-to-b from-blue-400/15 to-blue-400/15"></div>
-              <div class="flex items-center gap-2">
-                <span class="text-white font-medium">Unread:</span>
-                <span id="iu-notification-unread" class="text-white font-bold text-base">0</span>
-              </div>
-              <div class="w-px h-5 bg-gradient-to-b from-blue-400/15 to-blue-400/15"></div>
-              <div class="flex items-center gap-2">
-                <span class="text-white font-medium">Read:</span>
-                <span id="iu-notification-read" class="text-white font-bold text-base">0</span>
-              </div>
-            </div>
-    </div>
-  </div>
-  
-          <!-- Enhanced Notification List with Categories -->
-          <div class="flex-1 overflow-y-auto custom-scrollbar bg-gradient-to-br from-blue-500/20 via-blue-400/30 to-blue-500/20" id="iu-notification-list">
-    <!-- Loading State -->
-    <div class="p-6 text-center text-blue-200" id="iu-notification-loading">
-      <div class="animate-pulse flex flex-col items-center justify-center">
-        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center mb-4">
-          <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-          </svg>
-        </div>
-        <span class="text-sm font-medium">Loading LGU-IU notifications...</span>
-        <p class="text-xs text-blue-300 mt-1">Monitoring project updates & implementation alerts</p>
-      </div>
-    </div>
-  </div>
-  
-          <!-- Enhanced Footer with LGU-IU Monitor Active - Maximized Space and Enhanced UI -->
-          <div class="mt-auto p-4 border-t-2 border-blue-400/20 bg-gradient-to-r from-blue-500/50 via-blue-400/70 to-blue-500/50 backdrop-blur-md shadow-2xl">
-    <div class="flex items-center justify-between text-sm text-white font-semibold">
-      <div class="flex items-center gap-3">
-        <div class="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg"></div>
-        <span class="tracking-wide">LGU-IU Monitor Active</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="text-blue-300 text-lg">●</span>
-        <span class="text-xs text-blue-200 opacity-75">Live</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Notification Overlay -->
-<div id="iu-notification-overlay" class="fixed inset-0 bg-black/50 z-[1198] hidden"></div>
+<!-- Centralized Notification Panel -->
+<NotificationPanel 
+  client:load 
+  role="lgu-iu"
+  panelId="iu-notification-panel"
+  overlayId="iu-notification-overlay"
+/>
 
 <script>
   // Global API URL helper function - works for both localhost and production
@@ -1007,107 +914,21 @@
     console.log('🙈 LGU-IU profile dropdown hidden with smooth animation');
   }
 
-  // Notification functionality
+  // Notification functionality - Updated for centralized NotificationPanel
   function initializeNotifications() {
     const notificationBtn = document.getElementById('iu-notification-btn');
-    const notificationDropdown = document.getElementById('iu-notification-dropdown');
-    const notificationOverlay = document.getElementById('iu-notification-overlay');
     const notificationBadge = document.getElementById('iu-notification-badge');
-    const notificationList = document.getElementById('iu-notification-list');
-    const markAllReadBtn = document.getElementById('iu-mark-all-read');
-    const deleteAllReadBtn = document.getElementById('iu-delete-all-read');
-    const deleteAllNotificationsBtn = document.getElementById('iu-delete-all-notifications');
-    const closeNotificationsBtn = document.getElementById('iu-close-notifications');
 
-    // Toggle notification panel
+    // Toggle notification panel using global function
+    if (notificationBtn) {
     notificationBtn.addEventListener('click', () => {
       console.log('🔔 Toggling IU notification panel');
-      const isHidden = notificationDropdown.classList.contains('hidden');
-      
-      if (!isHidden) {
-        // Close notification panel
-        console.log('🙈 Closing IU notification panel');
-        notificationDropdown.classList.add('hidden');
-        notificationOverlay.classList.add('hidden');
-      } else {
-        // Open notification panel
-        console.log('👁️ Opening IU notification panel');
-        notificationDropdown.classList.remove('hidden');
-        notificationOverlay.classList.remove('hidden');
-        loadNotifications();
-      }
-    });
-
-    // Close notification panel
-    closeNotificationsBtn.addEventListener('click', () => {
-      notificationDropdown.classList.add('hidden');
-      notificationOverlay.classList.add('hidden');
-    });
-
-    // Close on overlay click
-    notificationOverlay.addEventListener('click', () => {
-      notificationDropdown.classList.add('hidden');
-      notificationOverlay.classList.add('hidden');
-    });
-
-    // Mark all as read
-    markAllReadBtn.addEventListener('click', async () => {
-      try {
-        await notificationService.markAllAsRead();
-        updateNotificationBadge();
-        loadNotifications();
-      } catch (error) {
-        console.error('Error marking all as read:', error);
-      }
-    });
-
-    // Delete all read notifications
-    deleteAllReadBtn.addEventListener('click', async () => {
-      if (confirm('Are you sure you want to delete all read notifications? This action cannot be undone.')) {
-        try {
-          const data = await notificationService.getNotifications();
-          const notifications = data.notifications.filter(n => n.isRead);
-          
-          let deletedCount = 0;
-          for (const notification of notifications) {
-            const success = await notificationService.deleteNotification(notification.id);
-            if (success) deletedCount++;
-          }
-          
-          if (deletedCount > 0) {
-            updateNotificationBadge();
-            loadNotifications();
-          }
-        } catch (error) {
-          console.error('Error deleting read notifications:', error);
+        // Use global function from NotificationPanel component
+        if (typeof window !== 'undefined' && window['iu-notification-panel_toggle']) {
+          window['iu-notification-panel_toggle']();
         }
-      }
-    });
-
-    // Delete all notifications (both read and unread)
-    deleteAllNotificationsBtn.addEventListener('click', async () => {
-      if (confirm('Are you sure you want to delete ALL notifications? This action cannot be undone and will clear both read and unread notifications.')) {
-        try {
-          const data = await notificationService.getNotifications();
-          const allNotifications = data.notifications || [];
-          
-          let deletedCount = 0;
-          for (const notification of allNotifications) {
-            const success = await notificationService.deleteNotification(notification.id);
-            if (success) deletedCount++;
-          }
-          
-          if (deletedCount > 0) {
-            updateNotificationBadge();
-            loadNotifications();
-            console.log(`🗑️ Successfully deleted ${deletedCount} notifications`);
-          }
-        } catch (error) {
-          console.error('Error deleting all notifications:', error);
-          alert('Failed to delete all notifications. Please try again.');
-        }
-      }
-    });
+      });
+    }
 
     // Load initial notification count
     updateNotificationBadge();
@@ -1152,181 +973,7 @@
     }
   }
 
-  async function loadNotifications() {
-    const notificationList = document.getElementById('iu-notification-list');
-    const loadingEl = document.getElementById('iu-notification-loading');
-    if (!notificationList) return;
-    
-    try {
-      // Hide loading state
-      if (loadingEl) loadingEl.style.display = 'none';
-      
-      const data = await notificationService.getNotifications();
-      const notifications = data.notifications || [];
-
-      if (notifications.length === 0) {
-        notificationList.innerHTML = `
-          <div class="p-8 text-center text-blue-200">
-            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/10 to-blue-600/10 flex items-center justify-center mx-auto mb-4">
-              <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <h4 class="text-lg font-semibold text-white mb-2">All Caught Up!</h4>
-            <p class="text-sm text-blue-200">No LGU-IU notifications at the moment</p>
-            <p class="text-xs text-blue-300 mt-1">All projects are running smoothly</p>
-          </div>
-        `;
-        return;
-      }
-
-      const notificationsHtml = notifications.map(notification => {
-        const priorityColors = {
-          high: 'from-red-500/20 to-red-600/20 border-red-500/30',
-          medium: 'from-blue-500/20 to-blue-500/20 border-blue-500/30',
-          low: 'from-blue-400/20 to-blue-400/20 border-blue-400/30',
-          info: 'from-blue-400/20 to-blue-400/20 border-blue-400/30'
-        };
-        
-        const priorityColor = priorityColors[notification.priority] || priorityColors.info;
-        const isUnread = !notification.isRead;
-        
-        return `
-          <div class="p-4 hover:bg-white/5 transition-all duration-200 ${isUnread ? 'bg-gradient-to-r from-blue-500/15 via-blue-400/20 to-blue-500/15' : ''} ${notification.actionUrl ? 'cursor-pointer' : ''}" 
-               data-notification-id="${notification.id}"
-               ${notification.actionUrl ? `onclick="handleNotificationClick('${notification.id}', '${notification.actionUrl}')"` : ''}>
-            <div class="flex items-start gap-4">
-              <!-- Priority Indicator -->
-              <div class="flex-shrink-0">
-                <div class="w-3 h-3 rounded-full ${isUnread ? 'bg-gradient-to-r from-green-400 to-green-500 animate-pulse' : 'bg-gray-500'}"></div>
-              </div>
-              
-              <!-- Notification Icon -->
-              <div class="flex-shrink-0">
-                <div class="w-10 h-10 rounded-lg bg-gradient-to-br ${priorityColor} flex items-center justify-center">
-                  ${notificationService.getNotificationIcon(notification.type, notification.category, notification.metadata)}
-                </div>
-              </div>
-              
-              <!-- Notification Content -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-white mb-1">${notification.title || 'LGU-IU Notification'}</h4>
-                    <p class="text-sm text-blue-200 leading-relaxed">${notification.message || 'No message content'}</p>
-                    
-                    <!-- Action Buttons -->
-                    ${notification.actionUrl ? `
-                      <div class="flex items-center gap-2 mt-3">
-                        <a href="${notification.actionUrl}" class="inline-flex items-center gap-2 text-xs text-blue-200 hover:text-white transition-colors px-3 py-1.5 rounded-lg border border-blue-400/30 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-blue-500/20 hover:border-blue-400/50" onclick="markIUNotificationAsRead('${notification.id}')">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                          </svg>
-                          ${notification.actionText || 'View Details'}
-                        </a>
-                      </div>
-                    ` : ''}
-                  </div>
-                  
-                  <!-- Time and Actions -->
-                  <div class="flex flex-col items-end gap-2">
-                    <span class="text-xs text-blue-300 whitespace-nowrap">${notificationService.formatTime(notification.createdAt)}</span>
-                    <div class="flex items-center gap-1">
-                      ${!notification.isRead ? `
-                        <button class="group flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-300 ease-out px-3 py-2 rounded-xl border-2 border-green-400/50 hover:border-green-400/70 hover:shadow-2xl shadow-lg hover:-translate-y-1 transform" 
-                                onclick="markIUNotificationAsRead('${notification.id}')" 
-                                title="Mark as read">
-                          <svg class="w-4 h-4 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                          </svg>
-                        </button>
-                      ` : ''}
-                      <button class="group flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300 ease-out px-3 py-2 rounded-xl border-2 border-red-400/50 hover:border-red-400/70 hover:shadow-2xl shadow-lg hover:-translate-y-1 transform" 
-                              onclick="deleteIUNotification('${notification.id}')" 
-                              title="Delete notification">
-                        <svg class="w-4 h-4 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      notificationList.innerHTML = notificationsHtml;
-      
-      // Add dividers between notifications
-      const notificationItems = notificationList.querySelectorAll('[data-notification-id]');
-      notificationItems.forEach((item, index) => {
-        if (index < notificationItems.length - 1) {
-          const divider = document.createElement('div');
-          divider.className = 'mx-4 border-t border-blue-400/10';
-          item.after(divider);
-        }
-      });
-      
-    } catch (error) {
-      console.error('Error loading LGU-IU notifications:', error);
-      notificationList.innerHTML = `
-        <div class="p-6 text-center text-red-400">
-          <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.500c-.77.833.192 2.5 1.732 2.5z"></path>
-            </svg>
-          </div>
-          <h4 class="text-sm font-semibold text-red-300 mb-2">Connection Error</h4>
-          <p class="text-sm text-red-200">Failed to load LGU-IU notifications</p>
-          <p class="text-xs text-red-300 mt-1">Check your connection and try again</p>
-        </div>
-      `;
-    }
-  }
-
-  // Global function for marking notification as read
-  window.markIUNotificationAsRead = async function(notificationId) {
-    await notificationService.markAsRead(notificationId);
-    updateNotificationBadge();
-    loadNotifications();
-  };
-
-  // Global function for handling notification click (marks as read and redirects)
-  window.handleNotificationClick = async function(notificationId, actionUrl) {
-    try {
-      // Mark as read first
-      await notificationService.markAsRead(notificationId);
-      updateNotificationBadge();
-      
-      // Close notification panel
-      const notificationDropdown = document.getElementById('iu-notification-dropdown');
-      const notificationOverlay = document.getElementById('iu-notification-overlay');
-      if (notificationDropdown) notificationDropdown.classList.add('hidden');
-      if (notificationOverlay) notificationOverlay.classList.add('hidden');
-      
-      // Redirect to the action URL
-      window.location.href = actionUrl;
-    } catch (error) {
-      console.error('Error handling notification click:', error);
-      // Still redirect even if marking as read fails
-      window.location.href = actionUrl;
-    }
-  };
-
-  // Global function for deleting notification
-  window.deleteIUNotification = async function(notificationId) {
-    if (confirm('Are you sure you want to delete this notification?')) {
-      const success = await notificationService.deleteNotification(notificationId);
-      if (success) {
-        updateNotificationBadge();
-        loadNotifications();
-      } else {
-        alert('Failed to delete notification. Please try again.');
-      }
-    }
-  };
+  // Removed loadNotifications and related functions - now handled by NotificationPanel component
 
   // Initialize sidebar toggle functionality
   function initializeSidebarToggle() {
