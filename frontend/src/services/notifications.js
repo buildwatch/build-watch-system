@@ -500,8 +500,18 @@ function getNotificationService() {
   return notificationServiceInstance;
 }
 
-// Export the getter function, but also export a default for backward compatibility
-const notificationService = getNotificationService();
+// Create a proxy that always returns the current service instance
+const notificationService = new Proxy({}, {
+  get(target, prop) {
+    const service = getNotificationService();
+    const value = service[prop];
+    // If it's a function, bind it to the service instance
+    if (typeof value === 'function') {
+      return value.bind(service);
+    }
+    return value;
+  }
+});
 
 // Re-initialize on client side when window is available
 if (typeof window !== 'undefined') {
