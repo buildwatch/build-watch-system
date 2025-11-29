@@ -530,39 +530,6 @@ import NotificationPanel from '../islands/NotificationPanel.jsx';
       }
     });
 
-    // Close sidebar function
-    function closeSidebar() {
-      // Slide sidebar out
-      notificationDropdown.style.transform = 'translateX(100%)';
-      // Fade overlay out
-      notificationOverlay.style.opacity = '0';
-      
-      setTimeout(() => {
-        notificationDropdown.classList.add('hidden');
-        notificationOverlay.classList.add('hidden');
-        // Ensure proper visibility state
-        notificationDropdown.style.visibility = 'hidden';
-        notificationDropdown.style.opacity = '0';
-      }, 300);
-    }
-
-    // Close button event
-    if (closeNotificationBtn) {
-      closeNotificationBtn.addEventListener('click', closeSidebar);
-    }
-
-    // Overlay click to close
-    if (notificationOverlay) {
-      notificationOverlay.addEventListener('click', closeSidebar);
-    }
-
-    // ESC key to close sidebar
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !notificationDropdown.classList.contains('hidden')) {
-        closeSidebar();
-      }
-    });
-
     // Load initial notification count
     updateNotificationBadge(notificationService);
 
