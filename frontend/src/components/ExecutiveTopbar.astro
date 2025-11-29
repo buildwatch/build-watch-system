@@ -563,53 +563,6 @@ import NotificationPanel from '../islands/NotificationPanel.jsx';
       }
     });
 
-    // Mark all as read
-    markAllReadBtn.addEventListener('click', async () => {
-      await notificationService.markAllAsRead();
-      updateNotificationBadge(notificationService);
-      loadNotifications(notificationService);
-    });
-
-    // Delete all read notifications
-    const deleteAllReadBtn = document.getElementById('executive-delete-all-read');
-    if (deleteAllReadBtn) {
-      deleteAllReadBtn.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to delete all read notifications?')) {
-          await notificationService.deleteAllRead();
-          updateNotificationBadge(notificationService);
-          loadNotifications(notificationService);
-        }
-      });
-    }
-
-    // Delete all notifications (both read and unread)
-    const deleteAllNotificationsBtn = document.getElementById('executive-delete-all-notifications');
-    if (deleteAllNotificationsBtn) {
-      deleteAllNotificationsBtn.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to delete ALL notifications? This action cannot be undone and will clear both read and unread notifications.')) {
-          try {
-            const data = await notificationService.getNotifications();
-            const allNotifications = data.notifications || [];
-            
-            let deletedCount = 0;
-            for (const notification of allNotifications) {
-              const success = await notificationService.deleteNotification(notification.id);
-              if (success) deletedCount++;
-            }
-            
-            if (deletedCount > 0) {
-              updateNotificationBadge(notificationService);
-              loadNotifications(notificationService);
-              console.log(`🗑️ Successfully deleted ${deletedCount} notifications`);
-            }
-          } catch (error) {
-            console.error('Error deleting all notifications:', error);
-            alert('Failed to delete all notifications. Please try again.');
-          }
-        }
-      });
-    }
-
     // Load initial notification count
     updateNotificationBadge(notificationService);
 
