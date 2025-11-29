@@ -6,18 +6,8 @@ class NotificationService {
     this.pollingInterval = null;
     this.isClient = false;
     
-    // Only start polling on client side - delay to ensure window is available
-    if (typeof window !== 'undefined') {
-      this.isClient = true;
-      // Use setTimeout to ensure we're fully in browser context
-      if (typeof setTimeout !== 'undefined') {
-        setTimeout(() => {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            this.startPolling();
-          }
-        }, 100);
-      }
-    }
+    // DO NOT start polling in constructor - it will be started explicitly from client side
+    // This prevents SSR issues where window might be defined but localStorage is not
   }
 
   // Get API URL dynamically (works for both localhost and production)
@@ -518,11 +508,23 @@ if (typeof window !== 'undefined') {
   // Wait for DOM to be ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      notificationServiceInstance = new NotificationService();
+      if (typeof window !== 'undefined' && window.localStorage) {
+        notificationServiceInstance = new NotificationService();
+        // Start polling only after instance is created and we're sure we're in browser
+        if (notificationServiceInstance && typeof notificationServiceInstance.startPolling === 'function') {
+          notificationServiceInstance.startPolling();
+        }
+      }
     });
   } else {
     // DOM already ready, create instance immediately
-    notificationServiceInstance = new NotificationService();
+    if (typeof window !== 'undefined' && window.localStorage) {
+      notificationServiceInstance = new NotificationService();
+      // Start polling only after instance is created and we're sure we're in browser
+      if (notificationServiceInstance && typeof notificationServiceInstance.startPolling === 'function') {
+        notificationServiceInstance.startPolling();
+      }
+    }
   }
 }
 
