@@ -4,9 +4,19 @@ class NotificationService {
     this.notifications = [];
     this.updateCallbacks = [];
     this.pollingInterval = null;
-    // Only start polling on client side
+    this.isClient = false;
+    
+    // Only start polling on client side - delay to ensure window is available
     if (typeof window !== 'undefined') {
-      this.startPolling();
+      this.isClient = true;
+      // Use setTimeout to ensure we're fully in browser context
+      if (typeof setTimeout !== 'undefined') {
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            this.startPolling();
+          }
+        }, 100);
+      }
     }
   }
 
@@ -279,18 +289,36 @@ class NotificationService {
   // Start polling for updates (only on client side)
   startPolling() {
     // Only start polling on client side
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof setInterval === 'undefined') {
+      return;
+    }
+    
+    // Double-check localStorage is available
+    if (!window.localStorage) {
       return;
     }
     
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
     }
 
     this.pollingInterval = setInterval(async () => {
-      // Double-check we're still on client side
-      if (typeof window !== 'undefined') {
-        await this.getNotificationCount();
+      // Triple-check we're still on client side with localStorage
+      if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+          await this.getNotificationCount();
+        } catch (error) {
+          // Silently fail if we're not in browser context
+          if (error.message && error.message.includes('localStorage')) {
+            this.stopPolling();
+            return;
+          }
+          console.error('Error in polling callback:', error);
+        }
+      } else {
+        // Stop polling if we're no longer in browser context
+        this.stopPolling();
       }
     }, 10000); // Poll every 10 seconds for faster updates
   }
