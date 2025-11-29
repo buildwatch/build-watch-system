@@ -463,7 +463,57 @@ class NotificationService {
   }
 }
 
-// Create singleton instance
-const notificationService = new NotificationService();
+// Create singleton instance - lazy initialization to prevent SSR issues
+let notificationServiceInstance = null;
+
+function getNotificationService() {
+  // Only create instance on client side
+  if (typeof window !== 'undefined') {
+    if (!notificationServiceInstance) {
+      notificationServiceInstance = new NotificationService();
+    }
+    return notificationServiceInstance;
+  }
+  
+  // For SSR, return a mock service that does nothing
+  if (!notificationServiceInstance) {
+    notificationServiceInstance = {
+      getNotificationCount: () => Promise.resolve(0),
+      getNotifications: () => Promise.resolve({ notifications: [], pagination: { total: 0, pages: 0 } }),
+      markAsRead: () => Promise.resolve(false),
+      markAllAsRead: () => Promise.resolve(false),
+      deleteNotification: () => Promise.resolve(false),
+      deleteAllRead: () => Promise.resolve(false),
+      onUpdate: () => () => {},
+      startPolling: () => {},
+      stopPolling: () => {},
+      getCurrentCount: () => 0,
+      getCurrentNotifications: () => [],
+      forceRefresh: () => Promise.resolve(),
+      formatTime: (timestamp) => new Date(timestamp).toLocaleDateString(),
+      getNotificationIcon: () => '',
+      getNotificationColor: () => '',
+      getAuthToken: () => null,
+      getApiUrl: () => 'http://localhost:3000/api'
+    };
+  }
+  return notificationServiceInstance;
+}
+
+// Export the getter function, but also export a default for backward compatibility
+const notificationService = getNotificationService();
+
+// Re-initialize on client side when window is available
+if (typeof window !== 'undefined') {
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      notificationServiceInstance = new NotificationService();
+    });
+  } else {
+    // DOM already ready, create instance immediately
+    notificationServiceInstance = new NotificationService();
+  }
+}
 
 export default notificationService; 
