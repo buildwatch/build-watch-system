@@ -297,38 +297,52 @@ class NotificationService {
 
   // Start polling for updates (only on client side)
   startPolling() {
-    // Only start polling on client side
-    if (typeof window === 'undefined' || typeof setInterval === 'undefined') {
+    // Only start polling on client side - strict checks
+    if (typeof window === 'undefined') {
       return;
     }
-    
-    // Double-check localStorage is available
+    if (typeof setInterval === 'undefined') {
+      return;
+    }
     if (!window.localStorage) {
       return;
     }
     
+    // Clear any existing interval
     if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
+      if (typeof clearInterval !== 'undefined') {
+        clearInterval(this.pollingInterval);
+      }
       this.pollingInterval = null;
     }
 
-    this.pollingInterval = setInterval(async () => {
-      // Triple-check we're still on client side with localStorage
-      if (typeof window !== 'undefined' && window.localStorage) {
+    // Create interval with strict checks in callback
+    this.pollingInterval = setInterval(() => {
+      // Strict check - must be in browser with localStorage
+      if (typeof window === 'undefined' || !window.localStorage) {
+        this.stopPolling();
+        return;
+      }
+      
+      // Use async IIFE to handle async operations safely
+      (async () => {
         try {
-          await this.getNotificationCount();
+          // Final check before making API call
+          if (typeof window !== 'undefined' && window.localStorage) {
+            await this.getNotificationCount();
+          }
         } catch (error) {
-          // Silently fail if we're not in browser context
-          if (error.message && error.message.includes('localStorage')) {
+          // If localStorage error, stop polling
+          if (error && (error.message?.includes('localStorage') || error.name === 'ReferenceError')) {
             this.stopPolling();
             return;
           }
-          console.error('Error in polling callback:', error);
+          // Only log non-localStorage errors
+          if (typeof window !== 'undefined') {
+            console.error('Error in polling callback:', error);
+          }
         }
-      } else {
-        // Stop polling if we're no longer in browser context
-        this.stopPolling();
-      }
+      })();
     }, 10000); // Poll every 10 seconds for faster updates
   }
 
