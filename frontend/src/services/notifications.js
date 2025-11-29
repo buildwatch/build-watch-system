@@ -34,13 +34,22 @@ class NotificationService {
 
   // Get auth token (safe for SSR)
   getAuthToken() {
-    if (typeof window === 'undefined' || !window.localStorage) {
+    // Multiple checks to ensure we're in browser context
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    if (!window.localStorage) {
       return null;
     }
     try {
-      return localStorage.getItem('token');
+      // Use window.localStorage explicitly to be safe
+      return window.localStorage.getItem('token');
     } catch (error) {
-      console.error('Error accessing localStorage:', error);
+      // Silently return null if localStorage is not available
+      // Don't log errors during SSR
+      if (typeof window !== 'undefined') {
+        console.error('Error accessing localStorage:', error);
+      }
       return null;
     }
   }
