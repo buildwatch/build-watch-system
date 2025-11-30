@@ -48,11 +48,23 @@ class ProfilePictureManager {
       const userData = localStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        return user.userId || user.id || user.employeeId || 'SA-001';
+        const userId = user.userId || user.id || user.employeeId || null;
+        console.log('🔍 [Profile Picture Debug] System Admin Manager: User data from localStorage:', {
+          userId: user.userId,
+          id: user.id,
+          employeeId: user.employeeId,
+          email: user.email,
+          role: user.role,
+          selectedUserId: userId
+        });
+        return userId || 'SA-001'; // Fallback to SA-001 if nothing found
+      } else {
+        console.warn('⚠️ [Profile Picture Debug] System Admin Manager: No user data in localStorage');
       }
     } catch (error) {
-      console.log('⚠️ Error getting user ID:', error);
+      console.error('❌ [Profile Picture Debug] System Admin Manager: Error getting user ID:', error);
     }
+    console.log('⚠️ [Profile Picture Debug] System Admin Manager: Using default fallback userId: SA-001');
     return 'SA-001'; // Default fallback
   }
 
@@ -77,16 +89,34 @@ class ProfilePictureManager {
         return;
       }
       
-      console.log('🔍 Fetching System Admin profile picture from server...');
+      // Get the actual userId from user data
+      const actualUserId = this.getCurrentUserId();
+      console.log('🔍 [Profile Picture Debug] System Admin Manager: Fetching profile picture from server...');
+      console.log('🔍 [Profile Picture Debug] System Admin Manager: Using userId:', actualUserId);
+      
       // Determine API URL based on environment
       const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
       const API_URL = isProd 
         ? `${window.location.protocol}//${window.location.hostname}/api`
         : 'http://localhost:3000/api';
-      const response = await fetch(`${API_URL}/profile/picture/SA-001`);
+      
+      const profilePictureEndpoint = `${API_URL}/profile/picture/${encodeURIComponent(actualUserId)}`;
+      console.log('🔍 [Profile Picture Debug] System Admin Manager: Endpoint:', profilePictureEndpoint);
+      
+      const response = await fetch(profilePictureEndpoint);
+      
+      console.log('🔍 [Profile Picture Debug] System Admin Manager: Response status:', response.status, response.statusText);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 [Profile Picture Debug] System Admin Manager: API Response:', {
+          success: data.success,
+          hasProfilePictureUrl: !!data.profilePictureUrl,
+          profilePictureUrl: data.profilePictureUrl ? (data.profilePictureUrl.substring(0, 50) + '...') : null,
+          isBase64: data.isBase64,
+          hasProfilePicture: data.hasProfilePicture
+        });
+        
         if (data.success && data.profilePictureUrl) {
           this.profilePictureUrl = data.profilePictureUrl;
           
@@ -95,18 +125,28 @@ class ProfilePictureManager {
           if (!data.profilePictureUrl.startsWith('data:')) {
             localStorage.setItem('sysadmin_profile_picture', data.profilePictureUrl);
             localStorage.setItem('profilePictureUrl', data.profilePictureUrl);
+            console.log('✅ [Profile Picture Debug] System Admin Manager: Stored HTTP URL in localStorage');
           } else {
             // If server returns data URL, store API endpoint instead
-            const apiUrl = `${API_URL}/profile/picture/SA-001`;
+            const apiUrl = `${API_URL}/profile/picture/${encodeURIComponent(actualUserId)}`;
             localStorage.setItem('sysadmin_profile_picture', apiUrl);
             localStorage.setItem('profilePictureUrl', apiUrl);
-            console.log('⚠️ Server returned data URL, storing API endpoint instead');
+            console.log('⚠️ [Profile Picture Debug] System Admin Manager: Server returned data URL, storing API endpoint instead:', apiUrl);
           }
           
-          console.log('✅ System Admin profile picture loaded from server:', this.profilePictureUrl);
+          console.log('✅ [Profile Picture Debug] System Admin Manager: Profile picture loaded from server');
           this.updateAllProfilePictures();
           return;
+        } else {
+          console.warn('⚠️ [Profile Picture Debug] System Admin Manager: API returned success but no profilePictureUrl:', data);
         }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ [Profile Picture Debug] System Admin Manager: API call failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
       }
     } catch (error) {
       console.log('⚠️ Failed to load from server, trying localStorage:', error);

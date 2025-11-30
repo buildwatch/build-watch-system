@@ -112,6 +112,14 @@ router.post('/upload-picture', authenticateToken, upload.single('profilePicture'
     
     // Update the authenticated user's profile picture URL
     try {
+      console.log('🔍 [Profile Upload Debug] Updating profile picture for user:', {
+        id: authenticatedUser.id,
+        userId: authenticatedUser.userId,
+        email: authenticatedUser.email,
+        currentProfilePictureUrl: authenticatedUser.profilePictureUrl,
+        newProfilePictureUrl: profilePictureUrl
+      });
+      
       // Use save() method to ensure the update is persisted immediately
       authenticatedUser.profilePictureUrl = profilePictureUrl;
       await authenticatedUser.save();
@@ -121,7 +129,7 @@ router.post('/upload-picture', authenticateToken, upload.single('profilePicture'
       
       // Verify the update was successful by querying fresh from database
       const updatedUser = await User.findByPk(authenticatedUser.id, {
-        attributes: ['id', 'profilePictureUrl'],
+        attributes: ['id', 'userId', 'email', 'profilePictureUrl'],
         raw: false
       });
       
@@ -130,9 +138,13 @@ router.post('/upload-picture', authenticateToken, upload.single('profilePicture'
         await updatedUser.reload();
       }
       
-      console.log('✅ Profile picture URL stored in database for user:', authenticatedUser.id);
-      console.log('✅ Verified profilePictureUrl in database:', updatedUser ? updatedUser.profilePictureUrl : 'N/A');
-      console.log('✅ Profile picture URL:', profilePictureUrl);
+      console.log('✅ [Profile Upload Debug] Profile picture URL stored in database for user:', {
+        id: authenticatedUser.id,
+        userId: authenticatedUser.userId,
+        email: authenticatedUser.email
+      });
+      console.log('✅ [Profile Upload Debug] Verified profilePictureUrl in database:', updatedUser ? updatedUser.profilePictureUrl : 'N/A');
+      console.log('✅ [Profile Upload Debug] Profile picture URL:', profilePictureUrl);
       
       if (!updatedUser || !updatedUser.profilePictureUrl || updatedUser.profilePictureUrl !== profilePictureUrl) {
         console.error('⚠️ Profile picture URL mismatch after update!');
@@ -178,8 +190,16 @@ router.post('/upload-picture', authenticateToken, upload.single('profilePicture'
         profileData[authenticatedUser.userId] = profileData[storageKey];
       }
       
+      // Also store with the user's primary key ID as string for System Admin
+      profileData[authenticatedUser.id.toString()] = profileData[storageKey];
+      
       fs.writeFileSync(profileDataPath, JSON.stringify(profileData, null, 2));
-      console.log('✅ Profile data stored in local file for user:', authenticatedUser.id);
+      console.log('✅ [Profile Upload Debug] Profile data stored in local file for user:', {
+        id: authenticatedUser.id,
+        userId: authenticatedUser.userId,
+        email: authenticatedUser.email,
+        storageKeys: [storageKey, authenticatedUser.email, authenticatedUser.userId, authenticatedUser.id.toString()].filter(Boolean)
+      });
     } catch (fileError) {
       console.error('⚠️ Local file storage failed:', fileError);
     }
@@ -253,7 +273,8 @@ router.get('/picture/:userId', async (req, res) => {
     res.header('Cache-Control', 'public, max-age=3600'); // 1 hour cache
     
     const userId = req.params.userId;
-    console.log('🔍 Fetching profile picture for user:', userId);
+    console.log('🔍 [Profile Picture Debug] Fetching profile picture for user:', userId);
+    console.log('🔍 [Profile Picture Debug] UserId type:', typeof userId);
     
     let profilePictureUrl = null;
     
@@ -262,22 +283,73 @@ router.get('/picture/:userId', async (req, res) => {
       // First try to find user by userId field (including deleted users)
       let user = await User.findOne({ 
         where: { userId: userId },
-        attributes: ['profilePictureUrl', 'status'],
+        attributes: ['id', 'userId', 'email', 'profilePictureUrl', 'status'],
         paranoid: false // Include soft-deleted records
       });
       
-      // If not found by userId, try by email (including deleted users)
+      console.log('🔍 [Profile Picture Debug] User found by userId:', user ? {
+        id: user.id,
+        userId: user.userId,
+        email: user.email,
+        hasProfilePicture: !!user.profilePictureUrl,
+        profilePictureUrl: user.profilePictureUrl
+      } : 'Not found');
+      
+      // If not found by userId, try by primary key id (numeric or UUID)
+      if (!user) {
+        // Try as numeric ID
+        if (!isNaN(userId)) {
+          const numericId = parseInt(userId);
+          user = await User.findOne({ 
+            where: { id: numericId },
+            attributes: ['id', 'userId', 'email', 'profilePictureUrl', 'status'],
+            paranoid: false
+          });
+          console.log('🔍 [Profile Picture Debug] User found by id (numeric):', user ? {
+            id: user.id,
+            userId: user.userId,
+            email: user.email,
+            hasProfilePicture: !!user.profilePictureUrl
+          } : 'Not found');
+        }
+        
+        // Try as UUID (if it looks like a UUID)
+        if (!user && userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          user = await User.findOne({ 
+            where: { id: userId },
+            attributes: ['id', 'userId', 'email', 'profilePictureUrl', 'status'],
+            paranoid: false
+          });
+          console.log('🔍 [Profile Picture Debug] User found by id (UUID):', user ? {
+            id: user.id,
+            userId: user.userId,
+            email: user.email,
+            hasProfilePicture: !!user.profilePictureUrl
+          } : 'Not found');
+        }
+      }
+      
+      // If not found by userId or id, try by email (including deleted users)
       if (!user) {
         user = await User.findOne({ 
           where: { email: userId },
-          attributes: ['profilePictureUrl', 'status'],
+          attributes: ['id', 'userId', 'email', 'profilePictureUrl', 'status'],
           paranoid: false // Include soft-deleted records
         });
+        console.log('🔍 [Profile Picture Debug] User found by email:', user ? {
+          id: user.id,
+          userId: user.userId,
+          email: user.email,
+          hasProfilePicture: !!user.profilePictureUrl
+        } : 'Not found');
       }
       
-      if (user && user.profilePictureUrl) {
+      // If user found but no profilePictureUrl, check if we can find it by the user's other identifiers
+      if (user && !user.profilePictureUrl) {
+        console.log('⚠️ [Profile Picture Debug] User found but profilePictureUrl is null, checking profile-data.json...');
+      } else if (user && user.profilePictureUrl) {
         profilePictureUrl = user.profilePictureUrl;
-        console.log(`✅ Profile picture found in database (status: ${user.status}) for user ${userId}:`, profilePictureUrl);
+        console.log(`✅ Profile picture found in database (status: ${user.status}) for user ${userId}:`, profilePictureUrl.substring(0, 50) + '...');
         
         // If user is deleted, also try to get preserved profile picture from activity logs
         if (user.status === 'deleted') {
@@ -318,6 +390,14 @@ router.get('/picture/:userId', async (req, res) => {
           // Try multiple possible ID formats
           const possibleIds = [userId];
           
+          // If we found the user in database, add their id, userId, and email to the search
+          if (user) {
+            possibleIds.push(user.id.toString());
+            if (user.userId) possibleIds.push(user.userId);
+            if (user.email) possibleIds.push(user.email);
+            console.log('🔍 [Profile Picture Debug] Checking profile-data.json with IDs:', possibleIds);
+          }
+          
           // Add specific mappings for known users
           const userMappings = {
             '1c93ca94-cb7f-4fea-a6be-4e1747f6f35d': 'exeviewer@gmail.com', // Executive Viewer
@@ -325,7 +405,8 @@ router.get('/picture/:userId', async (req, res) => {
             'EIU-0002': 'meopartner2@gmail.com',
             'EIU-0003': 'meopartner3@gmail.com',
             'EIU-0004': 'menropartner1@gmail.com',
-            'EIU-0005': 'mswdopartner1@gmail.com'
+            'EIU-0005': 'mswdopartner1@gmail.com',
+            'SYS-AD-0001': 'sysadmin@gmail.com' // System Admin mapping
           };
           
           // Add mapped IDs
@@ -345,17 +426,38 @@ router.get('/picture/:userId', async (req, res) => {
             });
           }
           
+          // Remove duplicates
+          const uniqueIds = [...new Set(possibleIds.filter(id => id))];
+          console.log('🔍 [Profile Picture Debug] Checking profile-data.json with unique IDs:', uniqueIds);
+          
           // Try each possible ID
-          for (const id of possibleIds) {
+          for (const id of uniqueIds) {
             if (profileData[id] && profileData[id].profilePictureUrl) {
               profilePictureUrl = profileData[id].profilePictureUrl;
-              console.log(`✅ Profile picture found in local file for user ${userId} (using ID: ${id}):`, profilePictureUrl);
+              console.log(`✅ [Profile Picture Debug] Profile picture found in local file for user ${userId} (using ID: ${id}):`, profilePictureUrl.substring(0, 50) + '...');
+              
+              // If we found the user in database, update the database with the profile picture URL
+              if (user && profilePictureUrl && !profilePictureUrl.startsWith('data:')) {
+                try {
+                  await user.update({ profilePictureUrl: profilePictureUrl });
+                  console.log(`✅ [Profile Picture Debug] Updated database with profile picture URL from profile-data.json`);
+                } catch (updateError) {
+                  console.error(`❌ [Profile Picture Debug] Failed to update database:`, updateError.message);
+                }
+              }
               break;
             }
           }
+          
+          if (!profilePictureUrl) {
+            console.log('⚠️ [Profile Picture Debug] Profile picture not found in profile-data.json for any of the IDs:', uniqueIds);
+            console.log('🔍 [Profile Picture Debug] Available keys in profile-data.json (first 10):', Object.keys(profileData).slice(0, 10));
+          }
+        } else {
+          console.log('⚠️ [Profile Picture Debug] profile-data.json file does not exist at:', profileDataPath);
         }
       } catch (fileError) {
-        console.log('⚠️ Local file read failed:', fileError.message);
+        console.error('❌ [Profile Picture Debug] Local file read failed:', fileError.message);
       }
     }
     

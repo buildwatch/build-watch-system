@@ -2439,7 +2439,15 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                       </div>
                       <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
                         <h3 className="text-sm font-medium opacity-90 mb-2">Status</h3>
-                        <p className="text-2xl font-bold capitalize">{selectedProject.status || 'N/A'}</p>
+                        <p className="text-2xl font-bold capitalize">
+                          {(() => {
+                            // Normalize status - convert pending to ongoing
+                            const normalizedStatus = (selectedProject.status === 'pending' || selectedProject.status === 'Pending' || selectedProject.status === 'PENDING') 
+                              ? 'ongoing' 
+                              : (selectedProject.status || 'ongoing');
+                            return normalizedStatus;
+                          })()}
+                        </p>
                       </div>
                       <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
                         <h3 className="text-sm font-medium opacity-90 mb-2">Overall Progress</h3>

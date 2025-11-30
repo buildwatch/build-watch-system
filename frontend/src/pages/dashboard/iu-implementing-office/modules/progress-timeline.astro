@@ -375,8 +375,8 @@ loading = false;
     border-radius: 12px;
     transition: all 0.3s ease;
     transform: translateY(0);
-    box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.25);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(13, 125, 181, 0.25);
+    border: 1px solid rgba(13, 125, 181, 0.2);
     position: relative;
     overflow: hidden;
     cursor: pointer;
@@ -406,7 +406,7 @@ loading = false;
   .btn-primary:hover {
     background: linear-gradient(135deg, #0A6A9A, #075A85);
     transform: scale(1.05) translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 10px 15px -3px rgba(13, 125, 181, 0.4);
   }
 
   .btn-secondary {
@@ -618,24 +618,24 @@ loading = false;
     transform: translateY(-2px);
   }
 
-  /* Enhanced Scrollbar Styles for Project Cards */
+  /* Enhanced Scrollbar Styles for Project Cards - Blue Theme */
   .scrollbar-thin::-webkit-scrollbar {
     height: 8px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgba(245, 158, 11, 0.1);
+    background: rgba(13, 125, 181, 0.1);
     border-radius: 4px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(245, 158, 11, 0.6);
+    background: rgba(13, 125, 181, 0.6);
     border-radius: 4px;
     transition: background 0.3s ease;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(245, 158, 11, 0.8);
+    background: rgba(13, 125, 181, 0.8);
   }
 
   /* Shimmer Animation for Filter Buttons */
@@ -700,14 +700,14 @@ loading = false;
   }
 
   .timeline-tab-button.active {
-    background: linear-gradient(135deg, rgb(245, 158, 11), rgb(217, 119, 6));
+    background: linear-gradient(135deg, #0D7DB5, #0A6A9A);
     color: white;
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 2px 4px rgba(13, 125, 181, 0.3);
   }
 
   .timeline-tab-button:not(.active):hover {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: rgb(217, 119, 6);
+    background-color: rgba(13, 125, 181, 0.1);
+    color: #0D7DB5;
   }
 
   /* Submission Tab Button Styles - Individual Color Themes */
@@ -716,18 +716,18 @@ loading = false;
     background-color: transparent;
   }
 
-  /* All Submissions Tab - Gold Theme */
+  /* All Submissions Tab - Blue Theme */
   .submission-tab-button#allSubmissionsTab.active {
-    background: linear-gradient(135deg, rgb(245, 158, 11), rgb(217, 119, 6));
+    background: linear-gradient(135deg, #0D7DB5, #0A6A9A);
     color: white;
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 2px 4px rgba(13, 125, 181, 0.3);
   }
 
-  /* Pending Review Tab - Brown with Gold Accent */
+  /* Pending Review Tab - Blue Theme */
   .submission-tab-button#pendingReviewTab.active {
-    background: linear-gradient(135deg, rgb(245, 158, 11), rgb(160, 82, 45));
+    background: linear-gradient(135deg, #0D7DB5, #0A6A9A);
     color: white;
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 2px 4px rgba(13, 125, 181, 0.3);
   }
 
   /* Approved Tab - Green Gradient */
@@ -822,9 +822,9 @@ loading = false;
 
   /* Timeline Section Container */
   .timeline-section-container {
-    background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(234, 179, 8, 0.1));
+    background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(13, 125, 181, 0.1));
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(234, 179, 8, 0.2);
+    border: 1px solid rgba(13, 125, 181, 0.2);
   }
 
   /* Timeline Progress Line Animation */
@@ -876,13 +876,13 @@ loading = false;
     box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
   }
 
-  /* Gold Scrollbar Theme for Timeline */
+  /* Blue Scrollbar Theme for Timeline */
   .timeline-section-container::-webkit-scrollbar {
     height: 8px;
   }
 
   .timeline-section-container::-webkit-scrollbar-track {
-    background: #fef3c7;
+    background: rgba(13, 125, 181, 0.1);
     border-radius: 4px;
   }
 
@@ -892,7 +892,7 @@ loading = false;
   }
 
   .timeline-section-container::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #ca8a04, #a16207);
+    background: linear-gradient(90deg, #0A6A9A, #075A85);
   }
 
   /* Blue Button Theme for LGU-IU IOO */
@@ -1100,14 +1100,8 @@ loading = false;
     <main class="bg-gradient-to-br from-gray-50 via-blue-50 to-white min-h-screen px-8 py-8">
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 mb-8">
-        <button onclick="exportProgressReport()" class="btn-success btn-sm inline-flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          Export Report
-        </button>
-        <button onclick="loadProgressTimeline()" class="btn-primary btn-sm inline-flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="loadProgressTimeline()" class="btn-primary inline-flex items-center gap-2 px-6 py-3">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
           Refresh Data
@@ -1134,7 +1128,7 @@ loading = false;
             </div>
           </div>
 
-          <!-- Pending Submissions - Professional Light Gold -->
+          <!-- Pending Submissions - Professional Blue -->
           <div class="profile-card p-6 cursor-pointer summary-card" onclick="filterByCard('pending')">
             <div class="flex items-center justify-between">
               <div>
@@ -1201,7 +1195,7 @@ loading = false;
             </div>
           </div>
 
-          <!-- Needs Revision - Professional Orange -->
+          <!-- Needs Revision - Professional Blue/Purple -->
           <div class="profile-card p-6 cursor-pointer summary-card" onclick="filterByCard('revision')">
             <div class="flex items-center justify-between">
               <div>
@@ -1377,13 +1371,13 @@ loading = false;
 
       {loading ? (
         <div class="flex items-center justify-center py-12">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#92751F]"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0D7DB5]"></div>
           <span class="ml-3 text-gray-600">Loading progress timeline...</span>
         </div>
       ) : error ? (
         <div class="text-center py-12">
           <p class="text-red-600 mb-4">{error}</p>
-          <button onclick="loadProgressTimeline()" class="px-4 py-2 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-all">
+          <button onclick="loadProgressTimeline()" class="px-4 py-2 bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] text-white rounded-lg hover:from-[#0A6A9A] hover:to-[#075A85] transition-all">
             Try Again
           </button>
         </div>
@@ -1394,7 +1388,7 @@ loading = false;
           </svg>
           <h3 class="text-xl font-semibold text-gray-800 mb-2">No Projects Available</h3>
           <p class="text-gray-600 mb-6">You don't have any projects to update. Create a project first to start monitoring progress.</p>
-          <button onclick="window.location.href='/dashboard/iu-implementing-office/modules/project-management'" class="px-6 py-3 bg-[#92751F] text-white rounded-lg hover:bg-[#7A6219] transition-colors flex items-center gap-2 mx-auto">
+          <button onclick="window.location.href='/dashboard/iu-implementing-office/modules/project-management'" class="px-6 py-3 bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] text-white rounded-lg hover:from-[#0A6A9A] hover:to-[#075A85] transition-colors flex items-center gap-2 mx-auto">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
@@ -1928,6 +1922,43 @@ loading = false;
           client:load
           mode="lgu-iu"
           apiUrl={API_URL}
+          theme={{
+            primary: 'blue',
+            primaryLight: 'indigo',
+            headerBg: 'from-blue-50 to-blue-100',
+            headerBorder: 'border-blue-200',
+            headerHover: 'hover:from-blue-100 hover:to-blue-200',
+            iconBg: 'from-[#0D7DB5] to-[#0A6A9A]',
+            iconHover: 'hover:from-[#0A6A9A] hover:to-[#075A85]',
+            titleHover: 'group-hover:text-blue-800',
+            btnPrimary: 'bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] hover:from-[#0A6A9A] hover:to-[#075A85] text-white',
+            btnSecondary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white',
+            chartBg1: 'from-blue-50 to-indigo-50',
+            chartBg2: 'from-green-50 to-emerald-50',
+            chartBorder1: 'border-blue-200',
+            chartBorder2: 'border-green-200',
+            chartIcon1: 'text-blue-400',
+            chartIcon2: 'text-green-400',
+            chartText1: 'text-blue-600',
+            chartText2: 'text-green-600',
+            chartColors: {
+              primary: 'rgba(13, 125, 181, 0.8)',
+              secondary: 'rgba(10, 106, 154, 0.6)',
+              gradient: ['rgba(13, 125, 181, 0.8)', 'rgba(10, 106, 154, 0.4)']
+            },
+            timelineColor: 'from-blue-200 via-blue-300 to-blue-400',
+            timelineDot: 'bg-[#0D7DB5]',
+            emptyStateBg: 'from-blue-100 to-blue-200',
+            emptyStateIcon: 'text-blue-400',
+            statCard1: 'text-blue-600',
+            statCard2: 'text-blue-600',
+            statCard3: 'text-green-600',
+            statCard4: 'text-red-600',
+            statIcon1: 'from-[#0D7DB5] to-[#0A6A9A]',
+            statIcon2: 'from-[#0D7DB5] to-[#0A6A9A]',
+            statIcon3: 'from-green-500 to-green-600',
+            statIcon4: 'from-red-500 to-red-600'
+          }}
         />
 
       )}
@@ -1993,7 +2024,7 @@ loading = false;
       const physicalProgress = parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
       
       // Determine project status based on the three main statuses
-      const projectStatus = project.status || 'pending';
+      const projectStatus = project.status || 'ongoing';
       let statusText, statusClass;
       
       // Check for delayed milestones first
@@ -2029,8 +2060,9 @@ loading = false;
         statusText = 'ONGOING';
         statusClass = 'bg-blue-100 text-blue-700';
       } else {
-        statusText = 'PENDING';
-        statusClass = 'bg-blue-100 text-[#0D7DB5]';
+        // Removed: PENDING status - projects now go directly to ongoing
+        statusText = 'ONGOING';
+        statusClass = 'bg-blue-100 text-blue-700';
       }
 
       const projectCard = document.createElement('div');
@@ -2057,18 +2089,20 @@ loading = false;
 
       // Status color mapping
       const getStatusColor = (status) => {
-        switch(status?.toLowerCase()) {
+        // Normalize status - convert pending to ongoing
+        const normalizedStatus = (status === 'pending' || status === 'Pending' || status === 'PENDING') 
+          ? 'ongoing' 
+          : (status?.toLowerCase() || 'ongoing');
+        
+        switch(normalizedStatus) {
           case 'completed':
-          case 'complete':
             return 'bg-green-100 text-green-700 border-green-200';
           case 'ongoing':
-            return 'bg-blue-100 text-blue-700 border-blue-200';
+            return 'bg-blue-100 text-blue-700 border-blue-200'; // Blue theme for ongoing
           case 'delayed':
-            return 'bg-red-100 text-red-700 border-red-200';
-          case 'pending':
-            return 'bg-blue-100 text-[#0D7DB5] border-[#0D7DB5]/20';
+            return 'bg-red-100 text-red-700 border-red-200'; // Red theme for delayed
           default:
-            return 'bg-gray-100 text-gray-600 border-gray-200';
+            return 'bg-blue-100 text-blue-700 border-blue-200'; // Default to ongoing (blue)
         }
       };
       
@@ -2086,9 +2120,15 @@ loading = false;
           
           <!-- Floating Status Badge and Notification Badge -->
           <div class="absolute top-3 right-3 flex items-center gap-2">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusColor(project.status)}">
-              ${project.status || 'Not Started'}
-            </span>
+            ${(() => {
+              // Normalize status - convert pending to ongoing
+              const normalizedStatus = (project.status === 'pending' || project.status === 'Pending' || project.status === 'PENDING') 
+                ? 'ongoing' 
+                : (project.status || 'ongoing');
+              return `<span class="px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusColor(normalizedStatus)}">
+                ${normalizedStatus}
+              </span>`;
+            })()}
             ${(project.pendingSubmissionsCount || 0) > 0 ? `
               <span class="relative">
                 <span class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white z-10 animate-pulse">
@@ -2419,6 +2459,15 @@ loading = false;
     updateSummaryCards(projects);
     initializeSearchAndFilter();
     initializeStatusLifecycleMonitoring();
+    // Animate progress bars after rendering
+    setTimeout(() => {
+      if (window.animateProgressBars) {
+        window.animateProgressBars();
+      }
+      if (window.setupProgressAnimation) {
+        window.setupProgressAnimation();
+      }
+    }, 200);
           
           // DO NOT auto-select any project - let user choose manually
           console.log('Projects loaded, waiting for user selection');
@@ -2474,6 +2523,15 @@ loading = false;
         updateSummaryCards(projects);
         initializeSearchAndFilter();
         initializeStatusLifecycleMonitoring();
+        // Animate progress bars after rendering
+        setTimeout(() => {
+          if (window.animateProgressBars) {
+            window.animateProgressBars();
+          }
+          if (window.setupProgressAnimation) {
+            window.setupProgressAnimation();
+          }
+        }, 200);
       });
       
       // Export enhanced timeline functions to window
@@ -2594,11 +2652,11 @@ loading = false;
           
           // Update active state
           document.querySelectorAll('.project-card').forEach(card => {
-            card.classList.remove('ring-2', 'ring-[#92751F]');
+            card.classList.remove('ring-2', 'ring-[#0D7DB5]');
           });
           const activeCard = document.querySelector(`[data-project-id="${projectId}"]`);
           if (activeCard) {
-            activeCard.classList.add('ring-2', 'ring-[#92751F]');
+            activeCard.classList.add('ring-2', 'ring-[#0D7DB5]');
             console.log('Updated active card styling');
           }
         } else {
@@ -2814,7 +2872,7 @@ loading = false;
     // Project info now updated in Project Management Dashboard section
     
     // Update project status based on the three main statuses
-    const projectStatus = actualProject.status || 'pending';
+    const projectStatus = actualProject.status || 'ongoing';
     let statusText, statusClass;
     
     console.log('Status determination:', {
@@ -3329,7 +3387,7 @@ loading = false;
     });
     
     // Start with the project's base status
-    let actualStatus = selectedProject.status || 'pending';
+    let actualStatus = selectedProject.status || 'ongoing';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -3406,8 +3464,9 @@ loading = false;
       statusText = 'ONGOING';
       statusClass = 'bg-blue-100 text-blue-700';
     } else {
-      statusText = 'PENDING';
-      statusClass = 'bg-yellow-100 text-yellow-700';
+      // Removed: PENDING status - projects now go directly to ongoing
+      statusText = 'ONGOING';
+      statusClass = 'bg-blue-100 text-blue-700';
     }
     
     console.log('🔍 Final status for badge:', {
@@ -3648,7 +3707,7 @@ loading = false;
         <div class="flex items-center justify-between">
           <div class="flex-1 mr-4">
             <div class="w-full bg-gray-200 rounded-full h-3">
-              <div class="bg-[#92751F] h-3 rounded-full transition-all duration-300" style="width: ${calculateMilestoneProgress(milestone, progressData)}%"></div>
+              <div class="bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] h-3 rounded-full transition-all duration-300" style="width: ${calculateMilestoneProgress(milestone, progressData)}%"></div>
             </div>
           </div>
           <span class="text-sm font-semibold">${calculateMilestoneProgress(milestone, progressData)}% Complete</span>
@@ -5009,6 +5068,15 @@ This compilation report has been generated automatically based on approved EIU m
     
     renderProjectsGrid(filteredProjects);
     updateSummaryCards(filteredProjects);
+    // Animate progress bars after rendering
+    setTimeout(() => {
+      if (window.animateProgressBars) {
+        window.animateProgressBars();
+      }
+      if (window.setupProgressAnimation) {
+        window.setupProgressAnimation();
+      }
+    }, 200);
   }
   
   function clearFilters() {
@@ -5017,6 +5085,15 @@ This compilation report has been generated automatically based on approved EIU m
     document.getElementById('priorityFilter').value = '';
     renderProjectsGrid(allProjects);
     updateSummaryCards(allProjects);
+    // Animate progress bars after rendering
+    setTimeout(() => {
+      if (window.animateProgressBars) {
+        window.animateProgressBars();
+      }
+      if (window.setupProgressAnimation) {
+        window.setupProgressAnimation();
+      }
+    }, 200);
   }
 
   // Project Management Dashboard functions
@@ -5128,7 +5205,12 @@ This compilation report has been generated automatically based on approved EIU m
 
     // Get the updated project status after checking for delays
     const updatedProject = allProjects.find(p => p.id === project.id) || project;
-    let actualStatus = updatedProject.status || updatedProject.projectStatus || updatedProject.workflowStatus || 'pending';
+    let actualStatus = updatedProject.status || updatedProject.projectStatus || updatedProject.workflowStatus || 'ongoing';
+    
+    // Normalize status - convert pending to ongoing
+    if (actualStatus === 'pending' || actualStatus === 'Pending' || actualStatus === 'PENDING') {
+      actualStatus = 'ongoing';
+    }
     
     // If there are delayed milestones and status hasn't been updated, force it to delayed
     if (delayedMilestones > 0 && actualStatus !== 'completed' && actualStatus !== 'delayed') {
@@ -5284,18 +5366,21 @@ This compilation report has been generated automatically based on approved EIU m
   }
 
   function getStatusColor(status) {
-    switch(status?.toLowerCase()) {
+    // Normalize status - convert pending to ongoing
+    const normalizedStatus = (status === 'pending' || status === 'Pending' || status === 'PENDING') 
+      ? 'ongoing' 
+      : (status?.toLowerCase() || 'ongoing');
+    
+    switch(normalizedStatus) {
       case 'completed':
       case 'complete':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-green-100 text-green-700 border-green-200'; // Green theme for completed
       case 'ongoing':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-blue-100 text-blue-700 border-blue-200'; // Blue theme for ongoing
       case 'delayed':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-700 border-[#0D7DB5]/20';
+        return 'bg-red-100 text-red-700 border-red-200'; // Red theme for delayed
       default:
-        return 'bg-gray-100 text-gray-600 border-gray-200';
+        return 'bg-blue-100 text-blue-700 border-blue-200'; // Default to ongoing (blue)
     }
   }
 
@@ -6390,8 +6475,8 @@ This compilation report has been generated automatically based on approved EIU m
           <label class="text-sm font-semibold text-green-700 mb-1 block">Budget Division</label>
           <p class="font-bold text-green-600 text-xl">${calculatedBudgetWeight.toFixed(2)}%</p>
         </div>
-        <div class="info-card bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-xl border border-[#0D7DB5]/20">
-          <label class="text-sm font-semibold text-orange-700 mb-1 block">Physical Division</label>
+        <div class="info-card bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-[#0D7DB5]/20">
+          <label class="text-sm font-semibold text-[#0D7DB5] mb-1 block">Physical Division</label>
           <p class="font-bold text-[#0D7DB5] text-xl">${calculatedPhysicalWeight.toFixed(2)}%</p>
         </div>
       `;
@@ -6653,8 +6738,8 @@ This compilation report has been generated automatically based on approved EIU m
 
       physicalInfo.innerHTML = `
         <div class="space-y-4">
-          <div class="bg-white/60 p-4 rounded-xl border border-orange-100">
-            <label class="text-sm font-semibold text-orange-700 mb-3 block">Required Proofs</label>
+          <div class="bg-white/60 p-4 rounded-xl border border-blue-100">
+            <label class="text-sm font-semibold text-[#0D7DB5] mb-3 block">Required Proofs</label>
             
             <!-- Photo Evidence -->
             <div class="mb-4">
@@ -6887,7 +6972,7 @@ This compilation report has been generated automatically based on approved EIU m
                   }
                   
                   return `
-                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-100 hover:border-[#0D7DB5]/20 transition-colors">
+                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-blue-100 hover:border-[#0D7DB5]/20 transition-colors">
                       <svg class="w-5 h-5 ${iconColor} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         ${iconSvg}
                       </svg>
@@ -6898,7 +6983,7 @@ This compilation report has been generated automatically based on approved EIU m
                       <button 
                          id="download-btn-${index}"
                          onclick="event.stopPropagation(); window.open('${docUrl}', '_blank'); console.log('📄 Opening file:', '${docUrl}');"
-                         class="px-4 py-2 bg-blue-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium flex items-center gap-2 flex-shrink-0 cursor-pointer border-none outline-none"
+                         class="px-4 py-2 bg-blue-100 text-[#0D7DB5] rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium flex items-center gap-2 flex-shrink-0 cursor-pointer border-none outline-none"
                          style="pointer-events: auto; z-index: 10; position: relative;">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -6912,15 +6997,15 @@ This compilation report has been generated automatically based on approved EIU m
             </div>
           </div>
 
-          <div class="bg-white/60 p-4 rounded-xl border border-orange-100">
-            <label class="text-sm font-semibold text-orange-700 mb-2 block">Physical Progress Description</label>
+          <div class="bg-white/60 p-4 rounded-xl border border-blue-100">
+            <label class="text-sm font-semibold text-[#0D7DB5] mb-2 block">Physical Progress Description</label>
             <div class="bg-gray-50 p-3 rounded-lg">
               <p class="text-gray-700 whitespace-pre-wrap">${submission.physicalProgressDescription || 'No physical progress description provided'}</p>
             </div>
           </div>
 
-          <div class="bg-white/60 p-4 rounded-xl border border-orange-100">
-            <label class="text-sm font-semibold text-orange-700 mb-2 block">Additional Notes</label>
+          <div class="bg-white/60 p-4 rounded-xl border border-blue-100">
+            <label class="text-sm font-semibold text-[#0D7DB5] mb-2 block">Additional Notes</label>
             <div class="bg-gray-50 p-3 rounded-lg">
               <p class="text-gray-700 whitespace-pre-wrap">${submission.additionalNotes || 'No additional notes provided'}</p>
             </div>
@@ -7473,7 +7558,7 @@ This compilation report has been generated automatically based on approved EIU m
         
         /* Dynamic color classes */
         .progress-red { background-color: #ef4444; }
-        .progress-yellow { background-color: #f59e0b; }
+        .progress-yellow { background-color: #0D7DB5; }
         .progress-blue { background-color: #3b82f6; }
         .progress-green { background-color: #10b981; }
       `;
@@ -8405,6 +8490,15 @@ This compilation report has been generated automatically based on approved EIU m
      // Update UI
      renderProjectsGrid(allProjects);
      updateSummaryCards(allProjects);
+     // Animate progress bars after rendering
+     setTimeout(() => {
+       if (window.animateProgressBars) {
+         window.animateProgressBars();
+       }
+       if (window.setupProgressAnimation) {
+         window.setupProgressAnimation();
+       }
+     }, 200);
      
      // Update selected project if it's the current one
      if (selectedProject && selectedProject.id === projectId) {
@@ -10407,9 +10501,9 @@ This compilation report has been generated automatically based on approved EIU m
       
       // Determine status color and message
       let statusConfig = {
-        color: 'yellow',
-        bgColor: 'yellow-50',
-        textColor: 'yellow-700',
+        color: 'blue',
+        bgColor: 'blue-50',
+        textColor: 'blue-700',
         message: 'Pending'
       };
 
@@ -10425,9 +10519,9 @@ This compilation report has been generated automatically based on approved EIU m
         case 'ongoing':
         case 'in_progress':
           statusConfig = {
-            color: 'yellow',
-            bgColor: 'yellow-50',
-            textColor: 'yellow-700',
+            color: 'blue',
+            bgColor: 'blue-50',
+            textColor: 'blue-700',
             message: 'In Progress'
           };
           break;
@@ -10450,9 +10544,9 @@ This compilation report has been generated automatically based on approved EIU m
         case 'revision_requested':
         case 'need_revision':
           statusConfig = {
-            color: 'orange',
-            bgColor: 'orange-50',
-            textColor: 'orange-700',
+            color: 'blue',
+            bgColor: 'blue-50',
+            textColor: 'blue-700',
             message: 'Revision Requested'
           };
           break;
@@ -10473,7 +10567,7 @@ This compilation report has been generated automatically based on approved EIU m
                onclick="toggleMilestoneCard('milestone-${milestone.id}')">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-4">
-                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-yellow-600 group-hover:to-yellow-700">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] group-hover:from-[#0A6A9A] group-hover:to-[#075A85]">
                   <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                   </svg>
@@ -10535,7 +10629,7 @@ This compilation report has been generated automatically based on approved EIU m
           <div id="milestone-${milestone.id}-content" class="section-content">
             <div class="p-6">
               <!-- General Information Section -->
-              <div class="bg-gradient-to-r from-yellow-50 to-gray-100 rounded-xl p-6 mb-6 border border-[#0D7DB5]/20">
+              <div class="bg-gradient-to-r from-blue-50 to-gray-100 rounded-xl p-6 mb-6 border border-[#0D7DB5]/20">
                 <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10552,32 +10646,32 @@ This compilation report has been generated automatically based on approved EIU m
                       <div class="text-lg font-bold text-gray-900">${selectedProject?.name || 'N/A'}</div>
                     </div>
                     <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                      <label class="block text-sm font-medium text-yellow-700 mb-1">Project Code</label>
+                      <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Project Code</label>
                       <div class="text-sm font-semibold text-gray-700">${selectedProject?.projectCode || 'N/A'}</div>
                     </div>
                   </div>
                   <div class="space-y-3">
                     <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                      <label class="block text-sm font-medium text-yellow-700 mb-1">Total Budget Allocation (₱)</label>
+                      <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Total Budget Allocation (₱)</label>
                       <div class="text-lg font-bold text-[#0D7DB5]">${parseFloat(selectedProject?.totalBudget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                       <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                        <label class="block text-sm font-medium text-yellow-700 mb-1">Start Date</label>
+                        <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Start Date</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.startDate ? new Date(selectedProject.startDate).toLocaleDateString() : 'Not set'}</div>
                       </div>
                       <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                        <label class="block text-sm font-medium text-yellow-700 mb-1">Target Completion Date</label>
+                        <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Target Completion Date</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.targetCompletionDate || selectedProject?.targetDateOfCompletion || selectedProject?.endDate ? new Date(selectedProject.targetCompletionDate || selectedProject.targetDateOfCompletion || selectedProject.endDate).toLocaleDateString() : 'Not set'}</div>
                       </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3 mt-3">
                       <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                        <label class="block text-sm font-medium text-yellow-700 mb-1">Actual Completion Date</label>
+                        <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Actual Completion Date</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.completionDate || selectedProject?.actualCompletionDate ? new Date(selectedProject.completionDate || selectedProject.actualCompletionDate).toLocaleDateString() : '–'}</div>
                       </div>
                       <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                        <label class="block text-sm font-medium text-yellow-700 mb-1">Expected Days</label>
+                        <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Expected Days</label>
                         <div class="text-sm font-semibold text-gray-700">${selectedProject?.expectedDaysOfCompletion ? selectedProject.expectedDaysOfCompletion + ' days' : '–'}</div>
                       </div>
                     </div>
@@ -10621,7 +10715,7 @@ This compilation report has been generated automatically based on approved EIU m
               </div>
 
               <!-- Milestone Information Section -->
-              <div class="bg-gradient-to-r from-yellow-50 to-gray-100 rounded-xl p-6 mb-6 border border-[#0D7DB5]/20">
+              <div class="bg-gradient-to-r from-blue-50 to-gray-100 rounded-xl p-6 mb-6 border border-[#0D7DB5]/20">
                 <h5 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10633,30 +10727,30 @@ This compilation report has been generated automatically based on approved EIU m
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                   <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                    <label class="block text-sm font-medium text-yellow-700 mb-1">Milestone Name (Item of Work)</label>
+                    <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Milestone Name (Item of Work)</label>
                     <div class="text-lg font-bold text-gray-900">${milestone.title || 'N/A'}</div>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                    <label class="block text-sm font-medium text-yellow-700 mb-1">Status</label>
+                    <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Status</label>
                     <div class="text-sm font-semibold">
                       <span class="px-3 py-1 text-xs font-medium rounded-full bg-${statusConfig.bgColor} text-${statusConfig.textColor}">${statusConfig.message}</span>
                     </div>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                    <label class="block text-sm font-medium text-yellow-700 mb-1">Weight</label>
+                    <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Weight</label>
                     <div class="text-lg font-bold text-[#0D7DB5]">${milestone.weight || 0}%</div>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                    <label class="block text-sm font-medium text-yellow-700 mb-1">Planned Budget</label>
+                    <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Planned Budget</label>
                     <div class="text-lg font-bold text-[#0D7DB5]">₱${parseFloat(milestone.plannedBudget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                   </div>
                   <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                    <label class="block text-sm font-medium text-yellow-700 mb-1">Due Date</label>
+                    <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Due Date</label>
                     <div class="text-sm font-semibold text-gray-700">${milestone.dueDate || 'Not set'}</div>
                   </div>
                 </div>
                 <div class="bg-white rounded-lg p-4 border border-[#0D7DB5]/20">
-                  <label class="block text-sm font-medium text-yellow-700 mb-1">Description</label>
+                  <label class="block text-sm font-medium text-[#0D7DB5] mb-1">Description</label>
                   <div class="text-sm text-gray-600 leading-relaxed">${milestone.description || 'No description available'}</div>
                 </div>
               </div>
@@ -11168,15 +11262,17 @@ This compilation report has been generated automatically based on approved EIU m
       const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
       const colorClass = bar.getAttribute('data-progress-color') || 'bg-gray-500';
       
-      // Apply the color class
-      bar.className = bar.className.replace(/bg-\w+-\d+/, '');
+      // Remove any existing background color classes (including arbitrary values)
+      bar.className = bar.className.replace(/bg-\[#[^\]]+\]|bg-\w+-\d+/g, '');
+      // Add the new color class
       bar.classList.add(colorClass);
       
-      // Set the progress width
+      // Set the progress width CSS variable for animation
       bar.style.setProperty('--progress-width', `${progress}%`);
       
       // Reset and start animation
       bar.style.animation = 'none';
+      bar.style.width = '0%'; // Reset width to 0 for animation
       bar.offsetHeight; // Trigger reflow
       bar.style.animation = 'fillProgress 2s ease-out forwards';
     });
@@ -11194,8 +11290,9 @@ This compilation report has been generated automatically based on approved EIU m
                         progress >= 51 && progress <= 75 ? 'bg-blue-500' : 
                         progress >= 76 && progress <= 100 ? 'bg-green-500' : 'bg-gray-500';
 
-      // Apply the color class
-      bar.className = bar.className.replace(/bg-\w+-\d+/, '');
+      // Remove any existing background color classes (including arbitrary values)
+      bar.className = bar.className.replace(/bg-\[#[^\]]+\]|bg-\w+-\d+/g, '');
+      // Add the new color class
       bar.classList.add(colorClass);
 
       // Update data attributes
@@ -11223,15 +11320,17 @@ This compilation report has been generated automatically based on approved EIU m
             const progress = parseFloat(progressBar.getAttribute('data-progress')) || 0;
             const colorClass = progressBar.getAttribute('data-progress-color') || 'bg-gray-500';
             
-            // Apply the color class
-            progressBar.className = progressBar.className.replace(/bg-\w+-\d+/, '');
+            // Remove any existing background color classes (including arbitrary values)
+            progressBar.className = progressBar.className.replace(/bg-\[#[^\]]+\]|bg-\w+-\d+/g, '');
+            // Add the new color class
             progressBar.classList.add(colorClass);
             
-            // Set the progress width
+            // Set the progress width CSS variable for animation
             progressBar.style.setProperty('--progress-width', `${progress}%`);
             
             // Reset and start animation
             progressBar.style.animation = 'none';
+            progressBar.style.width = '0%'; // Reset width to 0 for animation
             progressBar.offsetHeight; // Trigger reflow
             progressBar.style.animation = 'fillProgress 2s ease-out forwards';
           }
@@ -11305,7 +11404,7 @@ This compilation report has been generated automatically based on approved EIU m
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>`;
       } else if (type === 'warning') {
-        iconColor = 'text-amber-500';
+        iconColor = 'text-blue-500';
         iconSvg = `<svg class="w-16 h-16 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
         </svg>`;

@@ -69,7 +69,8 @@ try {
         // Calculate comprehensive statistics
         stats.totalProjects = allProjects.length;
         stats.ongoing = allProjects.filter(p => p.status === 'ongoing').length;
-        stats.pending = allProjects.filter(p => p.status === 'pending').length;
+        // Removed: pending count - projects now go directly to ongoing
+        stats.pending = 0;
         stats.delayed = allProjects.filter(p => p.status === 'delayed').length;
         stats.completed = allProjects.filter(p => p.status === 'complete').length;
         
@@ -422,21 +423,7 @@ const formatCurrency = (amount) => {
                 </div>
               </div>
 
-              <!-- Pending - Professional Light Gold -->
-              <div class="profile-card p-6">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm text-gray-600">Pending</p>
-                    <p class="text-2xl font-bold text-black">{stats.pending}</p>
-                    <p class="text-xs text-amber-600 mt-1">Awaiting review</p>
-                  </div>
-                  <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
+              {/* Removed: Pending summary card - projects now go directly to ongoing */}
 
               <!-- Delayed - Professional Light Red -->
               <div class="profile-card p-6">

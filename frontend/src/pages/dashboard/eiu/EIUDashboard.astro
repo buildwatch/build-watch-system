@@ -67,7 +67,7 @@ try {
         stats.totalProjects = projects.length;
         stats.ongoingProjects = projects.filter(p => p.status === 'ongoing').length;
         stats.completedProjects = projects.filter(p => p.status === 'complete').length;
-        stats.pendingProjects = projects.filter(p => p.status === 'pending').length;
+        // Removed: pendingProjects - projects now go directly to ongoing status
         
         // Calculate total budget from actual project data
         const totalBudget = projects.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);

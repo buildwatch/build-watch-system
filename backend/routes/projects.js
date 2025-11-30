@@ -1345,7 +1345,7 @@ router.get('/public', async (req, res) => {
         { approvedBySecretariat: true },
         { approvedByMPMEC: true }
       ],
-      status: { [Op.ne]: 'pending' } // Exclude pending projects
+      // No pending status - projects go directly to ongoing
     };
 
     console.log('🔍 Fetching public projects with filters:', { page, limit, status, category, priority, search, barangay });
@@ -1499,7 +1499,7 @@ router.get('/public/statistics', async (req, res) => {
     // Only get approved projects for public statistics
     const whereClause = {
       approvedBySecretariat: true,
-      status: { [Op.ne]: 'pending' }
+      // No pending status filter needed - projects go directly to ongoing
     };
 
     const projects = await Project.findAll({
@@ -1603,7 +1603,7 @@ router.get('/public/insights', async (req, res) => {
   try {
     const whereClause = {
       approvedBySecretariat: true,
-      status: { [Op.ne]: 'pending' }
+      // No pending status filter needed - projects go directly to ongoing
     };
 
     const projects = await Project.findAll({
@@ -1779,7 +1779,7 @@ router.get('/public/budget', async (req, res) => {
   try {
     const whereClause = {
       approvedBySecretariat: true,
-      status: { [Op.ne]: 'pending' }
+      // No pending status filter needed - projects go directly to ongoing
     };
 
     const projects = await Project.findAll({
@@ -6297,7 +6297,7 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
 
     const stats = {
       total: projects.length,
-      pending: projects.filter(p => p.status === 'pending').length,
+      // Removed pending status - projects go directly to ongoing
       ongoing: projects.filter(p => p.status === 'ongoing').length,
       delayed: projects.filter(p => p.status === 'delayed').length,
       complete: projects.filter(p => p.status === 'complete').length,

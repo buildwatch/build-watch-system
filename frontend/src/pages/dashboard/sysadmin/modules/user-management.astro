@@ -5303,11 +5303,19 @@ try {
             })
           };
           
-          // User distribution by group
+          // User distribution by group (with user names)
           const byGroup = {};
+          const byGroupUsers = {}; // Store actual users for each group
           users.forEach(user => {
             const group = user.group || 'Unknown';
             byGroup[group] = (byGroup[group] || 0) + 1;
+            if (!byGroupUsers[group]) {
+              byGroupUsers[group] = [];
+            }
+            byGroupUsers[group].push({
+              name: user.name || user.username || 'Unknown User',
+              userId: user.userId || 'N/A'
+            });
           });
           
           // User status distribution
@@ -5414,6 +5422,7 @@ try {
           return {
             growthTrends,
             byGroup,
+            byGroupUsers, // Include user names for tooltips
             byStatus,
             topDepartments,
             registrationTrends,
@@ -5437,7 +5446,7 @@ try {
           
           // Render each chart
           renderUserGrowthChart(Chart, stats.growthTrends);
-          renderUserGroupChart(Chart, stats.byGroup);
+          renderUserGroupChart(Chart, stats.byGroup, stats.byGroupUsers);
           renderUserStatusChart(Chart, stats.byStatus);
           renderUserDepartmentChart(Chart, stats.topDepartments);
           renderRegistrationTrendsChart(Chart, stats.registrationTrends);
@@ -5480,7 +5489,7 @@ try {
           });
         }
         
-        function renderUserGroupChart(Chart, byGroup) {
+        function renderUserGroupChart(Chart, byGroup, byGroupUsers) {
           const ctx = document.getElementById('userGroupChart');
           if (!ctx) return;
           
@@ -5507,7 +5516,25 @@ try {
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
-                legend: { position: 'bottom' }
+                legend: { position: 'bottom' },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const group = context.label;
+                      const count = context.parsed || context.raw || 0;
+                      const users = byGroupUsers && byGroupUsers[group] ? byGroupUsers[group] : [];
+                      
+                      if (users.length > 0) {
+                        // Show group name and list of user names
+                        const userNames = users.map(u => u.name).join(', ');
+                        return `${group}: ${userNames}`;
+                      } else {
+                        // Fallback to count if user names not available
+                        return `${group}: ${count}`;
+                      }
+                    }
+                  }
+                }
               }
             }
           });

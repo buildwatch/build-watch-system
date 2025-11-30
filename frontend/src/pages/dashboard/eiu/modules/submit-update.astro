@@ -1342,20 +1342,7 @@ loading = false;
           <!-- Project Progress Overview -->
           <div id="selectedProjectInfoContainer" class="mb-8"></div>
 
-          <!-- Pending Approval Message -->
-          <div id="pendingMessage" class="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6 mb-8" style="display: none;">
-            <div class="flex items-center gap-4">
-              <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-amber-600">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <h4 class="text-lg font-semibold text-yellow-800 mb-2">Project Pending Approval</h4>
-                <p class="text-yellow-700">This project is currently pending Secretariat approval. You cannot submit updates until the project is approved and status changes to "ONGOING".</p>
-              </div>
-            </div>
-          </div>
+          <!-- Removed: Project Pending Approval message - projects now go directly to ongoing status -->
 
           <!-- Collapsible Sections Container -->
           <div class="space-y-6">
@@ -1491,10 +1478,7 @@ loading = false;
                           <div class="w-4 h-4 bg-blue-500 rounded-full shadow-sm animate-pulse"></div>
                           <span class="font-medium text-gray-700">Ongoing</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                          <div class="w-4 h-4 bg-yellow-500 rounded-full border-2 border-yellow-600 bg-transparent shadow-sm"></div>
-                          <span class="font-medium text-gray-700">Pending</span>
-                        </div>
+                        {/* Removed: Pending status from legend - projects now go directly to ongoing */}
                         <div class="flex items-center gap-2">
                           <div class="w-4 h-4 bg-red-500 rounded-full shadow-sm animate-pulse"></div>
                           <span class="font-medium text-gray-700">Delayed</span>
@@ -1864,14 +1848,9 @@ loading = false;
       const updatesHistory = document.getElementById('updatesHistory');
       
       // Determine project status
-      const projectStatus = selectedProject.status || 'pending';
-      const isApproved = selectedProject.approvedBySecretariat === true;
+      const projectStatus = selectedProject.status || 'ongoing';
       
-      if (projectStatus.toLowerCase() === 'pending' || !isApproved) {
-        // Project is pending approval - EIU cannot submit updates
-        if (pendingMessage) pendingMessage.style.display = 'block';
-        // Keep sections available but collapsed
-      } else if (projectStatus.toLowerCase() === 'completed') {
+      if (projectStatus.toLowerCase() === 'completed') {
         // Project is completed - show history only
         if (pendingMessage) pendingMessage.style.display = 'none';
         if (updatesHistory) updatesHistory.style.display = 'block';
@@ -2004,7 +1983,7 @@ loading = false;
     if (!selectedProject) return;
     
     // Start with the project's base status
-    let actualStatus = selectedProject.status || 'pending';
+    let actualStatus = selectedProject.status || 'ongoing';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -2080,31 +2059,36 @@ loading = false;
           return 'bg-blue-100 text-blue-700'; // Approved by Secretariat and can be updated by EIU
         case 'delayed':
           return 'bg-red-100 text-red-700 animate-pulse'; // If even one milestone is delayed
-        case 'pending':
+        // Removed: pending case - projects now go directly to ongoing
         case 'submitted':
-          return 'bg-yellow-100 text-yellow-700'; // Not yet approved by Secretariat
+          return 'bg-blue-100 text-blue-700'; // Submitted projects are now ongoing
         default:
           return 'bg-gray-100 text-gray-700';
       }
     };
     
-    const statusText = actualStatus === 'secretariat_approved' ? 'ONGOING' : 
-                       actualStatus === 'delayed' ? 'DELAYED' :
-                       actualStatus === 'ongoing' ? 'ONGOING' :
-                       actualStatus === 'completed' ? 'COMPLETED' :
-                       actualStatus === 'pending' ? 'PENDING' :
-                       actualStatus.replace('_', ' ').toUpperCase();
+    // Normalize status - convert pending to ongoing
+    const normalizedStatus = (actualStatus === 'pending' || actualStatus === 'Pending' || actualStatus === 'PENDING') 
+      ? 'ongoing' 
+      : actualStatus;
+    
+    const statusText = normalizedStatus === 'secretariat_approved' ? 'ONGOING' : 
+                       normalizedStatus === 'delayed' ? 'DELAYED' :
+                       normalizedStatus === 'ongoing' ? 'ONGOING' :
+                       normalizedStatus === 'completed' ? 'COMPLETED' :
+                       normalizedStatus.replace('_', ' ').toUpperCase();
     
     console.log('🔍 Final status for badge:', {
       actualStatus: actualStatus,
+      normalizedStatus: normalizedStatus,
       statusText: statusText,
-      statusClass: getStatusClass(actualStatus)
+      statusClass: getStatusClass(normalizedStatus)
     });
     
     // Update the project status badge
     const projectStatusBadge = document.getElementById('projectStatusBadge');
     if (projectStatusBadge) {
-      projectStatusBadge.className = `px-3 py-1 text-sm font-medium rounded-full ${getStatusClass(actualStatus)}`;
+      projectStatusBadge.className = `px-3 py-1 text-sm font-medium rounded-full ${getStatusClass(normalizedStatus)}`;
       projectStatusBadge.textContent = statusText;
       console.log('✅ Updated project status badge to:', statusText);
     }
@@ -2467,10 +2451,9 @@ loading = false;
       const container = document.getElementById('milestonesContainer');
       console.log('📦 Container found:', container);
       
-      // Check if project is pending approval - disable milestone submissions
-      const projectStatus = selectedProject?.status || 'pending';
-      const isApproved = selectedProject?.approvedBySecretariat === true;
-      const isProjectPending = projectStatus.toLowerCase() === 'pending' || !isApproved;
+      // Removed: Pending approval check - projects now go directly to ongoing status
+      const projectStatus = selectedProject?.status || 'ongoing';
+      // Removed: Pending approval check - projects now go directly to ongoing status
       
       if (!projectMilestones || projectMilestones.length === 0) {
         console.log('❌ No milestones found');
@@ -2480,25 +2463,7 @@ loading = false;
         return;
       }
       
-      // If project is pending, show disabled message
-      if (isProjectPending) {
-        if (container) {
-          container.innerHTML = `
-            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-8 text-center">
-              <div class="flex items-center justify-center gap-4 mb-4">
-                <div class="icon-container-small bg-gradient-to-br from-yellow-500 to-amber-600">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <h4 class="text-xl font-bold text-yellow-800">Milestone Submissions Disabled</h4>
-              </div>
-              <p class="text-yellow-700 text-lg">This project is currently pending Secretariat approval. Milestone submissions will be enabled once the project is approved and status changes to "ONGOING".</p>
-            </div>
-          `;
-        }
-        return;
-      }
+      // Removed: Pending approval check - projects now go directly to ongoing status
       
       console.log('✅ Milestones found:', projectMilestones.length);
 
@@ -5159,7 +5124,7 @@ loading = false;
         newSection.style.display = 'block';
         
         // Check if project has delayed milestones
-        let actualStatus = selectedProject.workflowStatus || selectedProject.status || 'pending';
+        let actualStatus = selectedProject.workflowStatus || selectedProject.status || 'ongoing';
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -5248,7 +5213,6 @@ loading = false;
                           actualStatus === 'delayed' ? 'DELAYED' :
                           actualStatus === 'ongoing' ? 'ONGOING' :
                           actualStatus === 'completed' ? 'COMPLETED' :
-                          actualStatus === 'pending' ? 'PENDING' :
                           actualStatus.replace('_', ' ').toUpperCase();
                           
         console.log('🔍 Final status mapping:', {

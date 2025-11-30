@@ -106,12 +106,12 @@ const { submissionId } = Astro.props;
 <!-- Enhanced Milestone Submission Review Modal -->
 <div id="milestoneSubmissionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 overflow-y-auto backdrop-blur-sm">
   <div class="flex items-start justify-center min-h-screen px-4 py-8">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col border border-amber-200">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col border border-blue-200">
       
       <!-- Header (matching submit-update.astro style) -->
-      <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white p-6 flex items-center justify-between relative">
+      <div class="bg-gradient-to-r from-[#0D7DB5] to-[#0A6A9A] text-white p-6 flex items-center justify-between relative">
         <div class="flex items-center gap-4">
-          <div class="icon-container bg-gradient-to-br from-amber-500 to-orange-600 shadow-xl">
+          <div class="icon-container bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A] shadow-xl">
             <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -130,7 +130,7 @@ const { submissionId } = Astro.props;
       </div>
 
       <!-- Enhanced Modal Content -->
-      <div class="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 to-amber-50/30" id="modalContent">
+      <div class="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 to-blue-50/30" id="modalContent">
         
         <!-- General Information Section -->
         <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg border border-blue-100 hover:shadow-xl transition-shadow duration-300">
@@ -163,26 +163,26 @@ const { submissionId } = Astro.props;
         </div>
 
         <!-- Enhanced Submission Information Section -->
-        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 mb-6 shadow-lg border-2 border-amber-200 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-amber-300/10 rounded-full -translate-y-16 translate-x-16"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-orange-300/10 rounded-full translate-y-12 -translate-x-12"></div>
+        <div class="bg-gradient-to-br from-blue-50 to-blue-50/50 rounded-2xl p-6 mb-6 shadow-lg border-2 border-blue-200 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-blue-300/10 rounded-full -translate-y-16 translate-x-16"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-blue-300/10 rounded-full translate-y-12 -translate-x-12"></div>
           
-          <h3 class="text-2xl font-bold text-amber-800 mb-8 flex items-center gap-3 relative z-10">
-            <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+          <h3 class="text-2xl font-bold text-blue-800 mb-8 flex items-center gap-3 relative z-10">
+            <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
             </div>
             Submission Information
-            <span class="text-sm font-normal text-amber-600 bg-amber-100 px-3 py-1 rounded-full">EIU Update Details</span>
+            <span class="text-sm font-normal text-blue-600 bg-blue-100 px-3 py-1 rounded-full">EIU Update Details</span>
           </h3>
           
           <div class="space-y-8 relative z-10">
             
             <!-- All Division Weight Overview -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-amber-200 shadow-md">
-              <h4 class="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
-                <div class="icon-container-small bg-gradient-to-br from-amber-500 to-amber-600">
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-md">
+              <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                   <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                   </svg>
@@ -225,9 +225,9 @@ const { submissionId } = Astro.props;
             </div>
 
             <!-- Physical Division -->
-            <div class="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-md">
-              <h4 class="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">
-                <div class="icon-container-small bg-gradient-to-br from-orange-500 to-orange-600">
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-md">
+              <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+                <div class="icon-container-small bg-gradient-to-br from-[#0D7DB5] to-[#0A6A9A]">
                   <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
@@ -275,16 +275,16 @@ const { submissionId } = Astro.props;
       </div>
 
       <!-- Enhanced Modal Footer -->
-      <div class="bg-gradient-to-r from-gray-100 to-amber-50 px-6 py-5 flex items-center justify-between border-t-2 border-amber-200">
+      <div class="bg-gradient-to-r from-gray-100 to-blue-50 px-6 py-5 flex items-center justify-between border-t-2 border-blue-200">
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-2 text-sm text-gray-700 bg-white px-3 py-2 rounded-lg shadow-sm border">
-            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span id="submissionDate">Submitted: --</span>
           </div>
           <div class="text-xs font-medium" id="submissionStatus">
-            Status: <span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700">Under Review</span>
+            Status: <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700">Under Review</span>
           </div>
         </div>
         
@@ -394,12 +394,12 @@ const { submissionId } = Astro.props;
   }
   
   #modalContent::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #d97706, #f59e0b);
+    background: linear-gradient(to bottom, #0D7DB5, #0A6A9A);
     border-radius: 4px;
   }
-  
+
   #modalContent::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, #b45309, #d97706);
+    background: linear-gradient(to bottom, #0A6A9A, #075A85);
   }
   
   /* Smooth animations */

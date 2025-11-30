@@ -4,6 +4,8 @@ import Layout from "../../layouts/Layout.astro";
 import TopBar from "../../components/TopBar.astro";
 import LGUFooter from "../../components/LGUFooter.astro";
 import ProjectFeedback from "../../islands/ProjectFeedback.jsx";
+import PhotoVideoComments from "../../islands/PhotoVideoComments.jsx";
+import MediaReactions from "../../islands/MediaReactions.jsx";
 
 // Dynamic API URL detection - works for both localhost and production
 const getApiUrlForSSR = () => {
@@ -1366,28 +1368,38 @@ loading = false;
               projectMedia.map((milestoneMedia) => {
                 if (!milestoneMedia.photos || milestoneMedia.photos.length === 0) return null;
                 return (
-                  <div class="bg-white rounded-lg shadow-md p-8 mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-500">
+                  <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+                    <div class="flex items-center gap-3 mb-8 pb-4 border-b-2 border-blue-600">
+                      <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                      </div>
+                      <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                       {milestoneMedia.milestoneTitle}
                     </h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    </div>
+                    <div class="space-y-6">
                       {milestoneMedia.photos.map((photo) => {
                         const photoUrl = photo.url || '';
                         const photoName = (photo.name || 'Photo').replace(/'/g, "\\'");
                         return (
-                          <div class="group relative bg-white rounded-xl overflow-hidden border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 cursor-pointer">
-                            <div class="aspect-square relative overflow-hidden bg-gray-100">
+                          <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-md hover:shadow-2xl hover:border-blue-600/30 transition-all duration-300">
+                            <div class="group relative flex flex-col md:flex-row">
+                              <div class="w-full md:w-1/2 lg:w-2/5 aspect-square md:aspect-auto md:h-auto relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                               <img 
                                 src={photoUrl} 
                                 alt={photo.name || 'Photo'}
-                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                 loading="lazy"
                               />
-                              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                                  <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-3">
                                   <button
                                     onclick={`window.showFullPhotoView('${photoUrl.replace(/'/g, "\\'")}', '${photoName}')`}
-                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                      class="bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:scale-110 hover:bg-white transition-all transform"
+                                      title="View full size"
                                   >
                                     <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
@@ -1396,8 +1408,9 @@ loading = false;
                                   <a
                                     href={photoUrl}
                                     download
-                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                      class="bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:scale-110 hover:bg-white transition-all transform"
                                     onclick="event.stopPropagation()"
+                                      title="Download"
                                   >
                                     <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -1406,11 +1419,41 @@ loading = false;
                                 </div>
                               </div>
                             </div>
-                            <div class="p-3">
-                              <h4 class="font-semibold text-gray-800 truncate mb-1 text-sm">{photo.name || 'Photo'}</h4>
-                              <div class="flex items-center justify-between text-xs text-gray-600">
+                              <div class="w-full md:w-1/2 lg:w-3/5 p-6 bg-white flex flex-col">
+                                <div class="mb-4">
+                                  <h4 class="font-bold text-gray-900 mb-3 text-xl leading-tight">{photo.name || 'Photo'}</h4>
+                                  <div class="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">
+                                    <div class="flex items-center gap-1.5">
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                      </svg>
                                 <span class="file-size" data-size={photo.fileSize || 0}>{photo.fileSize > 0 ? (photo.fileSize < 1024 ? `${photo.fileSize} B` : photo.fileSize < 1024 * 1024 ? `${(photo.fileSize / 1024).toFixed(2)} KB` : photo.fileSize < 1024 * 1024 * 1024 ? `${(photo.fileSize / (1024 * 1024)).toFixed(2)} MB` : `${(photo.fileSize / (1024 * 1024 * 1024)).toFixed(2)} GB`) : 'Unknown size'}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                      </svg>
                                 <span class="file-date" data-date={photo.uploadDate || ''}>{photo.uploadDate ? new Date(photo.uploadDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="mb-5 pb-5 border-b border-gray-100">
+                                  <MediaReactions 
+                                    client:load
+                                    projectId={id}
+                                    mediaUrl={photoUrl}
+                                    mediaType="photo"
+                                  />
+                                </div>
+                                <div class="flex-1">
+                                  <PhotoVideoComments 
+                                    client:load
+                                    projectId={id}
+                                    mediaUrl={photoUrl}
+                                    mediaType="photo"
+                                    mediaName={photoName}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1442,37 +1485,47 @@ loading = false;
               projectMedia.map((milestoneMedia) => {
                 if (!milestoneMedia.videos || milestoneMedia.videos.length === 0) return null;
                 return (
-                  <div class="bg-white rounded-lg shadow-md p-8 mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-500">
+                  <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+                    <div class="flex items-center gap-3 mb-8 pb-4 border-b-2 border-blue-600">
+                      <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                      </div>
+                      <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                       {milestoneMedia.milestoneTitle}
                     </h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    </div>
+                    <div class="space-y-6">
                       {milestoneMedia.videos.map((video) => {
                         const videoUrl = video.url || '';
                         const videoName = (video.name || 'Video').replace(/'/g, "\\'");
                         return (
-                          <div class="group relative bg-white rounded-xl overflow-hidden border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 cursor-pointer">
-                            <div class="aspect-video relative overflow-hidden bg-gray-900">
+                          <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-md hover:shadow-2xl hover:border-blue-600/30 transition-all duration-300">
+                            <div class="group relative flex flex-col md:flex-row">
+                              <div class="w-full md:w-1/2 lg:w-2/5 aspect-video md:aspect-auto md:h-auto relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
                               {video.thumbnail ? (
                                 <img 
                                   src={video.thumbnail} 
                                   alt={video.name || 'Video'}
-                                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                   loading="lazy"
                                 />
                               ) : null}
-                              <div class="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center">
-                                <div class="bg-white/90 rounded-full p-4 group-hover:scale-110 transition-transform duration-300">
-                                  <svg class="w-8 h-8 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/0"></div>
+                                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                                  <div class="bg-white/95 backdrop-blur-sm rounded-full p-5 group-hover:scale-110 transition-transform duration-300 shadow-2xl">
+                                    <svg class="w-10 h-10 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                   </svg>
                                 </div>
                               </div>
-                              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                                  <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-3">
                                   <button
                                     onclick={`window.showFullVideoView('${videoUrl.replace(/'/g, "\\'")}', '${videoName}')`}
-                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                      class="bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:scale-110 hover:bg-white transition-all transform"
+                                      title="Play video"
                                   >
                                     <svg class="w-6 h-6 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
                                       <path d="M8 5v14l11-7z"/>
@@ -1481,8 +1534,9 @@ loading = false;
                                   <a
                                     href={videoUrl}
                                     download
-                                    class="bg-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform"
+                                      class="bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:scale-110 hover:bg-white transition-all transform"
                                     onclick="event.stopPropagation()"
+                                      title="Download"
                                   >
                                     <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -1491,11 +1545,41 @@ loading = false;
                                 </div>
                               </div>
                             </div>
-                            <div class="p-3">
-                              <h4 class="font-semibold text-gray-800 truncate mb-1 text-sm">{video.name || 'Video'}</h4>
-                              <div class="flex items-center justify-between text-xs text-gray-600">
+                              <div class="w-full md:w-1/2 lg:w-3/5 p-6 bg-white flex flex-col">
+                                <div class="mb-4">
+                                  <h4 class="font-bold text-gray-900 mb-3 text-xl leading-tight">{video.name || 'Video'}</h4>
+                                  <div class="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">
+                                    <div class="flex items-center gap-1.5">
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                      </svg>
                                 <span class="file-size" data-size={video.fileSize || 0}>{video.fileSize > 0 ? (video.fileSize < 1024 ? `${video.fileSize} B` : video.fileSize < 1024 * 1024 ? `${(video.fileSize / 1024).toFixed(2)} KB` : video.fileSize < 1024 * 1024 * 1024 ? `${(video.fileSize / (1024 * 1024)).toFixed(2)} MB` : `${(video.fileSize / (1024 * 1024 * 1024)).toFixed(2)} GB`) : 'Unknown size'}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                      </svg>
                                 <span class="file-date" data-date={video.uploadDate || ''}>{video.uploadDate ? new Date(video.uploadDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="mb-5 pb-5 border-b border-gray-100">
+                                  <MediaReactions 
+                                    client:load
+                                    projectId={id}
+                                    mediaUrl={videoUrl}
+                                    mediaType="video"
+                                  />
+                                </div>
+                                <div class="flex-1">
+                                  <PhotoVideoComments 
+                                    client:load
+                                    projectId={id}
+                                    mediaUrl={videoUrl}
+                                    mediaType="video"
+                                    mediaName={videoName}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>

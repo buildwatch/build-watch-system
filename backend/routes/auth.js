@@ -1237,7 +1237,64 @@ router.get('/profile/completion', authenticateToken, async (req, res) => {
 
     // Check if profilePictureUrl is valid (not null, not empty, and not just whitespace)
     // Handle both string and null/undefined cases
-    const profilePicValue = fields.profilePictureUrl;
+    let profilePicValue = fields.profilePictureUrl;
+    
+    // If profilePictureUrl is null/empty in database, try to check profile-data.json file
+    // This handles cases where the profile picture was uploaded but not properly saved to the user record
+    if (!profilePicValue || profilePicValue === 'null' || profilePicValue === 'undefined' || profilePicValue.trim() === '') {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const profileDataPath = path.join(__dirname, '../uploads/profile-pictures/profile-data.json');
+        
+        if (fs.existsSync(profileDataPath)) {
+          const profileData = JSON.parse(fs.readFileSync(profileDataPath, 'utf8'));
+          
+          // Try multiple possible ID formats (same as profile picture endpoint)
+          const possibleIds = [
+            user.id.toString(), // Primary key
+            user.userId, // userId field (UUID or SA-001)
+            user.email // Email
+          ];
+          
+          // Remove duplicates
+          const uniqueIds = [...new Set(possibleIds.filter(id => id))];
+          
+          console.log('🔍 [Profile Completion Debug] Checking profile-data.json with IDs:', uniqueIds);
+          
+          // Try each possible ID
+          for (const id of uniqueIds) {
+            if (profileData[id] && profileData[id].profilePictureUrl) {
+              profilePicValue = profileData[id].profilePictureUrl;
+              console.log('✅ [Profile Completion Debug] Found profile picture in profile-data.json for ID:', id, 'URL:', profilePicValue.substring(0, 50) + '...');
+              
+              // Update the user record with the found profile picture URL
+              if (profilePicValue && !profilePicValue.startsWith('data:')) {
+                try {
+                  await user.update({ profilePictureUrl: profilePicValue });
+                  await user.reload();
+                  fields.profilePictureUrl = profilePicValue;
+                  console.log('✅ [Profile Completion Debug] Updated user record with profile picture URL from profile-data.json');
+                } catch (updateError) {
+                  console.error('❌ [Profile Completion Debug] Failed to update user record:', updateError.message);
+                }
+              }
+              break;
+            }
+          }
+          
+          if (!profilePicValue || profilePicValue === 'null' || profilePicValue === 'undefined' || profilePicValue.trim() === '') {
+            console.log('⚠️ [Profile Completion Debug] Profile picture not found in profile-data.json for any of the IDs:', uniqueIds);
+            console.log('🔍 [Profile Completion Debug] Available keys in profile-data.json:', Object.keys(profileData).slice(0, 10));
+          }
+        } else {
+          console.log('⚠️ [Profile Completion Debug] profile-data.json file does not exist at:', profileDataPath);
+        }
+      } catch (profilePicError) {
+        console.error('❌ [Profile Completion Debug] Error checking profile-data.json:', profilePicError.message);
+      }
+    }
+    
     const hasProfilePicture = profilePicValue !== null && 
                               profilePicValue !== undefined &&
                               typeof profilePicValue === 'string' &&
@@ -1266,14 +1323,17 @@ router.get('/profile/completion', authenticateToken, async (req, res) => {
       })
       .map(([key]) => key);
 
-    console.log('Profile completion calculation:', {
+    console.log('🔍 [Profile Completion Debug] Profile completion calculation:', {
       userId: user.id,
+      userUserId: user.userId,
+      email: user.email,
       role: user.role,
       subRole: user.subRole,
       fields: fields,
       profilePictureUrl: user.profilePictureUrl,
       profilePictureUrlType: typeof user.profilePictureUrl,
       profilePictureUrlLength: user.profilePictureUrl ? user.profilePictureUrl.length : 0,
+      profilePicValue: profilePicValue ? (profilePicValue.substring(0, 50) + '...') : null,
       hasProfilePicture,
       filledFields,
       totalFields,

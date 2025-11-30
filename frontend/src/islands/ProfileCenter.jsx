@@ -1403,13 +1403,15 @@ export default function ProfileCenter({
                       : `bg-gradient-to-r ${currentTheme.primary} hover:shadow-2xl`
                   }`}
                   style={!editing ? {
-                    background: theme === 'blue' || theme === 'orange'
+                    background: theme === 'black' || userData?.role === 'SYS.AD' || userData?.role === 'System Administrator'
+                      ? 'linear-gradient(135deg, #000000 0%, #1f2937 100%)'
+                      : theme === 'blue' || theme === 'orange'
                       ? 'linear-gradient(135deg, #0D7DB5 0%, #0A6A9A 100%)'
                       : theme === 'emerald' || theme === 'green'
                       ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                       : theme === 'sky' || theme === 'light-blue'
                       ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
-                      : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                      : 'linear-gradient(135deg, #000000 0%, #1f2937 100%)' // Default to black instead of yellow
                   } : {}}
                 >
                   <span className="flex items-center justify-center gap-3 py-3.5 px-4">
@@ -1425,13 +1427,15 @@ export default function ProfileCenter({
                   onClick={() => setShowChangePasswordModal(true)}
                   className={`group w-full bg-gradient-to-r ${currentTheme.primary} text-white rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-2xl`}
                   style={{
-                    background: theme === 'blue' || theme === 'orange'
+                    background: theme === 'black' || userData?.role === 'SYS.AD' || userData?.role === 'System Administrator'
+                      ? 'linear-gradient(135deg, #000000 0%, #1f2937 100%)'
+                      : theme === 'blue' || theme === 'orange'
                       ? 'linear-gradient(135deg, #0D7DB5 0%, #0A6A9A 100%)'
                       : theme === 'emerald' || theme === 'green'
                       ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                       : theme === 'sky' || theme === 'light-blue'
                       ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
-                      : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                      : 'linear-gradient(135deg, #000000 0%, #1f2937 100%)' // Default to black instead of yellow
                   }}
                 >
                   <span className="flex items-center justify-center gap-3 py-3.5 px-4">

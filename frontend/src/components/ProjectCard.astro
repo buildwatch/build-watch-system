@@ -86,13 +86,18 @@ const getActualStatus = (proj) => {
   // Use status from API (backend handles completion check)
   let actualStatus = proj.status === 'complete' ? 'completed' : proj.status;
   
+  // Convert 'pending' to 'ongoing' - projects no longer have pending status
+  if (actualStatus === 'pending' || actualStatus === 'Pending' || actualStatus === 'PENDING') {
+    actualStatus = 'ongoing';
+  }
+  
   // If project is already completed, return as is (backend has verified all milestones are done)
   if (actualStatus === 'completed' || actualStatus === 'complete') {
     return 'completed';
   }
   
-  // If not completed, check for delayed milestones (only for ongoing/pending projects)
-  if (actualStatus !== 'completed' && actualStatus !== 'complete' && actualStatus !== 'ongoing' && proj.milestones && Array.isArray(proj.milestones)) {
+  // If not completed, check for delayed milestones (only for ongoing projects)
+  if (actualStatus !== 'completed' && actualStatus !== 'complete' && actualStatus === 'ongoing' && proj.milestones && Array.isArray(proj.milestones)) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     

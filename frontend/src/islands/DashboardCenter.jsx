@@ -344,6 +344,14 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
   });
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
   const [showFullMapModal, setShowFullMapModal] = useState(false);
+  const [userLogsSummary, setUserLogsSummary] = useState({
+    totalActivities: 0,
+    todayActivities: 0,
+    failedLogins: 0,
+    activeUsers: 0,
+    activeUsersList: []
+  });
+  const [userLogsLoading, setUserLogsLoading] = useState(true);
   // Map refs removed - using CentralizedProjectMap component instead
   
   // Refs
@@ -483,7 +491,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             // Ongoing projects include both 'ongoing' and 'delayed' statuses (delayed projects are still ongoing)
             const ongoingProjects = projectsList.filter(p => p.status === 'ongoing' || p.status === 'delayed').length;
             const completedProjects = projectsList.filter(p => p.status === 'completed' || p.status === 'complete').length;
-            const pendingProjects = projectsList.filter(p => p.status === 'pending').length;
+            // Removed: pendingProjects - projects now go directly to ongoing
             
             const totalBudget = projectsList.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
             
@@ -609,7 +617,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                   if (utilizedBudget === 0) {
                     utilizedBudget = projectsList.reduce((sum, p) => {
                       // Skip pending projects
-                      if (p.status === 'pending') return sum;
+                      // Removed: pending check - projects now go directly to ongoing
                       const budget = parseFloat(p.totalBudget || 0);
                       const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
                       // Only add if there's actual progress
@@ -719,6 +727,42 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
     }
   }, [announcements, announcementSlideIndex]);
 
+  // Fetch user logs summary (System Admin only)
+  useEffect(() => {
+    if (!isSystemAdmin) return;
+    
+    const fetchUserLogsSummary = async () => {
+      try {
+        setUserLogsLoading(true);
+        const token = getToken();
+        if (!token) return;
+        
+        const response = await fetch(`${API_URL}/activity-logs/summary`, {
+          headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.summary) {
+            setUserLogsSummary({
+              totalActivities: data.summary.totalActivities || 0,
+              todayActivities: data.summary.todayActivities || 0,
+              failedLogins: data.summary.failedLogins || 0,
+              activeUsers: data.summary.activeUsers || 0,
+              activeUsersList: data.summary.activeUsersList || []
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user logs summary:', error);
+      } finally {
+        setUserLogsLoading(false);
+      }
+    };
+    
+    fetchUserLogsSummary();
+  }, [isSystemAdmin]);
+
   // Fetch system health
   useEffect(() => {
     const fetchSystemHealth = async () => {
@@ -806,7 +850,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                   implementingOfficePicture: project.implementingOffice?.profilePictureUrl || project.implementingOffice?.profilePicture || null,
                   eiuPersonnelName: project.eiuPersonnelName || project.eiuPersonnel?.name || project.eiuPersonnel?.externalCompanyName || null,
                   eiuPersonnelPicture: project.eiuPersonnel?.profilePictureUrl || project.eiuPersonnel?.profilePicture || null,
-                  status: project.status || 'pending',
+                  status: project.status || 'ongoing',
                   progress: project.progress?.overall || project.overallProgress || 0,
                   projectCode: project.projectCode || null,
                   location: project.location || null,
@@ -1405,7 +1449,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
         </div>
       )}
 
-      {/* Calendar and Map Section */}
+      {/* Calendar and User Logs Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Interactive Calendar */}
         <div className={`bg-white rounded-2xl shadow-lg border ${currentTheme.border} p-6 ${currentTheme.cardHover} transition-all duration-300`}>
@@ -1530,7 +1574,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                     const implementingOfficePic = event.implementingOfficePicture || null;
                     const eiuPartner = event.eiuPersonnelName || null;
                     const eiuPartnerPic = event.eiuPersonnelPicture || null;
-                    const projectStatus = event.status || 'pending';
+                    const projectStatus = event.status || 'ongoing';
                     const progress = parseFloat(event.progress || 0).toFixed(1);
                     const projectCode = event.projectCode || null;
                     const location = event.location || null;
@@ -1584,7 +1628,8 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                     } else if (projectStatus === 'completed' || projectStatus === 'complete') {
                       statusBadgeColor = '#2563EB';
                       statusBadgeBg = '#DBEAFE';
-                    } else if (projectStatus === 'pending') {
+                    // Removed: pending status check - projects now go directly to ongoing
+                    } else if (false) { // Removed pending check
                       statusBadgeColor = '#F59E0B';
                       statusBadgeBg = '#FEF3C7';
                     }
@@ -1892,7 +1937,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                       const implementingOfficePic = formatProfilePic(event.implementingOfficePicture);
                       const eiuPartner = event.eiuPersonnelName || null;
                       const eiuPartnerPic = formatProfilePic(event.eiuPersonnelPicture);
-                      const projectStatus = event.status || 'pending';
+                      const projectStatus = event.status || 'ongoing';
                       const progress = parseFloat(event.progress || 0).toFixed(1);
                       const projectCode = event.projectCode || null;
                       const location = event.location || null;
@@ -1944,7 +1989,8 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                       } else if (projectStatus === 'completed' || projectStatus === 'complete') {
                         statusBadgeColor = '#2563EB';
                         statusBadgeBg = '#DBEAFE';
-                      } else if (projectStatus === 'pending') {
+                      // Removed: pending status check - projects now go directly to ongoing
+                    } else if (false) { // Removed pending check
                         statusBadgeColor = '#F59E0B';
                         statusBadgeBg = '#FEF3C7';
                       }
@@ -2120,6 +2166,114 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
           </div>
         </div>
 
+        {/* User Logs Overview - Only for System Admin */}
+        {isSystemAdmin && (
+          <div className={`bg-white rounded-2xl shadow-lg border ${currentTheme.border} p-6 ${currentTheme.cardHover} transition-all duration-300`}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">User Logs Overview</h3>
+              <a 
+                href="/dashboard/sysadmin/modules/user-logs"
+                className={`px-4 py-2 ${currentTheme.button} text-white rounded-lg transition-all duration-200 hover:opacity-90 text-sm font-medium flex items-center gap-2`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                View All
+              </a>
+            </div>
+            
+            {userLogsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-600">Total Activities</p>
+                        <p className="text-2xl font-bold text-blue-800">{userLogsSummary.totalActivities.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-blue-200 rounded-lg">
+                        <svg className="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-600">Today's Activities</p>
+                        <p className="text-2xl font-bold text-green-800">{userLogsSummary.todayActivities.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-green-200 rounded-lg">
+                        <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-red-600">Failed Logins</p>
+                        <p className="text-2xl font-bold text-red-800">{userLogsSummary.failedLogins.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-red-200 rounded-lg">
+                        <svg className="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-600">Active Users</p>
+                        <p className="text-2xl font-bold text-purple-800">{userLogsSummary.activeUsers.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-purple-200 rounded-lg">
+                        <svg className="w-6 h-6 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Active Users List */}
+                {userLogsSummary.activeUsersList && userLogsSummary.activeUsersList.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Recently Active Users</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {userLogsSummary.activeUsersList.slice(0, 5).map((user, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                              {user.name ? user.name.charAt(0).toUpperCase() : user.userId ? user.userId.charAt(0) : 'U'}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">{user.name || user.userId || 'Unknown User'}</p>
+                              <p className="text-xs text-gray-500">{user.role || 'N/A'}</p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-green-600 font-medium">Active</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Heatmap + Municipality Map - Only for non-System Admin */}
         {!isSystemAdmin && (
           <div className={`bg-white rounded-2xl shadow-lg border ${currentTheme.border} p-6 ${currentTheme.cardHover} transition-all duration-300 relative z-0`}>
@@ -2164,13 +2318,18 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                 <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                   {projects.map((project) => {
                     const getStatusColor = (status) => {
-                      switch (status?.toLowerCase()) {
-                        case 'ongoing': return 'bg-blue-100 text-blue-800';
-                        case 'completed': return 'bg-green-100 text-green-800';
-                        case 'delayed': return 'bg-red-100 text-red-800';
-                        case 'pending': return 'bg-yellow-100 text-yellow-800';
+                      // Normalize status - convert pending to ongoing
+                      const normalizedStatus = (status === 'pending' || status === 'Pending' || status === 'PENDING') 
+                        ? 'ongoing' 
+                        : (status?.toLowerCase() || 'ongoing');
+                      
+                      switch (normalizedStatus) {
+                        case 'ongoing': return 'bg-blue-100 text-blue-800'; // Blue theme for ongoing
+                        case 'completed': 
+                        case 'complete': return 'bg-green-100 text-green-800'; // Green theme for completed
+                        case 'delayed': return 'bg-red-100 text-red-800'; // Red theme for delayed
                         case 'on hold': return 'bg-orange-100 text-orange-800';
-                        default: return 'bg-gray-100 text-gray-800';
+                        default: return 'bg-blue-100 text-blue-800'; // Default to ongoing (blue)
                       }
                     };
                     
@@ -2197,9 +2356,17 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                               <h5 className="text-base font-bold text-gray-900 truncate">
                                 {project.name || project.projectName || 'Unnamed Project'}
                               </h5>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getStatusColor(project.status)}`}>
-                                {project.status || 'N/A'}
-                              </span>
+                              {(() => {
+                                // Normalize status - convert pending to ongoing
+                                const normalizedStatus = (project.status === 'pending' || project.status === 'Pending' || project.status === 'PENDING') 
+                                  ? 'ongoing' 
+                                  : (project.status || 'ongoing');
+                                return (
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getStatusColor(normalizedStatus)}`}>
+                                    {normalizedStatus}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                               <div>

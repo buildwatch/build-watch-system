@@ -77,14 +77,19 @@ const generateProjectCoordinates = (projectId, location) => {
 
 // Get status color for markers
 const getStatusColor = (status) => {
-  switch (status?.toLowerCase()) {
+  // Convert 'pending' to 'ongoing' - projects no longer have pending status
+  const normalizedStatus = (status === 'pending' || status === 'Pending' || status === 'PENDING') 
+    ? 'ongoing' 
+    : status?.toLowerCase();
+  
+  switch (normalizedStatus) {
     case 'ongoing': return '#3b82f6'; // blue
     case 'delayed': return '#ef4444'; // red
-    case 'completed': return '#10b981'; // green
+    case 'completed': 
+    case 'complete': return '#10b981'; // green
     case 'planning': return '#6b7280'; // gray
-    case 'pending': return '#f59e0b'; // yellow
     case 'on hold': return '#f97316'; // orange
-    default: return '#6b7280'; // gray
+    default: return '#3b82f6'; // default to ongoing (blue) instead of gray
   }
 };
 
@@ -397,7 +402,7 @@ export default function CentralizedProjectMap({
                 ${project.name || project.projectName || 'Project'}
               </h3>
               <p style="margin: 4px 0; line-height: 1.5;"><strong>Location:</strong> ${project.location || 'Santa Cruz, Laguna'}</p>
-              <p style="margin: 4px 0; line-height: 1.5;"><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${project.status || 'N/A'}</span></p>
+              <p style="margin: 4px 0; line-height: 1.5;"><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${(project.status === 'pending' || project.status === 'Pending' || project.status === 'PENDING') ? 'Ongoing' : (project.status || 'N/A')}</span></p>
               <p style="margin: 4px 0; line-height: 1.5;"><strong>Budget:</strong> ${formatBudget(project.budget || project.totalBudget)}</p>
               <p style="margin: 4px 0; line-height: 1.5;"><strong>Progress:</strong> ${progressValue.toFixed(1)}%</p>
               ${project.startDate ? `<p style="margin: 4px 0; line-height: 1.5;"><strong>Start:</strong> ${formatDate(project.startDate)}</p>` : ''}
@@ -673,10 +678,7 @@ export default function CentralizedProjectMap({
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               <span>Completed</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span>Pending</span>
-            </div>
+            {/* Removed: Pending status - projects now go directly to ongoing */}
           </div>
         </div>
       )}

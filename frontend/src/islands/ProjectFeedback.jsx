@@ -361,7 +361,35 @@ export default function ProjectFeedback({ projectId }) {
       });
 
       if (response.data.success) {
-        setComments(response.data.comments || []);
+        // Filter out media reactions and media-only comments (keep only actual user comments)
+        const allComments = response.data.comments || [];
+        const filteredComments = allComments
+          .filter(comment => {
+            const content = comment.content || '';
+            // Exclude media reactions
+            if (content.startsWith('[MEDIA_REACTION:')) {
+              return false;
+            }
+            // Exclude comments that are only media identifiers without actual comment text
+            if (content.startsWith('[MEDIA:') && content.replace(/^\[MEDIA:[^\]]+\]\s*/, '').trim() === '') {
+              return false;
+            }
+            return true;
+          })
+          .map(comment => {
+            // Extract media URL and clean content for display
+            const content = comment.content || '';
+            const mediaUrlMatch = content.match(/\[MEDIA:([^\]]+)\]/);
+            const extractedMediaUrl = mediaUrlMatch ? mediaUrlMatch[1] : null;
+            const cleanedContent = content.replace(/^\[MEDIA:[^\]]+\]\s*/, '').trim();
+            
+            return {
+              ...comment,
+              content: cleanedContent,
+              mediaUrl: extractedMediaUrl // Store for thumbnail display
+            };
+          });
+        setComments(filteredComments);
       }
     } catch (error) {
       console.error('Error loading comments:', error);
@@ -728,17 +756,38 @@ export default function ProjectFeedback({ projectId }) {
     socketRef.current.on('new_comment', (newComment) => {
       console.log('📨 Received new_comment event:', newComment);
       if (newComment.projectId === projectId) {
+        // Filter out media reactions and media-only comments
+        const content = newComment.content || '';
+        if (content.startsWith('[MEDIA_REACTION:')) {
+          return; // Don't add media reactions to Feedback panel
+        }
+        // Exclude comments that are only media identifiers without actual comment text
+        if (content.startsWith('[MEDIA:') && content.replace(/^\[MEDIA:[^\]]+\]\s*/, '').trim() === '') {
+          return; // Don't add empty media-only comments
+        }
+        
+        // Extract media URL and clean content for display
+        const mediaUrlMatch = content.match(/\[MEDIA:([^\]]+)\]/);
+        const extractedMediaUrl = mediaUrlMatch ? mediaUrlMatch[1] : null;
+        const cleanedContent = content.replace(/^\[MEDIA:[^\]]+\]\s*/, '').trim();
+        
+        const processedComment = {
+          ...newComment,
+          content: cleanedContent,
+          mediaUrl: extractedMediaUrl
+        };
+        
         // Add new comment to the list (respecting current sort/filter)
         setComments(prevComments => {
           // Check if comment already exists (avoid duplicates)
-          if (prevComments.some(c => c.id === newComment.id)) {
+          if (prevComments.some(c => c.id === processedComment.id)) {
             return prevComments;
           }
           // Add to beginning for newest first, or end for oldest first
           if (sortBy === 'newest') {
-            return [newComment, ...prevComments];
+            return [processedComment, ...prevComments];
           } else {
-            return [...prevComments, newComment];
+            return [...prevComments, processedComment];
           }
         });
       }
@@ -1162,7 +1211,31 @@ export default function ProjectFeedback({ projectId }) {
                 </div>
               </div>
               
-              <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+              {/* Media thumbnail if comment is associated with media */}
+              {comment.mediaUrl && (
+                <div className="mb-4">
+                  <div className="inline-block border-2 border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <img
+                      src={comment.mediaUrl}
+                      alt="Related media"
+                      className="w-40 h-40 object-cover cursor-pointer hover:opacity-90"
+                      onClick={() => {
+                        // Try to determine if it's a photo or video based on URL or use a default viewer
+                        if (window.showFullPhotoView) {
+                          window.showFullPhotoView(comment.mediaUrl, 'Media');
+                        } else {
+                          window.open(comment.mediaUrl, '_blank');
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Comment text - only show if there's actual text content */}
+              {comment.content && comment.content.trim() && (
+                <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+              )}
               
               {/* Display Images */}
               {comment.images && comment.images.length > 0 && (

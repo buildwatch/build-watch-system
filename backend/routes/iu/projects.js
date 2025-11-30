@@ -179,7 +179,7 @@ router.post('/', authenticateToken, async (req, res) => {
           projectId: project.id,
           title: milestone.trim(),
           description: milestone.trim(),
-          status: 'pending',
+          status: 'not_started',
           dueDate: endDate
         });
       }

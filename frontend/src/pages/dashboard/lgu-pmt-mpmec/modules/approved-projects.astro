@@ -107,8 +107,15 @@ try {
         
         // Calculate comprehensive statistics
         stats.totalProjects = approvedProjects.length;
-        stats.ongoing = approvedProjects.filter(p => p.status === 'ongoing').length;
-        stats.pending = approvedProjects.filter(p => p.status === 'pending').length;
+        stats.ongoing = approvedProjects.filter(p => {
+          // Normalize status - convert pending to ongoing
+          const normalizedStatus = (p.status === 'pending' || p.status === 'Pending' || p.status === 'PENDING') 
+            ? 'ongoing' 
+            : (p.status || 'ongoing');
+          return normalizedStatus === 'ongoing';
+        }).length;
+        // Removed: pending count - projects now go directly to ongoing
+        stats.pending = 0;
         
         // Calculate delayed projects and milestones with milestone-level detection
         const today = new Date();
@@ -557,21 +564,7 @@ loading = false;
             </div>
           </div>
 
-          <!-- Pending - Professional Light Gold -->
-          <div class="profile-card p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Pending</p>
-                <p class="text-2xl font-bold text-black" id="pending">{stats.pending}</p>
-                <p class="text-xs text-amber-600 mt-1">Awaiting review</p>
-              </div>
-              <div class="icon-container bg-gradient-to-br from-amber-500 to-amber-600">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
+          {/* Removed: Pending summary card - projects now go directly to ongoing */}
 
           <!-- Delayed - Professional Light Red -->
           <div class="profile-card p-6">
@@ -965,15 +958,22 @@ loading = false;
                           <div class="text-sm text-gray-900">₱{budget.toLocaleString()}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                          <span class={`px-2 py-1 text-xs font-medium rounded-full ${
-                            project.status === 'complete' ? 'bg-green-100 text-green-700' :
-                            project.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-                            project.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                            project.status === 'delayed' ? 'bg-red-100 text-red-700 animate-pulse' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {project.status}
-                          </span>
+                          {(() => {
+                            // Normalize status - convert pending to ongoing
+                            const normalizedStatus = (project.status === 'pending' || project.status === 'Pending' || project.status === 'PENDING') 
+                              ? 'ongoing' 
+                              : (project.status || 'ongoing');
+                            return (
+                              <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                                normalizedStatus === 'complete' || normalizedStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                                normalizedStatus === 'ongoing' ? 'bg-blue-100 text-blue-700' :
+                                normalizedStatus === 'delayed' ? 'bg-red-100 text-red-700 animate-pulse' :
+                                'bg-blue-100 text-blue-700'
+                              }`}>
+                                {normalizedStatus}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="flex items-center">
