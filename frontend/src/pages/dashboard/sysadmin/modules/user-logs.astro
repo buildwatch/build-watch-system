@@ -2666,14 +2666,14 @@ const statusColors = {
                   const newLogs = data.logs.filter(log => new Date(log.createdAt).getTime() > lastFetchTime);
                   if (newLogs.length > 0) {
                     lastFetchTime = Date.now();
-                    // Show a subtle notification
+                    // Show a subtle notification below the topbar
                     const notification = document.createElement('div');
-                    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-[100] flex items-center gap-2 animate-fade-in';
+                    notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-[100] flex items-center gap-2 animate-fade-in';
                     notification.innerHTML = `
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                       </svg>
-                      <span>${newLogs.length} new activity log${newLogs.length > 1 ? 's' : ''} detected. <a href="javascript:location.reload()" class="underline font-semibold">Refresh</a></span>
+                      <span>${newLogs.length} new activity log${newLogs.length > 1 ? 's' : ''} detected. <a href="javascript:location.reload()" class="underline font-semibold hover:text-green-100">Refresh</a></span>
                     `;
                     document.body.appendChild(notification);
                     setTimeout(() => {

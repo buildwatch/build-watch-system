@@ -5279,13 +5279,21 @@ try {
         
         // Process user statistics data
         function processUserStatisticsData(users, timeRange) {
-          // User growth over time
+          // User growth over time (with user names for tooltips)
           const growthData = {};
+          const growthUsersByDate = {}; // Store users by date for tooltips
           users.forEach(user => {
             if (user.createdAt) {
               const date = new Date(user.createdAt);
               const key = date.toISOString().split('T')[0]; // YYYY-MM-DD
               growthData[key] = (growthData[key] || 0) + 1;
+              if (!growthUsersByDate[key]) {
+                growthUsersByDate[key] = [];
+              }
+              growthUsersByDate[key].push({
+                name: user.name || user.username || 'Unknown User',
+                userId: user.userId || 'N/A'
+              });
             }
           });
           
@@ -5300,7 +5308,9 @@ try {
             data: sortedDates.map(date => {
               cumulative += growthData[date];
               return cumulative;
-            })
+            }),
+            dateKeys: sortedDates, // Store date keys for mapping
+            usersByDate: growthUsersByDate // Include user data for tooltips
           };
           
           // User distribution by group (with user names)
@@ -5318,24 +5328,48 @@ try {
             });
           });
           
-          // User status distribution
+          // User status distribution (with user names for tooltips)
           const byStatus = {};
+          const byStatusUsers = {}; // Store actual users for each status
           users.forEach(user => {
             const status = user.status || 'unknown';
             byStatus[status] = (byStatus[status] || 0) + 1;
+            if (!byStatusUsers[status]) {
+              byStatusUsers[status] = [];
+            }
+            byStatusUsers[status].push({
+              name: user.name || user.username || 'Unknown User',
+              userId: user.userId || 'N/A'
+            });
           });
           
-          // User distribution by department
+          // User distribution by department (with user names for tooltips)
           const byDepartment = {};
+          const byDepartmentUsers = {}; // Store actual users for each department
           users.forEach(user => {
             const dept = user.department || user.officeDepartment || 'Unknown';
             byDepartment[dept] = (byDepartment[dept] || 0) + 1;
+            if (!byDepartmentUsers[dept]) {
+              byDepartmentUsers[dept] = [];
+            }
+            byDepartmentUsers[dept].push({
+              name: user.name || user.username || 'Unknown User',
+              userId: user.userId || 'N/A'
+            });
           });
           
           // Top 10 departments
           const topDepartments = Object.entries(byDepartment)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
+          
+          // Create department users map for top departments only
+          const topDepartmentUsers = {};
+          topDepartments.forEach(([dept]) => {
+            if (byDepartmentUsers[dept]) {
+              topDepartmentUsers[dept] = byDepartmentUsers[dept];
+            }
+          });
           
           // Registration trends (monthly)
           const monthlyRegistrations = {};
@@ -5424,7 +5458,9 @@ try {
             byGroup,
             byGroupUsers, // Include user names for tooltips
             byStatus,
+            byStatusUsers, // Include user names for status tooltips
             topDepartments,
+            topDepartmentUsers, // Include user names for department tooltips
             registrationTrends,
             activeInactiveTrends,
             byRole,
@@ -5447,8 +5483,8 @@ try {
           // Render each chart
           renderUserGrowthChart(Chart, stats.growthTrends);
           renderUserGroupChart(Chart, stats.byGroup, stats.byGroupUsers);
-          renderUserStatusChart(Chart, stats.byStatus);
-          renderUserDepartmentChart(Chart, stats.topDepartments);
+          renderUserStatusChart(Chart, stats.byStatus, stats.byStatusUsers);
+          renderUserDepartmentChart(Chart, stats.topDepartments, stats.topDepartmentUsers);
           renderRegistrationTrendsChart(Chart, stats.registrationTrends);
           renderActiveInactiveChart(Chart, stats.activeInactiveTrends);
           renderUserRoleChart(Chart, stats.byRole);
@@ -5480,7 +5516,48 @@ try {
               maintainAspectRatio: false,
               plugins: {
                 legend: { display: false },
-                tooltip: { mode: 'index', intersect: false }
+                tooltip: {
+                  mode: 'index',
+                  intersect: false,
+                  callbacks: {
+                    title: function(context) {
+                      const index = context[0].dataIndex;
+                      const dateKey = trends.dateKeys && trends.dateKeys[index];
+                      if (!dateKey || !trends.usersByDate || !trends.usersByDate[dateKey]) {
+                        const value = context[0].parsed.y || 0;
+                        return `${context[0].label}: ${value} user${value !== 1 ? 's' : ''}`;
+                      }
+                      const value = context[0].parsed.y || 0;
+                      return `${context[0].label}: ${value} user${value !== 1 ? 's' : ''}`;
+                    },
+                    label: function(context) {
+                      const index = context.dataIndex;
+                      const dateKey = trends.dateKeys && trends.dateKeys[index];
+                      if (!dateKey || !trends.usersByDate || !trends.usersByDate[dateKey]) {
+                        const value = context.parsed.y || 0;
+                        return `Total Users: ${value}`;
+                      }
+                      const users = trends.usersByDate[dateKey];
+                      if (users.length === 0) {
+                        const value = context.parsed.y || 0;
+                        return `Total Users: ${value}`;
+                      }
+                      
+                      // Show first few users in tooltip
+                      const maxUsers = 5;
+                      const displayUsers = users.slice(0, maxUsers);
+                      const userNames = displayUsers.map(u => u.name).join(', ');
+                      const moreText = users.length > maxUsers 
+                        ? ` and ${users.length - maxUsers} more...` 
+                        : '';
+                      
+                      return [
+                        `Total Users: ${context.parsed.y || 0}`,
+                        `Users: ${userNames}${moreText}`
+                      ];
+                    }
+                  }
+                }
               },
               scales: {
                 y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -5540,7 +5617,7 @@ try {
           });
         }
         
-        function renderUserStatusChart(Chart, byStatus) {
+        function renderUserStatusChart(Chart, byStatus, byStatusUsers) {
           const ctx = document.getElementById('userStatusChart');
           if (!ctx) return;
           
@@ -5566,7 +5643,35 @@ try {
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: function(context) {
+                      const status = context[0].label || '';
+                      const value = context[0].parsed.y || 0;
+                      return `${status}: ${value} user${value !== 1 ? 's' : ''}`;
+                    },
+                    label: function(context) {
+                      const status = context.label || '';
+                      const users = byStatusUsers && byStatusUsers[status] ? byStatusUsers[status] : [];
+                      
+                      if (users.length === 0) {
+                        const value = context.parsed.y || 0;
+                        return `Users: ${value}`;
+                      }
+                      
+                      // Show first few users in tooltip
+                      const maxUsers = 5;
+                      const displayUsers = users.slice(0, maxUsers);
+                      const userNames = displayUsers.map(u => u.name).join(', ');
+                      const moreText = users.length > maxUsers 
+                        ? ` and ${users.length - maxUsers} more...` 
+                        : '';
+                      
+                      return `Users: ${userNames}${moreText}`;
+                    }
+                  }
+                }
               },
               scales: {
                 y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -5575,7 +5680,7 @@ try {
           });
         }
         
-        function renderUserDepartmentChart(Chart, topDepartments) {
+        function renderUserDepartmentChart(Chart, topDepartments, topDepartmentUsers) {
           const ctx = document.getElementById('userDepartmentChart');
           if (!ctx) return;
           
@@ -5596,7 +5701,35 @@ try {
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: function(context) {
+                      const dept = context[0].label || '';
+                      const value = context[0].parsed.x || 0;
+                      return `${dept}: ${value} user${value !== 1 ? 's' : ''}`;
+                    },
+                    label: function(context) {
+                      const dept = context.label || '';
+                      const users = topDepartmentUsers && topDepartmentUsers[dept] ? topDepartmentUsers[dept] : [];
+                      
+                      if (users.length === 0) {
+                        const value = context.parsed.x || 0;
+                        return `Users: ${value}`;
+                      }
+                      
+                      // Show first few users in tooltip
+                      const maxUsers = 5;
+                      const displayUsers = users.slice(0, maxUsers);
+                      const userNames = displayUsers.map(u => u.name).join(', ');
+                      const moreText = users.length > maxUsers 
+                        ? ` and ${users.length - maxUsers} more...` 
+                        : '';
+                      
+                      return `Users: ${userNames}${moreText}`;
+                    }
+                  }
+                }
               },
               scales: {
                 x: { beginAtZero: true, ticks: { stepSize: 1 } }
