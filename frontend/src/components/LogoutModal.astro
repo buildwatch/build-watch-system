@@ -468,14 +468,15 @@
           
           // EIU-style direct loading: Try server first, then localStorage
           try {
-            // Try LGU-PMT-0001 first (common key in profile-data.json)
-            console.log('🔄 MPMEC: Fetching profile picture from server for userId: LGU-PMT-0001');
+            // CRITICAL: Use actual userId from user data, not hardcoded
+            const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
+            console.log('🔄 MPMEC: Fetching profile picture from server for userId:', userId);
             // Determine API URL based on environment
             const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             const API_URL = isProd 
               ? `${window.location.protocol}//${window.location.hostname}/api`
               : 'http://localhost:3000/api';
-            const response = await fetch(`${API_URL}/profile/picture/LGU-PMT-0001`);
+            const response = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`);
             
             if (response.ok) {
               const result = await response.json();
@@ -693,7 +694,12 @@
               // For Executive Viewer, try userId first, then email, username, etc.
               const userId = user.userId || user.id || user.employeeId || user.username || user.email || 'EXEC-0001';
               console.log('🔄 Executive Viewer: Trying to fetch from server with userId:', userId);
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
+              // Determine API URL based on environment
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const API_URL = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}/api`
+                : 'http://localhost:3000/api';
+              const profileResponse = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.success && profileData.profilePictureUrl) {
@@ -802,14 +808,15 @@
           
           // EIU-style direct loading: Try server first, then localStorage
           try {
-            // Try SA-001 first (primary key in profile-data.json)
-            console.log('🔄 System Admin: Fetching profile picture from server for userId: SA-001');
+            // CRITICAL: Use actual userId from user data, not hardcoded
+            const userId = user.userId || user.id || user.employeeId || user.username || 'SA-001';
+            console.log('🔄 System Admin: Fetching profile picture from server for userId:', userId);
             // Determine API URL based on environment
             const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             const API_URL = isProd 
               ? `${window.location.protocol}//${window.location.hostname}/api`
               : 'http://localhost:3000/api';
-            const response = await fetch(`${API_URL}/profile/picture/SA-001`);
+            const response = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`);
             
             if (response.ok) {
               const result = await response.json();
@@ -955,10 +962,16 @@
               return;
             }
             
-            // If no localStorage, try to get from server (LGU-PMT-0001 primary key)
+            // If no localStorage, try to get from server with actual userId
             try {
-              console.log('🔄 MPMEC refresh: Fetching from server for userId: LGU-PMT-0001');
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/LGU-PMT-0001`);
+              const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
+              console.log('🔄 MPMEC refresh: Fetching from server for userId:', userId);
+              // Determine API URL based on environment
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const API_URL = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}/api`
+                : 'http://localhost:3000/api';
+              const profileResponse = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.success && profileData.profilePictureUrl) {
@@ -1004,7 +1017,12 @@
             // If still no URL, try to get from server with actual user ID
             try {
               const userId = user.userId || user.id || user.employeeId || user.username || 'EIU-0001';
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
+              // Determine API URL based on environment
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const API_URL = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}/api`
+                : 'http://localhost:3000/api';
+              const profileResponse = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.profilePictureUrl) {
@@ -1057,7 +1075,12 @@
             // If still no URL, try to get from server with actual user ID
             try {
               const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
-              const profileResponse = await fetch(`http://localhost:3000/api/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
+              // Determine API URL based on environment
+              const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+              const API_URL = isProd 
+                ? `${window.location.protocol}//${window.location.hostname}/api`
+                : 'http://localhost:3000/api';
+              const profileResponse = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}?t=${Date.now()}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.profilePictureUrl) {
@@ -1141,15 +1164,16 @@
               return;
             }
             
-            // If no localStorage, try to get from server (LGU-IU-0001 primary key)
+            // If no localStorage, try to get from server with actual userId
             try {
-              console.log('🔄 LGU-IU IOO refresh: Fetching from server for userId: LGU-IU-0001');
+              const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-IU-0001';
+              console.log('🔄 LGU-IU IOO refresh: Fetching from server for userId:', userId);
               // Determine API URL based on environment
               const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
               const API_URL = isProd 
                 ? `${window.location.protocol}//${window.location.hostname}/api`
                 : 'http://localhost:3000/api';
-              const profileResponse = await fetch(`${API_URL}/profile/picture/LGU-IU-0001`);
+              const profileResponse = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.success && profileData.profilePictureUrl) {
@@ -1179,15 +1203,16 @@
               return;
             }
             
-            // If no localStorage, try to get from server (SA-001 primary key)
+            // If no localStorage, try to get from server with actual userId
             try {
-              console.log('🔄 System Admin refresh: Fetching from server for userId: SA-001');
+              const userId = user.userId || user.id || user.employeeId || user.username || 'SA-001';
+              console.log('🔄 System Admin refresh: Fetching from server for userId:', userId);
               // Determine API URL based on environment
               const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
               const API_URL = isProd 
                 ? `${window.location.protocol}//${window.location.hostname}/api`
                 : 'http://localhost:3000/api';
-              const profileResponse = await fetch(`${API_URL}/profile/picture/SA-001`);
+              const profileResponse = await fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`);
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.success && profileData.profilePictureUrl) {
@@ -1260,15 +1285,16 @@
               return;
             }
             
-            // If no localStorage, try to fetch from server immediately (LGU-PMT-0001 primary key)
-            console.log('🎯 Force fetching MPMEC profile from server for userId: LGU-PMT-0001');
+            // If no localStorage, try to fetch from server immediately with actual userId
+            const userId = user.userId || user.id || user.employeeId || user.username || 'LGU-PMT-0001';
+            console.log('🎯 Force fetching MPMEC profile from server for userId:', userId);
             
             // Determine API URL based on environment
             const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             const API_URL = isProd 
               ? `${window.location.protocol}//${window.location.hostname}/api`
               : 'http://localhost:3000/api';
-            fetch(`${API_URL}/profile/picture/LGU-PMT-0001`)
+            fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`)
               .then(response => response.json())
               .then(profileData => {
                 if (profileData.success && profileData.profilePictureUrl) {
@@ -1513,10 +1539,16 @@
               return;
             }
             
-            // If no localStorage, try to fetch from server immediately (SA-001 primary key)
-            console.log('🎯 Force fetching System Admin profile from server for userId: SA-001');
+            // If no localStorage, try to fetch from server immediately with actual userId
+            const userId = user.userId || user.id || user.employeeId || user.username || 'SA-001';
+            console.log('🎯 Force fetching System Admin profile from server for userId:', userId);
             
-            fetch(`http://localhost:3000/api/profile/picture/SA-001`)
+            // Determine API URL based on environment
+            const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            const API_URL = isProd 
+              ? `${window.location.protocol}//${window.location.hostname}/api`
+              : 'http://localhost:3000/api';
+            fetch(`${API_URL}/profile/picture/${encodeURIComponent(userId)}`)
               .then(response => response.json())
               .then(profileData => {
                 if (profileData.success && profileData.profilePictureUrl) {
