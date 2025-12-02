@@ -6302,11 +6302,11 @@ loading = false;
               return false;
             }
             
-            // Check minimum budget requirement (500,000.00)
-            if (numericValue < 500000) {
+            // Check minimum budget requirement (1.00)
+            if (numericValue < 1) {
               window.showWarningModalAndScroll(
-                `Budget amount must be at least ₱500,000.00.`,
-                `Current amount: ₱${numericValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Please enter a budget of ₱500,000.00 or higher.`,
+                `Budget amount must be at least ₱1.00.`,
+                `Current amount: ₱${numericValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Please enter a budget of at least ₱1.00. The system accepts values from ₱1.00 to ₱999,999,999.00.`,
                 fieldElement
               );
               return false;
