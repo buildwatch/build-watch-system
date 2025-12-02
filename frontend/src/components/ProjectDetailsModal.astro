@@ -538,7 +538,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                         <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                         <path id="overallProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
                       </svg>
-                      <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                         <span id="overallProgressText" class="text-sm font-bold text-gray-700">0%</span>
                       </div>
                     </div>
@@ -550,7 +550,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                         <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                         <path id="timelineProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
                       </svg>
-                      <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                         <span id="timelineProgressText" class="text-sm font-bold text-gray-700">0%</span>
                       </div>
                     </div>
@@ -562,7 +562,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                         <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                         <path id="budgetProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
                       </svg>
-                      <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                         <span id="budgetProgressText" class="text-sm font-bold text-gray-700">0%</span>
                       </div>
                     </div>
@@ -574,7 +574,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                         <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                         <path id="physicalProgressCircle" class="progress-circle-fill" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" data-progress="0"></path>
                       </svg>
-                      <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                         <span id="physicalProgressText" class="text-sm font-bold text-gray-700">0%</span>
                       </div>
                     </div>
@@ -2600,6 +2600,133 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     });
   }
 
+  // Calculate milestone-specific progress (not project overall progress)
+  function calculateMilestoneProgress(milestone) {
+    // PRIORITY 1: Check if milestone has its own individual progress value
+    if (milestone.progress !== undefined && milestone.progress !== null && milestone.progress !== 0) {
+      const progress = parseFloat(milestone.progress);
+      if (progress > 0) {
+        console.log(`✅ Using milestone's individual progress: ${progress}%`);
+        return {
+          overall: progress,
+          timeline: progress / 3,
+          budget: progress / 3,
+          physical: progress / 3
+        };
+      }
+    }
+    
+    // PRIORITY 2: Calculate from division statuses and budget utilization
+    const milestoneWeight = parseFloat(milestone.weight || 0);
+    if (milestoneWeight > 0) {
+      // Get division weights (default to equal distribution if not set)
+      const timelineDivWeight = parseFloat(milestone.timelineWeight || milestoneWeight / 3);
+      const budgetDivWeight = parseFloat(milestone.budgetWeight || milestoneWeight / 3);
+      const physicalDivWeight = parseFloat(milestone.physicalWeight || milestoneWeight / 3);
+      
+      // Get budget data from milestone or approved submission
+      let plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || 0);
+      let usedBudget = parseFloat(milestone.usedBudget || 0);
+      
+      // Try to get budget data from approved submission if not in milestone
+      if ((plannedBudget === 0 || usedBudget === 0 || isNaN(usedBudget)) && milestone.submissions && Array.isArray(milestone.submissions)) {
+        const approvedSubmission = milestone.submissions.find(s => 
+          s.status === 'approved' || s.status === 'iu_approved'
+        );
+        if (approvedSubmission) {
+          if (plannedBudget === 0) plannedBudget = parseFloat(approvedSubmission.plannedBudget || approvedSubmission.budgetPlanned || 0);
+          if (usedBudget === 0 || isNaN(usedBudget)) {
+            usedBudget = parseFloat(approvedSubmission.usedBudget || 0);
+            // Also try to get from budgetUtilizationPercentage if usedBudget is still 0
+            if (usedBudget === 0 && approvedSubmission.budgetUtilizationPercentage && plannedBudget > 0) {
+              const utilizationPercent = parseFloat(approvedSubmission.budgetUtilizationPercentage) || 0;
+              usedBudget = (plannedBudget * utilizationPercent) / 100;
+            }
+          }
+        }
+      }
+      
+      // Calculate actual progress based on division statuses and budget utilization
+      let actualTimelineProgress = 0;
+      let actualBudgetProgress = 0;
+      let actualPhysicalProgress = 0;
+      
+      // Timeline division: if approved/completed, use full weight
+      if (milestone.timelineStatus === 'completed' || milestone.timelineStatus === 'approved' || milestone.timelineStatus === 'iu_approved' || milestone.timelineStatus === 'secretariat_approved') {
+        actualTimelineProgress = timelineDivWeight;
+      } else if (milestone.timelineStatus === 'in_progress' || milestone.timelineStatus === 'ongoing') {
+        actualTimelineProgress = timelineDivWeight * 0.5;
+      }
+      
+      // Budget division: calculate from actual budget utilization
+      if (milestone.budgetStatus === 'completed' || milestone.budgetStatus === 'approved' || milestone.budgetStatus === 'iu_approved' || milestone.budgetStatus === 'secretariat_approved') {
+        if (plannedBudget > 0 && usedBudget > 0) {
+          const budgetUtilizationRatio = Math.min(1, usedBudget / plannedBudget);
+          actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio;
+        } else {
+          // Try to get budgetUtilizationPercentage from approved submission
+          let budgetUtilizationRatio = 1.0;
+          if (milestone.submissions && Array.isArray(milestone.submissions)) {
+            const approvedSubmission = milestone.submissions.find(s => 
+              s.status === 'approved' || s.status === 'iu_approved'
+            );
+            if (approvedSubmission && approvedSubmission.budgetUtilizationPercentage !== undefined && approvedSubmission.budgetUtilizationPercentage !== null) {
+              budgetUtilizationRatio = Math.min(1, parseFloat(approvedSubmission.budgetUtilizationPercentage) / 100);
+            }
+          }
+          actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio;
+        }
+      } else if (milestone.budgetStatus === 'in_progress' || milestone.budgetStatus === 'ongoing') {
+        if (plannedBudget > 0 && usedBudget > 0) {
+          const budgetUtilizationRatio = Math.min(1, usedBudget / plannedBudget);
+          actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio * 0.5;
+        } else {
+          let budgetUtilizationRatio = 0.5;
+          if (milestone.submissions && Array.isArray(milestone.submissions)) {
+            const approvedSubmission = milestone.submissions.find(s => 
+              s.status === 'approved' || s.status === 'iu_approved'
+            );
+            if (approvedSubmission && approvedSubmission.budgetUtilizationPercentage !== undefined && approvedSubmission.budgetUtilizationPercentage !== null) {
+              budgetUtilizationRatio = Math.min(1, parseFloat(approvedSubmission.budgetUtilizationPercentage) / 100) * 0.5;
+            }
+          }
+          actualBudgetProgress = budgetDivWeight * budgetUtilizationRatio;
+        }
+      }
+      
+      // Physical division: if approved/completed, use full weight
+      if (milestone.physicalStatus === 'completed' || milestone.physicalStatus === 'approved' || milestone.physicalStatus === 'iu_approved' || milestone.physicalStatus === 'secretariat_approved') {
+        actualPhysicalProgress = physicalDivWeight;
+      } else if (milestone.physicalStatus === 'in_progress' || milestone.physicalStatus === 'ongoing') {
+        actualPhysicalProgress = physicalDivWeight * 0.5;
+      }
+      
+      // Sum up the actual progress from all divisions
+      const calculatedProgress = actualTimelineProgress + actualBudgetProgress + actualPhysicalProgress;
+      
+      return {
+        overall: calculatedProgress,
+        timeline: actualTimelineProgress,
+        budget: actualBudgetProgress,
+        physical: actualPhysicalProgress,
+        timelineCapacity: timelineDivWeight,
+        budgetCapacity: budgetDivWeight,
+        physicalCapacity: physicalDivWeight
+      };
+    }
+    
+    // Default: no progress
+    return {
+      overall: 0,
+      timeline: 0,
+      budget: 0,
+      physical: 0,
+      timelineCapacity: 0,
+      budgetCapacity: 0,
+      physicalCapacity: 0
+    };
+  }
+
   function populateMilestoneProgress(milestones, projectProgress = null) {
     console.log('📈 Populating milestone progress:', { 
       milestones, 
@@ -2626,273 +2753,89 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       return;
     }
 
-    // Use project progress values if available, otherwise fall back to milestone-specific values
-    const useProjectProgress = projectProgress && (
-      projectProgress.overallProgress > 0 || 
-      projectProgress.timelineProgress > 0 || 
-      projectProgress.budgetProgress > 0 || 
-      projectProgress.physicalProgress > 0
-    );
-
-    console.log('📈 Using project progress for milestones:', useProjectProgress, projectProgress);
-
     milestones.forEach((milestone, index) => {
       const progressDiv = document.createElement('div');
       progressDiv.className = 'bg-white rounded-lg border border-gray-200 p-4';
       
       const title = milestone.title || milestone.name || `Milestone ${index + 1}`;
       
-      // Use project progress values if available, otherwise use milestone-specific values
-      let overallProgress, timelineProgress, budgetProgress, physicalProgress;
-      let timelineBarWidth, budgetBarWidth, physicalBarWidth;
-      let timelineColor, budgetColor, physicalColor;
-      let timelineLoaded, budgetLoaded, physicalLoaded;
+      // Calculate milestone-specific progress (NOT project overall progress)
+      const milestoneProgressData = calculateMilestoneProgress(milestone);
       
-      if (useProjectProgress) {
-        // Debug milestone status
-        console.log(`🔍 Milestone ${index + 1} status debugging:`, {
-          title,
-          status: milestone.status,
-          statusType: typeof milestone.status,
-          allStatusFields: Object.keys(milestone).filter(key => key.toLowerCase().includes('status')),
-          milestoneData: milestone,
-          allStatusValues: Object.keys(milestone)
-            .filter(key => key.toLowerCase().includes('status'))
-            .reduce((acc, key) => {
-              acc[key] = milestone[key];
-              return acc;
-            }, {})
-        });
-        
-        // Check if this specific milestone was approved/completed
-        const isMilestoneApproved = milestone.status === 'completed' || 
-                                   milestone.status === 'approved' || 
-                                   milestone.status === 'compiled_for_secretariat' ||
-                                   milestone.status === 'Complete' ||
-                                   milestone.status === 'complete' ||
-                                   milestone.status === 'under_approval' ||
-                                   milestone.status === 'approved_by_secretariat' ||
-                                   milestone.status === 'in_progress';
-        
-        console.log(`🔍 Milestone ${index + 1} approval check:`, {
-          title,
-          status: milestone.status,
-          isApproved: isMilestoneApproved,
-          statusType: typeof milestone.status,
-          statusLength: milestone.status?.length,
-          statusTrimmed: milestone.status?.trim(),
-          statusLowercase: milestone.status?.toLowerCase(),
-          checks: {
-            completed: milestone.status === 'completed',
-            approved: milestone.status === 'approved',
-            compiled: milestone.status === 'compiled_for_secretariat',
-            Complete: milestone.status === 'Complete',
-            complete: milestone.status === 'complete',
-            under_approval: milestone.status === 'under_approval',
-            approved_by_secretariat: milestone.status === 'approved_by_secretariat',
-            in_progress: milestone.status === 'in_progress'
-          }
-        });
-        
-        if (isMilestoneApproved) {
-          // This milestone was approved - show actual division weights
-          // All divisions have the same weight (e.g., 6.7%)
-          const divisionWeight = parseFloat(milestone.timelineWeight || milestone.budgetWeight || milestone.physicalWeight || 33.33);
-          
-          // Use division weight for capacity display
-          timelineProgress = divisionWeight;
-          budgetProgress = divisionWeight;
-          physicalProgress = divisionWeight;
-        } else {
-          // This milestone is not approved - show 0% progress
-          overallProgress = 0;
-          timelineProgress = 0;
-          budgetProgress = 0;
-          physicalProgress = 0;
-        }
-        
-        // Calculate loaded percentages - use actual project progress data for utilization
-        if (isMilestoneApproved && projectProgress) {
-          timelineLoaded = projectProgress.timelineProgress || timelineProgress;
-          budgetLoaded = projectProgress.budgetProgress; // Always use actual budget progress from project data
-          physicalLoaded = projectProgress.physicalProgress || physicalProgress;
-          
-          console.log(`🔍 BUDGET DEBUG - Milestone ${index + 1}:`, {
-            title,
-            isApproved: isMilestoneApproved,
-            projectProgressExists: !!projectProgress,
-            projectProgressBudget: projectProgress.budgetProgress,
-            timelineProgress: timelineProgress,
-            budgetProgress: budgetProgress,
-            physicalProgress: physicalProgress,
-            calculatedBudgetLoaded: budgetLoaded
-          });
-        } else {
-          timelineLoaded = timelineProgress;
-          budgetLoaded = budgetProgress;
-          physicalLoaded = physicalProgress;
-          
-          console.log(`🔍 BUDGET DEBUG FALLBACK - Milestone ${index + 1}:`, {
-            title,
-            isApproved: isMilestoneApproved,
-            projectProgressExists: !!projectProgress,
-            usingFallback: true,
-            budgetLoaded: budgetLoaded
-          });
-        }
-        
-        // Calculate overall progress as sum of loaded percentages for completed milestones
-        if (isMilestoneApproved) {
-          overallProgress = timelineLoaded + budgetLoaded + physicalLoaded;
-          console.log(`🧮 Overall progress calculation for milestone ${index + 1}:`, {
-            title,
-            timelineLoaded,
-            budgetLoaded,
-            physicalLoaded,
-            sum: timelineLoaded + budgetLoaded + physicalLoaded,
-            overallProgress
-          });
-        }
-        
-        // For progress bar width: calculate fill percentage based on utilization within capacity
-        if (isMilestoneApproved) {
-          // For completed milestones: calculate fill as percentage of capacity utilization
-          timelineBarWidth = timelineProgress > 0 ? (timelineLoaded / timelineProgress) * 100 : 0;
-          budgetBarWidth = budgetProgress > 0 ? (budgetLoaded / budgetProgress) * 100 : 0;
-          physicalBarWidth = physicalProgress > 0 ? (physicalLoaded / physicalProgress) * 100 : 0;
-        } else {
-          // For pending milestones: use actual loaded percentage
-          timelineBarWidth = timelineLoaded;
-          budgetBarWidth = budgetLoaded;
-          physicalBarWidth = physicalLoaded;
-        }
-        
-        console.log(`🎯 Bar widths for milestone ${index + 1}:`, {
-          title,
-          timelineBarWidth,
-          budgetBarWidth,
-          physicalBarWidth,
-          timelineLoaded,
-          budgetLoaded,
-          physicalLoaded,
-          timelineProgress,
-          budgetProgress,
-          physicalProgress,
-          timelineFillPercent: timelineProgress > 0 ? ((timelineLoaded / timelineProgress) * 100).toFixed(1) + '%' : '0%',
-          budgetFillPercent: budgetProgress > 0 ? ((budgetLoaded / budgetProgress) * 100).toFixed(1) + '%' : '0%',
-          physicalFillPercent: physicalProgress > 0 ? ((physicalLoaded / physicalProgress) * 100).toFixed(1) + '%' : '0%'
-        });
-        
-        // For progress bar colors: use green for completed milestones (100% utilization within division weight)
-        timelineColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(timelineProgress);
-        budgetColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(budgetProgress);
-        physicalColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(physicalProgress);
-        
-        console.log(`📈 Milestone ${index + 1} progress calculation:`, {
-          title,
-          isApproved: isMilestoneApproved,
-          overallProgress,
-          timelineProgress,
-          budgetProgress,
-          physicalProgress,
-          timelineBarWidth,
-          budgetBarWidth,
-          physicalBarWidth,
-          timelineLoaded,
-          budgetLoaded,
-          physicalLoaded,
-          projectProgress: projectProgress ? {
-            budgetProgress: projectProgress.budgetProgress,
-            timelineProgress: projectProgress.timelineProgress,
-            physicalProgress: projectProgress.physicalProgress
-          } : 'No project progress data'
-        });
-      } else {
-        // Fallback to milestone-specific values
-        // Check if milestone is approved/completed for fallback case too
-        const isMilestoneApprovedFallback = milestone.status === 'completed' || 
-                                           milestone.status === 'approved' || 
-                                           milestone.status === 'compiled_for_secretariat' ||
-                                           milestone.status === 'Complete' ||
-                                           milestone.status === 'complete' ||
-                                           milestone.status === 'under_approval' ||
-                                           milestone.status === 'approved_by_secretariat' ||
-                                           milestone.status === 'in_progress';
-        
-        if (isMilestoneApprovedFallback) {
-          // Use actual division weights for approved milestones
-          // All divisions have the same weight (e.g., 6.7%)
-          const divisionWeight = parseFloat(milestone.timelineWeight || milestone.budgetWeight || milestone.physicalWeight || 33.33);
-          timelineProgress = divisionWeight;
-          budgetProgress = divisionWeight;
-          physicalProgress = divisionWeight;
-        } else {
-          // Use milestone-specific progress values
-          overallProgress = milestone.overallProgress || milestone.progress || 0;
-          timelineProgress = milestone.timelineProgress || 0;
-          budgetProgress = milestone.budgetProgress || 0;
-          physicalProgress = milestone.physicalProgress || 0;
-        }
-        
-        // For progress bar width: calculate fill percentage based on utilization within capacity (fallback case)
-        if (isMilestoneApprovedFallback) {
-          // For completed milestones: calculate fill as percentage of capacity utilization
-          timelineBarWidth = timelineProgress > 0 ? (timelineLoaded / timelineProgress) * 100 : 0;
-          budgetBarWidth = budgetProgress > 0 ? (budgetLoaded / budgetProgress) * 100 : 0;
-          physicalBarWidth = physicalProgress > 0 ? (physicalLoaded / physicalProgress) * 100 : 0;
-        } else {
-          // For pending milestones: use actual loaded percentage
-          timelineBarWidth = timelineLoaded;
-          budgetBarWidth = budgetLoaded;
-          physicalBarWidth = physicalLoaded;
-        }
-        
-        // For progress bar colors: use green for completed milestones (100% utilization within division weight)
-        timelineColor = isMilestoneApprovedFallback ? 'bg-green-500' : getProgressBarColor(timelineProgress);
-        budgetColor = isMilestoneApprovedFallback ? 'bg-green-500' : getProgressBarColor(budgetProgress);
-        physicalColor = isMilestoneApprovedFallback ? 'bg-green-500' : getProgressBarColor(physicalProgress);
-        
-        // Calculate loaded percentages - use actual project progress data for utilization
-        if (isMilestoneApprovedFallback && projectProgress) {
-          timelineLoaded = projectProgress.timelineProgress || timelineProgress;
-          budgetLoaded = projectProgress.budgetProgress; // Always use actual budget progress from project data
-          physicalLoaded = projectProgress.physicalProgress || physicalProgress;
-        } else {
-          timelineLoaded = timelineProgress;
-          budgetLoaded = budgetProgress;
-          physicalLoaded = physicalProgress;
-        }
-        
-        // Calculate overall progress as sum of loaded percentages for completed milestones (fallback case)
-        if (isMilestoneApprovedFallback) {
-          overallProgress = timelineLoaded + budgetLoaded + physicalLoaded;
-          console.log(`🧮 Overall progress calculation for milestone ${index + 1} (fallback):`, {
-            title,
-            timelineLoaded,
-            budgetLoaded,
-            physicalLoaded,
-            sum: timelineLoaded + budgetLoaded + physicalLoaded,
-            overallProgress
-          });
-        }
-        
-        console.log(`📈 Milestone ${index + 1} FALLBACK progress calculation:`, {
-          title,
-          isApproved: isMilestoneApprovedFallback,
-          overallProgress,
-          timelineProgress,
-          budgetProgress,
-          physicalProgress,
-          timelineLoaded,
-          budgetLoaded,
-          physicalLoaded,
-          projectProgress: projectProgress ? {
-            budgetProgress: projectProgress.budgetProgress,
-            timelineProgress: projectProgress.timelineProgress,
-            physicalProgress: projectProgress.physicalProgress
-          } : 'No project progress data'
-        });
+      let overallProgress = milestoneProgressData.overall || 0;
+      let timelineProgress = milestoneProgressData.timelineCapacity || milestoneProgressData.timeline || 0;
+      let budgetProgress = milestoneProgressData.budgetCapacity || milestoneProgressData.budget || 0;
+      let physicalProgress = milestoneProgressData.physicalCapacity || milestoneProgressData.physical || 0;
+      let timelineLoaded = milestoneProgressData.timeline || 0;
+      let budgetLoaded = milestoneProgressData.budget || 0;
+      let physicalLoaded = milestoneProgressData.physical || 0;
+      
+      // Check if this specific milestone was approved/completed
+      const isMilestoneApproved = milestone.status === 'completed' || 
+                                 milestone.status === 'approved' || 
+                                 milestone.status === 'compiled_for_secretariat' ||
+                                 milestone.status === 'Complete' ||
+                                 milestone.status === 'complete' ||
+                                 milestone.status === 'under_approval' ||
+                                 milestone.status === 'approved_by_secretariat' ||
+                                 milestone.status === 'in_progress' ||
+                                 (milestone.timelineStatus === 'approved' && milestone.budgetStatus === 'approved' && milestone.physicalStatus === 'approved');
+      
+      // If milestone is not approved, set progress to 0
+      if (!isMilestoneApproved) {
+        overallProgress = 0;
+        timelineLoaded = 0;
+        budgetLoaded = 0;
+        physicalLoaded = 0;
       }
+      
+      // For progress bar width: calculate fill percentage based on utilization within capacity
+      let timelineBarWidth, budgetBarWidth, physicalBarWidth;
+      if (isMilestoneApproved && timelineProgress > 0) {
+        timelineBarWidth = (timelineLoaded / timelineProgress) * 100;
+      } else {
+        timelineBarWidth = 0;
+      }
+      
+      if (isMilestoneApproved && budgetProgress > 0) {
+        budgetBarWidth = (budgetLoaded / budgetProgress) * 100;
+      } else {
+        budgetBarWidth = 0;
+      }
+      
+      if (isMilestoneApproved && physicalProgress > 0) {
+        physicalBarWidth = (physicalLoaded / physicalProgress) * 100;
+      } else {
+        physicalBarWidth = 0;
+      }
+      
+      // For progress bar colors
+      const getProgressBarColor = (progress) => {
+        if (progress >= 100) return 'bg-green-500';
+        if (progress >= 50) return 'bg-blue-500';
+        if (progress > 0) return 'bg-yellow-500';
+        return 'bg-gray-300';
+      };
+      
+      let timelineColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(timelineLoaded);
+      let budgetColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(budgetLoaded);
+      let physicalColor = isMilestoneApproved ? 'bg-green-500' : getProgressBarColor(physicalLoaded);
+      
+      console.log(`📈 Milestone ${index + 1} progress calculation:`, {
+        title,
+        isApproved: isMilestoneApproved,
+        overallProgress,
+        timelineProgress,
+        budgetProgress,
+        physicalProgress,
+        timelineLoaded,
+        budgetLoaded,
+        physicalLoaded,
+        timelineBarWidth,
+        budgetBarWidth,
+        physicalBarWidth
+      });
+      
       
       // Check milestone status - prioritize approved/completed status
       let status = milestone.status || 'pending';
