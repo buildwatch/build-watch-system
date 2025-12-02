@@ -758,19 +758,78 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
-    console.log('🔍 [FORGOT PASSWORD] Received userId:', userId);
+    const normalizedUserId = userId.trim().toUpperCase();
+    console.log('🔍 [FORGOT PASSWORD] Received userId:', normalizedUserId);
 
-    // Find user by userId (case-insensitive)
-    const user = await User.findOne({
-      where: {
-        userId: userId.toUpperCase()
-      }
+    // Try multiple lookup strategies
+    let user = null;
+
+    // Strategy 1: Find by userId (case-insensitive using Sequelize function)
+    user = await User.findOne({
+      where: sequelize.where(
+        sequelize.fn('UPPER', sequelize.col('userId')),
+        normalizedUserId
+      )
     });
 
-    console.log('🔍 [FORGOT PASSWORD] User lookup result:', user ? 'Found' : 'Not found');
+    console.log('🔍 [FORGOT PASSWORD] Strategy 1 (userId exact):', user ? `Found - ${user.email}` : 'Not found');
+
+    // Strategy 2: If not found, try by email (in case user enters email instead)
+    if (!user) {
+      // Check if input looks like an email
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailPattern.test(userId.trim())) {
+        user = await User.findOne({
+          where: {
+            email: userId.trim().toLowerCase()
+          }
+        });
+        console.log('🔍 [FORGOT PASSWORD] Strategy 2 (email lookup):', user ? `Found - ${user.email}` : 'Not found');
+      }
+    }
+
+    // Strategy 3: For System Admin, try to find by role if userId pattern matches
+    if (!user && normalizedUserId.startsWith('SYS-AD-')) {
+      // Find System Admin by role
+      const sysAdmin = await User.findOne({
+        where: {
+          role: 'SYS.AD',
+          status: 'active'
+        },
+        order: [['createdAt', 'ASC']] // Get the first/oldest System Admin
+      });
+      
+      if (sysAdmin) {
+        // If System Admin doesn't have userId set, update it
+        if (!sysAdmin.userId) {
+          await sysAdmin.update({ userId: normalizedUserId });
+          console.log('🔍 [FORGOT PASSWORD] System Admin userId updated to:', normalizedUserId);
+        }
+        user = sysAdmin;
+        console.log('🔍 [FORGOT PASSWORD] Strategy 3 (System Admin by role):', `Found - ${user.email}`);
+      }
+    }
+
+    // Strategy 4: Try to find any active user with matching email pattern (last resort)
+    if (!user) {
+      // Only try this if the input doesn't look like a standard userId format
+      const userIdPattern = /^[A-Z]+-[A-Z]+-\d+$/;
+      if (!userIdPattern.test(normalizedUserId)) {
+        user = await User.findOne({
+          where: {
+            email: {
+              [Op.like]: `%${normalizedUserId.toLowerCase()}%`
+            },
+            status: 'active'
+          }
+        });
+        console.log('🔍 [FORGOT PASSWORD] Strategy 4 (email pattern):', user ? `Found - ${user.email}` : 'Not found');
+      }
+    }
 
     // Return error if user doesn't exist or is not active
     if (!user) {
+      console.log('❌ [FORGOT PASSWORD] User not found after all strategies');
       return res.status(404).json({
         success: false,
         error: 'Unique User ID not found or does not exist'
