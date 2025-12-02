@@ -3229,7 +3229,7 @@ loading = false;
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Total Budget Allocation (₱) *</label>
                   <input type="text" name="totalBudget" id="totalBudget" required onchange="window.updateAllMilestoneWeights(); window.calculateTotals(); window.updateBudgetHints()" oninput="window.formatBudgetInput(this); window.updateBudgetHints()" onkeydown="window.handleBudgetKeydown(event)" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D7DB5] focus:border-transparent transition-all duration-200" placeholder="e.g., 1,000,000.00">
-                  <p class="text-xs text-gray-500 mt-1">Format: "1,000,000.00" | Range: ₱500,000.00 - ₱999,999,999.00</p>
+                  <p class="text-xs text-gray-500 mt-1">Format: "1,000,000.00" | Range: ₱1.00 - ₱999,999,999.00 (Minimum: ₱1.00, Maximum: ₱999,999,999.00)</p>
                 </div>
                 
                 <div class="md:col-span-2">
@@ -9315,11 +9315,20 @@ loading = false;
     
     // Validate budget
     const totalBudget = window.parseBudgetValue(formData.get('totalBudget')) || 0;
-    if (totalBudget <= 0) {
-      errors.push('Error: Total Budget Allocation must be greater than ₱0!');
+    if (totalBudget < 1) {
+      errors.push('Error: Total Budget Allocation must be at least ₱1.00!');
       const totalBudgetField = document.querySelector('[name="totalBudget"]');
       if (totalBudgetField) {
-        window.showFieldError(totalBudgetField, 'totalBudget_zero_error', 'Total Budget Allocation must be greater than ₱0!');
+        window.showFieldError(totalBudgetField, 'totalBudget_zero_error', 'Total Budget Allocation must be at least ₱1.00!');
+      }
+    }
+    
+    // Check maximum limit
+    if (totalBudget > 999999999) {
+      errors.push('Error: Total Budget Allocation cannot exceed ₱999,999,999.00!');
+      const totalBudgetField = document.querySelector('[name="totalBudget"]');
+      if (totalBudgetField) {
+        window.showFieldError(totalBudgetField, 'totalBudget_max_error', 'Total Budget Allocation cannot exceed ₱999,999,999.00!');
       }
     }
     
