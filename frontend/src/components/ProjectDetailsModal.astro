@@ -3510,28 +3510,31 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     // Display timeline with department grouping
     Object.entries(groupedByDept).forEach(([department, items]) => {
       const deptSection = document.createElement('div');
-      deptSection.className = 'mb-6';
+      deptSection.className = 'mb-8';
       
       const deptHeader = document.createElement('div');
-      deptHeader.className = 'mb-3 pb-2 border-b border-gray-200';
+      deptHeader.className = 'mb-5 pb-3 border-b border-gray-200 pl-12';
       deptHeader.innerHTML = `
         <h5 class="text-sm font-bold text-gray-700 uppercase tracking-wide">${department} Department</h5>
       `;
       deptSection.appendChild(deptHeader);
       
       const timelineContainer = document.createElement('div');
-      timelineContainer.className = 'relative pl-10 space-y-4';
+      timelineContainer.className = 'relative pl-12 space-y-5 pt-1 pb-2';
       
-      // Timeline line
+      // Timeline line - positioned to align with dot centers (dot is 1.5rem wide, center at 0.75rem)
       const timelineLine = document.createElement('div');
-      timelineLine.className = 'absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 to-gray-200';
+      timelineLine.className = 'absolute w-0.5 bg-gradient-to-b from-gray-300 to-gray-200';
+      timelineLine.style.left = '0.75rem';
+      timelineLine.style.top = '0.5rem';
+      timelineLine.style.bottom = '0.5rem';
       timelineContainer.appendChild(timelineLine);
       
       items.forEach((item, itemIndex) => {
         const timelineItem = document.createElement('div');
-        timelineItem.className = 'relative flex items-start gap-4';
+        timelineItem.className = 'relative flex items-start gap-4 min-h-[4rem]';
         
-        // Timeline dot
+        // Timeline dot - positioned to align with timeline line
         const dot = document.createElement('div');
         const dotColor = item.action === 'PROJECT_COMPLETED' 
           ? 'bg-green-500 border-green-700' 
@@ -3542,7 +3545,8 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
           : item.action === 'MILESTONE_SUBMITTED'
           ? 'bg-blue-500 border-blue-700'
           : 'bg-gray-500 border-gray-700';
-        dot.className = `absolute left-0 w-6 h-6 rounded-full border-2 ${dotColor} -ml-10 z-10 flex items-center justify-center shadow-sm`;
+        dot.className = `absolute left-0 w-6 h-6 rounded-full border-2 ${dotColor} -ml-12 z-10 flex items-center justify-center shadow-sm`;
+        dot.style.top = '0.75rem';
         dot.innerHTML = `
           <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events: none;">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${getActionIcon(item.action || 'PROJECT_UPDATED')}"></path>
@@ -3550,7 +3554,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
         `;
         timelineItem.appendChild(dot);
         
-        // Timeline content
+        // Timeline content - properly spaced to align with dot
         const content = document.createElement('div');
         content.className = `flex-1 bg-white rounded-lg border-2 p-4 shadow-sm hover:shadow-md transition-all ${
           item.action === 'PROJECT_COMPLETED' 
