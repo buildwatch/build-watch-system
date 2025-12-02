@@ -5370,7 +5370,16 @@ loading = false;
       setFieldValue('input[name="implementingOfficeName"]', projectData.implementingOfficeName);
       setFieldValue('select[name="category"]', projectData.category);
       setFieldValue('select[name="priority"]', projectData.priority);
-      setFieldValue('input[name="fundingSource"]', projectData.fundingSource || 'Municipal Development Fund');
+      // Funding Source is now readonly and auto-set, but update display if needed
+      const fundingSourceDisplay = document.getElementById('editFundingSourceSelect');
+      if (fundingSourceDisplay) {
+        fundingSourceDisplay.value = '20% Municipal Development Fund';
+      }
+      // Hidden input for form submission
+      const fundingSourceHidden = document.querySelector('input[name="fundingSource"]');
+      if (fundingSourceHidden) {
+        fundingSourceHidden.value = 'Municipal Development Fund';
+      }
       setFieldValue('input[name="createdDate"]', projectData.createdDate);
       setFieldValue('textarea[name="description"]', projectData.description);
       setFieldValue('textarea[name="expectedOutputs"]', projectData.expectedOutputs);
@@ -6485,6 +6494,17 @@ loading = false;
         }
         
         const apiUrl = window.getApiUrl();
+        
+        // Enhanced debugging
+        console.log('🌐 API URL:', apiUrl);
+        console.log('📤 Request URL:', `${apiUrl}/projects`);
+        console.log('📤 Request Method: POST');
+        console.log('📤 Request Headers:', {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token.substring(0, 20)}...`
+        });
+        console.log('📤 Request Body:', JSON.stringify(projectData, null, 2));
+        
         const response = await fetch(`${apiUrl}/projects`, {
           method: 'POST',
           headers: {
@@ -6494,14 +6514,36 @@ loading = false;
           body: JSON.stringify(projectData)
         });
         
-        const result = await response.json();
-        console.log('📡 Backend response:', result);
+        console.log('📡 Response Status:', response.status);
+        console.log('📡 Response Status Text:', response.statusText);
+        console.log('📡 Response Headers:', Object.fromEntries(response.headers.entries()));
+        
+        let result;
+        try {
+          const responseText = await response.text();
+          console.log('📡 Raw Response Text:', responseText);
+          result = JSON.parse(responseText);
+          console.log('📡 Parsed Response:', result);
+        } catch (parseError) {
+          console.error('❌ Error parsing response:', parseError);
+          return {
+            success: false,
+            error: `Failed to parse server response. Status: ${response.status}`
+          };
+        }
         
         // Return the actual response from backend (whether success or error)
         if (!response.ok) {
+          console.error('❌ Server Error Details:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: result.error,
+            message: result.message,
+            details: result.details || result.stack
+          });
           return {
             success: false,
-            error: result.error || result.message || `Server error: ${response.status}`
+            error: result.error || result.message || `Server error: ${response.status} ${response.statusText}`
           };
         }
         
@@ -10175,6 +10217,9 @@ loading = false;
           const startDateElement = document.querySelector('input[name="startDate"]');
           const targetCompletionDateElement = document.querySelector('input[name="targetCompletionDate"]');
           
+          // Ensure fundingSource is set correctly (should be "Municipal Development Fund")
+          const fundingSourceValue = formData.get('fundingSource') || 'Municipal Development Fund';
+          
           const projectData = {
             projectCode: formData.get('projectCode'),
             name: formData.get('name'),
@@ -10182,7 +10227,7 @@ loading = false;
             category: formData.get('category'),
             location: getSelectedBarangays(),
             priority: formData.get('priority'),
-            fundingSource: formData.get('fundingSource'),
+            fundingSource: fundingSourceValue, // Auto-set to "Municipal Development Fund"
             createdDate: formData.get('createdDate'),
             description: formData.get('description'),
             expectedOutputs: formData.get('expectedOutputs'),
@@ -10196,9 +10241,26 @@ loading = false;
             budgetBreakdown: formData.get('budgetBreakdown'),
             physicalProgressRequirements: formData.get('physicalProgressRequirements'),
             initialPhoto: initialPhotoUrl,
+            status: 'ongoing', // Explicitly set to ongoing (not pending)
+            workflowStatus: 'ongoing', // Explicitly set to ongoing
             milestones: milestones
           };
           
+          // Enhanced debugging before submission
+          console.log('📋 Project Data Before Submission:', {
+            ...projectData,
+            milestones: projectData.milestones.map(m => ({
+              title: m.title,
+              weight: m.weight,
+              plannedBudget: m.plannedBudget,
+              status: m.status
+            }))
+          });
+          console.log('🔍 Funding Source Value:', fundingSourceValue);
+          console.log('🔍 Status:', projectData.status);
+          console.log('🔍 Workflow Status:', projectData.workflowStatus);
+          console.log('🔍 Total Budget:', projectData.totalBudget);
+          console.log('🔍 Milestones Count:', projectData.milestones.length);
 
           // Create project
           const response = await projectService.createProject(projectData);
@@ -10307,6 +10369,206 @@ loading = false;
       });
     }
 
+  // ==================== PROJECT CREATION DEBUGGING FUNCTION ====================
+  
+  /**
+   * Debug Project Creation Function
+   * 
+   * Copy and paste this function call into your browser console to debug project creation issues:
+   * window.debugProjectCreation()
+   * 
+   * This will help identify:
+   * - Funding Source value
+   * - Status values
+   * - Form data validation
+   * - API endpoint and request details
+   */
+  window.debugProjectCreation = function() {
+    console.log('%c🔍 Project Creation Debugging Function', 'font-size: 16px; font-weight: bold; color: #0D7DB5;');
+    console.log('='.repeat(70));
+    
+    const debug = {
+      // Check form data
+      checkFormData: function() {
+        console.log('\n📋 Checking Form Data...');
+        const form = document.getElementById('createProjectForm');
+        if (!form) {
+          console.error('❌ Create project form not found!');
+          return false;
+        }
+        
+        const formData = new FormData(form);
+        const data = {};
+        for (const [key, value] of formData.entries()) {
+          data[key] = value;
+        }
+        
+        console.log('✅ Form found');
+        console.log('📝 Form Data:', data);
+        
+        // Check specific fields
+        console.log('\n🔍 Key Fields:');
+        console.log('  - Funding Source:', data.fundingSource || 'NOT SET');
+        console.log('  - Total Budget:', data.totalBudget || 'NOT SET');
+        console.log('  - Project Name:', data.name || 'NOT SET');
+        console.log('  - Category:', data.category || 'NOT SET');
+        console.log('  - Priority:', data.priority || 'NOT SET');
+        console.log('  - Start Date:', data.startDate || 'NOT SET');
+        console.log('  - Target Completion Date:', data.targetCompletionDate || 'NOT SET');
+        
+        // Check hidden funding source input
+        const hiddenFundingSource = document.querySelector('input[name="fundingSource"][type="hidden"]');
+        if (hiddenFundingSource) {
+          console.log('  - Hidden Funding Source Input:', hiddenFundingSource.value);
+        } else {
+          console.warn('  ⚠️ Hidden funding source input not found!');
+        }
+        
+        // Check displayed funding source
+        const displayFundingSource = document.getElementById('fundingSourceSelect');
+        if (displayFundingSource) {
+          console.log('  - Display Funding Source:', displayFundingSource.value);
+        }
+        
+        return true;
+      },
+      
+      // Check milestones data
+      checkMilestones: function() {
+        console.log('\n📋 Checking Milestones Data...');
+        const milestones = window.getMilestonesData ? window.getMilestonesData() : [];
+        console.log('✅ Milestones Count:', milestones.length);
+        
+        if (milestones.length === 0) {
+          console.warn('⚠️ No milestones found!');
+          return false;
+        }
+        
+        milestones.forEach((milestone, index) => {
+          console.log(`\n  Milestone ${index + 1}:`, {
+            title: milestone.title,
+            weight: milestone.weight,
+            plannedBudget: milestone.plannedBudget,
+            dueDate: milestone.dueDate,
+            status: milestone.status || 'NOT SET'
+          });
+        });
+        
+        const totalWeight = milestones.reduce((sum, m) => sum + (parseFloat(m.weight) || 0), 0);
+        const totalBudget = milestones.reduce((sum, m) => sum + (window.parseBudgetValue ? window.parseBudgetValue(m.plannedBudget) : parseFloat(m.plannedBudget) || 0), 0);
+        
+        console.log('\n  📊 Totals:');
+        console.log('    - Total Weight:', totalWeight.toFixed(2) + '%');
+        console.log('    - Total Milestone Budget:', '₱' + totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        
+        return true;
+      },
+      
+      // Check validation
+      checkValidation: function() {
+        console.log('\n📋 Checking Validation...');
+        if (typeof window.validateProjectForm === 'function') {
+          const errors = window.validateProjectForm();
+          if (errors.length === 0) {
+            console.log('✅ No validation errors');
+          } else {
+            console.error('❌ Validation Errors:', errors);
+          }
+          return errors;
+        } else {
+          console.warn('⚠️ validateProjectForm function not found');
+          return [];
+        }
+      },
+      
+      // Check API configuration
+      checkAPIConfig: function() {
+        console.log('\n📋 Checking API Configuration...');
+        const apiUrl = window.getApiUrl ? window.getApiUrl() : 'NOT SET';
+        const token = localStorage.getItem('token');
+        
+        console.log('  - API URL:', apiUrl);
+        console.log('  - Token:', token ? token.substring(0, 20) + '...' : 'NOT FOUND');
+        console.log('  - Full Endpoint:', `${apiUrl}/projects`);
+        
+        return { apiUrl, hasToken: !!token };
+      },
+      
+      // Simulate project data
+      simulateProjectData: function() {
+        console.log('\n📋 Simulating Project Data...');
+        const form = document.getElementById('createProjectForm');
+        if (!form) {
+          console.error('❌ Form not found');
+          return null;
+        }
+        
+        const formData = new FormData(form);
+        const fundingSourceValue = formData.get('fundingSource') || 'Municipal Development Fund';
+        const milestones = window.getMilestonesData ? window.getMilestonesData() : [];
+        
+        const projectData = {
+          projectCode: formData.get('projectCode'),
+          name: formData.get('name'),
+          implementingOfficeName: formData.get('implementingOfficeName'),
+          category: formData.get('category'),
+          location: window.getSelectedBarangays ? window.getSelectedBarangays() : [],
+          priority: formData.get('priority'),
+          fundingSource: fundingSourceValue,
+          createdDate: formData.get('createdDate'),
+          description: formData.get('description'),
+          expectedOutputs: formData.get('expectedOutputs'),
+          targetBeneficiaries: formData.get('targetBeneficiaries'),
+          hasExternalPartner: true,
+          eiuPersonnelId: formData.get('eiuPersonnelId') || document.getElementById('eiuPersonnelId')?.getAttribute('data-user-id'),
+          startDate: formData.get('startDate'),
+          targetCompletionDate: formData.get('targetCompletionDate'),
+          expectedDaysOfCompletion: parseInt(formData.get('expectedDaysOfCompletion')?.replace(' days', '') || '0'),
+          totalBudget: window.parseBudgetValue ? window.parseBudgetValue(formData.get('totalBudget')) : 0,
+          budgetBreakdown: formData.get('budgetBreakdown'),
+          physicalProgressRequirements: formData.get('physicalProgressRequirements'),
+          status: 'ongoing',
+          workflowStatus: 'ongoing',
+          milestones: milestones
+        };
+        
+        console.log('📤 Simulated Project Data:', JSON.stringify(projectData, null, 2));
+        console.log('\n🔍 Key Values:');
+        console.log('  - Funding Source:', projectData.fundingSource);
+        console.log('  - Status:', projectData.status);
+        console.log('  - Workflow Status:', projectData.workflowStatus);
+        console.log('  - Total Budget:', projectData.totalBudget);
+        console.log('  - Milestones Count:', projectData.milestones.length);
+        
+        return projectData;
+      },
+      
+      // Run all checks
+      runAll: function() {
+        console.log('\n🚀 Running All Debug Checks...\n');
+        this.checkFormData();
+        this.checkMilestones();
+        this.checkValidation();
+        this.checkAPIConfig();
+        this.simulateProjectData();
+        
+        console.log('\n✅ Debugging Complete!');
+        console.log('💡 Review the output above to identify any issues.');
+        console.log('💡 If you see errors, check:');
+        console.log('   1. Funding Source should be "Municipal Development Fund"');
+        console.log('   2. Status should be "ongoing" (not "pending")');
+        console.log('   3. All required fields should be filled');
+        console.log('   4. Milestones should have valid data');
+        console.log('   5. Total milestone budget should match total budget allocation');
+      }
+    };
+    
+    debug.runAll();
+    return debug;
+  };
+  
+  console.log('✅ Project Creation Debug Function Available: window.debugProjectCreation()');
+
     // Handle edit form submission
     const editForm = document.getElementById('editProjectForm');
     if (editForm) {
@@ -10336,6 +10598,9 @@ loading = false;
             return;
           }
           
+          // Ensure fundingSource is set correctly (should be "Municipal Development Fund")
+          const fundingSourceValue = formData.get('fundingSource') || 'Municipal Development Fund';
+          
           const projectData = {
             projectCode: formData.get('projectCode'),
             name: formData.get('name'),
@@ -10343,7 +10608,7 @@ loading = false;
             category: formData.get('category'),
             location: getSelectedEditBarangays(),
             priority: formData.get('priority'),
-            fundingSource: formData.get('fundingSource'),
+            fundingSource: fundingSourceValue, // Auto-set to "Municipal Development Fund"
             createdDate: formData.get('createdDate'),
             description: formData.get('description'),
             expectedOutputs: formData.get('expectedOutputs'),
