@@ -501,10 +501,17 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             
             // Calculate statistics
             const totalProjects = projectsList.length;
+            // Status filtering: Only 3 statuses exist - Ongoing, Delayed, and Completed
             // Ongoing projects include both 'ongoing' and 'delayed' statuses (delayed projects are still ongoing)
-            const ongoingProjects = projectsList.filter(p => p.status === 'ongoing' || p.status === 'delayed').length;
-            const completedProjects = projectsList.filter(p => p.status === 'completed' || p.status === 'complete').length;
-            // Removed: pendingProjects - projects now go directly to ongoing
+            const ongoingProjects = projectsList.filter(p => {
+              const status = (p.status || '').toLowerCase();
+              return status === 'ongoing' || status === 'delayed';
+            }).length;
+            const completedProjects = projectsList.filter(p => {
+              const status = (p.status || '').toLowerCase();
+              return status === 'completed' || status === 'complete';
+            }).length;
+            // Removed: pendingProjects - projects now go directly to ongoing (no pending status exists)
             
             // Calculate total budget from projects - use totalBudget field, fallback to totalBudgetAllocation if needed
             const totalBudget = projectsList.reduce((sum, p) => {
@@ -667,7 +674,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
               totalProjects,
               ongoingProjects,
               completedProjects,
-              pendingProjects,
+              pendingProjects: 0, // Removed pending status - projects go directly to ongoing
               averageProgress: Math.round(avgProgress),
               totalBudget: `₱${totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
               utilizedBudget: `₱${utilizedBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -676,13 +683,135 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
           }
         }
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        console.error('❌ [DashboardCenter] Error fetching projects:', error);
+        console.error('❌ [DashboardCenter] Error details:', {
+          message: error.message,
+          stack: error.stack,
+          role: currentRole,
+          endpoint: currentRole === 'EIU' ? `${API_URL}/eiu/projects` : `${API_URL}/projects`
+        });
+        
+        // Set stats to 0 on error
+        setStats({
+          totalProjects: 0,
+          ongoingProjects: 0,
+          completedProjects: 0,
+          pendingProjects: 0,
+          averageProgress: 0,
+          totalBudget: '₱0',
+          utilizedBudget: '₱0',
+          budgetUtilizationPercentage: 0
+        });
       } finally {
         setLoading(false);
       }
     };
     
     fetchProjects();
+    
+    // Expose debugging function to window for console access
+    if (typeof window !== 'undefined') {
+      window.debugDashboardBudget = async () => {
+        console.log('🔍 [DEBUG] Starting dashboard budget debugging...');
+        console.log('🔍 [DEBUG] Current role:', currentRole);
+        console.log('🔍 [DEBUG] API URL:', API_URL);
+        
+        try {
+          const token = getToken();
+          if (!token) {
+            console.error('❌ [DEBUG] No auth token found');
+            return;
+          }
+          
+          let projectsEndpoint = `${API_URL}/projects`;
+          if (currentRole === 'EIU') {
+            projectsEndpoint = `${API_URL}/eiu/projects`;
+          }
+          
+          const separator = projectsEndpoint.includes('?') ? '&' : '?';
+          const fullEndpoint = `${projectsEndpoint}${separator}limit=1000&page=1`;
+          
+          console.log('🔍 [DEBUG] Fetching from:', fullEndpoint);
+          
+          const response = await fetch(fullEndpoint, {
+            headers: getAuthHeaders()
+          });
+          
+          console.log('🔍 [DEBUG] Response status:', response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('🔍 [DEBUG] Response data:', data);
+            
+            if (data.success && data.projects) {
+              const projectsList = data.projects;
+              console.log(`🔍 [DEBUG] Total projects fetched: ${projectsList.length}`);
+              
+              // Analyze budgets
+              const budgetAnalysis = projectsList.map(p => ({
+                name: p.name,
+                projectCode: p.projectCode,
+                status: p.status,
+                totalBudget: p.totalBudget,
+                totalBudgetAllocation: p.totalBudgetAllocation,
+                budgetValue: parseFloat(p.totalBudget || p.totalBudgetAllocation || 0)
+              }));
+              
+              console.log('🔍 [DEBUG] Budget analysis:', budgetAnalysis);
+              
+              const totalBudget = projectsList.reduce((sum, p) => {
+                return sum + parseFloat(p.totalBudget || p.totalBudgetAllocation || 0);
+              }, 0);
+              
+              console.log('🔍 [DEBUG] Calculated Total Budget:', totalBudget);
+              console.log('🔍 [DEBUG] Formatted Total Budget:', `₱${totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+              
+              // Check utilized budget
+              const projectsWithUtilized = await Promise.all(
+                projectsList.slice(0, 5).map(async (project) => {
+                  try {
+                    const projectResponse = await fetch(`${API_URL}/projects/${project.id}`, {
+                      headers: getAuthHeaders()
+                    });
+                    if (projectResponse.ok) {
+                      const projectData = await projectResponse.json();
+                      return {
+                        name: project.name,
+                        amountSpent: projectData.progress?.amountSpent || projectData.project?.amountSpent || 0
+                      };
+                    }
+                  } catch (err) {
+                    console.warn(`⚠️ [DEBUG] Failed to fetch project ${project.id}:`, err);
+                  }
+                  return null;
+                })
+              );
+              
+              console.log('🔍 [DEBUG] Sample utilized budgets:', projectsWithUtilized.filter(Boolean));
+              
+              return {
+                success: true,
+                totalProjects: projectsList.length,
+                totalBudget,
+                projects: budgetAnalysis
+              };
+            } else {
+              console.error('❌ [DEBUG] Response missing projects:', data);
+              return { success: false, error: 'No projects in response', data };
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ [DEBUG] Response error:', response.status, errorData);
+            return { success: false, error: `HTTP ${response.status}`, errorData };
+          }
+        } catch (error) {
+          console.error('❌ [DEBUG] Debug function error:', error);
+          return { success: false, error: error.message };
+        }
+      };
+      
+      console.log('✅ [DashboardCenter] Debug function available: window.debugDashboardBudget()');
+    }
   }, [isSystemAdmin, currentRole]);
 
   // Fetch announcements
@@ -1683,7 +1812,9 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                     const formatProfilePic = (pic) => {
                       if (!pic) return null;
                       if (pic.startsWith('http://') || pic.startsWith('https://')) return pic;
-                      return `http://localhost:3000${pic.startsWith('/') ? pic : '/' + pic}`;
+                      // Use dynamic API base URL (remove /api suffix for file URLs)
+                      const baseUrl = API_URL.replace('/api', '');
+                      return `${baseUrl}${pic.startsWith('/') ? pic : '/' + pic}`;
                     };
                     
                     const implementingOfficePicUrl = formatProfilePic(implementingOfficePic);
@@ -1742,7 +1873,9 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                     const formatProfilePic = (pic) => {
                       if (!pic) return null;
                       if (pic.startsWith('http://') || pic.startsWith('https://')) return pic;
-                      return `http://localhost:3000${pic.startsWith('/') ? pic : '/' + pic}`;
+                      // Use dynamic API base URL (remove /api suffix for file URLs)
+                      const baseUrl = API_URL.replace('/api', '');
+                      return `${baseUrl}${pic.startsWith('/') ? pic : '/' + pic}`;
                     };
                     
                     const creatorPicUrl = formatProfilePic(creatorPicture);
@@ -1931,7 +2064,9 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                     const formatProfilePic = (pic) => {
                       if (!pic) return null;
                       if (pic.startsWith('http://') || pic.startsWith('https://')) return pic;
-                      return `http://localhost:3000${pic.startsWith('/') ? pic : '/' + pic}`;
+                      // Use dynamic API base URL (remove /api suffix for file URLs)
+                      const baseUrl = API_URL.replace('/api', '');
+                      return `${baseUrl}${pic.startsWith('/') ? pic : '/' + pic}`;
                     };
                     
                     // Render event details based on type
