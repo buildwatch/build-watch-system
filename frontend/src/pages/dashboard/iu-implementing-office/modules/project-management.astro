@@ -6603,6 +6603,11 @@ loading = false;
       }
     },
 
+    // Alias for getProject - maintains compatibility
+    async getProjectById(projectId) {
+      return this.getProject(projectId);
+    },
+
     async updateProject(projectId, projectData) {
       try {
         const token = localStorage.getItem('token');
