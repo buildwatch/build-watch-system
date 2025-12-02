@@ -476,7 +476,14 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
           projectsEndpoint = `${API_URL}/eiu/projects`;
         }
         
-        const response = await fetch(projectsEndpoint, {
+        // Fetch all projects (no pagination) for accurate budget calculation
+        // Add limit parameter to get all projects for dashboard stats
+        const separator = projectsEndpoint.includes('?') ? '&' : '?';
+        const fullEndpoint = `${projectsEndpoint}${separator}limit=1000&page=1`;
+        
+        console.log(`📊 [DashboardCenter] Fetching projects from: ${fullEndpoint}`);
+        
+        const response = await fetch(fullEndpoint, {
           headers: getAuthHeaders()
         });
         
@@ -484,6 +491,12 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
           const data = await response.json();
           if (data.success && data.projects) {
             const projectsList = data.projects;
+            console.log(`📊 [DashboardCenter] Fetched ${projectsList.length} projects for role: ${currentRole}`);
+            console.log(`📊 [DashboardCenter] Sample project budgets:`, projectsList.slice(0, 3).map(p => ({
+              name: p.name,
+              totalBudget: p.totalBudget,
+              totalBudgetAllocation: p.totalBudgetAllocation
+            })));
             setProjects(projectsList);
             
             // Calculate statistics
@@ -493,7 +506,16 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             const completedProjects = projectsList.filter(p => p.status === 'completed' || p.status === 'complete').length;
             // Removed: pendingProjects - projects now go directly to ongoing
             
-            const totalBudget = projectsList.reduce((sum, p) => sum + parseFloat(p.totalBudget || 0), 0);
+            // Calculate total budget from projects - use totalBudget field, fallback to totalBudgetAllocation if needed
+            const totalBudget = projectsList.reduce((sum, p) => {
+              const budget = parseFloat(p.totalBudget || p.totalBudgetAllocation || 0);
+              if (budget > 0) {
+                console.log(`💰 Project ${p.name || p.projectCode}: budget = ${budget}`);
+              }
+              return sum + budget;
+            }, 0);
+            
+            console.log(`💰 [DashboardCenter] Total Budget calculated: ₱${totalBudget.toLocaleString()} from ${projectsList.length} projects`);
             
             // Calculate utilized budget - role-specific logic
             let utilizedBudget = 0;
