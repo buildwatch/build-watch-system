@@ -1540,8 +1540,11 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
               <div className="border-t border-gray-200 pt-4">
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div 
-                    className={`bg-gradient-to-r ${currentTheme.gradient} h-3 rounded-full transition-all duration-1000 ease-out`}
-                    style={{ width: `${Math.max(stats.budgetUtilizationPercentage, 0.1)}%` }}
+                    className={`bg-gradient-to-r ${currentTheme.gradient} h-3 rounded-full budget-progress-bar-fill`}
+                    style={{ 
+                      '--progress-width': `${Math.max(stats.budgetUtilizationPercentage, 0.1)}%`,
+                      width: '0%'
+                    }}
                   ></div>
                 </div>
                 <p className="text-xs text-gray-500 mt-2 text-center">
@@ -3177,5 +3180,30 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
 
     </div>
   );
+}
+
+// Add CSS for budget progress bar animation
+if (typeof document !== 'undefined') {
+  const styleId = 'dashboard-budget-progress-style';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .budget-progress-bar-fill {
+        transform-origin: left;
+        animation: fillBudgetProgress 2s ease-out forwards;
+      }
+      
+      @keyframes fillBudgetProgress {
+        from {
+          width: 0%;
+        }
+        to {
+          width: var(--progress-width);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 }
 

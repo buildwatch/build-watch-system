@@ -520,6 +520,137 @@ loading = false;
         animation: warningShake 0.5s ease-out;
       }
 
+      /* Delete Confirmation Modal Animations */
+      @keyframes deleteFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes deleteIconBounce {
+        0%, 100% {
+          transform: translateY(0) scale(1);
+        }
+        25% {
+          transform: translateY(-10px) scale(1.1);
+        }
+        50% {
+          transform: translateY(0) scale(1);
+        }
+        75% {
+          transform: translateY(-5px) scale(1.05);
+        }
+      }
+
+      @keyframes deletePulse {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 0.9;
+        }
+      }
+
+      @keyframes deleteShake {
+        0%, 100% {
+          transform: translateX(0);
+        }
+        10%, 30%, 50%, 70%, 90% {
+          transform: translateX(-5px);
+        }
+        20%, 40%, 60%, 80% {
+          transform: translateX(5px);
+        }
+      }
+
+      .delete-modal-overlay {
+        animation: deleteFadeIn 0.3s ease-out;
+      }
+
+      .delete-modal-container {
+        animation: deleteFadeIn 0.3s ease-out;
+      }
+
+      .delete-modal-content {
+        animation: deleteFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .delete-icon-container {
+        animation: deleteIconBounce 0.8s ease-out;
+      }
+
+      .delete-icon {
+        animation: deletePulse 1.5s ease-in-out infinite;
+      }
+
+      .delete-body-icon {
+        animation: deleteShake 0.5s ease-out;
+      }
+
+      /* Success Modal Animations */
+      @keyframes successFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes successCheckmarkDraw {
+        0% {
+          stroke-dasharray: 0, 100;
+          stroke-dashoffset: 0;
+        }
+        100% {
+          stroke-dasharray: 100, 0;
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes successCheckmarkScale {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .success-modal-overlay {
+        animation: successFadeIn 0.3s ease-out;
+      }
+
+      .success-modal-container {
+        animation: successFadeIn 0.3s ease-out;
+      }
+
+      .success-modal-content {
+        animation: successFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .success-checkmark-container {
+        animation: successCheckmarkScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .success-checkmark {
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        animation: successCheckmarkDraw 0.6s ease-out 0.3s forwards;
+      }
+
       /* Enhanced Summary Card Styles */
       .profile-card {
         background: white;
@@ -2326,7 +2457,7 @@ loading = false;
                               </button>
                             )}
                             <button 
-                              onclick={`deleteProject('${project.id}')`} 
+                              onclick={`window.showDeleteConfirmModal('${project.id}', '${(project.name || '').replace(/'/g, "\\'")}')`} 
                               class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
                             >
                               Delete
@@ -2571,8 +2702,8 @@ loading = false;
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-300">
           <div class="p-8 text-center">
             <div class="mb-6">
-              <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 checkmark-container">
-                <svg class="w-12 h-12 text-green-600 checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#0D7DB5]/10 checkmark-container">
+                <svg class="w-12 h-12 text-[#0D7DB5] checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
@@ -2671,6 +2802,85 @@ loading = false;
                 OK
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[85] backdrop-blur-sm delete-modal-overlay">
+      <div class="flex items-center justify-center min-h-screen p-4 delete-modal-container">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-300 delete-modal-content">
+          <!-- Modal Header -->
+          <div class="bg-gradient-to-r from-[#0D7DB5] via-[#0A6A9A] to-[#075A85] p-6 text-white rounded-t-3xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="relative flex items-center gap-4">
+              <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm delete-icon-container">
+                <svg class="w-8 h-8 delete-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold">Confirm Deletion</h3>
+                <p class="text-white/90 text-sm mt-1">This action cannot be undone</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Modal Body -->
+          <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+              <div class="bg-red-50 p-3 rounded-xl flex-shrink-0">
+                <svg class="w-6 h-6 text-red-600 delete-body-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-gray-800 font-medium text-lg mb-2" id="deleteConfirmMessage">Are you sure you want to delete this project?</p>
+                <p class="text-gray-600 text-sm" id="deleteConfirmDescription">This action cannot be undone. All project data, milestones, and submissions will be permanently deleted.</p>
+              </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3">
+              <button 
+                onclick="window.closeDeleteConfirmModal()" 
+                class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Cancel
+              </button>
+              <button 
+                id="deleteConfirmButton"
+                class="px-6 py-3 bg-gradient-to-r from-red-600 via-red-500 to-red-600 hover:from-red-700 hover:via-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+              >
+                Delete Project
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[85] backdrop-blur-sm success-modal-overlay">
+      <div class="flex items-center justify-center min-h-screen p-4 success-modal-container">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-300 success-modal-content">
+          <div class="p-8 text-center">
+            <div class="mb-6">
+              <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 success-checkmark-container">
+                <svg class="w-12 h-12 text-green-600 success-checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2" id="successModalTitle">Success!</h3>
+            <p class="text-gray-600 mb-6" id="successModalMessage">Operation completed successfully.</p>
+            <button 
+              onclick="window.closeSuccessModal()" 
+              class="px-6 py-3 bg-gradient-to-r from-[#0D7DB5] via-[#0A6A9A] to-[#075A85] hover:from-[#0A6A9A] hover:via-[#075A85] hover:to-[#064A6F] text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+            >
+              OK
+            </button>
           </div>
         </div>
       </div>
@@ -4092,7 +4302,7 @@ loading = false;
       
       // Show warning message
       if (input.id === 'totalBudget') {
-        alert('Maximum budget limit reached: ₱999,999,999.00');
+        window.showWarningModal('Maximum Budget Limit Reached', 'The maximum budget limit is ₱999,999,999.00. Please enter a lower amount.');
       }
     } else {
     // Set the formatted value
@@ -6212,7 +6422,7 @@ loading = false;
       return true;
     } catch (error) {
       console.error('Error in validateStep2Fields:', error);
-      alert('An error occurred during validation. Please refresh the page and try again.');
+      window.showWarningModal('Validation Error', 'An error occurred during validation. Please refresh the page and try again.');
       return false;
     }
   };
@@ -7785,8 +7995,10 @@ loading = false;
     
     if (!modal) {
       console.error('Warning modal not found');
-      // Fallback to alert if modal doesn't exist
-      alert(message);
+      // Fallback to browser alert if modal doesn't exist
+      if (typeof alert !== 'undefined') {
+        alert(message);
+      }
       return;
     }
     
@@ -7829,6 +8041,91 @@ loading = false;
 
   window.closeWarningModal = function() {
     const modal = document.getElementById('warningModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+  };
+
+  // Delete Confirmation Modal Functions
+  window.showDeleteConfirmModal = function(projectId, projectName) {
+    const modal = document.getElementById('deleteConfirmModal');
+    const messageElement = document.getElementById('deleteConfirmMessage');
+    const descriptionElement = document.getElementById('deleteConfirmDescription');
+    const confirmButton = document.getElementById('deleteConfirmButton');
+    
+    if (!modal) {
+      console.error('Delete confirmation modal not found');
+      // Fallback to confirm if modal doesn't exist
+      return confirm('Are you sure you want to delete this project? This action cannot be undone.');
+    }
+    
+    // Set message
+    if (messageElement) {
+      messageElement.textContent = projectName 
+        ? `Are you sure you want to delete "${projectName}"?`
+        : 'Are you sure you want to delete this project?';
+    }
+    
+    if (descriptionElement) {
+      descriptionElement.textContent = 'This action cannot be undone. All project data, milestones, and submissions will be permanently deleted.';
+    }
+    
+    // Set up confirm button
+    if (confirmButton) {
+      confirmButton.onclick = function() {
+        window.closeDeleteConfirmModal();
+        window.deleteProject(projectId);
+      };
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeDeleteConfirmModal = function() {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+  };
+
+  // Success Modal Functions
+  window.showSuccessModal = function(title, message) {
+    const modal = document.getElementById('successModal');
+    const titleElement = document.getElementById('successModalTitle');
+    const messageElement = document.getElementById('successModalMessage');
+    
+    if (!modal) {
+      console.error('Success modal not found');
+      // Fallback to alert if modal doesn't exist
+      alert(message || title);
+      return;
+    }
+    
+    // Set title and message
+    if (titleElement) {
+      titleElement.textContent = title || 'Success!';
+    }
+    
+    if (messageElement) {
+      messageElement.textContent = message || 'Operation completed successfully.';
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+      window.closeSuccessModal();
+    }, 3000);
+  };
+
+  window.closeSuccessModal = function() {
+    const modal = document.getElementById('successModal');
     if (modal) {
       modal.classList.add('hidden');
       document.body.style.overflow = 'auto';
@@ -8230,11 +8527,11 @@ loading = false;
         openEditProjectModal();
       } else {
         console.error('Error fetching project:', response.error);
-        alert('Error fetching project: ' + response.error);
+        window.showWarningModal('Error Fetching Project', response.error || 'An error occurred while fetching the project. Please try again.');
       }
     } catch (error) {
       console.error('Error editing project:', error);
-      alert('Error editing project. Please try again.');
+      window.showWarningModal('Error Editing Project', 'An error occurred while editing the project. Please try again.');
     }
   }
 
@@ -9487,7 +9784,7 @@ loading = false;
       console.log('Project information saved successfully');
     } catch (error) {
       console.error('Error saving project information:', error);
-      alert('Error saving project information. Please try again.');
+      window.showWarningModal('Error Saving Project Information', 'An error occurred while saving project information. Please try again.');
     }
   };
 
@@ -9525,7 +9822,7 @@ loading = false;
       console.log('Saved project information cleared');
     } catch (error) {
       console.error('Error clearing project information:', error);
-      alert('Error clearing project information. Please try again.');
+      window.showWarningModal('Error Clearing Project Information', 'An error occurred while clearing project information. Please try again.');
     }
   };
 
@@ -10024,7 +10321,7 @@ loading = false;
         e.preventDefault();
         
         if (!currentEditingProject) {
-          alert('No project selected for editing.');
+          window.showWarningModal('No Project Selected', 'Please select a project to edit.');
           return;
         }
         
@@ -10036,13 +10333,13 @@ loading = false;
           
           // Validate milestones
           if (milestones.length === 0) {
-            alert('Please add at least one milestone to the project.');
+            window.showWarningModal('Milestones Required', 'Please add at least one milestone to the project.');
             return;
           }
           
           const totalWeight = milestones.reduce((sum, m) => sum + m.weight, 0);
           if (Math.abs(totalWeight - 100) > 0.01) {
-            alert(`Total milestone weight must equal 100%. Current total: ${totalWeight.toFixed(2)}%`);
+            window.showWarningModal('Invalid Milestone Weight', `Total milestone weight must equal 100%. Current total: ${totalWeight.toFixed(2)}%`);
             return;
           }
           
@@ -10079,14 +10376,16 @@ loading = false;
           
           if (response.success) {
             closeEditProjectModal();
-            window.location.reload();
-            alert('Project updated successfully!');
+            window.showSuccessModal('Project Updated Successfully!', 'The project has been updated successfully.');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
           } else {
-            alert('Error updating project: ' + response.error);
+            window.showWarningModal('Error Updating Project', response.error || 'An error occurred while updating the project. Please try again.');
           }
         } catch (error) {
           console.error('Error updating project:', error);
-          alert('Error updating project. Please try again.');
+          window.showWarningModal('Error Updating Project', 'An error occurred while updating the project. Please try again.');
         }
       });
     }
@@ -10270,31 +10569,32 @@ loading = false;
   }
 
   // Delete project function
-  async function deleteProject(projectId) {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-      return;
-    }
-    
+  window.deleteProject = async function(projectId) {
     try {
       const response = await projectService.deleteProject(projectId);
       
       if (response.success) {
-        window.location.reload();
-        alert('Project deleted successfully!');
+        // Show success modal before reload
+        window.showSuccessModal('Project Deleted Successfully!', 'The project has been permanently deleted from the system.');
         
         // Force refresh notifications to show the project deletion notification
         if (window.notificationService) {
           await window.notificationService.forceRefresh();
           console.log('Notifications refreshed after project deletion');
         }
+        
+        // Reload after a short delay to allow user to see success message
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } else {
-        alert('Error deleting project: ' + response.error);
+        window.showWarningModal('Error Deleting Project', response.error || 'An error occurred while deleting the project. Please try again.');
       }
     } catch (error) {
       console.error('Error deleting project:', error);
-      alert('Error deleting project. Please try again.');
+      window.showWarningModal('Error Deleting Project', 'An error occurred while deleting the project. Please try again.');
     }
-  }
+  };
 
   // Update progress function
   function updateProgress(projectId) {
