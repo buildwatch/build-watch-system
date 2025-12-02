@@ -2699,6 +2699,30 @@ loading = false;
                       <h4 class="text-lg font-bold text-black group-hover:text-emerald-800 transition-colors duration-300">${milestone.title}</h4>
                       <div class="flex flex-wrap items-center gap-3 mt-2">
                         <span class="px-3 py-1 text-xs font-medium rounded-full ${statusColor}">${statusText}</span>
+                        ${(() => {
+                          // Check if milestone has a rejected submission
+                          const rejectedSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
+                            milestone.submissions.find(s => s.status === 'rejected' || s.status === 'needs_revision');
+                          const rejectionReason = rejectedSubmission?.reviewNotes || rejectedSubmission?.remarks || '';
+                          
+                          if (rejectedSubmission && rejectionReason) {
+                            return `
+                              <div class="relative group">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700 border border-red-300 cursor-help">
+                                  Rejected
+                                </span>
+                                <div class="absolute left-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                                  <div class="font-semibold mb-1 text-red-300">Rejection Reason:</div>
+                                  <div class="text-gray-200 whitespace-pre-wrap">${rejectionReason}</div>
+                                  <div class="absolute bottom-0 left-4 transform translate-y-full">
+                                    <div class="border-4 border-transparent border-t-gray-900"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            `;
+                          }
+                          return '';
+                        })()}
                         <span class="text-sm text-gray-600">Weight: ${milestone.weight}%</span>
                         <span class="text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}">Due: ${milestone.dueDate}</span>
                         <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full shadow-sm ${countdownClass}">
@@ -10199,6 +10223,15 @@ window.restoreVideosFromStorage = function(milestoneId) {
       progressBarEl.style.width = progress + '%';
     }
 
+    // Check if milestone has a rejected submission and repopulate form with previous data
+    if (milestone.submissions && Array.isArray(milestone.submissions)) {
+      const rejectedSubmission = milestone.submissions.find(s => s.status === 'rejected' || s.status === 'needs_revision');
+      if (rejectedSubmission) {
+        console.log('🔄 Found rejected submission, repopulating form with previous data:', rejectedSubmission);
+        window.repopulateFormWithRejectedSubmission(milestone.id, rejectedSubmission);
+      }
+    }
+    
     // Automatically populate submission date with current internet time
     // Use generateServerBasedSubmissionDate if available, otherwise use current date
     if (typeof window.generateServerBasedSubmissionDate === 'function') {
@@ -10285,6 +10318,98 @@ window.restoreVideosFromStorage = function(milestoneId) {
 
   // Multiple Timeline Activities Management
   let milestoneActivitiesData = {}; // Store activities for each milestone
+
+  // Repopulate form with rejected submission data
+  window.repopulateFormWithRejectedSubmission = function(milestoneId, rejectedSubmission) {
+    console.log('🔄 Repopulating form with rejected submission data for milestone:', milestoneId, rejectedSubmission);
+    
+    try {
+      // Repopulate timeline activities
+      if (rejectedSubmission.timelineDivision?.activities && Array.isArray(rejectedSubmission.timelineDivision.activities)) {
+        const container = document.getElementById(`milestone-${milestoneId}-activities-container`);
+        if (container) {
+          container.innerHTML = '';
+          milestoneActivitiesData[milestoneId] = {
+            activities: [],
+            milestone: projectMilestones.find(m => m.id === milestoneId),
+            nextId: 1
+          };
+          
+          rejectedSubmission.timelineDivision.activities.forEach((activity, index) => {
+            window.addTimelineActivity(milestoneId);
+            const activityId = milestoneActivitiesData[milestoneId].nextId - 1;
+            const dateInput = document.getElementById(`activity-${milestoneId}-${activityId}-date`);
+            const descInput = document.getElementById(`activity-${milestoneId}-${activityId}-description`);
+            
+            if (dateInput && activity.date) {
+              dateInput.value = activity.date;
+              window.updateTimelineActivity(milestoneId, activityId, 'date', activity.date);
+            }
+            if (descInput && activity.description) {
+              descInput.value = activity.description;
+              window.updateTimelineActivity(milestoneId, activityId, 'description', activity.description);
+            }
+          });
+        }
+      }
+      
+      // Repopulate budget amount
+      if (rejectedSubmission.budgetDivision?.utilizedBudget) {
+        const budgetAmountInput = document.getElementById(`milestone-${milestoneId}-budget-amount`);
+        if (budgetAmountInput) {
+          const amount = parseFloat(rejectedSubmission.budgetDivision.utilizedBudget);
+          budgetAmountInput.value = amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          // Trigger input event to update calculations
+          budgetAmountInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      
+      // Repopulate budget breakdown
+      if (rejectedSubmission.budgetDivision?.breakdown) {
+        const budgetBreakdownInput = document.getElementById(`milestone-${milestoneId}-budget-breakdown`);
+        if (budgetBreakdownInput) {
+          budgetBreakdownInput.value = rejectedSubmission.budgetDivision.breakdown;
+          budgetBreakdownInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      
+      // Repopulate physical division description
+      if (rejectedSubmission.physicalDivision?.description) {
+        const physicalDescInput = document.getElementById(`milestone-${milestoneId}-physical-description`);
+        if (physicalDescInput) {
+          physicalDescInput.value = rejectedSubmission.physicalDivision.description;
+          physicalDescInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      
+      // Repopulate delay reason if exists
+      if (rejectedSubmission.delayReason) {
+        const delayReasonInput = document.getElementById(`milestone-${milestoneId}-delay-reason`);
+        if (delayReasonInput) {
+          delayReasonInput.value = rejectedSubmission.delayReason;
+          delayReasonInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      
+      // Repopulate submission date if exists
+      if (rejectedSubmission.submissionDate || rejectedSubmission.createdAt) {
+        const submissionDateInput = document.getElementById(`milestone-${milestoneId}-submission-date`);
+        if (submissionDateInput) {
+          const date = new Date(rejectedSubmission.submissionDate || rejectedSubmission.createdAt);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          submissionDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+      }
+      
+      console.log('✅ Form repopulated with rejected submission data');
+    } catch (error) {
+      console.error('❌ Error repopulating form with rejected submission:', error);
+    }
+  };
 
   // Initialize timeline activities for a milestone
   window.initializeTimelineActivities = function(milestoneId, milestone) {

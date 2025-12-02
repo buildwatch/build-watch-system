@@ -106,6 +106,22 @@ loading = false;
       animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       opacity: 0;
     }
+    
+    /* Modal enter animation */
+    @keyframes modalEnter {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    
+    .animate-modal-enter {
+      animation: modalEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
 
     /* Enhanced transitions for all elements */
     * {
@@ -8913,7 +8929,19 @@ This compilation report has been generated automatically based on approved EIU m
      const submission = milestoneSubmissions.find(s => s.id === window.currentReviewSubmissionId);
      if (!submission) return;
      
-     // Get remarks and full name from input fields
+     // Step 1: Get rejection reason using modal with animation
+     const rejectionReason = await showRejectionReasonModal();
+     if (!rejectionReason) {
+       return; // User cancelled
+     }
+     
+     // Step 2: Confirm rejection with question mark animation
+     const confirmed = await showRejectionConfirmModal();
+     if (!confirmed) {
+       return; // User cancelled
+     }
+     
+     // Step 3: Get remarks and full name from input fields (for audit trail)
      const remarksRecommendationText = document.getElementById('remarksRecommendationText');
      const approverFullName = document.getElementById('approverFullName');
      
@@ -8921,36 +8949,325 @@ This compilation report has been generated automatically based on approved EIU m
      const fullName = approverFullName?.value?.trim() || '';
      
      // Validate required fields
-     if (!remarks) {
-       await window.modernAlert('Please provide remarks and recommendation before rejecting the submission.', 'error');
-       if (remarksRecommendationText) {
-         remarksRecommendationText.focus();
-       }
-       return;
-     }
-     
      if (!fullName) {
-       await window.modernAlert('Please provide your full name for audit purposes before rejecting the submission.', 'error');
+       await showRejectionErrorModal('Please provide your full name for audit purposes before rejecting the submission.');
        if (approverFullName) {
          approverFullName.focus();
        }
        return;
      }
      
-     const confirmed = await window.modernConfirm('Are you sure you want to reject this milestone submission? The EIU will need to revise and resubmit.', 'Confirm Rejection');
-     if (confirmed) {
-       // Process status change with lifecycle rules, including remarks and full name
-       processSubmissionStatusChange(
-         window.currentReviewSubmissionId, 
-         STATUS_LIFECYCLE.MILESTONE.NEED_REVISION, 
-         remarks,
-         fullName
-       );
+     try {
+       const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+       if (!token) {
+         await showRejectionErrorModal('Authentication required. Please log in again.');
+         return;
+       }
+
+       // Update submission status to rejected with rejection reason
+       const response = await fetch(`${API_URL}/milestones/milestone-submissions/${window.currentReviewSubmissionId}/status`, {
+         method: 'PUT',
+         headers: {
+           'Authorization': `Bearer ${token}`,
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+           status: 'rejected',
+           reviewNotes: rejectionReason, // Store rejection reason in reviewNotes
+           remarks: remarks || rejectionReason, // Use rejection reason if remarks not provided
+           remarksAndRecommendation: remarks || rejectionReason,
+           approverFullName: fullName,
+           approverName: fullName
+         })
+       });
+
+       if (!response.ok) {
+         const errorData = await response.json().catch(() => ({}));
+         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+       }
+
+       const data = await response.json();
+       console.log('📦 Rejection response:', data);
+
+       if (data.success) {
+         // Create notification for EIU
+         await createEIURejectionNotification(window.currentReviewSubmissionId, rejectionReason, submission);
+         
+         // Update local submission status
+         if (submission) {
+           submission.status = 'rejected';
+           submission.reviewNotes = rejectionReason;
+           submission.reviewedAt = new Date().toISOString();
+         }
+         
+         // Refresh the submissions list
+         await loadMilestoneSubmissions();
+         
+         closeMilestoneSubmissionModal();
+         
+         // Show success notification with check animation
+         await showRejectionSuccessModal();
+       } else {
+         throw new Error(data.error || 'Failed to reject submission');
+       }
+     } catch (error) {
+       console.error('❌ Error rejecting submission:', error);
+       await showRejectionErrorModal(`Error rejecting submission: ${error.message}`);
+     }
+   }
+   
+   // Modal to get rejection reason with animation
+   function showRejectionReasonModal() {
+     return new Promise((resolve) => {
+       const modal = document.getElementById('rejectionReasonModal');
+       if (!modal) {
+         // Create modal if it doesn't exist
+         const modalHTML = `
+           <div id="rejectionReasonModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[10000] overflow-y-auto backdrop-blur-sm">
+             <div class="flex items-center justify-center min-h-screen px-4 py-8">
+               <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200 transform transition-all animate-modal-enter">
+                 <div class="p-6">
+                   <div class="flex justify-center mb-4">
+                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center animate-bounce">
+                       <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                       </svg>
+                     </div>
+                   </div>
+                   <h3 class="text-2xl font-bold text-gray-800 text-center mb-2">Rejection Reason</h3>
+                   <p class="text-gray-600 text-center mb-6">Please provide a reason for rejection:</p>
+                   <textarea 
+                     id="rejectionReasonInput" 
+                     rows="4"
+                     class="w-full px-4 py-3 border-2 border-red-200 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none transition-all duration-200 resize-y"
+                     placeholder="Enter the reason for rejecting this milestone submission..."
+                   ></textarea>
+                   <div class="flex gap-3 justify-center mt-6">
+                     <button 
+                       onclick="window.rejectionReasonModalResolve(null)"
+                       class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-200"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       onclick="window.rejectionReasonModalResolve(document.getElementById('rejectionReasonInput').value.trim())"
+                       class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200"
+                     >
+                       Continue
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         `;
+         document.body.insertAdjacentHTML('beforeend', modalHTML);
+       }
        
-       closeMilestoneSubmissionModal();
+       const modalElement = document.getElementById('rejectionReasonModal');
+       const input = document.getElementById('rejectionReasonInput');
+       if (input) {
+         input.value = '';
+       }
        
-       // Show enhanced notification
-       await window.modernAlert(`Milestone submission rejected. The EIU has been notified to make revisions.`, 'success');
+       window.rejectionReasonModalResolve = resolve;
+       modalElement.classList.remove('hidden');
+       
+       // Focus input after animation
+       setTimeout(() => {
+         if (input) input.focus();
+       }, 300);
+     });
+   }
+   
+   // Modal to confirm rejection with question mark animation
+   function showRejectionConfirmModal() {
+     return new Promise((resolve) => {
+       const modal = document.getElementById('rejectionConfirmModal');
+       if (!modal) {
+         const modalHTML = `
+           <div id="rejectionConfirmModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[10001] overflow-y-auto backdrop-blur-sm">
+             <div class="flex items-center justify-center min-h-screen px-4 py-8">
+               <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 transform transition-all animate-modal-enter">
+                 <div class="p-6">
+                   <div class="flex justify-center mb-4">
+                     <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center animate-pulse">
+                       <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                       </svg>
+                     </div>
+                   </div>
+                   <h3 class="text-2xl font-bold text-gray-800 text-center mb-4">Confirm Rejection</h3>
+                   <p class="text-gray-600 text-center mb-6">Are you sure you want to reject this milestone submission? The EIU will be notified and the submission will be deleted.</p>
+                   <div class="flex gap-3 justify-center">
+                     <button 
+                       onclick="window.rejectionConfirmModalResolve(false)"
+                       class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-200"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       onclick="window.rejectionConfirmModalResolve(true)"
+                       class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200"
+                     >
+                       Yes, Reject
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         `;
+         document.body.insertAdjacentHTML('beforeend', modalHTML);
+       }
+       
+       const modalElement = document.getElementById('rejectionConfirmModal');
+       window.rejectionConfirmModalResolve = resolve;
+       modalElement.classList.remove('hidden');
+     });
+   }
+   
+   // Modal to show rejection success with check animation
+   function showRejectionSuccessModal() {
+     return new Promise((resolve) => {
+       const modal = document.getElementById('rejectionSuccessModal');
+       if (!modal) {
+         const modalHTML = `
+           <div id="rejectionSuccessModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[10002] overflow-y-auto backdrop-blur-sm">
+             <div class="flex items-center justify-center min-h-screen px-4 py-8">
+               <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 transform transition-all animate-modal-enter">
+                 <div class="p-6">
+                   <div class="flex justify-center mb-4">
+                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+                       <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                       </svg>
+                     </div>
+                   </div>
+                   <h3 class="text-2xl font-bold text-gray-800 text-center mb-4">Rejection Successful</h3>
+                   <p class="text-gray-600 text-center mb-6">Milestone submission rejected successfully. The EIU has been notified.</p>
+                   <div class="flex justify-center">
+                     <button 
+                       onclick="document.getElementById('rejectionSuccessModal').classList.add('hidden'); window.rejectionSuccessModalResolve && window.rejectionSuccessModalResolve();"
+                       class="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all duration-200"
+                     >
+                       OK
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         `;
+         document.body.insertAdjacentHTML('beforeend', modalHTML);
+       }
+       
+       const modalElement = document.getElementById('rejectionSuccessModal');
+       window.rejectionSuccessModalResolve = resolve;
+       modalElement.classList.remove('hidden');
+       
+       // Auto-close after 3 seconds
+       setTimeout(() => {
+         modalElement.classList.add('hidden');
+         if (window.rejectionSuccessModalResolve) {
+           window.rejectionSuccessModalResolve();
+         }
+       }, 3000);
+     });
+   }
+   
+   // Modal to show rejection error
+   function showRejectionErrorModal(message) {
+     return new Promise((resolve) => {
+       const modal = document.getElementById('rejectionErrorModal');
+       if (!modal) {
+         const modalHTML = `
+           <div id="rejectionErrorModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[10003] overflow-y-auto backdrop-blur-sm">
+             <div class="flex items-center justify-center min-h-screen px-4 py-8">
+               <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 transform transition-all animate-modal-enter">
+                 <div class="p-6">
+                   <div class="flex justify-center mb-4">
+                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                       <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                       </svg>
+                     </div>
+                   </div>
+                   <h3 class="text-2xl font-bold text-gray-800 text-center mb-4">Error</h3>
+                   <p class="text-gray-600 text-center mb-6" id="rejectionErrorMessage">${message}</p>
+                   <div class="flex justify-center">
+                     <button 
+                       onclick="document.getElementById('rejectionErrorModal').classList.add('hidden'); window.rejectionErrorModalResolve && window.rejectionErrorModalResolve();"
+                       class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200"
+                     >
+                       OK
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         `;
+         document.body.insertAdjacentHTML('beforeend', modalHTML);
+       }
+       
+       const modalElement = document.getElementById('rejectionErrorModal');
+       const messageElement = document.getElementById('rejectionErrorMessage');
+       if (messageElement) {
+         messageElement.textContent = message;
+       }
+       window.rejectionErrorModalResolve = resolve;
+       modalElement.classList.remove('hidden');
+     });
+   }
+   
+   // Create notification for EIU about rejection
+   async function createEIURejectionNotification(submissionId, rejectionReason, submission) {
+     try {
+       const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+       if (!token) {
+         console.warn('⚠️ No token available for notification');
+         return;
+       }
+       
+       const eiuUserId = submission.submitterId || submission.submittedBy;
+       if (!eiuUserId) {
+         console.warn('⚠️ No EIU user ID found for notification');
+         return;
+       }
+       
+       const projectName = submission.project?.name || submission.projectName || 'Unknown Project';
+       const milestoneName = submission.milestone?.title || submission.milestoneName || 'Unknown Milestone';
+       
+       // Create notification for the EIU user
+       const response = await fetch(`${API_URL}/notifications/create-for-user`, {
+         method: 'POST',
+         headers: {
+           'Authorization': `Bearer ${token}`,
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+           userId: eiuUserId,
+           type: 'milestone_rejected',
+           title: 'Milestone Submission Rejected',
+           message: `Your milestone submission "${milestoneName}" for project "${projectName}" has been rejected. Reason: ${rejectionReason}`,
+           link: `/dashboard/eiu/modules/submit-update`,
+           metadata: {
+             submissionId: submissionId,
+             projectId: submission.projectId,
+             milestoneId: submission.milestoneId,
+             rejectionReason: rejectionReason
+           }
+         })
+       });
+       
+       if (response.ok) {
+         console.log('✅ Notification created for EIU user');
+       } else {
+         console.warn('⚠️ Failed to create notification:', await response.text());
+       }
+     } catch (error) {
+       console.error('❌ Error creating notification:', error);
      }
    }
 
