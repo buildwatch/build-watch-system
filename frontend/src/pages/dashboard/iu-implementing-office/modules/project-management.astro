@@ -5377,18 +5377,17 @@ loading = false;
         fundingSourceDisplay.value = '20% Municipal Development Fund';
       }
       // Hidden input for form submission - always set to "donor_fund" for database
-      const fundingSourceHidden = document.querySelector('input[name="fundingSource"][type="hidden"]');
-      if (fundingSourceHidden) {
-        // Always set to "donor_fund" since that's what the database expects
-        fundingSourceHidden.value = 'donor_fund';
-      } else {
+      let fundingSourceHidden = document.querySelector('input[name="fundingSource"][type="hidden"]');
+      if (!fundingSourceHidden) {
         // If hidden input doesn't exist, create it
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'fundingSource';
-        hiddenInput.value = 'donor_fund';
-        form.appendChild(hiddenInput);
+        fundingSourceHidden = document.createElement('input');
+        fundingSourceHidden.type = 'hidden';
+        fundingSourceHidden.name = 'fundingSource';
+        form.appendChild(fundingSourceHidden);
       }
+      // Always set to "donor_fund" since that's what the database expects
+      // (regardless of what's stored in the database, we always use "donor_fund" for Municipal Development Fund)
+      fundingSourceHidden.value = 'donor_fund';
       setFieldValue('input[name="createdDate"]', projectData.createdDate);
       setFieldValue('textarea[name="description"]', projectData.description);
       setFieldValue('textarea[name="expectedOutputs"]', projectData.expectedOutputs);
@@ -8429,13 +8428,24 @@ loading = false;
     console.log('Opening edit project modal...');
     const modal = document.getElementById('editProjectModal');
     if (!modal) {
-      console.error('Edit project modal not found');
+      console.error('❌ Edit project modal not found');
+      console.error('🔍 Available modals:', Array.from(document.querySelectorAll('[id*="modal"]')).map(el => el.id));
       return;
     }
-    console.log('Modal found, removing hidden class...');
+    console.log('✅ Modal found, removing hidden class...');
+    console.log('📋 Modal classes before:', modal.className);
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    console.log('Modal should now be visible');
+    console.log('📋 Modal classes after:', modal.className);
+    console.log('📋 Modal computed display:', window.getComputedStyle(modal).display);
+    console.log('📋 Modal computed visibility:', window.getComputedStyle(modal).visibility);
+    console.log('📋 Modal computed z-index:', window.getComputedStyle(modal).zIndex);
+    console.log('✅ Modal should now be visible');
+    
+    // Force modal to be visible (in case of CSS conflicts)
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
     
     // Setup dropdown placeholders for edit modal
     setTimeout(() => {
@@ -8594,7 +8604,7 @@ loading = false;
         { selector: 'input[name="implementingOfficeName"]', value: project.implementingOfficeName },
         { selector: 'select[name="category"]', value: project.category },
         { selector: 'select[name="priority"]', value: project.priority },
-        { selector: 'select[name="fundingSource"]', value: project.fundingSource },
+        // Funding Source is handled separately below (readonly field)
         { selector: 'input[name="createdDate"]', value: project.createdDate },
         { selector: 'textarea[name="description"]', value: project.description },
         { selector: 'textarea[name="expectedOutputs"]', value: project.expectedOutputs },
@@ -8640,6 +8650,25 @@ loading = false;
       if (hasExternalPartnerCheckbox) {
         hasExternalPartnerCheckbox.checked = project.hasExternalPartner || false;
       }
+      
+      // Funding Source is now readonly and auto-set, but update display if needed
+      // Map database value "donor_fund" back to display value
+      const fundingSourceDisplay = document.getElementById('editFundingSourceSelect');
+      if (fundingSourceDisplay) {
+        fundingSourceDisplay.value = '20% Municipal Development Fund';
+      }
+      // Hidden input for form submission - always set to "donor_fund" for database
+      let fundingSourceHidden = form.querySelector('input[name="fundingSource"][type="hidden"]');
+      if (!fundingSourceHidden) {
+        // If hidden input doesn't exist, create it
+        fundingSourceHidden = document.createElement('input');
+        fundingSourceHidden.type = 'hidden';
+        fundingSourceHidden.name = 'fundingSource';
+        form.appendChild(fundingSourceHidden);
+      }
+      // Always set to "donor_fund" since that's what the database expects
+      // (regardless of what's stored in the database, we always use "donor_fund" for Municipal Development Fund)
+      fundingSourceHidden.value = 'donor_fund';
     } catch (error) {
       console.error('Error populating form fields:', error);
     }
