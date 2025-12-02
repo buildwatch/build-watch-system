@@ -2074,8 +2074,38 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     console.log('🔍 FINAL MILESTONE ARRAY BEING PASSED:', milestonesArray);
     console.log('🔍 FINAL MILESTONE ARRAY TYPE:', typeof milestonesArray, 'IS ARRAY:', Array.isArray(milestonesArray));
     
-    // Debug each milestone's status
+    // Deduplicate milestones by ID or title to prevent duplicates
     if (milestonesArray && Array.isArray(milestonesArray)) {
+      const seenIds = new Set();
+      const seenTitles = new Set();
+      const uniqueMilestones = [];
+      
+      milestonesArray.forEach((milestone) => {
+        const milestoneId = milestone.id || milestone.milestoneId;
+        const milestoneTitle = (milestone.title || milestone.name || '').trim().toLowerCase();
+        
+        // Check if we've seen this milestone before (by ID or title)
+        const isDuplicate = (milestoneId && seenIds.has(milestoneId)) || 
+                           (milestoneTitle && seenTitles.has(milestoneTitle));
+        
+        if (!isDuplicate) {
+          if (milestoneId) seenIds.add(milestoneId);
+          if (milestoneTitle) seenTitles.add(milestoneTitle);
+          uniqueMilestones.push(milestone);
+        } else {
+          console.log(`⚠️ Duplicate milestone detected and removed:`, {
+            id: milestoneId,
+            title: milestone.title || milestone.name,
+            reason: milestoneId ? 'duplicate ID' : 'duplicate title'
+          });
+        }
+      });
+      
+      const originalCount = milestonesArray.length;
+      milestonesArray = uniqueMilestones;
+      console.log(`✅ Deduplicated milestones: ${milestonesArray.length} unique milestones (removed ${originalCount - milestonesArray.length} duplicates)`);
+      
+      // Debug each milestone's status
       milestonesArray.forEach((milestone, index) => {
         console.log(`🔍 Milestone ${index + 1} detailed data:`, {
           title: milestone.title || milestone.name,
@@ -3013,7 +3043,28 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     const container = document.getElementById('milestoneProgress');
     if (!container) return;
     
-    milestones.forEach((milestone, index) => {
+    // Deduplicate milestones before rendering
+    const seenIds = new Set();
+    const seenTitles = new Set();
+    const uniqueMilestones = [];
+    
+    milestones.forEach((milestone) => {
+      const milestoneId = milestone.id || milestone.milestoneId;
+      const milestoneTitle = (milestone.title || milestone.name || '').trim().toLowerCase();
+      
+      const isDuplicate = (milestoneId && seenIds.has(milestoneId)) || 
+                         (milestoneTitle && seenTitles.has(milestoneTitle));
+      
+      if (!isDuplicate) {
+        if (milestoneId) seenIds.add(milestoneId);
+        if (milestoneTitle) seenTitles.add(milestoneTitle);
+        uniqueMilestones.push(milestone);
+      }
+    });
+    
+    console.log(`📊 Rendering ${uniqueMilestones.length} unique milestones (filtered ${milestones.length - uniqueMilestones.length} duplicates)`);
+    
+    uniqueMilestones.forEach((milestone, index) => {
       const progressDiv = document.createElement('div');
       progressDiv.className = 'bg-white rounded-lg border border-gray-200 p-4';
       
