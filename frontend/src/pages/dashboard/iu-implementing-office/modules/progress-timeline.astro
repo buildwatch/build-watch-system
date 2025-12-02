@@ -7459,18 +7459,8 @@ This compilation report has been generated automatically based on approved EIU m
           </div>
         `;
       } else {
-        // Show action buttons for pending/rejected submissions
+        // Show action buttons for pending/rejected submissions (only Approve button, Reject is in the card)
         modalActionButtons.innerHTML = `
-          <button 
-            onclick="rejectMilestoneSubmissionWithLifecycle()"
-            class="px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-            Reject & Request Revision
-          </button>
-          
           <button 
             onclick="submitToMPMECSecretariatWithLifecycle()"
             class="px-8 py-3 bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:via-emerald-700 hover:to-green-800 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -8775,25 +8765,37 @@ This compilation report has been generated automatically based on approved EIU m
      }
    }
 
-     // Reject milestone submission function
+     // Reject milestone submission function (called from MilestoneSubmissionCard)
   async function rejectSubmission(submissionId) {
     console.log('🚫 Rejecting submission:', submissionId);
     
-    // Get rejection reason from user
-    const reason = prompt('Please provide a reason for rejection (optional):');
+    // Step 1: Get rejection reason using modal with animation
+    const rejectionReason = await showRejectionReasonModal();
+    if (!rejectionReason) {
+      return; // User cancelled
+    }
     
-    if (!confirm('Are you sure you want to reject this milestone submission? The EIU will be notified and the submission will be deleted.')) {
-      return;
+    // Step 2: Confirm rejection with question mark animation
+    const confirmed = await showRejectionConfirmModal();
+    if (!confirmed) {
+      return; // User cancelled
     }
     
     try {
       const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
       if (!token) {
-        alert('Authentication required. Please log in again.');
+        await showRejectionErrorModal('Authentication required. Please log in again.');
         return;
       }
 
-      // Update submission status to rejected
+      // Get submission details for notification
+      const submission = milestoneSubmissions.find(s => s.id === submissionId);
+      if (!submission) {
+        await showRejectionErrorModal('Submission not found.');
+        return;
+      }
+
+      // Update submission status to rejected with rejection reason
       const response = await fetch(`${API_URL}/milestones/milestone-submissions/${submissionId}/status`, {
         method: 'PUT',
         headers: {
@@ -8802,23 +8804,21 @@ This compilation report has been generated automatically based on approved EIU m
         },
         body: JSON.stringify({
           status: 'rejected',
-          reviewNotes: reason || 'Submission rejected by LGU-IU'
+          reviewNotes: rejectionReason // Store rejection reason in reviewNotes
         })
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
       console.log('📦 Rejection response:', data);
 
       if (data.success) {
-        // Show success message
-        alert('Milestone submission rejected successfully. The EIU has been notified.');
-        
         // Create notification for EIU
-        await createEIUNotification(submissionId, reason);
+        await createEIURejectionNotification(submissionId, rejectionReason, submission);
         
         // Delete the submission
         await deleteRejectedSubmission(submissionId);
@@ -8831,73 +8831,19 @@ This compilation report has been generated automatically based on approved EIU m
         if (modal) {
           modal.classList.add('hidden');
         }
+        
+        // Show success notification with check animation
+        await showRejectionSuccessModal();
       } else {
-        await window.modernAlert('Error rejecting submission: ' + (data.error || 'Unknown error'), 'error');
+        throw new Error(data.error || 'Failed to reject submission');
       }
       
     } catch (error) {
       console.error('❌ Error rejecting submission:', error);
-      await window.modernAlert('Error rejecting submission. Please try again.', 'error');
+      await showRejectionErrorModal(`Error rejecting submission: ${error.message}`);
     }
   }
 
-  // Create notification for EIU about rejection
-  async function createEIUNotification(submissionId, reason) {
-    try {
-      const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-      
-      // First, get the submission details to find the EIU user
-      const submissionResponse = await fetch(`${API_URL}/milestones/milestone-submissions/${submissionId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!submissionResponse.ok) {
-        console.warn('⚠️ Could not fetch submission details for notification');
-        return;
-      }
-
-      const submissionData = await submissionResponse.json();
-      if (!submissionData.success || !submissionData.submission) {
-        console.warn('⚠️ Invalid submission data for notification');
-        return;
-      }
-
-      const submission = submissionData.submission;
-      const eiuUserId = submission.submitterId;
-
-      if (!eiuUserId) {
-        console.warn('⚠️ No EIU user ID found for notification');
-        return;
-      }
-
-      // Create notification for the EIU user
-      const response = await fetch(`${API_URL}/notifications/create-for-user`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userId: eiuUserId,
-          type: 'milestone_rejected',
-          title: 'Milestone Submission Rejected',
-          message: `Your milestone submission "${submission.milestone?.title || 'Milestone Update'}" has been rejected by the LGU-IU. ${reason ? 'Reason: ' + reason : 'Please review and resubmit.'}`,
-          category: 'Submission',
-          entityType: 'MilestoneSubmission',
-          entityId: submissionId,
-          priority: 'high'
-        })
-      });
-
-      if (response.ok) {
-        console.log('✅ EIU notification created successfully');
-      } else {
-        console.warn('⚠️ Failed to create EIU notification');
-      }
-    } catch (error) {
-      console.error('❌ Error creating EIU notification:', error);
-    }
-  }
 
   // Delete rejected submission
   async function deleteRejectedSubmission(submissionId) {
