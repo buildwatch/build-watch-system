@@ -4108,7 +4108,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
             <div class="mb-4">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-sm font-medium text-gray-700">Progress</span>
-                <span class="text-sm font-bold text-gray-900">${progress}%</span>
+                <span class="text-sm font-bold text-gray-900">${progress.toFixed(2)}%</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div class="h-2 rounded-full transition-all duration-1000 bg-blue-600" style="width: ${progress}%"></div>
@@ -4825,7 +4825,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
         
         ${submission.additionalNotes ? `
           <!-- Additional Notes -->
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 ${(submission.remarks || submission.remarksAndRecommendation) ? 'mb-6' : ''}">
             <h4 class="text-md font-semibold text-blue-800 mb-2">Additional Notes</h4>
             <p class="text-sm text-gray-700 whitespace-pre-wrap">${submission.additionalNotes}</p>
           </div>
