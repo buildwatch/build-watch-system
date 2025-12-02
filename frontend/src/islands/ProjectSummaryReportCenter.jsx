@@ -629,22 +629,30 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             // Add approval entry (from LGU-IU)
             if (submission.status === 'approved' || submission.status === 'iu_approved') {
               const reviewer = submission.reviewer || {};
+              // Build details string with remarks if available
+              let details = `Approved milestone submission: ${submission.milestone?.title || 'Milestone'}`;
+              if (submission.reviewNotes) {
+                details += ` - ${submission.reviewNotes}`;
+              }
+              
               allActivities.push({
                 id: `approval-${submission.id}`,
                 action: 'MILESTONE_APPROVED',
                 entityType: 'MilestoneSubmission',
                 entityId: submission.milestoneId,
-                details: `Approved milestone submission: ${submission.milestone?.title || 'Milestone'}${submission.reviewNotes ? ` - ${submission.reviewNotes}` : ''}`,
+                details: details,
                 createdAt: submission.reviewedAt || submission.updatedAt || submission.createdAt,
                 user: {
                   id: reviewer.id || submission.reviewerId,
-                  name: reviewer.name || 'LGU-IU Personnel',
+                  name: submission.approverFullName || submission.approverName || reviewer.name || 'LGU-IU Personnel',
                   role: 'LGU-IU',
                   department: reviewer.department,
                   email: reviewer.email,
                   profilePictureUrl: reviewer.profilePictureUrl || null
                 },
-                module: 'Milestone Approval'
+                module: 'Milestone Approval',
+                remarks: submission.remarks || submission.remarksAndRecommendation || null,
+                approverFullName: submission.approverFullName || submission.approverName || null
               });
             }
           });
@@ -3576,6 +3584,26 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                   </div>
                                   {activity.details && (
                                     <p className="text-sm text-gray-700 mt-1">{activity.details}</p>
+                                  )}
+                                  {activity.action === 'MILESTONE_APPROVED' && (activity.remarks || activity.remarksAndRecommendation) && (
+                                    <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                        </svg>
+                                        <span className="text-xs font-semibold text-indigo-800">Remarks and Recommendation</span>
+                                      </div>
+                                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{activity.remarks || activity.remarksAndRecommendation}</p>
+                                      {activity.approverFullName && (
+                                        <div className="mt-2 pt-2 border-t border-indigo-200 flex items-center gap-2 text-xs text-indigo-700">
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                          </svg>
+                                          <span className="font-medium">Reviewed by:</span>
+                                          <span>{activity.approverFullName}</span>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                   <p className="text-xs text-gray-500 mt-2">
                                     {formatDate(activity.createdAt)}
