@@ -788,25 +788,77 @@ router.post('/forgot-password', async (req, res) => {
       }
     }
 
-    // Strategy 3: For System Admin, try to find by role if userId pattern matches
+    // Strategy 3: For System Admin, try to find by email or subRole if userId pattern matches
     if (!user && normalizedUserId.startsWith('SYS-AD-')) {
-      // Find System Admin by role
+      // Find System Admin by email (more specific than role since Executive Viewer also has SYS.AD role)
       const sysAdmin = await User.findOne({
         where: {
-          role: 'SYS.AD',
+          email: 'sysadmin@gmail.com',
           status: 'active'
-        },
-        order: [['createdAt', 'ASC']] // Get the first/oldest System Admin
+        }
       });
       
-      if (sysAdmin) {
+      // If not found by email, try by subRole
+      if (!sysAdmin) {
+        const sysAdminBySubRole = await User.findOne({
+          where: {
+            role: 'SYS.AD',
+            subRole: 'System Administrator',
+            status: 'active'
+          },
+          order: [['createdAt', 'ASC']]
+        });
+        if (sysAdminBySubRole) {
+          user = sysAdminBySubRole;
+        }
+      } else {
+        user = sysAdmin;
+      }
+      
+      if (user) {
         // If System Admin doesn't have userId set, update it
-        if (!sysAdmin.userId) {
-          await sysAdmin.update({ userId: normalizedUserId });
+        if (!user.userId || user.userId !== normalizedUserId) {
+          await user.update({ userId: normalizedUserId });
           console.log('🔍 [FORGOT PASSWORD] System Admin userId updated to:', normalizedUserId);
         }
-        user = sysAdmin;
-        console.log('🔍 [FORGOT PASSWORD] Strategy 3 (System Admin by role):', `Found - ${user.email}`);
+        console.log('🔍 [FORGOT PASSWORD] Strategy 3 (System Admin by email/subRole):', `Found - ${user.email}`);
+      }
+    }
+
+    // Strategy 3b: For Executive Viewer, try to find by email if userId pattern matches
+    if (!user && normalizedUserId.startsWith('EXE-VIEW-')) {
+      // Find Executive Viewer by email
+      const execViewer = await User.findOne({
+        where: {
+          email: 'exeviewer@gmail.com',
+          status: 'active'
+        }
+      });
+      
+      // If not found by email, try by subRole
+      if (!execViewer) {
+        const execViewerBySubRole = await User.findOne({
+          where: {
+            role: 'SYS.AD',
+            subRole: 'EXECUTIVE',
+            status: 'active'
+          },
+          order: [['createdAt', 'ASC']]
+        });
+        if (execViewerBySubRole) {
+          user = execViewerBySubRole;
+        }
+      } else {
+        user = execViewer;
+      }
+      
+      if (user) {
+        // If Executive Viewer doesn't have userId set, update it
+        if (!user.userId || user.userId !== normalizedUserId) {
+          await user.update({ userId: normalizedUserId });
+          console.log('🔍 [FORGOT PASSWORD] Executive Viewer userId updated to:', normalizedUserId);
+        }
+        console.log('🔍 [FORGOT PASSWORD] Strategy 3b (Executive Viewer by email/subRole):', `Found - ${user.email}`);
       }
     }
 
