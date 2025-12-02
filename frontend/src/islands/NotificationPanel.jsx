@@ -602,23 +602,13 @@ export default function NotificationPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterByDate, filterByUser, sortBy, sortOrder]);
 
-  // Real-time polling
+  // Load notifications when panel opens (NotificationService handles global polling)
   useEffect(() => {
     if (isOpen) {
       loadNotifications();
-      
-      // Poll every 10 seconds when panel is open
-      pollingIntervalRef.current = setInterval(() => {
-        loadNotifications();
-        notificationService.getNotificationCount();
-      }, 10000);
+      // Note: NotificationService already handles polling globally every 30 seconds
+      // No need for duplicate polling here to prevent rate limiting (429 errors)
     }
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
   }, [isOpen, userRole]);
 
   // Handle panel visibility

@@ -5,6 +5,13 @@ class NotificationService {
     this.updateCallbacks = [];
     this.pollingInterval = null;
     this.isClient = false;
+    this.isPolling = false; // Flag to prevent multiple polling instances
+    this.lastRequestTime = 0; // Track last request time for throttling
+    this.requestQueue = []; // Queue for pending requests
+    this.isProcessingQueue = false; // Flag to prevent concurrent queue processing
+    this.backoffDelay = 10000; // Initial backoff delay (10 seconds)
+    this.maxBackoffDelay = 60000; // Maximum backoff delay (60 seconds)
+    this.consecutiveErrors = 0; // Track consecutive 429 errors
     
     // DO NOT start polling in constructor - it will be started explicitly from client side
     // This prevents SSR issues where window might be defined but localStorage is not
@@ -44,7 +51,7 @@ class NotificationService {
     }
   }
 
-  // Get notification count for Topbar badge
+  // Get notification count for Topbar badge (with throttling and error handling)
   async getNotificationCount() {
     try {
       // Only run on client side
@@ -55,7 +62,20 @@ class NotificationService {
       const token = this.getAuthToken();
       if (!token) return 0;
 
+      // Throttle requests - minimum 2 seconds between requests
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+      if (timeSinceLastRequest < 2000) {
+        // Queue the request instead of making it immediately
+        return new Promise((resolve) => {
+          this.requestQueue.push({ type: 'count', resolve });
+          this.processRequestQueue();
+        });
+      }
+
       const apiUrl = this.getApiUrl();
+      this.lastRequestTime = now;
+      
       const response = await fetch(`${apiUrl}/notifications/count?isRead=false&_t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -68,15 +88,70 @@ class NotificationService {
         const data = await response.json();
         this.notificationCount = data.count;
         this.notifyUpdateCallbacks();
+        this.consecutiveErrors = 0; // Reset error count on success
+        this.backoffDelay = 10000; // Reset backoff delay
         return data.count;
+      } else if (response.status === 429) {
+        // Too Many Requests - implement exponential backoff
+        this.consecutiveErrors++;
+        this.backoffDelay = Math.min(this.backoffDelay * 2, this.maxBackoffDelay);
+        console.warn(`⚠️ Rate limited (429). Backing off for ${this.backoffDelay}ms. Consecutive errors: ${this.consecutiveErrors}`);
+        
+        // Stop polling temporarily if we get too many 429s
+        if (this.consecutiveErrors >= 3) {
+          this.stopPolling();
+          console.warn('⚠️ Too many rate limit errors. Polling stopped. Will resume after backoff period.');
+          
+          // Resume polling after backoff period
+          setTimeout(() => {
+            this.consecutiveErrors = 0;
+            this.backoffDelay = 10000;
+            if (this.isPolling) {
+              this.startPolling();
+            }
+          }, this.backoffDelay);
+        }
+        
+        return this.notificationCount; // Return cached count
       }
     } catch (error) {
       console.error('Error fetching notification count:', error);
     }
-    return 0;
+    return this.notificationCount || 0; // Return cached count on error
+  }
+  
+  // Process queued requests with throttling
+  async processRequestQueue() {
+    if (this.isProcessingQueue || this.requestQueue.length === 0) {
+      return;
+    }
+    
+    this.isProcessingQueue = true;
+    
+    while (this.requestQueue.length > 0) {
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+      
+      if (timeSinceLastRequest < 2000) {
+        // Wait before processing next request
+        await new Promise(resolve => setTimeout(resolve, 2000 - timeSinceLastRequest));
+      }
+      
+      const request = this.requestQueue.shift();
+      if (request.type === 'count') {
+        try {
+          const count = await this.getNotificationCount();
+          request.resolve(count);
+        } catch (error) {
+          request.resolve(this.notificationCount || 0);
+        }
+      }
+    }
+    
+    this.isProcessingQueue = false;
   }
 
-  // Get notifications list
+  // Get notifications list (with throttling and error handling)
   async getNotifications(page = 1, limit = 20) {
     try {
       // Only run on client side
@@ -87,7 +162,17 @@ class NotificationService {
       const token = this.getAuthToken();
       if (!token) return { notifications: [], pagination: { total: 0, pages: 0 } };
 
+      // Throttle requests - minimum 2 seconds between requests
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+      if (timeSinceLastRequest < 2000) {
+        // Return cached notifications if request is too soon
+        return { notifications: this.notifications, pagination: { total: this.notifications.length, pages: 1 } };
+      }
+
       const apiUrl = this.getApiUrl();
+      this.lastRequestTime = now;
+      
       const response = await fetch(`${apiUrl}/notifications?page=${page}&limit=${limit}&_t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -99,12 +184,18 @@ class NotificationService {
       if (response.ok) {
         const data = await response.json();
         this.notifications = data.notifications;
+        this.consecutiveErrors = 0; // Reset error count on success
+        this.backoffDelay = 10000; // Reset backoff delay
         return data;
+      } else if (response.status === 429) {
+        // Too Many Requests - return cached notifications
+        console.warn('⚠️ Rate limited (429) when fetching notifications. Returning cached data.');
+        return { notifications: this.notifications, pagination: { total: this.notifications.length, pages: 1 } };
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-    return { notifications: [], pagination: { total: 0, pages: 0 } };
+    return { notifications: this.notifications || [], pagination: { total: 0, pages: 0 } };
   }
 
   // Get recent activity notifications
@@ -298,6 +389,12 @@ class NotificationService {
       return;
     }
     
+    // Prevent multiple polling instances
+    if (this.isPolling && this.pollingInterval) {
+      console.log('⚠️ Polling already active, skipping duplicate start');
+      return;
+    }
+    
     // Clear any existing interval
     if (this.pollingInterval) {
       if (typeof clearInterval !== 'undefined') {
@@ -306,11 +403,22 @@ class NotificationService {
       this.pollingInterval = null;
     }
 
+    this.isPolling = true;
+    
+    // Use longer polling interval to reduce load (30 seconds instead of 10)
+    const pollingInterval = 30000; // 30 seconds
+
     // Create interval with strict checks in callback
     this.pollingInterval = setInterval(() => {
       // Strict check - must be in browser with localStorage
       if (typeof window === 'undefined' || !window.localStorage) {
         this.stopPolling();
+        return;
+      }
+      
+      // Skip if we're still in backoff period
+      if (this.consecutiveErrors >= 3) {
+        console.log('⏸️ Skipping poll due to rate limiting backoff');
         return;
       }
       
@@ -333,7 +441,9 @@ class NotificationService {
           }
         }
       })();
-    }, 10000); // Poll every 10 seconds for faster updates
+    }, pollingInterval);
+    
+    console.log(`✅ Notification polling started (interval: ${pollingInterval}ms)`);
   }
 
   // Stop polling
@@ -342,6 +452,8 @@ class NotificationService {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
     }
+    this.isPolling = false;
+    console.log('⏹️ Notification polling stopped');
   }
 
   // Get current notification count
