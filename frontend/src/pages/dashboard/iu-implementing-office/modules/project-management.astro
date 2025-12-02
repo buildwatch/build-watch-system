@@ -6350,8 +6350,8 @@ loading = false;
         }
       }
       
-      // Additional validation: Check if project duration is at least 31 days
-      console.log('🔍 Starting 31-day validation in validateStep2Fields...');
+      // Additional validation: Check if project duration is at least 28 days (1 month minimum)
+      console.log('🔍 Starting 28-day validation in validateStep2Fields...');
       
       // Use the same field finding logic that works for other fields
       const startDateInput = document.querySelector(`#step2 input#startDate`) || 
@@ -6384,11 +6384,11 @@ loading = false;
           daysDifference: daysDifference
         });
         
-        if (daysDifference < 31) {
+        if (daysDifference < 28) {
           // Show warning modal and highlight both date fields
           window.showWarningModal(
-            `Project duration must be at least 31 days (1 month).`,
-            `Current duration: ${daysDifference} days. Please adjust the dates to have at least 31 days between start and target completion dates.`
+            `Project duration must be at least 28 days (1 month).`,
+            `Current duration: ${daysDifference} days. Please adjust the dates to have at least 28 days between start and target completion dates. (28, 29, 30, or 31 days are all considered 1 month)`
           );
           
           // Scroll to and highlight both date fields
@@ -7280,7 +7280,7 @@ loading = false;
           return false;
         }
         
-        // Additional validation: Check if project duration is at least 31 days
+        // Additional validation: Check if project duration is at least 28 days (1 month minimum)
         const timeDifference = targetDateObj.getTime() - startDateObj.getTime();
         const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
         
@@ -7290,18 +7290,18 @@ loading = false;
           daysDifference: daysDifference
         });
         
-        if (daysDifference < 31) {
+        if (daysDifference < 28) {
           console.log('❌ Project duration validation failed:', {
             daysDifference,
-            minimumRequired: 31,
+            minimumRequired: 28,
             startDate: startDate,
             targetDate: targetCompletionDate
           });
           
           // Show warning modal and highlight both date fields
           window.showWarningModal(
-            `Project duration must be at least 31 days (1 month).`,
-            `Current duration: ${daysDifference} days. Please adjust the dates to have at least 31 days between start and target completion dates.`
+            `Project duration must be at least 28 days (1 month).`,
+            `Current duration: ${daysDifference} days. Please adjust the dates to have at least 28 days between start and target completion dates. (28, 29, 30, or 31 days are all considered 1 month)`
           );
           
           // Scroll to and highlight both date fields
