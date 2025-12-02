@@ -482,7 +482,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
             </div>
           </div>
 
-          <!-- Section 6: Milestones Set -->
+          <!-- Section 6: Phases Set -->
           <div class="bg-gray-50 rounded-2xl border border-gray-200">
             <button 
               class="w-full p-6 text-left flex items-center justify-between hover:bg-gray-100 rounded-t-2xl transition-colors"
@@ -492,7 +492,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                 <svg class="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
-                Milestones Set (from Create Project Modal)
+                Phases Set (from Create Project Modal)
               </h3>
               <svg class="w-5 h-5 text-gray-600 transition-transform" data-section="milestones" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -500,7 +500,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
             </button>
             <div id="milestonesContent" class="px-6 pb-6 border-t border-gray-200 hidden">
               <div id="milestonesData" class="space-y-4">
-                <!-- Milestones will be populated here -->
+                <!-- Phases will be populated here -->
               </div>
             </div>
           </div>
@@ -583,16 +583,16 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
                 </div>
               </div>
 
-              <!-- Milestone Progress -->
+              <!-- Phase Progress -->
               <div class="mb-8">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                   <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                   </svg>
-                  Milestone Progress
+                  Phase Progress
                 </h4>
                 <div id="milestoneProgress" class="space-y-4">
-                  <!-- Milestone progress will be populated here -->
+                  <!-- Phase progress will be populated here -->
                 </div>
               </div>
 
@@ -2619,7 +2619,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     if (!milestones || !Array.isArray(milestones) || milestones.length === 0) {
       container.innerHTML = `
         <div class="bg-white p-4 rounded-lg border text-center text-gray-500">
-          <p class="text-sm">No milestone progress data available</p>
+          <p class="text-sm">No phase progress data available</p>
           <p class="text-xs text-gray-400 mt-1">Progress will be displayed once EIU submits updates</p>
         </div>
       `;
