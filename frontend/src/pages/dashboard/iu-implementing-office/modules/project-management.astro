@@ -5371,14 +5371,23 @@ loading = false;
       setFieldValue('select[name="category"]', projectData.category);
       setFieldValue('select[name="priority"]', projectData.priority);
       // Funding Source is now readonly and auto-set, but update display if needed
+      // Map database value "donor_fund" back to display value
       const fundingSourceDisplay = document.getElementById('editFundingSourceSelect');
       if (fundingSourceDisplay) {
         fundingSourceDisplay.value = '20% Municipal Development Fund';
       }
-      // Hidden input for form submission
-      const fundingSourceHidden = document.querySelector('input[name="fundingSource"]');
+      // Hidden input for form submission - always set to "donor_fund" for database
+      const fundingSourceHidden = document.querySelector('input[name="fundingSource"][type="hidden"]');
       if (fundingSourceHidden) {
-        fundingSourceHidden.value = 'Municipal Development Fund';
+        // Always set to "donor_fund" since that's what the database expects
+        fundingSourceHidden.value = 'donor_fund';
+      } else {
+        // If hidden input doesn't exist, create it
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'fundingSource';
+        hiddenInput.value = 'donor_fund';
+        form.appendChild(hiddenInput);
       }
       setFieldValue('input[name="createdDate"]', projectData.createdDate);
       setFieldValue('textarea[name="description"]', projectData.description);
@@ -10217,8 +10226,12 @@ loading = false;
           const startDateElement = document.querySelector('input[name="startDate"]');
           const targetCompletionDateElement = document.querySelector('input[name="targetCompletionDate"]');
           
-          // Ensure fundingSource is set correctly (should be "Municipal Development Fund")
-          const fundingSourceValue = formData.get('fundingSource') || 'Municipal Development Fund';
+          // Map "Municipal Development Fund" to "donor_fund" for database ENUM
+          // Display shows "20% Municipal Development Fund" but database needs "donor_fund"
+          const fundingSourceInput = formData.get('fundingSource') || 'Municipal Development Fund';
+          const fundingSourceValue = (fundingSourceInput === 'Municipal Development Fund' || fundingSourceInput === 'donor_fund') 
+            ? 'donor_fund' 
+            : fundingSourceInput;
           
           const projectData = {
             projectCode: formData.get('projectCode'),
@@ -10227,7 +10240,7 @@ loading = false;
             category: formData.get('category'),
             location: getSelectedBarangays(),
             priority: formData.get('priority'),
-            fundingSource: fundingSourceValue, // Auto-set to "Municipal Development Fund"
+            fundingSource: fundingSourceValue, // Maps to "donor_fund" for database ENUM
             createdDate: formData.get('createdDate'),
             description: formData.get('description'),
             expectedOutputs: formData.get('expectedOutputs'),
@@ -10256,7 +10269,8 @@ loading = false;
               status: m.status
             }))
           });
-          console.log('🔍 Funding Source Value:', fundingSourceValue);
+          console.log('🔍 Funding Source Input:', fundingSourceInput);
+          console.log('🔍 Funding Source Value (for DB):', fundingSourceValue);
           console.log('🔍 Status:', projectData.status);
           console.log('🔍 Workflow Status:', projectData.workflowStatus);
           console.log('🔍 Total Budget:', projectData.totalBudget);
@@ -10504,7 +10518,11 @@ loading = false;
         }
         
         const formData = new FormData(form);
-        const fundingSourceValue = formData.get('fundingSource') || 'Municipal Development Fund';
+        // Map "Municipal Development Fund" to "donor_fund" for database ENUM
+        const fundingSourceInput = formData.get('fundingSource') || 'Municipal Development Fund';
+        const fundingSourceValue = (fundingSourceInput === 'Municipal Development Fund' || fundingSourceInput === 'donor_fund') 
+          ? 'donor_fund' 
+          : fundingSourceInput;
         const milestones = window.getMilestonesData ? window.getMilestonesData() : [];
         
         const projectData = {
@@ -10514,7 +10532,7 @@ loading = false;
           category: formData.get('category'),
           location: window.getSelectedBarangays ? window.getSelectedBarangays() : [],
           priority: formData.get('priority'),
-          fundingSource: fundingSourceValue,
+          fundingSource: fundingSourceValue, // Maps to "donor_fund" for database ENUM
           createdDate: formData.get('createdDate'),
           description: formData.get('description'),
           expectedOutputs: formData.get('expectedOutputs'),
@@ -10534,7 +10552,8 @@ loading = false;
         
         console.log('📤 Simulated Project Data:', JSON.stringify(projectData, null, 2));
         console.log('\n🔍 Key Values:');
-        console.log('  - Funding Source:', projectData.fundingSource);
+        console.log('  - Funding Source (Display):', fundingSourceInput);
+        console.log('  - Funding Source (DB Value):', projectData.fundingSource);
         console.log('  - Status:', projectData.status);
         console.log('  - Workflow Status:', projectData.workflowStatus);
         console.log('  - Total Budget:', projectData.totalBudget);
@@ -10598,8 +10617,12 @@ loading = false;
             return;
           }
           
-          // Ensure fundingSource is set correctly (should be "Municipal Development Fund")
-          const fundingSourceValue = formData.get('fundingSource') || 'Municipal Development Fund';
+          // Map "Municipal Development Fund" to "donor_fund" for database ENUM
+          // Display shows "20% Municipal Development Fund" but database needs "donor_fund"
+          const fundingSourceInput = formData.get('fundingSource') || 'Municipal Development Fund';
+          const fundingSourceValue = (fundingSourceInput === 'Municipal Development Fund' || fundingSourceInput === 'donor_fund') 
+            ? 'donor_fund' 
+            : fundingSourceInput;
           
           const projectData = {
             projectCode: formData.get('projectCode'),
@@ -10608,7 +10631,7 @@ loading = false;
             category: formData.get('category'),
             location: getSelectedEditBarangays(),
             priority: formData.get('priority'),
-            fundingSource: fundingSourceValue, // Auto-set to "Municipal Development Fund"
+            fundingSource: fundingSourceValue, // Maps to "donor_fund" for database ENUM
             createdDate: formData.get('createdDate'),
             description: formData.get('description'),
             expectedOutputs: formData.get('expectedOutputs'),
