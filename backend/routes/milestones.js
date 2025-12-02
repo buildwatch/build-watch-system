@@ -6,6 +6,20 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Helper function to get dynamic base URL
+function getBaseUrl() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const port = process.env.PORT || 3000;
+  
+  if (isProduction) {
+    // Use production URL from environment or default
+    return process.env.BACKEND_URL || process.env.API_URL || 'https://www.build-watch.com';
+  } else {
+    // Use localhost for development
+    return `http://localhost:${port}`;
+  }
+}
+
 // Configure multer for RPMES form uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -49,7 +63,7 @@ const upload = multer({
 function getDefaultFiles(type) {
   const fs = require('fs');
   const path = require('path');
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   
   try {
     const uploadsDir = path.join(__dirname, '..', 'uploads');
@@ -112,7 +126,7 @@ function getDefaultFiles(type) {
 function convertToFullUrl(fileData) {
   if (!fileData) return fileData;
   
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   const fs = require('fs');
   const path = require('path');
   
@@ -1303,7 +1317,7 @@ router.get('/project/:projectId/public/media', async (req, res) => {
           mediaByMilestone[milestoneId].photos.push({
             id: `photo-${submission.id}-${photo.name || Math.random()}`,
             name: photo.name || 'Photo Evidence',
-            url: photoUrl.startsWith('http') ? photoUrl : `http://localhost:3000${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`,
+            url: photoUrl.startsWith('http') ? photoUrl : `${getBaseUrl()}${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`,
             uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
             fileSize: photo.size || 0
           });
@@ -1317,7 +1331,7 @@ router.get('/project/:projectId/public/media', async (req, res) => {
           mediaByMilestone[milestoneId].videos.push({
             id: `video-${submission.id}-${video.name || Math.random()}`,
             name: video.name || 'Video Evidence',
-            url: videoUrl.startsWith('http') ? videoUrl : `http://localhost:3000${videoUrl.startsWith('/') ? videoUrl : '/' + videoUrl}`,
+            url: videoUrl.startsWith('http') ? videoUrl : `${getBaseUrl()}${videoUrl.startsWith('/') ? videoUrl : '/' + videoUrl}`,
             uploadDate: submissionData.reviewedAt || submissionData.submittedAt,
             fileSize: video.size || 0,
             thumbnail: video.thumbnail || null
@@ -1419,12 +1433,14 @@ router.get('/milestone-submissions/:id', authenticateToken, async (req, res) => 
 router.put('/milestone-submissions/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reviewNotes } = req.body;
+    const { status, reviewNotes, remarks, remarksAndRecommendation, approverFullName, approverName } = req.body;
     
     console.log('🔍 Updating milestone submission status:', {
       id,
       status,
       reviewNotes,
+      remarks,
+      approverFullName,
       userId: req.user.id
     });
     
@@ -1469,7 +1485,11 @@ router.put('/milestone-submissions/:id/status', authenticateToken, async (req, r
         status,
         reviewedBy: req.user.id,
         reviewedAt: new Date(),
-        reviewNotes: reviewNotes || null
+        reviewNotes: reviewNotes || null,
+        remarks: remarks || remarksAndRecommendation || null,
+        remarksAndRecommendation: remarks || remarksAndRecommendation || null,
+        approverFullName: approverFullName || approverName || null,
+        approverName: approverFullName || approverName || null
       });
       // Reload the instance to ensure it's fresh
       await submission.reload();
@@ -1832,7 +1852,7 @@ router.get('/debug-files', (req, res) => {
         size: stats.size,
         isDirectory: stats.isDirectory(),
         modified: stats.mtime,
-        url: `http://localhost:3000/uploads/${file}`
+        url: `${getBaseUrl()}/uploads/${file}`
       };
     }).filter(file => !file.isDirectory);
 
@@ -1876,7 +1896,7 @@ router.get('/test-files', (req, res) => {
     success: true,
     original: testFiles,
     processed: processedFiles,
-    baseUrl: 'http://localhost:3000',
+    baseUrl: getBaseUrl(),
     fallbacks: {
       defaultImages: getDefaultFiles('image'),
       defaultVideos: getDefaultFiles('video'),

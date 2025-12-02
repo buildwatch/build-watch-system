@@ -219,6 +219,26 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'Notes from the reviewer'
     },
+    remarks: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Remarks and recommendation from the approver/reviewer'
+    },
+    remarksAndRecommendation: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Remarks and recommendation from the approver/reviewer (alias for remarks)'
+    },
+    approverFullName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Full name of the approver/reviewer for audit purposes'
+    },
+    approverName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Name of the approver/reviewer (alias for approverFullName)'
+    },
     
     // Timestamps
     submittedAt: {

@@ -7187,6 +7187,70 @@ This compilation report has been generated automatically based on approved EIU m
         }
       }
 
+      // Populate Remarks and Recommendation Section
+      const remarksRecommendationSection = document.getElementById('remarksRecommendationSection');
+      const remarksRecommendationDisplay = document.getElementById('remarksRecommendationDisplay');
+      const remarksRecommendationInput = document.getElementById('remarksRecommendationInput');
+      const remarksRecommendationContent = document.getElementById('remarksRecommendationContent');
+      const remarksRecommendationAuthor = document.getElementById('remarksRecommendationAuthor');
+      const remarksRecommendationText = document.getElementById('remarksRecommendationText');
+      const approverFullName = document.getElementById('approverFullName');
+      
+      if (remarksRecommendationSection) {
+        // Get existing remarks and recommendation from submission
+        const existingRemarks = submission.remarks || submission.remarksAndRecommendation || submission.reviewRemarks || '';
+        const existingApproverName = submission.approverFullName || submission.approverName || submission.reviewedBy || '';
+        const isApproved = submission.status === 'approved' || submission.status === 'iu_approved';
+        
+        // Show/hide input fields based on approval status
+        if (isApproved && existingRemarks) {
+          // Show read-only display
+          if (remarksRecommendationDisplay) {
+            remarksRecommendationDisplay.classList.remove('hidden');
+          }
+          if (remarksRecommendationInput) {
+            remarksRecommendationInput.classList.add('hidden');
+          }
+          
+          // Populate display
+          if (remarksRecommendationContent) {
+            remarksRecommendationContent.textContent = existingRemarks || 'No remarks provided.';
+          }
+          if (remarksRecommendationAuthor) {
+            const approvalDate = submission.approvedAt || submission.iuApprovedAt || submission.updatedAt || submission.createdAt;
+            const formattedDate = approvalDate ? formatDateTime(approvalDate) : 'N/A';
+            remarksRecommendationAuthor.innerHTML = `
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span class="font-semibold text-blue-800">Reviewed by:</span>
+                <span class="text-gray-800">${existingApproverName || 'N/A'}</span>
+                <span class="text-gray-500">•</span>
+                <span class="text-gray-600">${formattedDate}</span>
+              </div>
+            `;
+          }
+        } else {
+          // Show input fields for pending submissions
+          if (remarksRecommendationDisplay) {
+            remarksRecommendationDisplay.classList.add('hidden');
+          }
+          if (remarksRecommendationInput) {
+            remarksRecommendationInput.classList.remove('hidden');
+          }
+          
+          // Pre-fill if editing existing remarks
+          if (remarksRecommendationText && existingRemarks) {
+            remarksRecommendationText.value = existingRemarks;
+            updateRemarksCharCount();
+          }
+          if (approverFullName && existingApproverName) {
+            approverFullName.value = existingApproverName;
+          }
+        }
+      }
+
       // Enhanced Profile Picture Loading (same approach as ProjectDetailsModal)
       if (submitterData.profilePictureUrl) {
         console.log('👤 Loading submitter profile picture:', submitterData.profilePictureUrl);
@@ -7406,6 +7470,9 @@ This compilation report has been generated automatically based on approved EIU m
     
     // Initialize character counter for notes
     initializeNotesCharCounter();
+    
+    // Initialize character counter for remarks and recommendation
+    initializeRemarksCharCounter();
     
     // Load all evidence images after modal is populated (same approach as profile pictures)
     setTimeout(async () => {
@@ -7718,6 +7785,29 @@ This compilation report has been generated automatically based on approved EIU m
       
       notesTextarea.addEventListener('input', updateCounter);
       updateCounter(); // Initialize counter
+    }
+  }
+
+  // Character counter for Remarks and Recommendation
+  function updateRemarksCharCount() {
+    const remarksTextarea = document.getElementById('remarksRecommendationText');
+    const charCounter = document.getElementById('remarksCharCount');
+    
+    if (remarksTextarea && charCounter) {
+      const count = remarksTextarea.value.length;
+      charCounter.textContent = `${count} characters`;
+      charCounter.className = count > 1000 ? 'text-xs text-red-500' : 'text-xs text-gray-500';
+    }
+  }
+
+  // Initialize remarks character counter
+  function initializeRemarksCharCounter() {
+    const remarksTextarea = document.getElementById('remarksRecommendationText');
+    const charCounter = document.getElementById('remarksCharCount');
+    
+    if (remarksTextarea && charCounter) {
+      remarksTextarea.addEventListener('input', updateRemarksCharCount);
+      updateRemarksCharCount(); // Initialize counter
     }
   }
 
@@ -8599,9 +8689,35 @@ This compilation report has been generated automatically based on approved EIU m
      return false;
    }
 
-   function processSubmissionStatusChange(submissionId, newStatus, reason = '') {
+   async function processSubmissionStatusChange(submissionId, newStatus, reason = '', approverFullName = '') {
      const submission = milestoneSubmissions.find(s => s.id === submissionId);
      if (!submission) return false;
+
+     // If rejecting, make API call to save remarks and full name
+     if (newStatus === STATUS_LIFECYCLE.MILESTONE.NEED_REVISION && reason && approverFullName) {
+       try {
+         const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+         if (token) {
+           await fetch(`${API_URL}/milestones/milestone-submissions/${submissionId}/status`, {
+             method: 'PUT',
+             headers: {
+               'Authorization': `Bearer ${token}`,
+               'Content-Type': 'application/json'
+             },
+             body: JSON.stringify({
+               status: 'needs_revision',
+               reviewNotes: reason,
+               remarks: reason,
+               remarksAndRecommendation: reason,
+               approverFullName: approverFullName,
+               approverName: approverFullName
+             })
+           });
+         }
+       } catch (error) {
+         console.error('Error updating submission with remarks:', error);
+       }
+     }
 
      // Update submission status
      updateMilestoneStatus(submission.milestone.id, newStatus, reason);
@@ -8797,17 +8913,44 @@ This compilation report has been generated automatically based on approved EIU m
      const submission = milestoneSubmissions.find(s => s.id === window.currentReviewSubmissionId);
      if (!submission) return;
      
-     const reason = prompt('Please provide a reason for rejection (optional):');
+     // Get remarks and full name from input fields
+     const remarksRecommendationText = document.getElementById('remarksRecommendationText');
+     const approverFullName = document.getElementById('approverFullName');
+     
+     const remarks = remarksRecommendationText?.value?.trim() || '';
+     const fullName = approverFullName?.value?.trim() || '';
+     
+     // Validate required fields
+     if (!remarks) {
+       await window.modernAlert('Please provide remarks and recommendation before rejecting the submission.', 'error');
+       if (remarksRecommendationText) {
+         remarksRecommendationText.focus();
+       }
+       return;
+     }
+     
+     if (!fullName) {
+       await window.modernAlert('Please provide your full name for audit purposes before rejecting the submission.', 'error');
+       if (approverFullName) {
+         approverFullName.focus();
+       }
+       return;
+     }
      
      const confirmed = await window.modernConfirm('Are you sure you want to reject this milestone submission? The EIU will need to revise and resubmit.', 'Confirm Rejection');
      if (confirmed) {
-       // Process status change with lifecycle rules
-       processSubmissionStatusChange(window.currentReviewSubmissionId, STATUS_LIFECYCLE.MILESTONE.NEED_REVISION, reason || 'Rejected by IOO Admin');
+       // Process status change with lifecycle rules, including remarks and full name
+       processSubmissionStatusChange(
+         window.currentReviewSubmissionId, 
+         STATUS_LIFECYCLE.MILESTONE.NEED_REVISION, 
+         remarks,
+         fullName
+       );
        
        closeMilestoneSubmissionModal();
        
        // Show enhanced notification
-       await window.modernAlert(`Milestone submission rejected. ${reason ? 'Reason: ' + reason + '. ' : ''}The EIU has been notified to make revisions.`, 'success');
+       await window.modernAlert(`Milestone submission rejected. The EIU has been notified to make revisions.`, 'success');
      }
    }
 
@@ -8818,6 +8961,30 @@ This compilation report has been generated automatically based on approved EIU m
      // RPMES form validation removed - no longer required
      
      const additionalNotes = document.getElementById('adminNotes')?.value || '';
+     
+     // Get remarks and full name from input fields
+     const remarksRecommendationText = document.getElementById('remarksRecommendationText');
+     const approverFullName = document.getElementById('approverFullName');
+     
+     const remarks = remarksRecommendationText?.value?.trim() || '';
+     const fullName = approverFullName?.value?.trim() || '';
+     
+     // Validate required fields
+     if (!remarks) {
+       await window.modernAlert('Please provide remarks and recommendation before approving the submission.', 'error');
+       if (remarksRecommendationText) {
+         remarksRecommendationText.focus();
+       }
+       return;
+     }
+     
+     if (!fullName) {
+       await window.modernAlert('Please provide your full name for audit purposes before approving the submission.', 'error');
+       if (approverFullName) {
+         approverFullName.focus();
+       }
+       return;
+     }
      
      const confirmed = await window.modernConfirm('Are you sure you want to submit this milestone to the MPMEC Secretariat? This action cannot be undone.', 'Confirm Submission');
      if (confirmed) {
@@ -8944,7 +9111,11 @@ This compilation report has been generated automatically based on approved EIU m
            },
            body: JSON.stringify({
              status: 'approved',
-             reviewNotes: additionalNotes || 'Approved by IOO Admin and forwarded to MPMEC Secretariat'
+             reviewNotes: additionalNotes || 'Approved by IOO Admin and forwarded to MPMEC Secretariat',
+             remarks: remarks,
+             remarksAndRecommendation: remarks,
+             approverFullName: fullName,
+             approverName: fullName
            })
          });
 
