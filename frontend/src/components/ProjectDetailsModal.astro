@@ -2130,11 +2130,73 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       populateRecentUpdates(updatesArray, project, activityLogsArray, null);
     });
 
-    // Last updated - Enhanced with multiple fallbacks
-    safeSetTextContent('lastUpdated', formatDate(project.updatedAt || project.lastProgressUpdate || project.lastModified || project.lastUpdate?.createdAt));
+    // Last updated - Fetch latest LGU-IU approval date from milestone submissions
+    fetchLastUpdatedDate(project.id).then(lastUpdatedDate => {
+      if (lastUpdatedDate) {
+        safeSetTextContent('lastUpdated', formatDate(lastUpdatedDate));
+      } else {
+        // Fallback to project updated date
+        safeSetTextContent('lastUpdated', formatDate(project.updatedAt || project.lastProgressUpdate || project.lastModified || project.lastUpdate?.createdAt) || 'N/A');
+      }
+    }).catch(err => {
+      console.warn('⚠️ Could not fetch last updated date, using fallback:', err);
+      safeSetTextContent('lastUpdated', formatDate(project.updatedAt || project.lastProgressUpdate || project.lastModified || project.lastUpdate?.createdAt) || 'N/A');
+    });
   }
 
   // Note: fetchDetailedEiuInfo function removed - no longer needed since ProgressCalculationService now includes all EIU fields
+
+  // Fetch last updated date from latest LGU-IU approval
+  async function fetchLastUpdatedDate(projectId) {
+    if (!projectId) return null;
+    
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return null;
+      
+      const API_URL = window.getApiUrl();
+      
+      // Fetch milestone submissions for this project
+      const submissionsResponse = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (submissionsResponse.ok) {
+        const submissionsData = await submissionsResponse.json();
+        const submissions = submissionsData.submissions || submissionsData.data || [];
+        
+        // Filter for approved submissions by LGU-IU (status: 'approved' or 'iu_approved')
+        const approvedSubmissions = submissions.filter(s => 
+          s.status === 'approved' || s.status === 'iu_approved'
+        );
+        
+        if (approvedSubmissions.length > 0) {
+          // Sort by approval date (most recent first)
+          approvedSubmissions.sort((a, b) => {
+            const dateA = new Date(a.approvedAt || a.iuApprovedAt || a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.approvedAt || b.iuApprovedAt || b.updatedAt || b.createdAt || 0);
+            return dateB - dateA;
+          });
+          
+          // Get the most recent approval date
+          const latestApproval = approvedSubmissions[0];
+          const lastUpdatedDate = latestApproval.approvedAt || latestApproval.iuApprovedAt || latestApproval.updatedAt || latestApproval.createdAt;
+          
+          console.log('✅ Found last updated date from LGU-IU approval:', lastUpdatedDate);
+          return lastUpdatedDate;
+        }
+      }
+      
+      console.log('⚠️ No approved submissions found for last updated date');
+      return null;
+    } catch (error) {
+      console.error('❌ Error fetching last updated date:', error);
+      return null;
+    }
+  }
 
   // Helper function to safely set text content
   function safeSetTextContent(elementId, value) {
@@ -2222,10 +2284,14 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     if (!dateStr) return 'N/A';
     try {
       const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'N/A';
       return date.toLocaleDateString('en-US', { 
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
       });
     } catch (e) {
       return 'N/A';
@@ -3454,11 +3520,11 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       deptSection.appendChild(deptHeader);
       
       const timelineContainer = document.createElement('div');
-      timelineContainer.className = 'relative pl-8 space-y-4';
+      timelineContainer.className = 'relative pl-10 space-y-4';
       
       // Timeline line
       const timelineLine = document.createElement('div');
-      timelineLine.className = 'absolute left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 to-gray-200';
+      timelineLine.className = 'absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 to-gray-200';
       timelineContainer.appendChild(timelineLine);
       
       items.forEach((item, itemIndex) => {
@@ -3476,9 +3542,9 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
           : item.action === 'MILESTONE_SUBMITTED'
           ? 'bg-blue-500 border-blue-700'
           : 'bg-gray-500 border-gray-700';
-        dot.className = `absolute left-0 w-6 h-6 rounded-full border-2 ${dotColor} -ml-8 z-10 flex items-center justify-center`;
+        dot.className = `absolute left-0 w-6 h-6 rounded-full border-2 ${dotColor} -ml-10 z-10 flex items-center justify-center shadow-sm`;
         dot.innerHTML = `
-          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events: none;">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${getActionIcon(item.action || 'PROJECT_UPDATED')}"></path>
           </svg>
         `;
