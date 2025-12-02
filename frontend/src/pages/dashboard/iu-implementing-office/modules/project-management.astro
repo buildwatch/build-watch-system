@@ -1561,6 +1561,21 @@ loading = false;
       <!-- Initialize data and functions BEFORE React component loads -->
       <script define:vars={{ projects }}>
         // Global API URL helper function - works for both localhost and production
+        // Helper function to format image/file URLs dynamically
+        window.formatImageUrl = function(url) {
+          if (!url) return null;
+          // If already absolute URL, return as is
+          if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+          }
+          // Get API base URL and remove /api suffix for file URLs
+          const apiUrl = window.getApiUrl();
+          const baseUrl = apiUrl.replace('/api', '');
+          // Ensure URL starts with /
+          const path = url.startsWith('/') ? url : '/' + url;
+          return `${baseUrl}${path}`;
+        };
+        
         window.getApiUrl = function() {
           const isProd = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
           return isProd 
@@ -9815,8 +9830,8 @@ loading = false;
           let initialPhotoUrl = null;
           
           if (initialPhotoOption === 'default' || !initialPhotoOption) {
-            // Use default photo from public folder
-            initialPhotoUrl = '/projects-page-header-bg.png';
+            // Use default photo from public folder - format with dynamic URL
+            initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl('/projects-page-header-bg.png') : '/projects-page-header-bg.png';
           } else if (initialPhotoOption === 'upload') {
             const initialPhotoFile = formData.get('initialPhoto');
             if (initialPhotoFile && initialPhotoFile.size > 0) {
@@ -9841,26 +9856,28 @@ loading = false;
                   if (uploadData.success && uploadData.upload) {
                     // Use the uploaded file URL
                     const fileName = uploadData.upload.fileName;
-                    initialPhotoUrl = `/uploads/${fileName}`;
+                    // Format upload URL dynamically
+                    initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl(`/uploads/${fileName}`) : `/uploads/${fileName}`;
                   } else if (uploadData.success && uploadData.file) {
-                    // Alternative response format
-                    initialPhotoUrl = uploadData.file.path || uploadData.file.url || `/uploads/${uploadData.file.filename}`;
+                    // Alternative response format - use provided URL or format it
+                    const fileUrl = uploadData.file.path || uploadData.file.url || `/uploads/${uploadData.file.filename}`;
+                    initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl(fileUrl) : fileUrl;
                   } else {
                     console.warn('Photo upload response missing file data, using default');
-              initialPhotoUrl = '/projects-page-header-bg.png';
+                    initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl('/projects-page-header-bg.png') : '/projects-page-header-bg.png';
                   }
                 } else {
                   const errorData = await uploadResponse.json().catch(() => ({}));
                   console.error('Photo upload failed:', errorData);
-                  initialPhotoUrl = '/projects-page-header-bg.png';
+                  initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl('/projects-page-header-bg.png') : '/projects-page-header-bg.png';
                 }
               } catch (uploadError) {
                 console.error('Error uploading photo:', uploadError);
-                initialPhotoUrl = '/projects-page-header-bg.png';
+                initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl('/projects-page-header-bg.png') : '/projects-page-header-bg.png';
               }
             } else {
               // No file uploaded, use default
-              initialPhotoUrl = '/projects-page-header-bg.png';
+              initialPhotoUrl = window.formatImageUrl ? window.formatImageUrl('/projects-page-header-bg.png') : '/projects-page-header-bg.png';
             }
           }
 

@@ -1,4 +1,6 @@
 ---
+import { getApiUrl } from '../config/api.js';
+
 interface Props {
   project: any;
   userTheme?: 'eiu' | 'iu-implementing-office' | 'secretariat' | 'mpmec' | 'executive' | 'public';
@@ -9,6 +11,10 @@ interface Props {
 }
 
 const { project, userTheme = 'public', onClick, showModal = true, showClickForDetails = false, pendingSubmissionsCount = 0 } = Astro.props;
+
+// Get API base URL for image formatting
+const API_URL = getApiUrl();
+const BASE_URL = API_URL.replace('/api', '');
 
 // Theme-based hover colors
 const themeColors = {
@@ -138,25 +144,18 @@ const getStatusColor = (status) => {
   }
 };
 
-// Get project image - use correct default image path
+// Get project image - use correct default image path with dynamic URL
 const getProjectImage = (proj) => {
   if (proj.initialPhoto && proj.initialPhoto !== '' && proj.initialPhoto !== 'None') {
-    if (proj.initialPhoto.startsWith('http')) {
+    if (proj.initialPhoto.startsWith('http://') || proj.initialPhoto.startsWith('https://')) {
       return proj.initialPhoto;
     }
-    // Use dynamic base URL
-    if (typeof window !== 'undefined' && window.getApiUrl) {
-      const apiUrl = window.getApiUrl();
-      const baseUrl = apiUrl.replace('/api', '');
-      return proj.initialPhoto.startsWith('/') ? `${baseUrl}${proj.initialPhoto}` : `${baseUrl}${proj.initialPhoto}`;
-    }
-    // Fallback for server-side rendering
-    const isProd = typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
-    const baseUrl = isProd ? 'https://www.build-watch.com' : 'http://localhost:3000';
-    return proj.initialPhoto.startsWith('/') ? `${baseUrl}${proj.initialPhoto}` : `${baseUrl}${proj.initialPhoto}`;
+    // Use dynamic base URL (server-side)
+    const path = proj.initialPhoto.startsWith('/') ? proj.initialPhoto : `/${proj.initialPhoto}`;
+    return `${BASE_URL}${path}`;
   }
-  // Use the correct default image path that exists in the public folder
-  return '/projects-page-header-bg.png';
+  // Default image - use dynamic base URL
+  return `${BASE_URL}/projects-page-header-bg.png`;
 };
 
 // Handle click action - FIXED LOGIC
@@ -189,7 +188,7 @@ const handleClick = () => {
       alt={project.name || project.projectName}
       class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
       loading="lazy"
-      onerror="this.src='/projects-page-header-bg.png'"
+      onerror={`this.src='${BASE_URL}/projects-page-header-bg.png'`}
     />
     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
     

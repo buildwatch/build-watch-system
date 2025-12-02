@@ -670,6 +670,13 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
             
             const budgetUtilizationPercentage = totalBudget > 0 ? (utilizedBudget / totalBudget) * 100 : 0;
             
+            console.log(`💰 [DashboardCenter] Budget Calculation:`, {
+              totalBudget,
+              utilizedBudget,
+              percentage: budgetUtilizationPercentage,
+              rounded: Math.round(budgetUtilizationPercentage * 100) / 100
+            });
+            
             setStats({
               totalProjects,
               ongoingProjects,
@@ -678,7 +685,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
               averageProgress: Math.round(avgProgress),
               totalBudget: `₱${totalBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
               utilizedBudget: `₱${utilizedBudget.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              budgetUtilizationPercentage: Math.round(budgetUtilizationPercentage)
+              budgetUtilizationPercentage: Math.round(budgetUtilizationPercentage * 100) / 100 // Round to 2 decimal places, but keep as number for percentage display
             });
           }
         }
@@ -1534,10 +1541,14 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div 
                     className={`bg-gradient-to-r ${currentTheme.gradient} h-3 rounded-full transition-all duration-1000 ease-out`}
-                    style={{ width: `${stats.budgetUtilizationPercentage}%` }}
+                    style={{ width: `${Math.max(stats.budgetUtilizationPercentage, 0.1)}%` }}
                   ></div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">{stats.budgetUtilizationPercentage}% utilized</p>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  {stats.budgetUtilizationPercentage > 0 
+                    ? `${stats.budgetUtilizationPercentage.toFixed(2)}% utilized`
+                    : '0% utilized'}
+                </p>
               </div>
             </div>
           </div>
