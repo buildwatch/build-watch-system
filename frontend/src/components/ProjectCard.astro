@@ -13,8 +13,12 @@ interface Props {
 const { project, userTheme = 'public', onClick, showModal = true, showClickForDetails = false, pendingSubmissionsCount = 0 } = Astro.props;
 
 // Get API base URL for image formatting
+// Note: During SSR, this will be localhost, but we'll fix it client-side
 const API_URL = getApiUrl();
-const BASE_URL = API_URL.replace('/api', '');
+let BASE_URL = API_URL.replace('/api', '');
+
+// For client-side, we'll use a data attribute and fix URLs dynamically
+// This ensures URLs work correctly in both dev and production
 
 // Theme-based hover colors
 const themeColors = {
@@ -144,18 +148,17 @@ const getStatusColor = (status) => {
   }
 };
 
-// Get project image - use correct default image path with dynamic URL
+// Get project image - use data attribute for client-side URL fixing
 const getProjectImage = (proj) => {
   if (proj.initialPhoto && proj.initialPhoto !== '' && proj.initialPhoto !== 'None') {
     if (proj.initialPhoto.startsWith('http://') || proj.initialPhoto.startsWith('https://')) {
       return proj.initialPhoto;
     }
-    // Use dynamic base URL (server-side)
-    const path = proj.initialPhoto.startsWith('/') ? proj.initialPhoto : `/${proj.initialPhoto}`;
-    return `${BASE_URL}${path}`;
+    // Return relative path - will be fixed client-side
+    return proj.initialPhoto.startsWith('/') ? proj.initialPhoto : `/${proj.initialPhoto}`;
   }
-  // Default image - use dynamic base URL
-  return `${BASE_URL}/projects-page-header-bg.png`;
+  // Default image - return relative path
+  return '/projects-page-header-bg.png';
 };
 
 // Handle click action - FIXED LOGIC
@@ -186,9 +189,9 @@ const handleClick = () => {
     <img 
       src={getProjectImage(project)}
       alt={project.name || project.projectName}
-      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 dynamic-image-url"
       loading="lazy"
-      onerror={`this.src='${BASE_URL}/projects-page-header-bg.png'`}
+      data-default-image="/projects-page-header-bg.png"
     />
     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
     
@@ -436,5 +439,66 @@ const handleClick = () => {
   // Also run on window load for any dynamically loaded content
   window.addEventListener('load', () => {
     setTimeout(setupProgressAnimation, 100);
+  });
+  
+  // Fix image URLs client-side to work in both dev and production
+  function fixImageUrls() {
+    if (typeof window === 'undefined') return;
+    
+    // Get dynamic base URL
+    const getBaseUrl = () => {
+      const hostname = window.location.hostname;
+      const protocol = window.location.protocol;
+      
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:3000';
+      }
+      
+      if (hostname.includes('build-watch.com')) {
+        return protocol === 'https:' 
+          ? `${protocol}//${hostname}`
+          : `http://${hostname}:3000`;
+      }
+      
+      return 'http://localhost:3000';
+    };
+    
+    const baseUrl = getBaseUrl();
+    
+    // Fix all images with dynamic-image-url class
+    document.querySelectorAll('img.dynamic-image-url').forEach(img => {
+      const currentSrc = img.getAttribute('src');
+      const defaultImage = img.getAttribute('data-default-image') || '/projects-page-header-bg.png';
+      
+      if (currentSrc) {
+        // If already absolute URL, skip
+        if (currentSrc.startsWith('http://') || currentSrc.startsWith('https://')) {
+          return;
+        }
+        
+        // Fix the URL
+        const path = currentSrc.startsWith('/') ? currentSrc : `/${currentSrc}`;
+        img.src = `${baseUrl}${path}`;
+        
+        // Set up error handler with dynamic URL
+        img.onerror = function() {
+          this.onerror = null; // Prevent infinite loop
+          this.src = `${baseUrl}${defaultImage}`;
+        };
+      }
+    });
+  }
+  
+  // Run immediately and also on DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fixImageUrls);
+  } else {
+    fixImageUrls();
+  }
+  
+  // Also run after a short delay to catch dynamically added images
+  setTimeout(fixImageUrls, 100);
+  window.addEventListener('load', () => {
+    setTimeout(fixImageUrls, 200);
   });
 </script> 
