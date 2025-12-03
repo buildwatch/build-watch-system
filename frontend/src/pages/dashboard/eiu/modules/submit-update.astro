@@ -3224,7 +3224,7 @@ loading = false;
                         </div>
                       </div>
                       
-                      <!-- Enhanced Remarks -->
+                      <!-- Enhanced Additional Notes -->
                       <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                           <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3244,7 +3244,7 @@ loading = false;
                         <div class="flex justify-between items-center mt-2">
                           <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-600 font-medium">Required:</span>
-                            <span class="text-xs text-gray-600">Include any additional information or comments</span>
+                            <span class="text-xs text-gray-600">Include your Remarks</span>
                           </div>
                           <span id="milestone-${milestone.id}-notes-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
                         </div>
@@ -4104,7 +4104,7 @@ loading = false;
                         </div>
                       </div>
                       
-                      <!-- Enhanced Remarks -->
+                      <!-- Enhanced Additional Notes -->
                       <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                           <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4124,7 +4124,7 @@ loading = false;
                         <div class="flex justify-between items-center mt-2">
                           <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-600 font-medium">Required:</span>
-                            <span class="text-xs text-gray-600">Include any additional information or comments</span>
+                            <span class="text-xs text-gray-600">Include your Remarks</span>
                           </div>
                           <span id="milestone-${milestone.id}-notes-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
                         </div>
@@ -4457,7 +4457,7 @@ loading = false;
                          </div>
                        </div>
                        
-                       <!-- Remarks -->
+                       <!-- Additional Notes -->
                        <div>
                          <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
                          <textarea id="milestone-${milestone.id}-notes" rows="3" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors" placeholder="Any additional information or comments...">${milestone.notes || ''}</textarea>
@@ -8740,20 +8740,40 @@ loading = false;
      const endDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || selectedProject.endDate;
      
      if (startDate && endDate) {
+       // Get today's date in YYYY-MM-DD format
+       const today = new Date();
+       today.setHours(0, 0, 0, 0);
+       const todayStr = today.toISOString().split('T')[0];
+       
+       // Parse end date
+       const endDateObj = new Date(endDate);
+       endDateObj.setHours(0, 0, 0, 0);
+       const endDateStr = endDateObj.toISOString().split('T')[0];
+       
+       // If End Date has reached or passed today, restrict max to today
+       // Otherwise, use End Date as max
+       const maxDate = endDateStr >= todayStr ? todayStr : endDateStr;
+       
        // Set min and max attributes on the date input
        dateInput.min = startDate;
-       dateInput.max = endDate;
+       dateInput.max = maxDate;
        
        // Update info text
        if (infoDiv) {
          const startDateObj = new Date(startDate);
-         const endDateObj = new Date(endDate);
-         infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and ${endDateObj.toLocaleDateString()}`;
+         const maxDateObj = new Date(maxDate);
+         if (maxDate === todayStr) {
+           infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and today (${maxDateObj.toLocaleDateString()})`;
+         } else {
+           infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and ${maxDateObj.toLocaleDateString()}`;
+         }
        }
        
        console.log(`📅 Activity date constraints set for milestone ${milestoneId}:`, {
          min: startDate,
-         max: endDate,
+         max: maxDate,
+         endDate: endDate,
+         today: todayStr,
          milestone: milestone.title || milestone.name
        });
      } else {
@@ -10442,6 +10462,21 @@ window.restoreVideosFromStorage = function(milestoneId) {
     const startDate = milestone.timelineStartDate || milestone.plannedStartDate || milestone.timelineDivision?.startDate || milestone.timeline?.startDate || milestone.startDate || selectedProject.startDate;
     const endDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || selectedProject.endDate;
     
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // If End Date has reached or passed today, restrict max to today
+    // Otherwise, use End Date as max
+    let maxDate = endDate || '';
+    if (endDate) {
+      const endDateObj = new Date(endDate);
+      endDateObj.setHours(0, 0, 0, 0);
+      const endDateStr = endDateObj.toISOString().split('T')[0];
+      maxDate = endDateStr >= todayStr ? todayStr : endDateStr;
+    }
+    
     const activity = {
       id: activityId,
       date: '',
@@ -10470,7 +10505,7 @@ window.restoreVideosFromStorage = function(milestoneId) {
                   id="activity-${milestoneId}-${activityId}-date"
                   class="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                   min="${startDate || ''}"
-                  max="${endDate || ''}"
+                  max="${maxDate || ''}"
                   onchange="updateTimelineActivity('${milestoneId}', ${activityId}, 'date', this.value); validateTimelineActivities('${milestoneId}');"
                   required
                 />
