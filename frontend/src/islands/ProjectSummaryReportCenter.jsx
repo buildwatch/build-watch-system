@@ -2293,42 +2293,6 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
               <h1 className="text-3xl font-bold mb-2">Project Summary & Report</h1>
               <p className="text-white/90">Comprehensive project monitoring and reporting</p>
             </div>
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all ${notifications.length > 0 ? 'animate-pulse' : ''}`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {notifications.length > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notifications.length > 9 ? '9+' : notifications.length}
-                  </span>
-                )}
-              </button>
-              
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl z-50 max-h-96 overflow-y-auto">
-                  <div className="p-4 border-b border-gray-200">
-                    <h3 className="font-semibold text-gray-900">Recent Updates</h3>
-                  </div>
-                  <div className="divide-y divide-gray-100">
-                    {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">No new notifications</div>
-                    ) : (
-                      notifications.map(notif => (
-                        <div key={notif.id} className="p-4 hover:bg-gray-50 transition-colors">
-                          <p className="text-sm text-gray-900">{notif.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">{formatDate(notif.timestamp)}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
@@ -2877,6 +2841,30 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       </td>
                                     </tr>
                                   ))}
+                                  {/* Total Row */}
+                                  <tr className="border-t-2 border-gray-300 bg-gray-50 font-semibold">
+                                    <td className="py-3 px-4 text-gray-900">Total</td>
+                                    <td className="py-3 px-4 text-right text-gray-900">
+                                      {formatCurrency(budgetData.milestoneBudgets.reduce((sum, m) => sum + (parseFloat(m.planned) || 0), 0))}
+                                    </td>
+                                    <td className="py-3 px-4 text-right text-gray-900">
+                                      {formatCurrency(budgetData.milestoneBudgets.reduce((sum, m) => sum + (parseFloat(m.used) || 0), 0))}
+                                    </td>
+                                    <td className="py-3 px-4 text-right text-gray-900">
+                                      {formatCurrency(budgetData.milestoneBudgets.reduce((sum, m) => sum + (parseFloat(m.remaining) || 0), 0))}
+                                    </td>
+                                    <td className="py-3 px-4 text-right">
+                                      <span className="font-semibold text-gray-900">
+                                        {(() => {
+                                          const totalUsed = budgetData.milestoneBudgets.reduce((sum, m) => sum + (parseFloat(m.used) || 0), 0);
+                                          const totalPlanned = budgetData.milestoneBudgets.reduce((sum, m) => sum + (parseFloat(m.planned) || 0), 0);
+                                          const totalUtilization = totalPlanned > 0 ? (totalUsed / totalPlanned) * 100 : 0;
+                                          return totalUtilization.toFixed(1) + '%';
+                                        })()}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-gray-700"></td>
+                                  </tr>
                                 </tbody>
                               </table>
                             </div>
@@ -2955,6 +2943,21 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                       tension: 0.5,
                                       pointRadius: 5,
                                       pointHoverRadius: 7
+                                    },
+                                    {
+                                      label: 'Total Project Progress',
+                                      data: timelineData.progressData.map((item) => {
+                                        // Total Project Progress is the cumulative progress percentage
+                                        // which represents the overall project completion at each phase
+                                        return item.cumulative;
+                                      }),
+                                      borderColor: 'rgba(139, 92, 246, 0.8)',
+                                      backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                      borderDash: [3, 3],
+                                      tension: 0.5,
+                                      pointRadius: 4,
+                                      pointHoverRadius: 6,
+                                      fill: false
                                     }
                                   ]
                                 }}
@@ -3016,7 +3019,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     x: {
                                       title: {
                                         display: true,
-                                        text: 'Milestone',
+                                        text: 'Phase',
                                         font: {
                                           size: 13,
                                           weight: 'bold',
@@ -3033,16 +3036,24 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                         color: 'rgba(0, 0, 0, 0.05)'
                                       },
                                       ticks: {
-                                        maxRotation: 0,
-                                        minRotation: 0,
+                                        maxRotation: 45,
+                                        minRotation: 45,
                                         font: {
-                                          size: 11,
+                                          size: 10,
                                           family: "'Inter', 'Segoe UI', sans-serif"
                                         },
                                         color: '#6B7280',
-                                        padding: 5,
-                                        autoSkip: false,
-                                        maxTicksLimit: 10
+                                        padding: 8,
+                                        autoSkip: true,
+                                        maxTicksLimit: 15,
+                                        callback: function(value, index) {
+                                          const label = this.getLabelForValue(value);
+                                          // Truncate long labels
+                                          if (label && label.length > 20) {
+                                            return label.substring(0, 20) + '...';
+                                          }
+                                          return label;
+                                        }
                                       }
                                     },
                                     y: {
@@ -3513,7 +3524,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                               <div className="bg-white/60 rounded-lg p-3">
                                 <p className="text-xs text-gray-600 mb-1">Used Budget</p>
                                 <p className="text-sm font-semibold text-gray-900">
-                                  {selectedProject.amountSpent || selectedProject.usedBudget || selectedProject.budgetUsed
+                                  {budgetData && budgetData.used
+                                    ? formatCurrency(budgetData.used)
+                                    : selectedProject.amountSpent || selectedProject.usedBudget || selectedProject.budgetUsed
                                     ? formatCurrency(selectedProject.amountSpent || selectedProject.usedBudget || selectedProject.budgetUsed)
                                     : formatCurrency(0)}
                                 </p>
