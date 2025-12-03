@@ -3224,13 +3224,13 @@ loading = false;
                         </div>
                       </div>
                       
-                      <!-- Enhanced Additional Notes -->
+                      <!-- Enhanced Remarks -->
                       <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                           <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7"></path>
                           </svg>
-                          Additional Notes *
+                          Remarks *
                         </label>
                         <textarea 
                           id="milestone-${milestone.id}-notes" 
@@ -3248,7 +3248,7 @@ loading = false;
                           </div>
                           <span id="milestone-${milestone.id}-notes-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
                         </div>
-                        <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-notes-error">Error: Additional Notes is required</div>
+                        <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-notes-error">Error: Remarks is required</div>
                       </div>
                       
                       <!-- Enhanced Progress Display (Controlled by SECRETARIAT) -->
@@ -4104,13 +4104,13 @@ loading = false;
                         </div>
                       </div>
                       
-                      <!-- Enhanced Additional Notes -->
+                      <!-- Enhanced Remarks -->
                       <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                           <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7"></path>
                           </svg>
-                          Additional Notes *
+                          Remarks *
                         </label>
                         <textarea 
                           id="milestone-${milestone.id}-notes" 
@@ -4128,7 +4128,7 @@ loading = false;
                           </div>
                           <span id="milestone-${milestone.id}-notes-char-count" class="text-xs font-medium" style="color: #6b7280;">0/500</span>
                         </div>
-                        <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-notes-error">Error: Additional Notes is required</div>
+                        <div class="text-xs text-red-600 mt-1 hidden" id="milestone-${milestone.id}-notes-error">Error: Remarks is required</div>
                       </div>
                       
                       <!-- Enhanced Progress Display (Controlled by SECRETARIAT) -->
@@ -4457,9 +4457,9 @@ loading = false;
                          </div>
                        </div>
                        
-                       <!-- Additional Notes -->
+                       <!-- Remarks -->
                        <div>
-                         <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                         <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
                          <textarea id="milestone-${milestone.id}-notes" rows="3" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors" placeholder="Any additional information or comments...">${milestone.notes || ''}</textarea>
                        </div>
                        
@@ -8776,7 +8776,7 @@ loading = false;
       { name: 'Video Evidence', isValid: window.validateVideoEvidence(milestoneId) },
       { name: 'Excel/Document Files', isValid: window.validateDocumentEvidence(milestoneId) },
       { name: 'Physical Progress Description', isValid: window.validatePhysicalDescription(milestoneId) },
-      { name: 'Additional Notes', isValid: window.validateAdditionalNotes(milestoneId) }
+      { name: 'Remarks', isValid: window.validateAdditionalNotes(milestoneId) }
     ];
 
     const invalidFields = validations.filter(v => !v.isValid);

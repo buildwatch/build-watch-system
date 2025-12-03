@@ -2946,10 +2946,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                     },
                                     {
                                       label: 'Total Project Progress',
-                                      data: timelineData.progressData.map((item) => {
-                                        // Total Project Progress is the cumulative progress percentage
-                                        // which represents the overall project completion at each phase
-                                        return item.cumulative;
+                                      data: timelineData.progressData.map((item, index) => {
+                                        // Total Project Progress is the sum of progress percentages up to this phase
+                                        // Example: Phase 1 = 9.7%, Phase 2 = 14.0% -> Total at Phase 2 = 23.7%
+                                        let totalProgress = 0;
+                                        for (let i = 0; i <= index; i++) {
+                                          totalProgress += timelineData.progressData[i].progress || 0;
+                                        }
+                                        return totalProgress;
                                       }),
                                       borderColor: 'rgba(139, 92, 246, 0.8)',
                                       backgroundColor: 'rgba(139, 92, 246, 0.1)',
