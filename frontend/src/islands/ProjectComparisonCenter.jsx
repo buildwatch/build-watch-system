@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getApiUrl } from '../config/api.js';
 
 /**
  * ProjectComparisonCenter - Side-by-side project comparison tool
@@ -15,6 +16,9 @@ export default function ProjectComparisonCenter({
   const [projectDetails, setProjectDetails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [maxCompare, setMaxCompare] = useState(4);
+  
+  // Get dynamic API URL
+  const API_URL = getApiUrl();
 
   // Theme colors
   const themeColors = {
@@ -70,7 +74,11 @@ export default function ProjectComparisonCenter({
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const API_URL = 'http://localhost:3000/api';
+      if (!token) {
+        alert('Authentication required. Please log in again.');
+        setLoading(false);
+        return;
+      }
 
       const detailsPromises = selectedProjects.map(async (projectId) => {
         const response = await fetch(`${API_URL}/projects/${projectId}`, {

@@ -8990,13 +8990,13 @@ This compilation report has been generated automatically based on approved EIU m
                    ></textarea>
                    <div class="flex gap-3 justify-center mt-6">
                      <button 
-                       onclick="window.rejectionReasonModalResolve(null)"
+                       id="rejectionReasonCancelBtn"
                        class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-200"
                      >
                        Cancel
                      </button>
                      <button 
-                       onclick="window.rejectionReasonModalResolve(document.getElementById('rejectionReasonInput').value.trim())"
+                       id="rejectionReasonContinueBtn"
                        class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200"
                      >
                        Continue
@@ -9012,11 +9012,44 @@ This compilation report has been generated automatically based on approved EIU m
        
        const modalElement = document.getElementById('rejectionReasonModal');
        const input = document.getElementById('rejectionReasonInput');
+       const cancelBtn = document.getElementById('rejectionReasonCancelBtn');
+       const continueBtn = document.getElementById('rejectionReasonContinueBtn');
+       
        if (input) {
          input.value = '';
        }
        
-       window.rejectionReasonModalResolve = resolve;
+       // Remove old event listeners if any
+       const newCancelBtn = cancelBtn?.cloneNode(true);
+       const newContinueBtn = continueBtn?.cloneNode(true);
+       if (cancelBtn && newCancelBtn) {
+         cancelBtn.parentNode?.replaceChild(newCancelBtn, cancelBtn);
+       }
+       if (continueBtn && newContinueBtn) {
+         continueBtn.parentNode?.replaceChild(newContinueBtn, continueBtn);
+       }
+       
+       // Set up new event listeners
+       const closeModal = (result) => {
+         modalElement.classList.add('hidden');
+         window.rejectionReasonModalResolve = null;
+         resolve(result);
+       };
+       
+       const finalCancelBtn = document.getElementById('rejectionReasonCancelBtn');
+       const finalContinueBtn = document.getElementById('rejectionReasonContinueBtn');
+       
+       if (finalCancelBtn) {
+         finalCancelBtn.onclick = () => closeModal(null);
+       }
+       if (finalContinueBtn) {
+         finalContinueBtn.onclick = () => {
+           const reason = input?.value.trim() || '';
+           closeModal(reason);
+         };
+       }
+       
+       window.rejectionReasonModalResolve = (result) => closeModal(result);
        modalElement.classList.remove('hidden');
        
        // Focus input after animation
@@ -9047,13 +9080,13 @@ This compilation report has been generated automatically based on approved EIU m
                    <p class="text-gray-600 text-center mb-6">Are you sure you want to reject this milestone submission? The EIU will be notified and the submission will be deleted.</p>
                    <div class="flex gap-3 justify-center">
                      <button 
-                       onclick="window.rejectionConfirmModalResolve(false)"
+                       id="rejectionConfirmCancelBtn"
                        class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all duration-200"
                      >
                        Cancel
                      </button>
                      <button 
-                       onclick="window.rejectionConfirmModalResolve(true)"
+                       id="rejectionConfirmYesBtn"
                        class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200"
                      >
                        Yes, Reject
@@ -9068,7 +9101,37 @@ This compilation report has been generated automatically based on approved EIU m
        }
        
        const modalElement = document.getElementById('rejectionConfirmModal');
-       window.rejectionConfirmModalResolve = resolve;
+       const cancelBtn = document.getElementById('rejectionConfirmCancelBtn');
+       const yesBtn = document.getElementById('rejectionConfirmYesBtn');
+       
+       // Remove old event listeners if any
+       const newCancelBtn = cancelBtn?.cloneNode(true);
+       const newYesBtn = yesBtn?.cloneNode(true);
+       if (cancelBtn && newCancelBtn) {
+         cancelBtn.parentNode?.replaceChild(newCancelBtn, cancelBtn);
+       }
+       if (yesBtn && newYesBtn) {
+         yesBtn.parentNode?.replaceChild(newYesBtn, yesBtn);
+       }
+       
+       // Set up new event listeners
+       const closeModal = (result) => {
+         modalElement.classList.add('hidden');
+         window.rejectionConfirmModalResolve = null;
+         resolve(result);
+       };
+       
+       const finalCancelBtn = document.getElementById('rejectionConfirmCancelBtn');
+       const finalYesBtn = document.getElementById('rejectionConfirmYesBtn');
+       
+       if (finalCancelBtn) {
+         finalCancelBtn.onclick = () => closeModal(false);
+       }
+       if (finalYesBtn) {
+         finalYesBtn.onclick = () => closeModal(true);
+       }
+       
+       window.rejectionConfirmModalResolve = (result) => closeModal(result);
        modalElement.classList.remove('hidden');
      });
    }
@@ -9094,7 +9157,7 @@ This compilation report has been generated automatically based on approved EIU m
                    <p class="text-gray-600 text-center mb-6">Milestone submission rejected successfully. The EIU has been notified.</p>
                    <div class="flex justify-center">
                      <button 
-                       onclick="document.getElementById('rejectionSuccessModal').classList.add('hidden'); window.rejectionSuccessModalResolve && window.rejectionSuccessModalResolve();"
+                       id="rejectionSuccessOkBtn"
                        class="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all duration-200"
                      >
                        OK
@@ -9109,15 +9172,35 @@ This compilation report has been generated automatically based on approved EIU m
        }
        
        const modalElement = document.getElementById('rejectionSuccessModal');
-       window.rejectionSuccessModalResolve = resolve;
+       const okBtn = document.getElementById('rejectionSuccessOkBtn');
+       
+       // Remove old event listeners if any
+       const newOkBtn = okBtn?.cloneNode(true);
+       if (okBtn && newOkBtn) {
+         okBtn.parentNode?.replaceChild(newOkBtn, okBtn);
+       }
+       
+       // Set up close function
+       let isResolved = false;
+       const closeModal = () => {
+         if (isResolved) return;
+         isResolved = true;
+         modalElement.classList.add('hidden');
+         window.rejectionSuccessModalResolve = null;
+         resolve();
+       };
+       
+       const finalOkBtn = document.getElementById('rejectionSuccessOkBtn');
+       if (finalOkBtn) {
+         finalOkBtn.onclick = closeModal;
+       }
+       
+       window.rejectionSuccessModalResolve = closeModal;
        modalElement.classList.remove('hidden');
        
        // Auto-close after 3 seconds
        setTimeout(() => {
-         modalElement.classList.add('hidden');
-         if (window.rejectionSuccessModalResolve) {
-           window.rejectionSuccessModalResolve();
-         }
+         closeModal();
        }, 3000);
      });
    }
@@ -9143,7 +9226,7 @@ This compilation report has been generated automatically based on approved EIU m
                    <p class="text-gray-600 text-center mb-6" id="rejectionErrorMessage">${message}</p>
                    <div class="flex justify-center">
                      <button 
-                       onclick="document.getElementById('rejectionErrorModal').classList.add('hidden'); window.rejectionErrorModalResolve && window.rejectionErrorModalResolve();"
+                       id="rejectionErrorOkBtn"
                        class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200"
                      >
                        OK
@@ -9159,10 +9242,31 @@ This compilation report has been generated automatically based on approved EIU m
        
        const modalElement = document.getElementById('rejectionErrorModal');
        const messageElement = document.getElementById('rejectionErrorMessage');
+       const okBtn = document.getElementById('rejectionErrorOkBtn');
+       
        if (messageElement) {
          messageElement.textContent = message;
        }
-       window.rejectionErrorModalResolve = resolve;
+       
+       // Remove old event listeners if any
+       const newOkBtn = okBtn?.cloneNode(true);
+       if (okBtn && newOkBtn) {
+         okBtn.parentNode?.replaceChild(newOkBtn, okBtn);
+       }
+       
+       // Set up close function
+       const closeModal = () => {
+         modalElement.classList.add('hidden');
+         window.rejectionErrorModalResolve = null;
+         resolve();
+       };
+       
+       const finalOkBtn = document.getElementById('rejectionErrorOkBtn');
+       if (finalOkBtn) {
+         finalOkBtn.onclick = closeModal;
+       }
+       
+       window.rejectionErrorModalResolve = closeModal;
        modalElement.classList.remove('hidden');
      });
    }
