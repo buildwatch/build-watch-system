@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import ExecutiveLayout from '../../../../components/ExecutiveLayout.astro';
+import ProjectLedgerCenter from '../../../../islands/ProjectLedgerCenter.jsx';
+---
+
+<Layout title="Project Ledger | Executive Viewer Dashboard">
+  <ExecutiveLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <ProjectLedgerCenter client:load theme="purple" userRole="Executive Viewer" />
+    </section>
+  </ExecutiveLayout>
+</Layout>
+

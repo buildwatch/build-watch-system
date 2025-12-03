@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+import Layout from '../../../../layouts/Layout.astro';
+import IUImplementingOfficeLayout from '../../../../components/IUImplementingOfficeLayout.astro';
+import ProjectLedgerCenter from '../../../../islands/ProjectLedgerCenter.jsx';
+---
+
+<Layout title="Project Ledger | LGU-IU Dashboard">
+  <IUImplementingOfficeLayout>
+    <section class="p-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      <ProjectLedgerCenter client:load theme="blue" userRole="LGU-IU" />
+    </section>
+  </IUImplementingOfficeLayout>
+</Layout>
+
