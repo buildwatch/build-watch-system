@@ -345,7 +345,8 @@ class ProgressCalculationService {
         projectId: projectId,
         status: 'approved'
       },
-      attributes: ['milestoneId', 'status']
+      attributes: ['milestoneId', 'status'],
+      order: [['submittedAt', 'DESC']]
     });
 
     const latestUpdate = await ProjectUpdate.findOne({
@@ -393,8 +394,21 @@ class ProgressCalculationService {
           : 'approved';
       }
       
+      // Calculate applied weight based on actual progress percentage, not just status
+      // Get actual progress from milestone record (this contains the actual progress percentage like 54.4%)
+      // Priority: milestone.progress > update.progress > progress variable
+      const actualProgress = parseFloat(milestone.progress || update?.progress || progress || 0);
+      
+      // If milestone is completed/approved, use actual progress percentage instead of full weight
+      // Example: If milestone has 54.4% progress out of 60% weight, add 54.4% not 60%
+      // This ensures overall progress reflects actual completion, not just approval status
       if (status === 'completed' || status === 'approved') {
-        appliedWeight += weight;
+        // Use actual progress percentage if available, otherwise fall back to weight
+        // This handles cases where a milestone is approved but not fully complete (e.g., 54.4% / 60%)
+        appliedWeight += actualProgress > 0 ? actualProgress : weight;
+      } else if (status === 'in_progress' || status === 'ongoing') {
+        // For in-progress milestones, add actual progress percentage
+        appliedWeight += actualProgress;
       }
 
       return {

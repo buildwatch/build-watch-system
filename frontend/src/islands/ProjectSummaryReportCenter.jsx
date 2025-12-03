@@ -1339,13 +1339,19 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
       timelineItems.sort((a, b) => a.dueDate - b.dueDate);
       progressData.sort((a, b) => new Date(a.date) - new Date(b.date));
       
+      // Calculate overall progress from actual milestone progress percentages
+      // Sum of all actual progress percentages (e.g., 30.0% + 54.4% + 10.0% = 94.4%)
+      const calculatedOverallProgress = timelineItems.reduce((sum, item) => {
+        return sum + (parseFloat(item.progress) || 0);
+      }, 0);
+      
       const timelineDataResult = {
         projectStart: startDate,
         projectEnd: endDate,
         today,
         timelineItems,
         progressData,
-        overallProgress: parseFloat(project.overallProgress || 0)
+        overallProgress: calculatedOverallProgress > 0 ? calculatedOverallProgress : parseFloat(project.overallProgress || 0)
       };
       
       console.log('📅 [Timeline Debug] Final timeline data:', timelineDataResult);
