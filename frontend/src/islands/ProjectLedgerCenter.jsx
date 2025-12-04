@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Dynamic API URL helper - works for both localhost and production
 const getApiUrl = () => {
@@ -43,7 +43,9 @@ const getThemeColors = (role) => {
         gradientIcon: 'from-green-500 to-green-600',
         primaryText: 'text-green-600',
         border: 'border-green-200',
-        borderHover: 'border-green-300'
+        borderHover: 'border-green-300',
+        headerBg: 'from-green-600 to-green-700',
+        tableHeaderBg: 'bg-green-600'
       };
     case 'LGU-IU':
       return {
@@ -53,7 +55,9 @@ const getThemeColors = (role) => {
         gradientIcon: 'from-blue-500 to-blue-600',
         primaryText: 'text-blue-600',
         border: 'border-blue-200',
-        borderHover: 'border-blue-300'
+        borderHover: 'border-blue-300',
+        headerBg: 'from-blue-600 to-blue-700',
+        tableHeaderBg: 'bg-blue-600'
       };
     case 'LGU-PMT':
     case 'MPMEC':
@@ -64,7 +68,9 @@ const getThemeColors = (role) => {
         gradientIcon: 'from-indigo-500 to-indigo-600',
         primaryText: 'text-indigo-600',
         border: 'border-indigo-200',
-        borderHover: 'border-indigo-300'
+        borderHover: 'border-indigo-300',
+        headerBg: 'from-indigo-600 to-indigo-700',
+        tableHeaderBg: 'bg-indigo-600'
       };
     case 'LGU-PMT-MPMEC-SECRETARIAT':
     case 'MPMEC-SEC':
@@ -75,7 +81,9 @@ const getThemeColors = (role) => {
         gradientIcon: 'from-cyan-500 to-cyan-600',
         primaryText: 'text-cyan-600',
         border: 'border-cyan-200',
-        borderHover: 'border-cyan-300'
+        borderHover: 'border-cyan-300',
+        headerBg: 'from-cyan-600 to-cyan-700',
+        tableHeaderBg: 'bg-cyan-600'
       };
     case 'Executive Viewer':
     case 'EMS':
@@ -86,7 +94,9 @@ const getThemeColors = (role) => {
         gradientIcon: 'from-purple-500 to-purple-600',
         primaryText: 'text-purple-600',
         border: 'border-purple-200',
-        borderHover: 'border-purple-300'
+        borderHover: 'border-purple-300',
+        headerBg: 'from-purple-600 to-purple-700',
+        tableHeaderBg: 'bg-purple-600'
       };
     default:
       return {
@@ -96,7 +106,9 @@ const getThemeColors = (role) => {
         gradientIcon: 'from-blue-500 to-blue-600',
         primaryText: 'text-blue-600',
         border: 'border-blue-200',
-        borderHover: 'border-blue-300'
+        borderHover: 'border-blue-300',
+        headerBg: 'from-blue-600 to-blue-700',
+        tableHeaderBg: 'bg-blue-600'
       };
   }
 };
@@ -130,7 +142,7 @@ const formatDate = (dateString) => {
 export default function ProjectLedgerCenter({ 
   theme = 'blue',
   userRole = null,
-  projectId = null // Optional: if provided, show specific project
+  projectId = null
 }) {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -144,12 +156,10 @@ export default function ProjectLedgerCenter({
   const API_URL = getApiUrl();
   const token = getToken();
 
-  // Fetch projects
   useEffect(() => {
     fetchProjects();
   }, [projectId]);
 
-  // If projectId is provided, fetch that specific project
   useEffect(() => {
     if (projectId) {
       fetchProjectDetails(projectId);
@@ -161,17 +171,12 @@ export default function ProjectLedgerCenter({
       setLoading(true);
       setError('');
       
-      // Use public endpoint if no token or userRole is 'public'
       const isPublic = !token || userRole === 'public';
       const endpoint = projectId 
         ? (isPublic ? `${API_URL}/projects/public/${projectId}` : `${API_URL}/projects/${projectId}`)
         : (isPublic ? `${API_URL}/projects/public` : `${API_URL}/projects`);
       
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
-      // Only add Authorization header if token exists
+      const headers = { 'Content-Type': 'application/json' };
       if (token && !isPublic) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -207,17 +212,12 @@ export default function ProjectLedgerCenter({
       setLoading(true);
       setError('');
       
-      // Use public endpoint if no token or userRole is 'public'
       const isPublic = !token || userRole === 'public';
       const endpoint = isPublic 
         ? `${API_URL}/projects/public/${id}`
         : `${API_URL}/projects/${id}`;
       
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
-      // Only add Authorization header if token exists
+      const headers = { 'Content-Type': 'application/json' };
       if (token && !isPublic) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -243,7 +243,6 @@ export default function ProjectLedgerCenter({
     }
   };
 
-  // Filter projects
   const filteredProjects = projects.filter(project => {
     const matchesSearch = !searchQuery || 
       project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -256,7 +255,6 @@ export default function ProjectLedgerCenter({
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  // Get EIU partner information
   const getEIUPartner = (project) => {
     if (project.eiuPersonnelName) {
       return {
@@ -273,25 +271,22 @@ export default function ProjectLedgerCenter({
     return null;
   };
 
-  // Get project phases/milestones with updates
   const getProjectPhases = (project) => {
     if (!project.milestones || project.milestones.length === 0) {
       return [];
     }
 
-    // Get approved updates for milestones
     const updates = project.updates || [];
     const approvedUpdates = updates.filter(u => 
       u.status === 'iu_approved' || u.status === 'secretariat_approved'
     );
 
     return project.milestones.map(milestone => {
-      // Find updates for this milestone
       const milestoneUpdates = approvedUpdates.filter(u => 
         u.milestoneUpdates?.some(mu => mu.milestoneId === milestone.id)
       );
 
-      const latestUpdate = milestoneUpdates[0]; // Most recent approved update
+      const latestUpdate = milestoneUpdates[0];
       const milestoneUpdate = latestUpdate?.milestoneUpdates?.find(
         mu => mu.milestoneId === milestone.id
       );
@@ -305,7 +300,6 @@ export default function ProjectLedgerCenter({
     });
   };
 
-  // Calculate expected days
   const calculateExpectedDays = (startDate, targetDate) => {
     if (!startDate || !targetDate) return 'N/A';
     try {
@@ -353,7 +347,7 @@ export default function ProjectLedgerCenter({
 
   return (
     <div className="w-full">
-      {/* Page Header - Matching announcement center style */}
+      {/* Page Header */}
       <div className={`bg-white border-b ${colors.border} px-8 py-6 mb-0 -mx-8 -mt-8`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -385,7 +379,7 @@ export default function ProjectLedgerCenter({
       </div>
 
       {/* Main Content */}
-      <main className="px-8 py-8 bg-white min-h-screen">
+      <main className="px-8 py-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
         {/* Search and Filter Section */}
         {!projectId && (
           <div className="mb-6 space-y-4">
@@ -396,13 +390,13 @@ export default function ProjectLedgerCenter({
                   placeholder="Search projects by name, code, or location..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
                 />
               </div>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
               >
                 <option value="">All Status</option>
                 <option value="ongoing">Ongoing</option>
@@ -413,7 +407,7 @@ export default function ProjectLedgerCenter({
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
               >
                 <option value="">All Categories</option>
                 <option value="infrastructure">Infrastructure</option>
@@ -432,9 +426,9 @@ export default function ProjectLedgerCenter({
                   <div
                     key={project.id}
                     onClick={() => setSelectedProject(project)}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all"
+                    className="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-xl cursor-pointer transition-all bg-white"
                   >
-                    <h3 className="font-bold text-lg mb-2">{project.name}</h3>
+                    <h3 className="font-bold text-lg mb-2 text-gray-800">{project.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">Code: {project.projectCode || 'N/A'}</p>
                     <p className="text-sm text-gray-600">Location: {project.location || 'N/A'}</p>
                   </div>
@@ -444,312 +438,362 @@ export default function ProjectLedgerCenter({
           </div>
         )}
 
-        {/* Project Ledger Table - RPMES Style */}
+        {/* Project Ledger Table */}
         {displayProject && (
           <div className="space-y-6">
             {/* Back Button */}
             {!projectId && (
               <button
                 onClick={() => setSelectedProject(null)}
-                className="mb-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                className="mb-4 px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-semibold shadow-sm"
               >
                 ← Back to Projects
               </button>
             )}
 
-            {/* Ledger Table Container */}
-            <div className="bg-white border-2 border-gray-300 rounded-lg overflow-hidden shadow-lg">
-              {/* Table Header */}
-              <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b-2 border-gray-300">
-                <h2 className="text-xl font-bold text-gray-800">
-                  REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) PHYSICAL AND FINANCIAL ACCOMPLISHMENT REPORT
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Implementing Agency: {displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}
-                </p>
-              </div>
-
-              {/* Basic Project Information Section */}
-              <div className="p-6 border-b-2 border-gray-300">
-                <h3 className="text-lg font-bold mb-4 text-gray-800">BASIC PROJECT INFORMATION</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Project/Program Title:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{displayProject.name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Project Code:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{displayProject.projectCode || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Implementing Office:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Category:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border capitalize">{displayProject.category || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Location/Barangay:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{displayProject.location || displayProject.barangay || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Priority:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border uppercase">{displayProject.priority || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Funding Source:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{displayProject.fundingSource || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Created Date:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{formatDate(displayProject.createdAt)}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Project Description:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border min-h-[60px]">{displayProject.description || 'N/A'}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Expected Outputs:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border min-h-[60px]">{displayProject.expectedOutputs || 'N/A'}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Target Beneficiaries:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border min-h-[60px]">{displayProject.targetBeneficiaries || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* EIU Partner Contractor Section */}
-              {eiuPartner && (
-                <div className="p-6 border-b-2 border-gray-300 bg-blue-50">
-                  <h3 className="text-lg font-bold mb-4 text-gray-800">EIU PARTNER CONTRACTOR</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.company}</p>
+            {/* Modern Ledger Table Container */}
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+              {/* Build Watch Header */}
+              <div className={`bg-gradient-to-r ${colors.headerBg} px-8 py-6 text-white relative overflow-hidden`}>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">BUILD WATCH</h2>
+                        <p className="text-sm text-white/90">Project Monitoring & Evaluation System</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Email/Username:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.email}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Contact Number:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.contact}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Birthdate:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.birthdate}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Group:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.group}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Department:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.department}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Subrole:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.subrole}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Company:</label>
-                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">{eiuPartner.company}</p>
+                    <div className="text-right">
+                      <p className="text-sm text-white/80">Physical and Financial</p>
+                      <p className="text-sm text-white/80">Accomplishment Report</p>
+                      <p className="text-xs text-white/70 mt-1">
+                        {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                      </p>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Timeline Information Section */}
-              <div className="p-6 border-b-2 border-gray-300">
-                <h3 className="text-lg font-bold mb-4 text-gray-800">TIMELINE INFORMATION</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Start Date:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{formatDate(displayProject.startDate)}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Target Completion Date:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{formatDate(displayProject.targetCompletionDate || displayProject.endDate)}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Expected Days of Completion:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">
-                      {calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate)}
+                  <div className="border-t border-white/20 pt-4">
+                    <p className="text-sm font-semibold">
+                      Implementing Agency: <span className="font-normal">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</span>
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Actual Completion Date:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">{formatDate(displayProject.actualCompletionDate || displayProject.completionDate)}</p>
-                  </div>
                 </div>
               </div>
 
-              {/* Budget Information Section */}
-              <div className="p-6 border-b-2 border-gray-300">
-                <h3 className="text-lg font-bold mb-4 text-gray-800">BUDGET INFORMATION</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Total Budget Allocation (₱):</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border font-semibold">{formatCurrency(displayProject.totalBudget)}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Budget Description:</label>
-                    <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border min-h-[60px]">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
+              {/* Main Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`${colors.tableHeaderBg} text-white`}>
+                      <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Project Information</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {/* Basic Project Information */}
+                    <tr className="bg-gray-50">
+                      <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                        BASIC PROJECT INFORMATION
+                      </td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 w-1/3">Project/Program Title</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.name || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Project Code</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.projectCode || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Implementing Office</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Category</td>
+                      <td className="px-6 py-4 text-gray-900 capitalize">{displayProject.category || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Location/Barangay</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.location || displayProject.barangay || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Priority</td>
+                      <td className="px-6 py-4 text-gray-900 uppercase">{displayProject.priority || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Funding Source</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.fundingSource || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Created Date</td>
+                      <td className="px-6 py-4 text-gray-900">{formatDate(displayProject.createdAt)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 align-top">Project Description</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.description || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 align-top">Expected Outputs</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.expectedOutputs || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b-2 border-gray-300 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 align-top">Target Beneficiaries</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.targetBeneficiaries || 'N/A'}</td>
+                    </tr>
 
-              {/* Physical Accomplishment Information Section */}
-              <div className="p-6 border-b-2 border-gray-300">
-                <h3 className="text-lg font-bold mb-4 text-gray-800">PHYSICAL ACCOMPLISHMENT INFORMATION</h3>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">General Description:</label>
-                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border min-h-[60px]">
-                    {displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}
-                  </p>
-                </div>
-              </div>
+                    {/* EIU Partner Contractor */}
+                    {eiuPartner && (
+                      <>
+                        <tr className="bg-blue-50">
+                          <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                            EIU PARTNER CONTRACTOR
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Company Name</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.company}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Email/Username</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.email}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Contact Number</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.contact}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Birthdate</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.birthdate}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Group</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.group}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Department</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.department}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Subrole</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.subrole}</td>
+                        </tr>
+                        <tr className="border-b-2 border-gray-300 hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Company</td>
+                          <td className="px-6 py-4 text-gray-900">{eiuPartner.company}</td>
+                        </tr>
+                      </>
+                    )}
 
-              {/* Project Phases Update Section */}
-              {phases.length > 0 && (
-                <div className="p-6 border-b-2 border-gray-300">
-                  <h3 className="text-lg font-bold mb-4 text-gray-800">PROJECT PHASES UPDATE</h3>
-                  <p className="text-sm text-gray-600 mb-4 italic">
-                    Updates from EIU per phases/milestone that are approved by LGU-IU
-                  </p>
-                  
-                  <div className="space-y-6">
-                    {phases.map((phase, index) => (
-                      <div key={phase.id || index} className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <h4 className="font-bold text-md mb-4 text-gray-800">Phase {index + 1}: {phase.title || phase.name || 'Untitled Phase'}</h4>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Phase (Item of Work):</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border">{phase.title || phase.name || 'N/A'}</p>
-                          </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Description:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border min-h-[60px]">{phase.description || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Planned Budget:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatCurrency(phase.plannedBudget || phase.budgetAllocation)}</p>
-                          </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Breakdown Description:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border min-h-[60px]">{phase.budgetBreakdown || phase.breakdownDescription || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Budget Alloted Weight:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border">{phase.weight || phase.budgetWeight || 'N/A'}%</p>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Physical Accomplishment Weight:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border">{phase.physicalWeight || phase.weight || 'N/A'}%</p>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Start Date:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatDate(phase.startDate)}</p>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Target Completion Date:</label>
-                            <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatDate(phase.dueDate || phase.targetDate)}</p>
-                          </div>
-                          {phase.update && (
-                            <>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Submission Date:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatDate(phase.submissionDate)}</p>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Actual Phase Completion Date:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatDate(phase.update.actualCompletionDate || phase.update.completionDate)}</p>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Timeline Activities & Deliverables:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border min-h-[60px]">{phase.update.timelineActivities || phase.update.activities || 'N/A'}</p>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Used Budget:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatCurrency(phase.update.usedBudget || phase.update.budgetUsed)}</p>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Remaining Budget:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border">{formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update.usedBudget || phase.update.budgetUsed || 0))}</p>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Budget Breakdown & Allocation:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border min-h-[60px]">{phase.update.budgetBreakdown || phase.update.budgetAllocation || 'N/A'}</p>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Physical Accomplishment Gained Weight:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border">{phase.update.physicalAccomplishmentWeight || phase.update.progress || 'N/A'}%</p>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Photo Proof:</label>
-                                <div className="flex flex-wrap gap-2">
-                                  {phase.update.photoProof && phase.update.photoProof.length > 0 ? (
-                                    phase.update.photoProof.map((photo, idx) => (
-                                      <img key={idx} src={photo} alt={`Proof ${idx + 1}`} className="w-24 h-24 object-cover rounded border" />
-                                    ))
-                                  ) : (
-                                    <p className="text-sm text-gray-500">No photos available</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Video Proof:</label>
-                                <div className="flex flex-wrap gap-2">
-                                  {phase.update.videoProof && phase.update.videoProof.length > 0 ? (
-                                    phase.update.videoProof.map((video, idx) => (
-                                      <video key={idx} src={video} controls className="w-48 h-32 object-cover rounded border" />
-                                    ))
-                                  ) : (
-                                    <p className="text-sm text-gray-500">No videos available</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Document Proof:</label>
-                                <div className="flex flex-wrap gap-2">
-                                  {phase.update.documentProof && phase.update.documentProof.length > 0 ? (
-                                    phase.update.documentProof.map((doc, idx) => (
-                                      <a key={idx} href={doc} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                        Document {idx + 1}
-                                      </a>
-                                    ))
-                                  ) : (
-                                    <p className="text-sm text-gray-500">No documents available</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Physical Progress Description:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border min-h-[60px]">{phase.update.physicalDescription || phase.update.description || 'N/A'}</p>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Submitted By:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border">{phase.submittedBy}</p>
-                              </div>
-                              <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Remarks and Recommendation:</label>
-                                <p className="text-sm text-gray-900 bg-white p-2 rounded border min-h-[60px]">{phase.update.remarks || phase.update.recommendation || 'N/A'}</p>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    {/* Timeline Information */}
+                    <tr className="bg-gray-50">
+                      <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                        TIMELINE INFORMATION
+                      </td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Start Date</td>
+                      <td className="px-6 py-4 text-gray-900">{formatDate(displayProject.startDate)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Target Completion Date</td>
+                      <td className="px-6 py-4 text-gray-900">{formatDate(displayProject.targetCompletionDate || displayProject.endDate)}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Expected Days of Completion</td>
+                      <td className="px-6 py-4 text-gray-900">
+                        {calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate)}
+                      </td>
+                    </tr>
+                    <tr className="border-b-2 border-gray-300 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Actual Completion Date</td>
+                      <td className="px-6 py-4 text-gray-900">{formatDate(displayProject.actualCompletionDate || displayProject.completionDate)}</td>
+                    </tr>
+
+                    {/* Budget Information */}
+                    <tr className="bg-gray-50">
+                      <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                        BUDGET INFORMATION
+                      </td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Total Budget Allocation (₱)</td>
+                      <td className="px-6 py-4 text-gray-900 font-bold">{formatCurrency(displayProject.totalBudget)}</td>
+                    </tr>
+                    <tr className="border-b-2 border-gray-300 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 align-top">Budget Description</td>
+                      <td className="px-6 py-4 text-gray-900">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
+                    </tr>
+
+                    {/* Physical Accomplishment Information */}
+                    <tr className="bg-gray-50">
+                      <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                        PHYSICAL ACCOMPLISHMENT INFORMATION
+                      </td>
+                    </tr>
+                    <tr className="border-b-2 border-gray-300 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 align-top">General Description</td>
+                      <td className="px-6 py-4 text-gray-900">
+                        {displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}
+                      </td>
+                    </tr>
+
+                    {/* Project Phases Update */}
+                    {phases.length > 0 && (
+                      <>
+                        <tr className="bg-indigo-50">
+                          <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                            PROJECT PHASES UPDATE
+                            <span className="text-xs font-normal text-gray-600 ml-2 italic">
+                              (Updates from EIU per phases/milestone approved by LGU-IU)
+                            </span>
+                          </td>
+                        </tr>
+                        {phases.map((phase, index) => (
+                          <React.Fragment key={phase.id || index}>
+                            <tr className="bg-indigo-100/50">
+                              <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b border-gray-300">
+                                Phase {index + 1}: {phase.title || phase.name || 'Untitled Phase'}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Phase (Item of Work)</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.title || phase.name || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Description</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.description || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Planned Budget</td>
+                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.plannedBudget || phase.budgetAllocation)}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Breakdown Description</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.budgetBreakdown || phase.breakdownDescription || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Budget Alloted Weight</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.weight || phase.budgetWeight || 'N/A'}%</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Physical Accomplishment Weight</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.physicalWeight || phase.weight || 'N/A'}%</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Start Date</td>
+                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.startDate)}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Target Completion Date</td>
+                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.dueDate || phase.targetDate)}</td>
+                            </tr>
+                            {phase.update && (
+                              <>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submission Date</td>
+                                  <td className="px-6 py-4 text-gray-900">{formatDate(phase.submissionDate)}</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Actual Phase Completion Date</td>
+                                  <td className="px-6 py-4 text-gray-900">{formatDate(phase.update.actualCompletionDate || phase.update.completionDate)}</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Timeline Activities & Deliverables</td>
+                                  <td className="px-6 py-4 text-gray-900">{phase.update.timelineActivities || phase.update.activities || 'N/A'}</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Used Budget</td>
+                                  <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.update.usedBudget || phase.update.budgetUsed)}</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Remaining Budget</td>
+                                  <td className="px-6 py-4 text-gray-900">
+                                    {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update.usedBudget || phase.update.budgetUsed || 0))}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Budget Breakdown & Allocation</td>
+                                  <td className="px-6 py-4 text-gray-900">{phase.update.budgetBreakdown || phase.update.budgetAllocation || 'N/A'}</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Physical Accomplishment Gained Weight</td>
+                                  <td className="px-6 py-4 text-gray-900">{phase.update.physicalAccomplishmentWeight || phase.update.progress || 'N/A'}%</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Photo Proof</td>
+                                  <td className="px-6 py-4 text-gray-900">
+                                    {phase.update.photoProof && phase.update.photoProof.length > 0 ? (
+                                      <div className="flex flex-wrap gap-2">
+                                        {phase.update.photoProof.map((photo, idx) => (
+                                          <img key={idx} src={photo} alt={`Proof ${idx + 1}`} className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow" />
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-500">No photos available</span>
+                                    )}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Video Proof</td>
+                                  <td className="px-6 py-4 text-gray-900">
+                                    {phase.update.videoProof && phase.update.videoProof.length > 0 ? (
+                                      <div className="flex flex-wrap gap-2">
+                                        {phase.update.videoProof.map((video, idx) => (
+                                          <video key={idx} src={video} controls className="w-48 h-32 object-cover rounded-lg border-2 border-gray-200 shadow-sm" />
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-500">No videos available</span>
+                                    )}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Document Proof</td>
+                                  <td className="px-6 py-4 text-gray-900">
+                                    {phase.update.documentProof && phase.update.documentProof.length > 0 ? (
+                                      <div className="flex flex-wrap gap-2">
+                                        {phase.update.documentProof.map((doc, idx) => (
+                                          <a key={idx} href={doc} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                            Document {idx + 1}
+                                          </a>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-500">No documents available</span>
+                                    )}
+                                  </td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Physical Progress Description</td>
+                                  <td className="px-6 py-4 text-gray-900">{phase.update.physicalDescription || phase.update.description || 'N/A'}</td>
+                                </tr>
+                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submitted By</td>
+                                  <td className="px-6 py-4 text-gray-900">{phase.submittedBy}</td>
+                                </tr>
+                                <tr className="border-b-2 border-gray-300 hover:bg-indigo-50/30 transition-colors">
+                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Remarks and Recommendation</td>
+                                  <td className="px-6 py-4 text-gray-900">{phase.update.remarks || phase.update.recommendation || 'N/A'}</td>
+                                </tr>
+                              </>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Footer */}
-              <div className="bg-gray-100 px-6 py-4 text-center text-sm text-gray-600">
-                <p>Generated on {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <div className={`bg-gradient-to-r ${colors.headerBg} px-8 py-4 text-white text-center text-sm`}>
+                <p>Generated on {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-xs text-white/80 mt-1">Build Watch Project Monitoring & Evaluation System</p>
               </div>
             </div>
           </div>
@@ -777,4 +821,3 @@ export default function ProjectLedgerCenter({
     </div>
   );
 }
-
