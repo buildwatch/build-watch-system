@@ -692,96 +692,99 @@ export default function ProjectLedgerCenter({
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Target Completion Date</td>
                               <td className="px-6 py-4 text-gray-900">{formatDate(phase.dueDate || phase.targetDate)}</td>
                             </tr>
-                            {phase.update && (
-                              <>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submission Date</td>
-                                  <td className="px-6 py-4 text-gray-900">{formatDate(phase.submissionDate)}</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Actual Phase Completion Date</td>
-                                  <td className="px-6 py-4 text-gray-900">{formatDate(phase.update.actualCompletionDate || phase.update.completionDate)}</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Timeline Activities & Deliverables</td>
-                                  <td className="px-6 py-4 text-gray-900">{phase.update.timelineActivities || phase.update.activities || 'N/A'}</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Used Budget</td>
-                                  <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.update.usedBudget || phase.update.budgetUsed)}</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Remaining Budget</td>
-                                  <td className="px-6 py-4 text-gray-900">
-                                    {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update.usedBudget || phase.update.budgetUsed || 0))}
-                                  </td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Budget Breakdown & Allocation</td>
-                                  <td className="px-6 py-4 text-gray-900">{phase.update.budgetBreakdown || phase.update.budgetAllocation || 'N/A'}</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Physical Accomplishment Gained Weight</td>
-                                  <td className="px-6 py-4 text-gray-900">{phase.update.physicalAccomplishmentWeight || phase.update.progress || 'N/A'}%</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Photo Proof</td>
-                                  <td className="px-6 py-4 text-gray-900">
-                                    {phase.update.photoProof && phase.update.photoProof.length > 0 ? (
-                                      <div className="flex flex-wrap gap-2">
-                                        {phase.update.photoProof.map((photo, idx) => (
-                                          <img key={idx} src={photo} alt={`Proof ${idx + 1}`} className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow" />
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <span className="text-gray-500">No photos available</span>
-                                    )}
-                                  </td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Video Proof</td>
-                                  <td className="px-6 py-4 text-gray-900">
-                                    {phase.update.videoProof && phase.update.videoProof.length > 0 ? (
-                                      <div className="flex flex-wrap gap-2">
-                                        {phase.update.videoProof.map((video, idx) => (
-                                          <video key={idx} src={video} controls className="w-48 h-32 object-cover rounded-lg border-2 border-gray-200 shadow-sm" />
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <span className="text-gray-500">No videos available</span>
-                                    )}
-                                  </td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Document Proof</td>
-                                  <td className="px-6 py-4 text-gray-900">
-                                    {phase.update.documentProof && phase.update.documentProof.length > 0 ? (
-                                      <div className="flex flex-wrap gap-2">
-                                        {phase.update.documentProof.map((doc, idx) => (
-                                          <a key={idx} href={doc} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                                            Document {idx + 1}
-                                          </a>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <span className="text-gray-500">No documents available</span>
-                                    )}
-                                  </td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Physical Progress Description</td>
-                                  <td className="px-6 py-4 text-gray-900">{phase.update.physicalDescription || phase.update.description || 'N/A'}</td>
-                                </tr>
-                                <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submitted By</td>
-                                  <td className="px-6 py-4 text-gray-900">{phase.submittedBy}</td>
-                                </tr>
-                                <tr className="border-b-2 border-gray-300 hover:bg-indigo-50/30 transition-colors">
-                                  <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Remarks and Recommendation</td>
-                                  <td className="px-6 py-4 text-gray-900">{phase.update.remarks || phase.update.recommendation || 'N/A'}</td>
-                                </tr>
-                              </>
-                            )}
+                            
+                            {/* CONTRACTOR UPDATE Section - Always shown */}
+                            <tr className="bg-indigo-200/50">
+                              <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                                CONTRACTOR UPDATE
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submission Date</td>
+                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.submissionDate)}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Actual Phase Completion Date</td>
+                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.update?.actualCompletionDate || phase.update?.completionDate)}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Timeline Activities & Deliverables</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.update?.timelineActivities || phase.update?.activities || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Used Budget</td>
+                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.update?.usedBudget || phase.update?.budgetUsed || 0)}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Remaining Budget</td>
+                              <td className="px-6 py-4 text-gray-900">
+                                {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update?.usedBudget || phase.update?.budgetUsed || 0))}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Budget Breakdown & Allocation</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.update?.budgetBreakdown || phase.update?.budgetAllocation || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Physical Accomplishment Gained Weight</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.update?.physicalAccomplishmentWeight || phase.update?.progress || 'N/A'}%</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Photo Proof</td>
+                              <td className="px-6 py-4 text-gray-900">
+                                {phase.update?.photoProof && phase.update.photoProof.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {phase.update.photoProof.map((photo, idx) => (
+                                      <img key={idx} src={photo} alt={`Proof ${idx + 1}`} className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow" />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500">No photos available</span>
+                                )}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Video Proof</td>
+                              <td className="px-6 py-4 text-gray-900">
+                                {phase.update?.videoProof && phase.update.videoProof.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {phase.update.videoProof.map((video, idx) => (
+                                      <video key={idx} src={video} controls className="w-48 h-32 object-cover rounded-lg border-2 border-gray-200 shadow-sm" />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500">No videos available</span>
+                                )}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Document Proof</td>
+                              <td className="px-6 py-4 text-gray-900">
+                                {phase.update?.documentProof && phase.update.documentProof.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {phase.update.documentProof.map((doc, idx) => (
+                                      <a key={idx} href={doc} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                        Document {idx + 1}
+                                      </a>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500">No documents available</span>
+                                )}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Physical Progress Description</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.update?.physicalDescription || phase.update?.description || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submitted By</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.submittedBy || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b-2 border-gray-300 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Remarks and Recommendation</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.update?.remarks || phase.update?.recommendation || 'N/A'}</td>
+                            </tr>
                           </React.Fragment>
                         ))}
                       </>
