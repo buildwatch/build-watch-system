@@ -139,6 +139,20 @@ const formatDate = (dateString) => {
   }
 };
 
+// Format date for RPMES (mm-dd-yyyy)
+const formatDateRPMES = (dateString) => {
+  if (!dateString) return 'N/A';
+  try {
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}-${day}-${year}`;
+  } catch (e) {
+    return dateString;
+  }
+};
+
 export default function ProjectLedgerCenter({ 
   theme = 'blue',
   userRole = null,
@@ -151,6 +165,7 @@ export default function ProjectLedgerCenter({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  const [tableView, setTableView] = useState('vertical'); // 'vertical' or 'horizontal'
   
   const colors = getThemeColors(userRole || getCurrentUserRole());
   const API_URL = getApiUrl();
@@ -451,6 +466,40 @@ export default function ProjectLedgerCenter({
               </button>
             )}
 
+            {/* View Toggle Buttons */}
+            <div className="flex justify-end gap-3 mb-4">
+              <button
+                onClick={() => setTableView('vertical')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                  tableView === 'vertical'
+                    ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                  </svg>
+                  Vertical Table View
+                </div>
+              </button>
+              <button
+                onClick={() => setTableView('horizontal')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                  tableView === 'horizontal'
+                    ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2H19a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                  </svg>
+                  Horizontal Table View
+                </div>
+              </button>
+            </div>
+
             {/* Modern Ledger Table Container */}
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
               {/* Build Watch Header */}
@@ -485,16 +534,18 @@ export default function ProjectLedgerCenter({
                 </div>
               </div>
 
-              {/* Main Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className={`${colors.tableHeaderBg} text-white`}>
-                      <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Project Information</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Details</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white">
+              {/* Main Table - Conditional Rendering */}
+              {tableView === 'vertical' ? (
+                /* Vertical Table View */
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className={`${colors.tableHeaderBg} text-white`}>
+                        <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Project Information</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
                     {/* Basic Project Information */}
                     <tr className="bg-gray-50">
                       <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
@@ -792,6 +843,90 @@ export default function ProjectLedgerCenter({
                   </tbody>
                 </table>
               </div>
+              ) : (
+                /* Horizontal Table View - RPMES Style */
+                <div className="overflow-x-auto max-h-[calc(100vh-400px)]">
+                  <div className="inline-block min-w-full align-middle">
+                    <div className="overflow-x-auto shadow-inner">
+                      <table className="w-full border-collapse border border-gray-400 min-w-[2200px] text-xs">
+                        <thead className="sticky top-0 z-10">
+                          {/* Main Header Row */}
+                          <tr className={`${colors.tableHeaderBg} text-white border-b-2 border-white`}>
+                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[220px]">Program/Project Title</th>
+                            <th colSpan="5" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Implementation Schedule</th>
+                            <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Fund Source</th>
+                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[140px]">Total Program/Project Cost (PHP)</th>
+                            <th colSpan="4" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Financial Status (in PHP exact figures)</th>
+                            <th colSpan="7" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Physical Accomplishment</th>
+                            <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Employment Generated</th>
+                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[280px]">Remarks</th>
+                          </tr>
+                          {/* Sub-header Row */}
+                          <tr className={`${colors.tableHeaderBg} text-white`}>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Start Date<br/>(mm-dd-yyyy)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">End Date<br/>(mm-dd-yyyy)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Fund Source</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Funding Agency</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[90px] leading-tight">Expected Days</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Fund Source</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Funding Agency</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Appropriations</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Allotment</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Obligations</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Disbursements</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Target OWPA<br/>to date (%)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Actual OWPA<br/>to date (%)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[70px] leading-tight">Slippage</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[220px] leading-tight">Output Indicator</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[80px] leading-tight">End-of-Project<br/>Target</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Target<br/>to date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Actual<br/>to date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[55px] leading-tight">M<br/>(Male)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold text-center bg-opacity-100 min-w-[55px] leading-tight">F<br/>(Female)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white">
+                          <tr className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
+                            <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDateRPMES(displayProject.startDate)}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDateRPMES(displayProject.targetCompletionDate || displayProject.endDate)}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingAgency || displayProject.implementingOfficeName || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{(() => {
+                              const days = calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate);
+                              return days.replace(' days', '').replace('N/A', 'N/A');
+                            })()}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingAgency || displayProject.implementingOfficeName || 'N/A'}</td>
+                            <td className="px-3 py-3 text-xs border-r border-gray-400 text-right font-semibold bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.disbursements || 0).replace('₱', '').trim()}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.progress?.targetOWPA || displayProject.targetOWPA || displayProject.progress?.target || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center font-semibold bg-white">{displayProject.progress?.actualOWPA || displayProject.actualOWPA || displayProject.progress?.overall || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                              {(() => {
+                                const target = parseFloat(displayProject.progress?.targetOWPA || displayProject.targetOWPA || displayProject.progress?.target || 0);
+                                const actual = parseFloat(displayProject.progress?.actualOWPA || displayProject.actualOWPA || displayProject.progress?.overall || 0);
+                                const slippage = actual - target;
+                                return slippage !== 0 ? `${slippage > 0 ? '+' : ''}${slippage.toFixed(1)}` : '0';
+                              })()}
+                            </td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.outputIndicator || displayProject.expectedOutputs || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.endOfProjectTarget || displayProject.progress?.target || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.targetToDate || displayProject.progress?.targetOWPA || displayProject.progress?.target || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.actualToDate || displayProject.progress?.actualOWPA || displayProject.progress?.overall || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.employmentGenerated?.male || displayProject.employmentMale || '0'}</td>
+                            <td className="px-2 py-3 text-xs text-center bg-white">{displayProject.employmentGenerated?.female || displayProject.employmentFemale || '0'}</td>
+                            <td className="px-3 py-3 text-xs align-top bg-white">{displayProject.remarks || 'N/A'}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Footer */}
               <div className={`bg-gradient-to-r ${colors.headerBg} px-8 py-4 text-white text-center text-sm`}>
