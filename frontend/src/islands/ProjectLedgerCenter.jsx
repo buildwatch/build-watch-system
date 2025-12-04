@@ -844,83 +844,208 @@ export default function ProjectLedgerCenter({
                 </table>
               </div>
               ) : (
-                /* Horizontal Table View - RPMES Style */
+                /* Horizontal Table View - Correct Structure */
                 <div className="overflow-x-auto max-h-[calc(100vh-400px)]">
                   <div className="inline-block min-w-full align-middle">
                     <div className="overflow-x-auto shadow-inner">
-                      <table className="w-full border-collapse border border-gray-400 min-w-[2200px] text-xs">
+                      <table className="w-full border-collapse border border-gray-400 min-w-[3000px] text-xs">
                         <thead className="sticky top-0 z-10">
                           {/* Main Header Row */}
                           <tr className={`${colors.tableHeaderBg} text-white border-b-2 border-white`}>
-                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[220px]">Program/Project Title</th>
-                            <th colSpan="5" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Implementation Schedule</th>
-                            <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Fund Source</th>
-                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[140px]">Total Program/Project Cost (PHP)</th>
-                            <th colSpan="4" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Financial Status (in PHP exact figures)</th>
-                            <th colSpan="7" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Physical Accomplishment</th>
-                            <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Employment Generated</th>
-                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[280px]">Remarks</th>
+                            <th colSpan="11" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Basic Project Information</th>
+                            <th colSpan="8" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">EIU Partner Contractor</th>
+                            <th colSpan="4" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Timeline Information</th>
+                            <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Budget Information</th>
+                            <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[200px]">Physical Accomplishment Information</th>
+                            <th colSpan="19" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Project Phases Update</th>
                           </tr>
                           {/* Sub-header Row */}
                           <tr className={`${colors.tableHeaderBg} text-white`}>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Start Date<br/>(mm-dd-yyyy)</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">End Date<br/>(mm-dd-yyyy)</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Fund Source</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Funding Agency</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[90px] leading-tight">Expected Days</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Fund Source</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Funding Agency</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Appropriations</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Allotment</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Obligations</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[110px] leading-tight">Disbursements</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Target OWPA<br/>to date (%)</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Actual OWPA<br/>to date (%)</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[70px] leading-tight">Slippage</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[220px] leading-tight">Output Indicator</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[80px] leading-tight">End-of-Project<br/>Target</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Target<br/>to date</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[75px] leading-tight">Actual<br/>to date</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[55px] leading-tight">M<br/>(Male)</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold text-center bg-opacity-100 min-w-[55px] leading-tight">F<br/>(Female)</th>
+                            {/* Basic Project Information */}
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Project/Program Title</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Project Code</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Implementing Office</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Category</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Location/Barangay</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Priority</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Funding Source</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Created Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Project Description</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[180px] leading-tight">Expected Outputs</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Target Beneficiaries</th>
+                            
+                            {/* EIU Partner Contractor */}
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company Name</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Email/Username</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Contact Number</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Birthdate</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Group</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Department</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Subrole</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company</th>
+                            
+                            {/* Timeline Information */}
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Start Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Target Completion Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Expected Days of Completion</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Actual Completion Date</th>
+                            
+                            {/* Budget Information */}
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Total Budget Allocation (₱)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Budget Description</th>
+                            
+                            {/* Physical Accomplishment Information - rowSpan="2" so no sub-header */}
+                            
+                            {/* Project Phases Update */}
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Phase (Item of Work)</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Description</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Planned Budget</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[180px] leading-tight">Breakdown Description</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Budget Alloted Weight</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[140px] leading-tight">Physical Accomplishment Weight</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Start Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Target Completion Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Submission Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Actual Phase Completion Date</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Timeline Activities & Deliverables</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Used Budget</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Remaining Budget</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[180px] leading-tight">Budget Breakdown & Allocation</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[140px] leading-tight">Physical Accomplishment Gained Weight</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Photo Proof</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Video Proof</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Document Proof</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Physical Progress Description</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Submitted By</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold text-center bg-opacity-100 min-w-[200px] leading-tight">Remarks and Recommendation</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white">
+                          {phases.length > 0 ? (
+                            // Render one row per phase
+                            phases.map((phase, phaseIndex) => (
+                              <tr key={phase.id || phaseIndex} className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
+                                {/* Basic Project Information - Same for all rows */}
+                                <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.projectCode || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.location || displayProject.barangay || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white uppercase">{displayProject.priority || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.createdAt)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.description || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.targetBeneficiaries || 'N/A'}</td>
+                                
+                                {/* EIU Partner Contractor - Same for all rows */}
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{eiuPartner?.birthdate || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                
+                                {/* Timeline Information - Same for all rows */}
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.startDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.targetCompletionDate || displayProject.endDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate)}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.actualCompletionDate || displayProject.completionDate)}</td>
+                                
+                                {/* Budget Information - Same for all rows */}
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right font-semibold bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
+                                
+                                {/* Physical Accomplishment Information - Same for all rows */}
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}</td>
+                                
+                                {/* Project Phases Update - Different per phase */}
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{phase.title || phase.name || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.description || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.plannedBudget || phase.budgetAllocation || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.budgetBreakdown || phase.breakdownDescription || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.weight || phase.budgetWeight || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.physicalWeight || phase.weight || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.startDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.dueDate || phase.targetDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.submissionDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.update?.actualCompletionDate || phase.update?.completionDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.timelineActivities || phase.update?.activities || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.update?.usedBudget || phase.update?.budgetUsed || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">
+                                  {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update?.usedBudget || phase.update?.budgetUsed || 0)).replace('₱', '').trim()}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.budgetBreakdown || phase.update?.budgetAllocation || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.update?.physicalAccomplishmentWeight || phase.update?.progress || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {phase.update?.photoProof && phase.update.photoProof.length > 0 
+                                    ? `${phase.update.photoProof.length} photo(s)` 
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {phase.update?.videoProof && phase.update.videoProof.length > 0 
+                                    ? `${phase.update.videoProof.length} video(s)` 
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {phase.update?.documentProof && phase.update.documentProof.length > 0 
+                                    ? `${phase.update.documentProof.length} document(s)` 
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.physicalDescription || phase.update?.description || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.submittedBy || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs align-top bg-white">{phase.update?.remarks || phase.update?.recommendation || 'N/A'}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            // If no phases, show one row with project info only
                           <tr className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
+                              {/* Basic Project Information */}
                             <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDateRPMES(displayProject.startDate)}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDateRPMES(displayProject.targetCompletionDate || displayProject.endDate)}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.projectCode || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.location || displayProject.barangay || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white uppercase">{displayProject.priority || 'N/A'}</td>
                             <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingAgency || displayProject.implementingOfficeName || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{(() => {
-                              const days = calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate);
-                              return days.replace(' days', '').replace('N/A', 'N/A');
-                            })()}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingAgency || displayProject.implementingOfficeName || 'N/A'}</td>
-                            <td className="px-3 py-3 text-xs border-r border-gray-400 text-right font-semibold bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(displayProject.disbursements || 0).replace('₱', '').trim()}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.progress?.targetOWPA || displayProject.targetOWPA || displayProject.progress?.target || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center font-semibold bg-white">{displayProject.progress?.actualOWPA || displayProject.actualOWPA || displayProject.progress?.overall || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.createdAt)}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.description || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.targetBeneficiaries || 'N/A'}</td>
+                              
+                              {/* EIU Partner Contractor */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{eiuPartner?.birthdate || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                              
+                              {/* Timeline Information */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.startDate)}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.targetCompletionDate || displayProject.endDate)}</td>
                             <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                              {(() => {
-                                const target = parseFloat(displayProject.progress?.targetOWPA || displayProject.targetOWPA || displayProject.progress?.target || 0);
-                                const actual = parseFloat(displayProject.progress?.actualOWPA || displayProject.actualOWPA || displayProject.progress?.overall || 0);
-                                const slippage = actual - target;
-                                return slippage !== 0 ? `${slippage > 0 ? '+' : ''}${slippage.toFixed(1)}` : '0';
-                              })()}
+                                {calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate)}
                             </td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.outputIndicator || displayProject.expectedOutputs || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.endOfProjectTarget || displayProject.progress?.target || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.targetToDate || displayProject.progress?.targetOWPA || displayProject.progress?.target || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.actualToDate || displayProject.progress?.actualOWPA || displayProject.progress?.overall || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.employmentGenerated?.male || displayProject.employmentMale || '0'}</td>
-                            <td className="px-2 py-3 text-xs text-center bg-white">{displayProject.employmentGenerated?.female || displayProject.employmentFemale || '0'}</td>
-                            <td className="px-3 py-3 text-xs align-top bg-white">{displayProject.remarks || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.actualCompletionDate || displayProject.completionDate)}</td>
+                              
+                              {/* Budget Information */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-right font-semibold bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
+                              
+                              {/* Physical Accomplishment Information */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}</td>
+                              
+                              {/* Project Phases Update - Empty when no phases */}
+                              <td colSpan="19" className="px-2 py-3 text-xs text-center bg-white text-gray-500">No phases available</td>
                           </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
