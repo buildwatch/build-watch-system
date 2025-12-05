@@ -311,7 +311,7 @@ export default function ProjectLedgerCenter({
     }
     
     // Special handling for submissions module - ensure we have complete data
-    if (eiuData && (!eiuData.contactNumber || !eiuData.birthdate || !eiuData.department)) {
+    if (eiuData && (!eiuData.contactNumber || !eiuData.department)) {
       console.log('👤 EIU data appears incomplete, checking for additional fields...');
       
       // Try to get more complete data from the enriched object
@@ -319,14 +319,25 @@ export default function ProjectLedgerCenter({
         eiuData = {
           ...eiuData,
           ...project.eiuPersonnel,
-          // Ensure all fields are properly mapped
-          contactNumber: project.eiuPersonnel.contactNumber || project.eiuPersonnel.phoneNumber || eiuData.contactNumber,
-          birthdate: project.eiuPersonnel.birthdate || eiuData.birthdate,
-          department: project.eiuPersonnel.department || project.eiuPersonnel.externalCompanyName || eiuData.department || 'External Partner Company',
-          externalCompanyName: project.eiuPersonnel.externalCompanyName || project.eiuPersonnel.department || eiuData.externalCompanyName || 'Sample Company',
+          // Ensure all fields are properly mapped - check all possible field names
+          contactNumber: project.eiuPersonnel.contactNumber || project.eiuPersonnel.phoneNumber || project.eiuPersonnel.phone || 
+                         project.eiuPersonnel.contact || project.eiuPersonnel.contact_number || project.eiuPersonnel.phone_number ||
+                         eiuData.contactNumber || eiuData.phoneNumber || eiuData.phone || eiuData.contact,
+          department: project.eiuPersonnel.department || project.eiuPersonnel.externalCompanyName || project.eiuPersonnel.departmentName || 
+                      eiuData.department || eiuData.departmentName || 'External Partner Company',
+          externalCompanyName: project.eiuPersonnel.externalCompanyName || project.eiuPersonnel.department || project.eiuPersonnel.company || 
+                               project.eiuPersonnel.companyName || eiuData.externalCompanyName || eiuData.company || eiuData.companyName,
           profilePicture: project.eiuPersonnel.profilePicture || eiuData.profilePicture
         };
         console.log('👤 Enhanced EIU data:', eiuData);
+        console.log('📞 All contact-related fields in enhanced data:', {
+          contactNumber: eiuData.contactNumber,
+          phoneNumber: eiuData.phoneNumber,
+          phone: eiuData.phone,
+          contact: eiuData.contact,
+          contact_number: eiuData.contact_number,
+          phone_number: eiuData.phone_number
+        });
       }
     }
     
@@ -341,12 +352,14 @@ export default function ProjectLedgerCenter({
     // Extract fields with multiple fallback options (matching ProjectDetailsModal.astro)
     const fullName = eiuData.name || eiuData.fullName || `${eiuData.firstName || ''} ${eiuData.lastName || ''}`.trim();
     const email = eiuData.email || eiuData.username;
-    const contact = eiuData.contactNumber || eiuData.phoneNumber || eiuData.contact || eiuData.contact_number || eiuData.phone_number;
+    // Try multiple sources for contact number - also check project level
+    const contact = eiuData.contactNumber || eiuData.phoneNumber || eiuData.contact || eiuData.contact_number || eiuData.phone_number || 
+                    project.contactNumber || project.phoneNumber || project.contact;
     const group = eiuData.group || eiuData.groupName || 'EIU';
     const department = eiuData.department || eiuData.departmentName;
     const subrole = eiuData.subRole || eiuData.subrole || eiuData.role;
-    const company = eiuData.externalCompanyName || eiuData.company;
-    const birthdate = eiuData.birthdate || eiuData.birthDate || eiuData.dateOfBirth;
+    // Company Name should be the EIU's full name (name field), not the company field
+    const company = fullName; // Use full name as company name
     
     // Handle cases where fields might be empty strings or null
     const displayFullName = fullName && fullName !== '' && fullName !== 'null' ? fullName : 'N/A';
@@ -356,7 +369,6 @@ export default function ProjectLedgerCenter({
     const displayDepartment = department && department !== '' && department !== 'null' ? department : 'N/A';
     const displaySubrole = subrole && subrole !== '' && subrole !== 'null' ? subrole : 'N/A';
     const displayCompany = company && company !== '' && company !== 'null' ? company : 'N/A';
-    const displayBirthdate = birthdate && birthdate !== '' && birthdate !== 'null' ? formatDate(birthdate) : 'N/A';
     
     console.log('👤 Extracted EIU values:', {
       displayFullName,
@@ -365,19 +377,27 @@ export default function ProjectLedgerCenter({
       displayGroup,
       displayDepartment,
       displaySubrole,
-      displayCompany,
-      displayBirthdate
+      displayCompany
+    });
+    
+    console.log('📞 Contact Number Debug:', {
+      'eiuData.contactNumber': eiuData.contactNumber,
+      'eiuData.phoneNumber': eiuData.phoneNumber,
+      'eiuData.contact': eiuData.contact,
+      'project.contactNumber': project.contactNumber,
+      'project.phoneNumber': project.phoneNumber,
+      'project.contact': project.contact,
+      'final contact': displayContact
     });
     
     return {
       name: displayFullName,
       email: displayEmail,
       contact: displayContact,
-      birthdate: displayBirthdate,
       group: displayGroup,
       department: displayDepartment,
       subrole: displaySubrole,
-      company: displayCompany
+      company: displayCompany // This is now the EIU's full name
     };
   };
 
@@ -478,6 +498,10 @@ export default function ProjectLedgerCenter({
         console.log('  - project.eiu:', displayProject.eiu);
         console.log('  - project.eiuPartner:', displayProject.eiuPartner);
         console.log('  - project._debug?.eiuPersonnel:', displayProject._debug?.eiuPersonnel);
+        console.log('  - project.contactNumber:', displayProject.contactNumber);
+        console.log('  - project.phoneNumber:', displayProject.phoneNumber);
+        console.log('  - project.contact:', displayProject.contact);
+        console.log('  - All project keys with "contact" or "phone":', Object.keys(displayProject).filter(k => k.toLowerCase().includes('contact') || k.toLowerCase().includes('phone')));
       }
       
       // Physical Accomplishment Debug
@@ -772,10 +796,6 @@ export default function ProjectLedgerCenter({
                           <td className="px-6 py-4 text-gray-900">{eiuPartner.contact}</td>
                         </tr>
                         <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Birthdate</td>
-                          <td className="px-6 py-4 text-gray-900">{eiuPartner.birthdate}</td>
-                        </tr>
-                        <tr className="border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
                           <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Group</td>
                           <td className="px-6 py-4 text-gray-900">{eiuPartner.group}</td>
                         </tr>
@@ -1007,7 +1027,7 @@ export default function ProjectLedgerCenter({
                           {/* Main Header Row */}
                           <tr className={`${colors.tableHeaderBg} text-white border-b-2 border-white`}>
                             <th colSpan="11" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Basic Project Information</th>
-                            <th colSpan="8" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">EIU Partner Contractor</th>
+                            <th colSpan="7" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">EIU Partner Contractor</th>
                             <th colSpan="4" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Timeline Information</th>
                             <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Budget Information</th>
                             <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[200px]">Physical Accomplishment Information</th>
@@ -1032,7 +1052,6 @@ export default function ProjectLedgerCenter({
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company Name</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Email/Username</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Contact Number</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Birthdate</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Group</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Department</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Subrole</th>
@@ -1099,7 +1118,6 @@ export default function ProjectLedgerCenter({
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{eiuPartner?.birthdate || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
@@ -1180,7 +1198,6 @@ export default function ProjectLedgerCenter({
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{eiuPartner?.birthdate || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
