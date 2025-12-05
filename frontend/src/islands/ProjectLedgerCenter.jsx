@@ -921,25 +921,24 @@ export default function ProjectLedgerCenter({
                           </tr>
                         </thead>
                         <tbody className="bg-white">
-                          {/* Render only ONE row per project - use first phase if available */}
-                          {(() => {
-                            const firstPhase = phases.length > 0 ? phases[0] : null;
-                            return (
-                          <tr className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
-                                {/* Basic Project Information */}
-                            <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
+                          {phases.length > 0 ? (
+                            // Render one row per phase - project info repeated for each phase
+                            phases.map((phase, phaseIndex) => (
+                              <tr key={phase.id || phaseIndex} className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
+                                {/* Basic Project Information - Same for all rows */}
+                                <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.projectCode || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.location || displayProject.barangay || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white uppercase">{displayProject.priority || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.createdAt)}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.description || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.targetBeneficiaries || 'N/A'}</td>
                                 
-                                {/* EIU Partner Contractor */}
+                                {/* EIU Partner Contractor - Same for all rows */}
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
@@ -949,88 +948,122 @@ export default function ProjectLedgerCenter({
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
                                 
-                                {/* Timeline Information */}
+                                {/* Timeline Information - Same for all rows */}
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.startDate)}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.targetCompletionDate || displayProject.endDate)}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
                                   {calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate)}
-                            </td>
+                                </td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.actualCompletionDate || displayProject.completionDate)}</td>
                                 
-                                {/* Budget Information */}
+                                {/* Budget Information - Same for all rows */}
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-right font-semibold bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
                                 
-                                {/* Physical Accomplishment Information */}
+                                {/* Physical Accomplishment Information - Same for all rows */}
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}</td>
                                 
-                                {/* Project Phases Update - Use first phase if available */}
-                                {firstPhase ? (
-                                  <>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{firstPhase.title || firstPhase.name || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{firstPhase.description || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(firstPhase.plannedBudget || firstPhase.budgetAllocation || 0).replace('₱', '').trim()}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{firstPhase.budgetBreakdown || firstPhase.breakdownDescription || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{firstPhase.weight || firstPhase.budgetWeight || 'N/A'}%</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{firstPhase.physicalWeight || firstPhase.weight || 'N/A'}%</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(firstPhase.startDate)}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(firstPhase.dueDate || firstPhase.targetDate)}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(firstPhase.submissionDate)}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(firstPhase.update?.actualCompletionDate || firstPhase.update?.completionDate)}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{firstPhase.update?.timelineActivities || firstPhase.update?.activities || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(firstPhase.update?.usedBudget || firstPhase.update?.budgetUsed || 0).replace('₱', '').trim()}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">
-                                      {formatCurrency((firstPhase.plannedBudget || firstPhase.budgetAllocation || 0) - (firstPhase.update?.usedBudget || firstPhase.update?.budgetUsed || 0)).replace('₱', '').trim()}
-                                    </td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{firstPhase.update?.budgetBreakdown || firstPhase.update?.budgetAllocation || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{firstPhase.update?.physicalAccomplishmentWeight || firstPhase.update?.progress || 'N/A'}%</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                                      {firstPhase.update?.photoProof && firstPhase.update.photoProof.length > 0 
-                                        ? `${firstPhase.update.photoProof.length} photo(s)` 
-                                        : 'N/A'}
-                                    </td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                                      {firstPhase.update?.videoProof && firstPhase.update.videoProof.length > 0 
-                                        ? `${firstPhase.update.videoProof.length} video(s)` 
-                                        : 'N/A'}
-                                    </td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                                      {firstPhase.update?.documentProof && firstPhase.update.documentProof.length > 0 
-                                        ? `${firstPhase.update.documentProof.length} document(s)` 
-                                        : 'N/A'}
-                                    </td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{firstPhase.update?.physicalDescription || firstPhase.update?.description || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{firstPhase.submittedBy || 'N/A'}</td>
-                                    <td className="px-2 py-3 text-xs align-top bg-white">{firstPhase.update?.remarks || firstPhase.update?.recommendation || 'N/A'}</td>
-                                  </>
-                                ) : (
-                                  // If no phases, show N/A for all phase columns
-                                  <>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
-                                    <td className="px-2 py-3 text-xs text-center bg-white text-gray-500">N/A</td>
-                                  </>
-                                )}
+                                {/* Project Phases Update - Different per phase */}
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{phase.title || phase.name || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.description || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.plannedBudget || phase.budgetAllocation || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.budgetBreakdown || phase.breakdownDescription || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.weight || phase.budgetWeight || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.physicalWeight || phase.weight || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.startDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.dueDate || phase.targetDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.submissionDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.update?.actualCompletionDate || phase.update?.completionDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.timelineActivities || phase.update?.activities || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.update?.usedBudget || phase.update?.budgetUsed || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">
+                                  {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update?.usedBudget || phase.update?.budgetUsed || 0)).replace('₱', '').trim()}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.budgetBreakdown || phase.update?.budgetAllocation || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.update?.physicalAccomplishmentWeight || phase.update?.progress || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {phase.update?.photoProof && phase.update.photoProof.length > 0 
+                                    ? `${phase.update.photoProof.length} photo(s)` 
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {phase.update?.videoProof && phase.update.videoProof.length > 0 
+                                    ? `${phase.update.videoProof.length} video(s)` 
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                  {phase.update?.documentProof && phase.update.documentProof.length > 0 
+                                    ? `${phase.update.documentProof.length} document(s)` 
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.physicalDescription || phase.update?.description || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.submittedBy || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs align-top bg-white">{phase.update?.remarks || phase.update?.recommendation || 'N/A'}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            // If no phases, show one row with project info only
+                          <tr className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
+                              {/* Basic Project Information */}
+                            <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.projectCode || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.location || displayProject.barangay || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white uppercase">{displayProject.priority || 'N/A'}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.createdAt)}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.description || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.targetBeneficiaries || 'N/A'}</td>
+                              
+                              {/* EIU Partner Contractor */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{eiuPartner?.birthdate || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                              
+                              {/* Timeline Information */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.startDate)}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.targetCompletionDate || displayProject.endDate)}</td>
+                            <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                {calculateExpectedDays(displayProject.startDate, displayProject.targetCompletionDate || displayProject.endDate)}
+                            </td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.actualCompletionDate || displayProject.completionDate)}</td>
+                              
+                              {/* Budget Information */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-right font-semibold bg-white">{formatCurrency(displayProject.totalBudget).replace('₱', '').trim()}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
+                              
+                              {/* Physical Accomplishment Information */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}</td>
+                              
+                              {/* Project Phases Update - Empty when no phases */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs text-center bg-white text-gray-500">N/A</td>
                           </tr>
-                            );
-                          })()}
+                          )}
                         </tbody>
                       </table>
                     </div>
