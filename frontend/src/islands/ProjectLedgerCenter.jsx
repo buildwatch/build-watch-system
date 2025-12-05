@@ -270,20 +270,115 @@ export default function ProjectLedgerCenter({
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const getEIUPartner = (project) => {
-    if (project.eiuPersonnelName) {
-      return {
-        name: project.eiuPersonnelName,
-        email: project.eiuPersonnelEmail || project.eiuPersonnelUsername || 'N/A',
-        contact: project.eiuPersonnelContact || 'N/A',
-        birthdate: project.eiuPersonnelBirthdate || 'N/A',
-        group: project.eiuPersonnelGroup || 'N/A',
-        department: project.eiuPersonnelDepartment || 'N/A',
-        subrole: project.eiuPersonnelSubrole || 'N/A',
-        company: project.eiuPersonnelCompany || project.eiuPersonnelName || 'N/A'
-      };
+  // Format funding source - maps "donor_fund" to "Municipal Development Fund"
+  const formatFundingSource = (source) => {
+    if (!source) return 'N/A';
+    
+    // Handle special case for Municipal Development Fund
+    if (source === 'donor_fund') {
+      return 'Municipal Development Fund';
     }
-    return null;
+    
+    // Convert underscore to space and capitalize each word
+    const formatted = source.replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    
+    return formatted;
+  };
+
+  // Get EIU Partner data - matches ProjectDetailsModal.astro logic
+  const getEIUPartner = (project) => {
+    // Debug logging
+    console.log('🔍 ProjectLedgerCenter - EIU Data Extraction Debugging:');
+    console.log('  - project.eiuPersonnel:', project.eiuPersonnel);
+    console.log('  - project.assignedEIU:', project.assignedEIU);
+    console.log('  - project.User:', project.User);
+    console.log('  - project.eiu:', project.eiu);
+    console.log('  - project.eiuPartner:', project.eiuPartner);
+    console.log('  - project._debug?.eiuPersonnel:', project._debug?.eiuPersonnel);
+    console.log('  - All project keys:', Object.keys(project));
+    
+    // Try multiple sources for EIU data - including _debug object from ProgressCalculationService
+    let eiuData = project.eiuPersonnel || project.assignedEIU || project.User || project.eiu || project.eiuPartner;
+    console.log('🎯 Initial eiuData result:', eiuData);
+    
+    // If no direct EIU data, check if it's in the _debug object
+    if (!eiuData && project._debug && project._debug.eiuPersonnel) {
+      eiuData = project._debug.eiuPersonnel;
+      console.log('👤 Using EIU data from _debug object:', eiuData);
+    }
+    
+    // Special handling for submissions module - ensure we have complete data
+    if (eiuData && (!eiuData.contactNumber || !eiuData.birthdate || !eiuData.department)) {
+      console.log('👤 EIU data appears incomplete, checking for additional fields...');
+      
+      // Try to get more complete data from the enriched object
+      if (project.eiuPersonnel) {
+        eiuData = {
+          ...eiuData,
+          ...project.eiuPersonnel,
+          // Ensure all fields are properly mapped
+          contactNumber: project.eiuPersonnel.contactNumber || project.eiuPersonnel.phoneNumber || eiuData.contactNumber,
+          birthdate: project.eiuPersonnel.birthdate || eiuData.birthdate,
+          department: project.eiuPersonnel.department || project.eiuPersonnel.externalCompanyName || eiuData.department || 'External Partner Company',
+          externalCompanyName: project.eiuPersonnel.externalCompanyName || project.eiuPersonnel.department || eiuData.externalCompanyName || 'Sample Company',
+          profilePicture: project.eiuPersonnel.profilePicture || eiuData.profilePicture
+        };
+        console.log('👤 Enhanced EIU data:', eiuData);
+      }
+    }
+    
+    if (!eiuData) {
+      console.log('⚠️ No EIU data found');
+      return null;
+    }
+    
+    console.log('👤 Final EIU Data:', eiuData);
+    console.log('👤 EIU Data keys:', Object.keys(eiuData));
+    
+    // Extract fields with multiple fallback options (matching ProjectDetailsModal.astro)
+    const fullName = eiuData.name || eiuData.fullName || `${eiuData.firstName || ''} ${eiuData.lastName || ''}`.trim();
+    const email = eiuData.email || eiuData.username;
+    const contact = eiuData.contactNumber || eiuData.phoneNumber || eiuData.contact || eiuData.contact_number || eiuData.phone_number;
+    const group = eiuData.group || eiuData.groupName || 'EIU';
+    const department = eiuData.department || eiuData.departmentName;
+    const subrole = eiuData.subRole || eiuData.subrole || eiuData.role;
+    const company = eiuData.externalCompanyName || eiuData.company;
+    const birthdate = eiuData.birthdate || eiuData.birthDate || eiuData.dateOfBirth;
+    
+    // Handle cases where fields might be empty strings or null
+    const displayFullName = fullName && fullName !== '' && fullName !== 'null' ? fullName : 'N/A';
+    const displayEmail = email && email !== '' && email !== 'null' ? email : 'N/A';
+    const displayContact = contact && contact !== '' && contact !== 'null' ? contact : 'N/A';
+    const displayGroup = group && group !== '' && group !== 'null' ? group : 'EIU';
+    const displayDepartment = department && department !== '' && department !== 'null' ? department : 'N/A';
+    const displaySubrole = subrole && subrole !== '' && subrole !== 'null' ? subrole : 'N/A';
+    const displayCompany = company && company !== '' && company !== 'null' ? company : 'N/A';
+    const displayBirthdate = birthdate && birthdate !== '' && birthdate !== 'null' ? formatDate(birthdate) : 'N/A';
+    
+    console.log('👤 Extracted EIU values:', {
+      displayFullName,
+      displayEmail,
+      displayContact,
+      displayGroup,
+      displayDepartment,
+      displaySubrole,
+      displayCompany,
+      displayBirthdate
+    });
+    
+    return {
+      name: displayFullName,
+      email: displayEmail,
+      contact: displayContact,
+      birthdate: displayBirthdate,
+      group: displayGroup,
+      department: displayDepartment,
+      subrole: displaySubrole,
+      company: displayCompany
+    };
   };
 
   const getProjectPhases = (project) => {
@@ -359,6 +454,65 @@ export default function ProjectLedgerCenter({
   const displayProject = selectedProject || (filteredProjects.length === 1 ? filteredProjects[0] : null);
   const phases = displayProject ? getProjectPhases(displayProject) : [];
   const eiuPartner = displayProject ? getEIUPartner(displayProject) : null;
+
+  // Debugging function - accessible from browser console
+  // Usage: window.debugProjectLedger()
+  if (typeof window !== 'undefined') {
+    window.debugProjectLedger = () => {
+      console.log('🔍 ========== PROJECT LEDGER DEBUG INFO ==========');
+      console.log('📊 Display Project:', displayProject);
+      console.log('📊 Project Keys:', displayProject ? Object.keys(displayProject) : 'No project');
+      
+      // Funding Source Debug
+      console.log('\n💰 FUNDING SOURCE DEBUG:');
+      console.log('  - Raw fundingSource:', displayProject?.fundingSource);
+      console.log('  - Formatted:', formatFundingSource(displayProject?.fundingSource));
+      
+      // EIU Partner Debug
+      console.log('\n👤 EIU PARTNER DEBUG:');
+      console.log('  - EIU Partner Object:', eiuPartner);
+      if (displayProject) {
+        console.log('  - project.eiuPersonnel:', displayProject.eiuPersonnel);
+        console.log('  - project.assignedEIU:', displayProject.assignedEIU);
+        console.log('  - project.User:', displayProject.User);
+        console.log('  - project.eiu:', displayProject.eiu);
+        console.log('  - project.eiuPartner:', displayProject.eiuPartner);
+        console.log('  - project._debug?.eiuPersonnel:', displayProject._debug?.eiuPersonnel);
+      }
+      
+      // Physical Accomplishment Debug
+      console.log('\n🏗️ PHYSICAL ACCOMPLISHMENT DEBUG:');
+      console.log('  - physicalProgressRequirements:', displayProject?.physicalProgressRequirements);
+      console.log('  - generalDescription:', displayProject?.generalDescription);
+      console.log('  - physicalDescription:', displayProject?.physicalDescription);
+      console.log('  - requiredDocumentation:', displayProject?.requiredDocumentation);
+      console.log('  - physicalProgressDescription:', displayProject?.physicalProgressDescription);
+      console.log('  - Final value:', displayProject?.physicalProgressRequirements || displayProject?.generalDescription || displayProject?.physicalDescription || displayProject?.requiredDocumentation || 'N/A');
+      
+      // Phases Debug
+      console.log('\n📋 PHASES DEBUG:');
+      console.log('  - Number of phases:', phases.length);
+      console.log('  - Phases:', phases);
+      
+      console.log('\n✅ ========== END DEBUG INFO ==========');
+      return {
+        displayProject,
+        eiuPartner,
+        phases,
+        fundingSource: {
+          raw: displayProject?.fundingSource,
+          formatted: formatFundingSource(displayProject?.fundingSource)
+        },
+        physicalAccomplishment: {
+          physicalProgressRequirements: displayProject?.physicalProgressRequirements,
+          generalDescription: displayProject?.generalDescription,
+          physicalDescription: displayProject?.physicalDescription,
+          requiredDocumentation: displayProject?.requiredDocumentation,
+          final: displayProject?.physicalProgressRequirements || displayProject?.generalDescription || displayProject?.physicalDescription || displayProject?.requiredDocumentation || 'N/A'
+        }
+      };
+    };
+  }
 
   return (
     <div className="w-full">
@@ -578,7 +732,7 @@ export default function ProjectLedgerCenter({
                     </tr>
                     <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Funding Source</td>
-                      <td className="px-6 py-4 text-gray-900">{displayProject.fundingSource || 'N/A'}</td>
+                      <td className="px-6 py-4 text-gray-900">{formatFundingSource(displayProject.fundingSource)}</td>
                     </tr>
                     <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Created Date</td>
@@ -689,7 +843,7 @@ export default function ProjectLedgerCenter({
                     <tr className="border-b-2 border-gray-300 hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 align-top">General Description</td>
                       <td className="px-6 py-4 text-gray-900">
-                        {displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}
+                        {displayProject.physicalProgressRequirements || displayProject.generalDescription || displayProject.physicalDescription || displayProject.requiredDocumentation || 'N/A'}
                       </td>
                     </tr>
 
@@ -935,7 +1089,7 @@ export default function ProjectLedgerCenter({
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.location || displayProject.barangay || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white uppercase">{displayProject.priority || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{formatFundingSource(displayProject.fundingSource)}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.createdAt)}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.description || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
@@ -964,7 +1118,7 @@ export default function ProjectLedgerCenter({
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
                                     
                                     {/* Physical Accomplishment Information */}
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}</td>
+                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressRequirements || displayProject.generalDescription || displayProject.physicalDescription || displayProject.requiredDocumentation || 'N/A'}</td>
                                   </>
                                 ) : null}
                                 
@@ -1016,7 +1170,7 @@ export default function ProjectLedgerCenter({
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.location || displayProject.barangay || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white uppercase">{displayProject.priority || 'N/A'}</td>
-                            <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.fundingSource || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{formatFundingSource(displayProject.fundingSource)}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.createdAt)}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.description || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
@@ -1045,7 +1199,7 @@ export default function ProjectLedgerCenter({
                               <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.budgetDescription || displayProject.budgetBreakdown || 'N/A'}</td>
                               
                               {/* Physical Accomplishment Information */}
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressDescription || displayProject.generalDescription || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressRequirements || displayProject.generalDescription || displayProject.physicalDescription || displayProject.requiredDocumentation || 'N/A'}</td>
                               
                               {/* Project Phases Update - Empty when no phases */}
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
