@@ -207,78 +207,20 @@ export default function ProjectLedgerCenter({
   }, [selectedProject?.id]);
 
   // Helper function to enrich project with EIU user details
+  // Note: The /api/users/:id endpoint may not exist or require System Admin
+  // So we rely on the project data already containing the contact number
   const enrichProjectWithEIUData = async (project) => {
-    // Get the EIU user ID - try multiple sources
-    const eiuUserId = project.eiuPersonnelId || project.eiuPersonnel?.id || project.eiuPersonnel?.userId;
-    
-    if (!project || !eiuUserId) {
-      console.log('⚠️ No EIU user ID found for project:', {
-        eiuPersonnelId: project?.eiuPersonnelId,
-        'eiuPersonnel.id': project?.eiuPersonnel?.id,
-        'eiuPersonnel.userId': project?.eiuPersonnel?.userId
-      });
-      return project;
-    }
-
-    try {
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    // The contact number should already be in the project data from the backend
+    // We just ensure the eiuPersonnel object is properly structured
+    if (project.eiuPersonnel) {
+      // Ensure contact number field exists (even if it's already there)
+      // This helps with consistent field access
+      if (!project.eiuPersonnel.contactNumber) {
+        project.eiuPersonnel.contactNumber = project.eiuPersonnel.phoneNumber || 
+                                             project.eiuPersonnel.phone || 
+                                             project.eiuPersonnel.contact ||
+                                             null;
       }
-
-      console.log('📞 Fetching EIU user data for ID:', eiuUserId);
-      
-      // Fetch user details from users API
-      const userResponse = await fetch(`${API_URL}/users/${eiuUserId}`, { headers });
-      
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        if (userData.success && userData.user) {
-          const eiuUser = userData.user;
-          console.log('📞 Fetched EIU user data:', eiuUser);
-          console.log('📞 Contact Number in fetched data:', eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone);
-          
-          // Merge EIU user details into project.eiuPersonnel
-          if (project.eiuPersonnel) {
-            project.eiuPersonnel = {
-              ...project.eiuPersonnel,
-              ...eiuUser,
-              // Ensure contact number is properly set - prioritize fetched data
-              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone || eiuUser.contact || 
-                             project.eiuPersonnel.contactNumber || project.eiuPersonnel.phoneNumber || project.eiuPersonnel.phone,
-              phoneNumber: eiuUser.phoneNumber || eiuUser.phone || eiuUser.contactNumber || 
-                          project.eiuPersonnel.phoneNumber || project.eiuPersonnel.phone || project.eiuPersonnel.contactNumber,
-              // Ensure other fields are properly mapped
-              fullName: eiuUser.fullName || eiuUser.name || project.eiuPersonnel.name,
-              email: eiuUser.email || eiuUser.username || project.eiuPersonnel.email || project.eiuPersonnel.username,
-              birthdate: eiuUser.birthdate || project.eiuPersonnel.birthdate,
-              group: eiuUser.group || project.eiuPersonnel.group || 'EIU',
-              department: eiuUser.department || project.eiuPersonnel.department,
-              subRole: eiuUser.subRole || eiuUser.subrole || project.eiuPersonnel.subRole || project.eiuPersonnel.subrole,
-              company: eiuUser.company || eiuUser.companyName || project.eiuPersonnel.company || project.eiuPersonnel.externalCompanyName
-            };
-          } else {
-            // If eiuPersonnel doesn't exist, create it from user data
-            project.eiuPersonnel = {
-              ...eiuUser,
-              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone || eiuUser.contact,
-              phoneNumber: eiuUser.phoneNumber || eiuUser.phone || eiuUser.contactNumber,
-              fullName: eiuUser.fullName || eiuUser.name,
-              email: eiuUser.email || eiuUser.username
-            };
-          }
-          
-          console.log('✅ Enriched project.eiuPersonnel:', project.eiuPersonnel);
-          console.log('✅ Final contactNumber:', project.eiuPersonnel.contactNumber);
-        } else {
-          console.log('⚠️ User data response not successful:', userData);
-        }
-      } else {
-        const errorText = await userResponse.text();
-        console.log('⚠️ Failed to fetch user data, status:', userResponse.status, 'Response:', errorText);
-      }
-    } catch (err) {
-      console.error('❌ Error enriching project with EIU data:', err);
     }
     
     return project;
