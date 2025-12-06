@@ -32,6 +32,20 @@ const getCurrentUserRole = () => {
   return null;
 };
 
+// Get current user data
+const getCurrentUser = () => {
+  if (typeof window === 'undefined') return null;
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
 // Helper function to get theme colors based on user role
 const getThemeColors = (role) => {
   switch (role) {
@@ -513,7 +527,69 @@ export default function ProjectLedgerCenter({
     }
   };
 
+  // Get current user for role-based filtering
+  const currentUser = getCurrentUser();
+  const currentUserRole = (currentUser?.role || userRole || getCurrentUserRole() || '').toUpperCase();
+  const currentUserId = currentUser?.id || currentUser?.userId || null;
+  
+  console.log('🔐 Project Ledger - Role-based filtering:', {
+    currentUserRole,
+    currentUserId,
+    totalProjects: projects.length,
+    userEmail: currentUser?.email || currentUser?.username
+  });
+  
   const filteredProjects = projects.filter(project => {
+    // Role-based access control - ensure users only see projects they have access to
+    let hasAccess = true;
+    
+    if (currentUserRole === 'EIU' && currentUserId) {
+      // EIU users: only see projects assigned to them
+      hasAccess = project.hasExternalPartner === true && 
+                  (project.eiuPersonnelId === currentUserId || 
+                   project.eiuPersonnel?.id === currentUserId);
+      
+      if (!hasAccess) {
+        console.log('🚫 EIU access denied for project:', {
+          projectId: project.id,
+          projectName: project.name,
+          projectEiuPersonnelId: project.eiuPersonnelId,
+          projectEiuPersonnel: project.eiuPersonnel?.id,
+          currentUserId: currentUserId,
+          hasExternalPartner: project.hasExternalPartner
+        });
+      }
+    } else if ((currentUserRole === 'LGU-IU' || currentUserRole === 'IU') && currentUserId) {
+      // LGU-IU users: only see projects from their implementing office
+      const userImplementingOffice = currentUser?.implementingOfficeName || 
+                                     currentUser?.office || 
+                                     currentUser?.department || 
+                                     currentUser?.officeName;
+      
+      hasAccess = project.implementingOfficeId === currentUserId || 
+                  project.implementingUnitId === currentUserId ||
+                  (userImplementingOffice && project.implementingOfficeName === userImplementingOffice);
+      
+      if (!hasAccess) {
+        console.log('🚫 LGU-IU access denied for project:', {
+          projectId: project.id,
+          projectName: project.name,
+          projectImplementingOfficeId: project.implementingOfficeId,
+          projectImplementingUnitId: project.implementingUnitId,
+          projectImplementingOfficeName: project.implementingOfficeName,
+          currentUserId: currentUserId,
+          userImplementingOffice: userImplementingOffice
+        });
+      }
+    }
+    // For other roles (MPMEC, Secretariat, Executive, etc.), backend already filters correctly
+    // But we can add additional frontend filtering if needed
+    
+    if (!hasAccess) {
+      return false;
+    }
+    
+    // Apply search and filter criteria
     const matchesSearch = !searchQuery || 
       project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.projectCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -524,6 +600,18 @@ export default function ProjectLedgerCenter({
     
     return matchesSearch && matchesStatus && matchesCategory;
   });
+  
+  // Log filtering results
+  if (projects.length !== filteredProjects.length) {
+    console.log(`🔐 Filtered ${projects.length} projects down to ${filteredProjects.length} based on user access (${currentUserRole})`);
+  } else {
+    console.log(`✅ All ${projects.length} projects are accessible for user (${currentUserRole})`);
+  }
+  if (projects.length !== filteredProjects.length) {
+    console.log(`🔐 Filtered ${projects.length} projects down to ${filteredProjects.length} based on user access (${currentUserRole})`);
+  } else {
+    console.log(`✅ All ${projects.length} projects are accessible for user (${currentUserRole})`);
+  }
 
   // Format funding source - maps "donor_fund" to "Municipal Development Fund"
   const formatFundingSource = (source) => {
