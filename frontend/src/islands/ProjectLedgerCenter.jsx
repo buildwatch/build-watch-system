@@ -200,12 +200,38 @@ export default function ProjectLedgerCenter({
   const [filterCategory, setFilterCategory] = useState('');
   const [tableView, setTableView] = useState('vertical'); // 'vertical' or 'horizontal'
   
+  // Advanced Filtering State
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [dateRangeStart, setDateRangeStart] = useState('');
+  const [dateRangeEnd, setDateRangeEnd] = useState('');
+  const [budgetRangeMin, setBudgetRangeMin] = useState('');
+  const [budgetRangeMax, setBudgetRangeMax] = useState('');
+  const [progressRangeMin, setProgressRangeMin] = useState('');
+  const [progressRangeMax, setProgressRangeMax] = useState('');
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedPriorities, setSelectedPriorities] = useState([]);
+  const [quickFilterPreset, setQuickFilterPreset] = useState('');
+  
+  // Column Customization State
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState({}); // Will be initialized based on table view
+  const [columnOrder, setColumnOrder] = useState([]);
+  
+  // Saved Views State
+  const [savedViews, setSavedViews] = useState([]);
+  const [showSavedViews, setShowSavedViews] = useState(false);
+  const [showSaveViewModal, setShowSaveViewModal] = useState(false);
+  const [viewNameToSave, setViewNameToSave] = useState('');
+  
   const colors = getThemeColors(userRole || getCurrentUserRole());
   const API_URL = getApiUrl();
   const token = getToken();
 
   useEffect(() => {
     fetchProjects();
+    loadSavedViews();
+    initializeColumnVisibility();
   }, [projectId]);
 
   useEffect(() => {
@@ -213,6 +239,195 @@ export default function ProjectLedgerCenter({
       fetchProjectDetails(projectId);
     }
   }, [projectId]);
+  
+  // Initialize column visibility based on table view
+  useEffect(() => {
+    initializeColumnVisibility();
+  }, [tableView]);
+  
+  const initializeColumnVisibility = () => {
+    if (tableView === 'vertical') {
+      // Vertical table columns
+      const defaultColumns = {
+        'projectTitle': true,
+        'projectCode': true,
+        'implementingOffice': true,
+        'category': true,
+        'location': true,
+        'priority': true,
+        'fundingSource': true,
+        'createdDate': true,
+        'description': true,
+        'expectedOutputs': true,
+        'targetBeneficiaries': true,
+        'eiuPartner': true,
+        'timelineInfo': true,
+        'budgetInfo': true,
+        'physicalAccomplishment': true,
+        'phases': true
+      };
+      setVisibleColumns(prev => Object.keys(prev).length === 0 ? defaultColumns : prev);
+    } else {
+      // Horizontal table columns
+      const defaultColumns = {
+        'basicInfo': true,
+        'eiuPartner': true,
+        'timelineInfo': true,
+        'budgetInfo': true,
+        'physicalAccomplishment': true,
+        'phases': true
+      };
+      setVisibleColumns(prev => Object.keys(prev).length === 0 ? defaultColumns : prev);
+    }
+  };
+  
+  // Load saved views from localStorage
+  const loadSavedViews = () => {
+    try {
+      const saved = localStorage.getItem('projectLedgerSavedViews');
+      if (saved) {
+        const views = JSON.parse(saved);
+        setSavedViews(Array.isArray(views) ? views : []);
+      }
+    } catch (e) {
+      console.error('Error loading saved views:', e);
+      setSavedViews([]);
+    }
+  };
+  
+  // Save view to localStorage
+  const saveView = (name) => {
+    if (!name || name.trim() === '') {
+      alert('Please enter a name for this view.');
+      return;
+    }
+    
+    const viewConfig = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      filters: {
+        searchQuery,
+        filterStatus,
+        filterCategory,
+        dateRangeStart,
+        dateRangeEnd,
+        budgetRangeMin,
+        budgetRangeMax,
+        progressRangeMin,
+        progressRangeMax,
+        selectedStatuses,
+        selectedCategories,
+        selectedPriorities,
+        quickFilterPreset
+      },
+      columnVisibility: visibleColumns,
+      tableView,
+      createdAt: new Date().toISOString()
+    };
+    
+    const updatedViews = [...savedViews, viewConfig];
+    setSavedViews(updatedViews);
+    localStorage.setItem('projectLedgerSavedViews', JSON.stringify(updatedViews));
+    setShowSaveViewModal(false);
+    setViewNameToSave('');
+    alert(`View "${name}" saved successfully!`);
+  };
+  
+  // Load a saved view
+  const loadView = (view) => {
+    if (view.filters) {
+      setSearchQuery(view.filters.searchQuery || '');
+      setFilterStatus(view.filters.filterStatus || '');
+      setFilterCategory(view.filters.filterCategory || '');
+      setDateRangeStart(view.filters.dateRangeStart || '');
+      setDateRangeEnd(view.filters.dateRangeEnd || '');
+      setBudgetRangeMin(view.filters.budgetRangeMin || '');
+      setBudgetRangeMax(view.filters.budgetRangeMax || '');
+      setProgressRangeMin(view.filters.progressRangeMin || '');
+      setProgressRangeMax(view.filters.progressRangeMax || '');
+      setSelectedStatuses(view.filters.selectedStatuses || []);
+      setSelectedCategories(view.filters.selectedCategories || []);
+      setSelectedPriorities(view.filters.selectedPriorities || []);
+      setQuickFilterPreset(view.filters.quickFilterPreset || '');
+    }
+    if (view.columnVisibility) {
+      setVisibleColumns(view.columnVisibility);
+    }
+    if (view.tableView) {
+      setTableView(view.tableView);
+    }
+    setShowSavedViews(false);
+  };
+  
+  // Delete a saved view
+  const deleteView = (viewId) => {
+    if (confirm('Are you sure you want to delete this saved view?')) {
+      const updatedViews = savedViews.filter(v => v.id !== viewId);
+      setSavedViews(updatedViews);
+      localStorage.setItem('projectLedgerSavedViews', JSON.stringify(updatedViews));
+    }
+  };
+  
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setFilterStatus('');
+    setFilterCategory('');
+    setDateRangeStart('');
+    setDateRangeEnd('');
+    setBudgetRangeMin('');
+    setBudgetRangeMax('');
+    setProgressRangeMin('');
+    setProgressRangeMax('');
+    setSelectedStatuses([]);
+    setSelectedCategories([]);
+    setSelectedPriorities([]);
+    setQuickFilterPreset('');
+  };
+  
+  // Apply quick filter preset
+  const applyQuickFilter = (preset) => {
+    // Clear all filters first (except the preset itself)
+    setSearchQuery('');
+    setFilterStatus('');
+    setFilterCategory('');
+    setDateRangeStart('');
+    setDateRangeEnd('');
+    setBudgetRangeMin('');
+    setBudgetRangeMax('');
+    setProgressRangeMin('');
+    setProgressRangeMax('');
+    setSelectedStatuses([]);
+    setSelectedCategories([]);
+    setSelectedPriorities([]);
+    
+    // Set the preset
+    setQuickFilterPreset(preset);
+    
+    // Apply preset-specific filters
+    switch (preset) {
+      case 'overdue':
+        // Projects past target completion date - handled in filter logic
+        break;
+      case 'highPriority':
+        setSelectedPriorities(['high']);
+        break;
+      case 'nearCompletion':
+        setProgressRangeMin('80');
+        setProgressRangeMax('100');
+        break;
+      case 'needsAttention':
+        setSelectedStatuses(['delayed', 'at_risk', 'pending']);
+        break;
+      case 'recentlyUpdated':
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        setDateRangeStart(sevenDaysAgo.toISOString().split('T')[0]);
+        break;
+      default:
+        break;
+    }
+  };
 
   // Note: Removed useEffect for re-enrichment since we're not making API calls
   // The contact number should already be in the project data from the backend
@@ -595,10 +810,113 @@ export default function ProjectLedgerCenter({
       project.projectCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.location?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = !filterStatus || project.status === filterStatus;
-    const matchesCategory = !filterCategory || project.category === filterCategory;
+    // Status filter (support both single and multi-select)
+    const matchesStatus = !filterStatus && selectedStatuses.length === 0 
+      ? true 
+      : filterStatus 
+        ? project.status === filterStatus 
+        : selectedStatuses.length > 0 
+          ? selectedStatuses.includes(project.status) 
+          : true;
     
-    return matchesSearch && matchesStatus && matchesCategory;
+    // Category filter (support both single and multi-select)
+    const matchesCategory = !filterCategory && selectedCategories.length === 0 
+      ? true 
+      : filterCategory 
+        ? project.category === filterCategory 
+        : selectedCategories.length > 0 
+          ? selectedCategories.includes(project.category) 
+          : true;
+    
+    // Priority filter
+    const matchesPriority = selectedPriorities.length === 0 || selectedPriorities.includes(project.priority);
+    
+    // Date range filter
+    let matchesDateRange = true;
+    if (dateRangeStart || dateRangeEnd) {
+      const projectStartDate = project.startDate ? new Date(project.startDate) : null;
+      const projectEndDate = project.targetCompletionDate || project.endDate ? new Date(project.targetCompletionDate || project.endDate) : null;
+      
+      if (dateRangeStart) {
+        const startFilter = new Date(dateRangeStart);
+        if (projectStartDate && projectStartDate < startFilter) {
+          matchesDateRange = false;
+        }
+      }
+      if (dateRangeEnd) {
+        const endFilter = new Date(dateRangeEnd);
+        if (projectEndDate && projectEndDate > endFilter) {
+          matchesDateRange = false;
+        }
+      }
+    }
+    
+    // Budget range filter
+    let matchesBudgetRange = true;
+    if (budgetRangeMin || budgetRangeMax) {
+      const projectBudget = parseFloat(project.totalBudget || 0);
+      if (budgetRangeMin && projectBudget < parseFloat(budgetRangeMin)) {
+        matchesBudgetRange = false;
+      }
+      if (budgetRangeMax && projectBudget > parseFloat(budgetRangeMax)) {
+        matchesBudgetRange = false;
+      }
+    }
+    
+    // Progress range filter
+    let matchesProgressRange = true;
+    if (progressRangeMin || progressRangeMax) {
+      const projectProgress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      if (progressRangeMin && projectProgress < parseFloat(progressRangeMin)) {
+        matchesProgressRange = false;
+      }
+      if (progressRangeMax && projectProgress > parseFloat(progressRangeMax)) {
+        matchesProgressRange = false;
+      }
+    }
+    
+    // Quick filter presets
+    let matchesQuickFilter = true;
+    if (quickFilterPreset) {
+      switch (quickFilterPreset) {
+        case 'overdue':
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const targetDate = project.targetCompletionDate ? new Date(project.targetCompletionDate) : null;
+          if (targetDate) {
+            targetDate.setHours(0, 0, 0, 0);
+            matchesQuickFilter = targetDate < today && project.status !== 'completed';
+          } else {
+            matchesQuickFilter = false;
+          }
+          break;
+        case 'highPriority':
+          matchesQuickFilter = project.priority === 'high';
+          break;
+        case 'nearCompletion':
+          const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+          matchesQuickFilter = progress >= 80 && progress < 100;
+          break;
+        case 'needsAttention':
+          matchesQuickFilter = project.status === 'delayed' || project.status === 'at_risk' || project.status === 'pending';
+          break;
+        case 'recentlyUpdated':
+          const updatedDate = project.updatedAt ? new Date(project.updatedAt) : null;
+          if (updatedDate) {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            matchesQuickFilter = updatedDate >= sevenDaysAgo;
+          } else {
+            matchesQuickFilter = false;
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesCategory && matchesPriority && 
+           matchesDateRange && matchesBudgetRange && matchesProgressRange && matchesQuickFilter;
   });
   
   // Log filtering results
@@ -2011,8 +2329,71 @@ export default function ProjectLedgerCenter({
         {/* Search and Filter Section */}
         {!projectId && (
           <div className="mb-6 space-y-4 no-print">
-            <div className="flex flex-wrap gap-4">
+            {/* Quick Filter Presets */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                onClick={() => applyQuickFilter('overdue')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  quickFilterPreset === 'overdue'
+                    ? 'bg-red-500 text-white shadow-lg'
+                    : 'bg-red-100 text-red-700 hover:bg-red-200'
+                }`}
+              >
+                ⚠️ Overdue Projects
+              </button>
+              <button
+                onClick={() => applyQuickFilter('highPriority')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  quickFilterPreset === 'highPriority'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                }`}
+              >
+                🔥 High Priority
+              </button>
+              <button
+                onClick={() => applyQuickFilter('nearCompletion')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  quickFilterPreset === 'nearCompletion'
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+              >
+                ✅ Near Completion
+              </button>
+              <button
+                onClick={() => applyQuickFilter('needsAttention')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  quickFilterPreset === 'needsAttention'
+                    ? 'bg-yellow-500 text-white shadow-lg'
+                    : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                }`}
+              >
+                ⚡ Needs Attention
+              </button>
+              <button
+                onClick={() => applyQuickFilter('recentlyUpdated')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  quickFilterPreset === 'recentlyUpdated'
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                🕒 Recently Updated
+              </button>
+              {(quickFilterPreset || searchQuery || filterStatus || filterCategory || dateRangeStart || dateRangeEnd || budgetRangeMin || budgetRangeMax || progressRangeMin || progressRangeMax || selectedStatuses.length > 0 || selectedCategories.length > 0 || selectedPriorities.length > 0) && (
+                <button
+                  onClick={clearAllFilters}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all"
+                >
+                  🗑️ Clear All
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[300px]">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
                 <input
                   type="text"
                   placeholder="Search projects by name, code, or location..."
@@ -2021,31 +2402,330 @@ export default function ProjectLedgerCenter({
                   className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
                 />
               </div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
-              >
-                <option value="">All Status</option>
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
-                <option value="delayed">Delayed</option>
-                <option value="pending">Pending</option>
-              </select>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
-              >
-                <option value="">All Categories</option>
-                <option value="infrastructure">Infrastructure</option>
-                <option value="transportation">Transportation</option>
-                <option value="health">Health</option>
-                <option value="education">Education</option>
-                <option value="social">Social Services</option>
-                <option value="environment">Environment</option>
-              </select>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setSelectedStatuses([]);
+                  }}
+                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
+                >
+                  <option value="">All Status</option>
+                  <option value="ongoing">Ongoing</option>
+                  <option value="completed">Completed</option>
+                  <option value="delayed">Delayed</option>
+                  <option value="pending">Pending</option>
+                  <option value="at_risk">At Risk</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => {
+                    setFilterCategory(e.target.value);
+                    setSelectedCategories([]);
+                  }}
+                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
+                >
+                  <option value="">All Categories</option>
+                  <option value="infrastructure">Infrastructure</option>
+                  <option value="transportation">Transportation</option>
+                  <option value="health">Health</option>
+                  <option value="education">Education</option>
+                  <option value="social">Social Services</option>
+                  <option value="environment">Environment</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm ${
+                    showAdvancedFilters
+                      ? `bg-gradient-to-r ${colors.gradient} text-white`
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {showAdvancedFilters ? '▼' : '▶'} Advanced Filters
+                </button>
+                <button
+                  onClick={() => setShowSavedViews(!showSavedViews)}
+                  className="px-4 py-2.5 rounded-xl font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all shadow-sm"
+                >
+                  💾 Saved Views ({savedViews.length})
+                </button>
+                <button
+                  onClick={() => setShowColumnSettings(!showColumnSettings)}
+                  className="px-4 py-2.5 rounded-xl font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all shadow-sm"
+                >
+                  ⚙️ Columns
+                </button>
+              </div>
             </div>
+
+            {/* Advanced Filters Panel */}
+            {showAdvancedFilters && (
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg space-y-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Advanced Filters</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Date Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date (From)</label>
+                    <input
+                      type="date"
+                      value={dateRangeStart}
+                      onChange={(e) => setDateRangeStart(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date (To)</label>
+                    <input
+                      type="date"
+                      value={dateRangeEnd}
+                      onChange={(e) => setDateRangeEnd(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Budget Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Budget (₱)</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={budgetRangeMin}
+                      onChange={(e) => setBudgetRangeMin(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Budget (₱)</label>
+                    <input
+                      type="number"
+                      placeholder="No limit"
+                      value={budgetRangeMax}
+                      onChange={(e) => setBudgetRangeMax(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Progress Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Progress (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="0"
+                      value={progressRangeMin}
+                      onChange={(e) => setProgressRangeMin(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Progress (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="100"
+                      value={progressRangeMax}
+                      onChange={(e) => setProgressRangeMax(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Multi-Select Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  {/* Status Multi-Select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status (Multiple)</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-lg p-2">
+                      {['ongoing', 'completed', 'delayed', 'pending', 'at_risk'].map(status => (
+                        <label key={status} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={selectedStatuses.includes(status)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedStatuses([...selectedStatuses, status]);
+                                setFilterStatus('');
+                              } else {
+                                setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                              }
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm capitalize">{status.replace('_', ' ')}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Category Multi-Select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category (Multiple)</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-lg p-2">
+                      {['infrastructure', 'transportation', 'health', 'education', 'social', 'environment'].map(category => (
+                        <label key={category} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(category)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCategories([...selectedCategories, category]);
+                                setFilterCategory('');
+                              } else {
+                                setSelectedCategories(selectedCategories.filter(c => c !== category));
+                              }
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm capitalize">{category}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Priority Multi-Select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority (Multiple)</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-lg p-2">
+                      {['high', 'medium', 'low'].map(priority => (
+                        <label key={priority} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={selectedPriorities.includes(priority)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedPriorities([...selectedPriorities, priority]);
+                              } else {
+                                setSelectedPriorities(selectedPriorities.filter(p => p !== priority));
+                              }
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm capitalize">{priority}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Saved Views Panel */}
+            {showSavedViews && (
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-800">Saved Views</h3>
+                  <button
+                    onClick={() => setShowSaveViewModal(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium"
+                  >
+                    + Save Current View
+                  </button>
+                </div>
+                {savedViews.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No saved views yet. Save your current filter settings to create one.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {savedViews.map(view => (
+                      <div key={view.id} className="flex items-center justify-between p-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-800">{view.name}</h4>
+                          <p className="text-xs text-gray-500">
+                            Saved {new Date(view.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => loadView(view)}
+                            className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-sm font-medium"
+                          >
+                            Load
+                          </button>
+                          <button
+                            onClick={() => deleteView(view.id)}
+                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all text-sm font-medium"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Save View Modal */}
+            {showSaveViewModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Save Current View</h3>
+                  <input
+                    type="text"
+                    placeholder="Enter view name..."
+                    value={viewNameToSave}
+                    onChange={(e) => setViewNameToSave(e.target.value)}
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        saveView(viewNameToSave);
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveView(viewNameToSave)}
+                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSaveViewModal(false);
+                        setViewNameToSave('');
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Column Settings Panel */}
+            {showColumnSettings && (
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Column Visibility</h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {Object.keys(visibleColumns).map(columnKey => (
+                    <label key={columnKey} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns[columnKey] || false}
+                        onChange={(e) => {
+                          setVisibleColumns({
+                            ...visibleColumns,
+                            [columnKey]: e.target.checked
+                          });
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm capitalize">{columnKey.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Project List */}
             {filteredProjects.length > 0 && !displayProject && (
