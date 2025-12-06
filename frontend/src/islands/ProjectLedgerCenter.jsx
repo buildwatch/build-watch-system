@@ -199,6 +199,7 @@ export default function ProjectLedgerCenter({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [tableView, setTableView] = useState('vertical'); // 'vertical' or 'horizontal'
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'dashboard'
   
   // Advanced Filtering State
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -925,6 +926,117 @@ export default function ProjectLedgerCenter({
   } else {
     console.log(`✅ All ${projects.length} projects are accessible for user (${currentUserRole})`);
   }
+
+  // ==================== DASHBOARD DATA CALCULATIONS ====================
+  
+  // Calculate dashboard statistics
+  const calculateDashboardStats = () => {
+    const stats = {
+      totalProjects: filteredProjects.length,
+      totalBudget: 0,
+      averageProgress: 0,
+      projectsByStatus: {},
+      budgetByCategory: {},
+      progressDistribution: {
+        '0-20': 0,
+        '21-40': 0,
+        '41-60': 0,
+        '61-80': 0,
+        '81-100': 0
+      },
+      projectsByPriority: {},
+      statusCounts: {
+        ongoing: 0,
+        completed: 0,
+        delayed: 0,
+        pending: 0,
+        at_risk: 0
+      }
+    };
+
+    if (filteredProjects.length === 0) {
+      return stats;
+    }
+
+    let totalProgress = 0;
+    filteredProjects.forEach(project => {
+      // Total Budget
+      const budget = parseFloat(project.totalBudget || 0);
+      stats.totalBudget += budget;
+
+      // Average Progress
+      const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      totalProgress += progress;
+
+      // Projects by Status
+      const status = project.status || 'unknown';
+      stats.projectsByStatus[status] = (stats.projectsByStatus[status] || 0) + 1;
+      if (stats.statusCounts[status] !== undefined) {
+        stats.statusCounts[status]++;
+      }
+
+      // Budget by Category
+      const category = project.category || 'uncategorized';
+      stats.budgetByCategory[category] = (stats.budgetByCategory[category] || 0) + budget;
+
+      // Progress Distribution
+      if (progress <= 20) stats.progressDistribution['0-20']++;
+      else if (progress <= 40) stats.progressDistribution['21-40']++;
+      else if (progress <= 60) stats.progressDistribution['41-60']++;
+      else if (progress <= 80) stats.progressDistribution['61-80']++;
+      else stats.progressDistribution['81-100']++;
+
+      // Projects by Priority
+      const priority = project.priority || 'medium';
+      stats.projectsByPriority[priority] = (stats.projectsByPriority[priority] || 0) + 1;
+    });
+
+    stats.averageProgress = filteredProjects.length > 0 ? totalProgress / filteredProjects.length : 0;
+
+    return stats;
+  };
+
+  const dashboardStats = calculateDashboardStats();
+
+  // Get status color
+  const getStatusColor = (status) => {
+    const colors = {
+      'ongoing': '#3B82F6', // blue
+      'completed': '#10B981', // green
+      'delayed': '#EF4444', // red
+      'pending': '#F59E0B', // amber
+      'at_risk': '#F97316', // orange
+      'unknown': '#6B7280' // gray
+    };
+    return colors[status] || colors['unknown'];
+  };
+
+  // Get priority color
+  const getPriorityColor = (priority) => {
+    const colors = {
+      'high': '#EF4444', // red
+      'medium': '#F59E0B', // amber
+      'low': '#10B981' // green
+    };
+    return colors[priority] || '#6B7280';
+  };
+
+  // Get category color
+  const getCategoryColor = (category, index) => {
+    const categoryColors = [
+      '#3B82F6', // blue
+      '#10B981', // green
+      '#F59E0B', // amber
+      '#EF4444', // red
+      '#8B5CF6', // purple
+      '#EC4899', // pink
+      '#06B6D4', // cyan
+      '#F97316' // orange
+    ];
+    const categories = Object.keys(dashboardStats.budgetByCategory);
+    const categoryIndex = categories.indexOf(category);
+    return categoryColors[categoryIndex % categoryColors.length];
+  };
 
   // ==================== EXPORT & PRINT FUNCTIONS ====================
   
@@ -2762,39 +2874,78 @@ export default function ProjectLedgerCenter({
               </button>
             )}
 
-            {/* View Toggle and Export Buttons */}
+            {/* View Mode Toggle (Table/Dashboard) */}
             <div className="flex justify-between items-center gap-3 mb-4 flex-wrap no-print">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setTableView('vertical')}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
-                    tableView === 'vertical'
-                      ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                    </svg>
-                    Vertical Table View
+              <div className="flex gap-3 items-center">
+                {/* Dashboard/Table Toggle */}
+                <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                      viewMode === 'table'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                      </svg>
+                      Table View
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('dashboard')}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                      viewMode === 'dashboard'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                      </svg>
+                      Dashboard
+                    </div>
+                  </button>
+                </div>
+
+                {/* Table View Type Toggle (only show in table mode) */}
+                {viewMode === 'table' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setTableView('vertical')}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                        tableView === 'vertical'
+                          ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                        Vertical
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setTableView('horizontal')}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                        tableView === 'horizontal'
+                          ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2H19a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                        </svg>
+                        Horizontal
+                      </div>
+                    </button>
                   </div>
-                </button>
-                <button
-                  onClick={() => setTableView('horizontal')}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
-                    tableView === 'horizontal'
-                      ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2H19a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
-                    </svg>
-                    Horizontal Table View
-                  </div>
-                </button>
+                )}
               </div>
               
               {/* Export & Print Buttons */}
@@ -2842,7 +2993,452 @@ export default function ProjectLedgerCenter({
               </div>
             </div>
 
+            {/* Dashboard View */}
+            {viewMode === 'dashboard' && (
+              <div className="space-y-6">
+                {/* Summary Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Projects Card */}
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-blue-100 text-sm font-medium mb-1">Total Projects</p>
+                        <p className="text-3xl font-bold">{dashboardStats.totalProjects}</p>
+                        <p className="text-blue-100 text-xs mt-1">
+                          {projects.length !== filteredProjects.length 
+                            ? `${filteredProjects.length} of ${projects.length} filtered`
+                            : 'All projects'}
+                        </p>
+                      </div>
+                      <div className="bg-white/20 rounded-full p-3">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total Budget Card */}
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-100 text-sm font-medium mb-1">Total Budget</p>
+                        <p className="text-2xl font-bold">{formatCurrency(dashboardStats.totalBudget)}</p>
+                        <p className="text-green-100 text-xs mt-1">Allocated budget</p>
+                      </div>
+                      <div className="bg-white/20 rounded-full p-3">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Average Progress Card */}
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-purple-100 text-sm font-medium mb-1">Average Progress</p>
+                        <p className="text-3xl font-bold">{dashboardStats.averageProgress.toFixed(1)}%</p>
+                        <div className="mt-2 bg-white/20 rounded-full h-2">
+                          <div 
+                            className="bg-white rounded-full h-2 transition-all duration-500"
+                            style={{ width: `${dashboardStats.averageProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="bg-white/20 rounded-full p-3">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Overview Card */}
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-orange-100 text-sm font-medium mb-1">Active Projects</p>
+                        <p className="text-3xl font-bold">{dashboardStats.statusCounts.ongoing || 0}</p>
+                        <p className="text-orange-100 text-xs mt-1">
+                          {dashboardStats.statusCounts.completed || 0} completed
+                        </p>
+                      </div>
+                      <div className="bg-white/20 rounded-full p-3">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Charts Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Projects by Status Pie Chart */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Projects by Status</h3>
+                    <div className="flex items-center justify-center">
+                      <svg width="250" height="250" viewBox="0 0 250 250" className="transform -rotate-90">
+                        {(() => {
+                          const statusData = Object.entries(dashboardStats.projectsByStatus);
+                          if (statusData.length === 0) {
+                            return (
+                              <text x="125" y="125" textAnchor="middle" fill="#6B7280" fontSize="14" transform="rotate(90 125 125)">
+                                No data
+                              </text>
+                            );
+                          }
+                          const total = statusData.reduce((sum, [, count]) => sum + count, 0);
+                          let currentAngle = 0;
+                          const radius = 100;
+                          const centerX = 125;
+                          const centerY = 125;
+                          
+                          return statusData.map(([status, count], index) => {
+                            const percentage = (count / total) * 100;
+                            const angle = (count / total) * 360;
+                            const startAngle = currentAngle;
+                            const endAngle = currentAngle + angle;
+                            
+                            const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                            const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+                            const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                            const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+                            
+                            const largeArc = angle > 180 ? 1 : 0;
+                            
+                            const pathData = [
+                              `M ${centerX} ${centerY}`,
+                              `L ${x1} ${y1}`,
+                              `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                              'Z'
+                            ].join(' ');
+                            
+                            currentAngle += angle;
+                            
+                            return (
+                              <g key={status}>
+                                <path
+                                  d={pathData}
+                                  fill={getStatusColor(status)}
+                                  stroke="white"
+                                  strokeWidth="2"
+                                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => {
+                                    if (selectedStatuses.includes(status)) {
+                                      setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                                    } else {
+                                      setSelectedStatuses([...selectedStatuses, status]);
+                                      setFilterStatus('');
+                                    }
+                                  }}
+                                />
+                              </g>
+                            );
+                          });
+                        })()}
+                      </svg>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {Object.entries(dashboardStats.projectsByStatus).map(([status, count]) => {
+                        const total = Object.values(dashboardStats.projectsByStatus).reduce((sum, c) => sum + c, 0);
+                        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                        return (
+                          <div key={status} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                            onClick={() => {
+                              if (selectedStatuses.includes(status)) {
+                                setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                              } else {
+                                setSelectedStatuses([...selectedStatuses, status]);
+                                setFilterStatus('');
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-4 h-4 rounded-full"
+                                style={{ backgroundColor: getStatusColor(status) }}
+                              ></div>
+                              <span className="text-sm font-medium text-gray-700 capitalize">
+                                {status.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-gray-800">{count}</span>
+                              <span className="text-xs text-gray-500">({percentage}%)</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Budget by Category Bar Chart */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Budget by Category</h3>
+                    <div className="space-y-4">
+                      {Object.entries(dashboardStats.budgetByCategory).length === 0 ? (
+                        <p className="text-gray-500 text-center py-8">No budget data available</p>
+                      ) : (
+                        Object.entries(dashboardStats.budgetByCategory)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([category, budget], index) => {
+                            const maxBudget = Math.max(...Object.values(dashboardStats.budgetByCategory));
+                            const percentage = maxBudget > 0 ? (budget / maxBudget) * 100 : 0;
+                            return (
+                              <div key={category} className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-gray-700 capitalize">
+                                    {category}
+                                  </span>
+                                  <span className="text-sm font-bold text-gray-800">
+                                    {formatCurrency(budget)}
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                  <div
+                                    className="h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-1"
+                                    style={{
+                                      width: `${percentage}%`,
+                                      backgroundColor: getCategoryColor(category, index)
+                                    }}
+                                  >
+                                    <span className="text-[10px] text-white font-medium">
+                                      {percentage > 10 ? `${percentage.toFixed(0)}%` : ''}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Progress Distribution Chart */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Progress Distribution</h3>
+                    <div className="space-y-3">
+                      {Object.entries(dashboardStats.progressDistribution).map(([range, count]) => {
+                        const total = Object.values(dashboardStats.progressDistribution).reduce((sum, c) => sum + c, 0);
+                        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                        const [min, max] = range.split('-').map(Number);
+                        const rangeColors = {
+                          '0-20': '#EF4444',
+                          '21-40': '#F59E0B',
+                          '41-60': '#3B82F6',
+                          '61-80': '#8B5CF6',
+                          '81-100': '#10B981'
+                        };
+                        return (
+                          <div key={range} className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-700">
+                                {range}%
+                              </span>
+                              <span className="text-sm font-bold text-gray-800">
+                                {count} projects ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                              <div
+                                className="h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                                style={{
+                                  width: `${percentage}%`,
+                                  backgroundColor: rangeColors[range]
+                                }}
+                              >
+                                {percentage > 5 && (
+                                  <span className="text-[10px] text-white font-medium">
+                                    {count}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Projects by Priority */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Projects by Priority</h3>
+                    <div className="space-y-3">
+                      {Object.entries(dashboardStats.projectsByPriority).length === 0 ? (
+                        <p className="text-gray-500 text-center py-8">No priority data available</p>
+                      ) : (
+                        Object.entries(dashboardStats.projectsByPriority)
+                          .sort(([a], [b]) => {
+                            const order = { 'high': 0, 'medium': 1, 'low': 2 };
+                            return (order[a] || 99) - (order[b] || 99);
+                          })
+                          .map(([priority, count]) => {
+                            const total = Object.values(dashboardStats.projectsByPriority).reduce((sum, c) => sum + c, 0);
+                            const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                            return (
+                              <div 
+                                key={priority} 
+                                className="flex items-center justify-between p-3 border-2 border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-all"
+                                onClick={() => {
+                                  if (selectedPriorities.includes(priority)) {
+                                    setSelectedPriorities(selectedPriorities.filter(p => p !== priority));
+                                  } else {
+                                    setSelectedPriorities([...selectedPriorities, priority]);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="w-4 h-4 rounded-full"
+                                    style={{ backgroundColor: getPriorityColor(priority) }}
+                                  ></div>
+                                  <span className="text-sm font-medium text-gray-700 capitalize">
+                                    {priority} Priority
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg font-bold text-gray-800">{count}</span>
+                                  <span className="text-xs text-gray-500">({percentage}%)</span>
+                                </div>
+                              </div>
+                            );
+                          })
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Breakdown Table */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Status Breakdown</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {Object.entries(dashboardStats.statusCounts).map(([status, count]) => (
+                      <div 
+                        key={status}
+                        className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-all text-center"
+                        onClick={() => {
+                          if (selectedStatuses.includes(status)) {
+                            setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                          } else {
+                            setSelectedStatuses([...selectedStatuses, status]);
+                            setFilterStatus('');
+                          }
+                        }}
+                      >
+                        <div 
+                          className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
+                          style={{ backgroundColor: getStatusColor(status) + '20' }}
+                        >
+                          <div 
+                            className="w-8 h-8 rounded-full"
+                            style={{ backgroundColor: getStatusColor(status) }}
+                          ></div>
+                        </div>
+                        <p className="text-2xl font-bold text-gray-800">{count}</p>
+                        <p className="text-xs text-gray-600 capitalize mt-1">
+                          {status.replace('_', ' ')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Timeline Overview */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Timeline Overview</h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {filteredProjects.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No projects to display</p>
+                    ) : (
+                      filteredProjects.slice(0, 10).map((project) => {
+                        const startDate = project.startDate ? new Date(project.startDate) : null;
+                        const endDate = project.targetCompletionDate || project.endDate 
+                          ? new Date(project.targetCompletionDate || project.endDate) 
+                          : null;
+                        const today = new Date();
+                        const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+                        
+                        // Calculate timeline position (simplified)
+                        let timelineWidth = 0;
+                        let timelinePosition = 0;
+                        if (startDate && endDate) {
+                          const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                          const daysElapsed = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
+                          timelineWidth = Math.min(100, Math.max(5, (totalDays > 0 ? (daysElapsed / totalDays) * 100 : 0)));
+                          timelinePosition = 0;
+                        }
+                        
+                        return (
+                          <div 
+                            key={project.id}
+                            className="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-all"
+                            onClick={() => {
+                              const enrichedProject = enrichProjectWithEIUData(project);
+                              setSelectedProject(enrichedProject);
+                              setViewMode('table');
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-800 truncate">
+                                  {project.name || 'Unnamed Project'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {project.projectCode || 'N/A'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 ml-4">
+                                <span className="text-xs font-medium text-gray-600">
+                                  {progress.toFixed(0)}%
+                                </span>
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: getStatusColor(project.status || 'unknown') }}
+                                ></div>
+                              </div>
+                            </div>
+                            <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="absolute h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1"
+                                style={{
+                                  width: `${progress}%`,
+                                  backgroundColor: progress >= 80 ? '#10B981' : progress >= 50 ? '#3B82F6' : progress >= 25 ? '#F59E0B' : '#EF4444'
+                                }}
+                              >
+                                {progress > 15 && (
+                                  <span className="text-[8px] text-white font-medium">
+                                    {progress.toFixed(0)}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between mt-1 text-xs text-gray-500">
+                              <span>
+                                {startDate ? formatDate(project.startDate) : 'N/A'}
+                              </span>
+                              <span>
+                                {endDate ? formatDate(project.targetCompletionDate || project.endDate) : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                    {filteredProjects.length > 10 && (
+                      <p className="text-center text-sm text-gray-500 pt-2">
+                        Showing 10 of {filteredProjects.length} projects. Use filters to narrow down.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Modern Ledger Table Container */}
+            {viewMode === 'table' && (
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
               {/* Build Watch Header */}
               <div className={`bg-gradient-to-r ${colors.headerBg} px-8 py-6 text-white relative overflow-hidden`}>
@@ -3523,6 +4119,7 @@ export default function ProjectLedgerCenter({
                 <p className="text-xs text-white/80 mt-1">Build Watch Project Monitoring & Evaluation System</p>
               </div>
             </div>
+            )}
           </div>
         )}
 
