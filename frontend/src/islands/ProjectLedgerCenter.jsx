@@ -153,6 +153,23 @@ const formatDateRPMES = (dateString) => {
   }
 };
 
+// Format date and time for display (e.g., "December 3, 2025 at 01:34 PM")
+const formatDateTime = (dateString) => {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    return dateString;
+  }
+};
+
 export default function ProjectLedgerCenter({ 
   theme = 'blue',
   userRole = null,
@@ -782,10 +799,53 @@ export default function ProjectLedgerCenter({
         documentProof: documentCount > 0 ? `${documentCount} document(s)` : 'N/A',
         physicalProgressDescription: approvedSubmission?.physicalProgressDescription || 'N/A',
         submittedBy: submitterName,
-        remarksAndRecommendation: approvedSubmission?.remarks || 
-                                 approvedSubmission?.remarksAndRecommendation || 
-                                 approvedSubmission?.reviewNotes || 
-                                 'N/A'
+        remarksAndRecommendation: (() => {
+          // Get remarks text
+          const remarksText = approvedSubmission?.remarks || 
+                             approvedSubmission?.remarksAndRecommendation || 
+                             approvedSubmission?.reviewNotes || 
+                             '';
+          
+          // Get approver name
+          const approverName = approvedSubmission?.approverFullName || 
+                               approvedSubmission?.approverName || 
+                               approvedSubmission?.reviewer?.name || 
+                               null;
+          
+          // Get review date
+          const reviewDate = approvedSubmission?.reviewedAt || 
+                            approvedSubmission?.updatedAt || 
+                            null;
+          
+          // Build the formatted string
+          if (!remarksText && !approverName) {
+            return 'N/A';
+          }
+          
+          let result = remarksText || '';
+          
+          // Add approver information if available (matching MilestoneSubmissionModal format)
+          if (approverName || reviewDate) {
+            if (result) {
+              result += '\n\n';
+            }
+            result += 'Reviewed by:';
+            if (approverName) {
+              result += `\n${approverName}`;
+            }
+            if (reviewDate) {
+              const formattedDate = formatDateTime(reviewDate);
+              if (formattedDate) {
+                if (approverName) {
+                  result += '\n•';
+                }
+                result += `\n${formattedDate}`;
+              }
+            }
+          }
+          
+          return result || 'N/A';
+        })()
       };
       
       console.log(`  ✅ Phase data for "${milestone.title}":`, {
