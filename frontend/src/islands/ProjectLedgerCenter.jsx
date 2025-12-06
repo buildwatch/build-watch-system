@@ -2760,137 +2760,205 @@ export default function ProjectLedgerCenter({
         {!projectId && (
           <div className="mb-6 space-y-4 no-print">
             {/* Quick Filter Presets */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-3 mb-4">
               <button
                 onClick={() => applyQuickFilter('overdue')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
                   quickFilterPreset === 'overdue'
-                    ? 'bg-red-500 text-white shadow-lg'
-                    : 'bg-red-100 text-red-700 hover:bg-red-200'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/50 scale-105'
+                    : 'bg-gradient-to-r from-red-50 to-red-100 text-red-700 hover:from-red-100 hover:to-red-200 hover:shadow-md hover:scale-105 border border-red-200'
                 }`}
               >
-                ⚠️ Overdue Projects
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="text-base">⚠️</span>
+                  <span>Overdue Projects</span>
+                </span>
+                {quickFilterPreset === 'overdue' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                )}
               </button>
               <button
                 onClick={() => applyQuickFilter('highPriority')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
                   quickFilterPreset === 'highPriority'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/50 scale-105'
+                    : 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 hover:from-orange-100 hover:to-orange-200 hover:shadow-md hover:scale-105 border border-orange-200'
                 }`}
               >
-                🔥 High Priority
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="text-base">🔥</span>
+                  <span>High Priority</span>
+                </span>
+                {quickFilterPreset === 'highPriority' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                )}
               </button>
               <button
                 onClick={() => applyQuickFilter('nearCompletion')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
                   quickFilterPreset === 'nearCompletion'
-                    ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/50 scale-105'
+                    : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md hover:scale-105 border border-green-200'
                 }`}
               >
-                ✅ Near Completion
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="text-base">✅</span>
+                  <span>Near Completion</span>
+                </span>
+                {quickFilterPreset === 'nearCompletion' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                )}
               </button>
               <button
                 onClick={() => applyQuickFilter('needsAttention')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
                   quickFilterPreset === 'needsAttention'
-                    ? 'bg-yellow-500 text-white shadow-lg'
-                    : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/50 scale-105'
+                    : 'bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700 hover:from-yellow-100 hover:to-yellow-200 hover:shadow-md hover:scale-105 border border-yellow-200'
                 }`}
               >
-                ⚡ Needs Attention
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="text-base">⚡</span>
+                  <span>Needs Attention</span>
+                </span>
+                {quickFilterPreset === 'needsAttention' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                )}
               </button>
               <button
                 onClick={() => applyQuickFilter('recentlyUpdated')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
                   quickFilterPreset === 'recentlyUpdated'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/50 scale-105'
+                    : 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200 hover:shadow-md hover:scale-105 border border-blue-200'
                 }`}
               >
-                🕒 Recently Updated
+                <span className="relative z-10 flex items-center gap-2">
+                  <span className="text-base">🕒</span>
+                  <span>Recently Updated</span>
+                </span>
+                {quickFilterPreset === 'recentlyUpdated' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                )}
               </button>
               {(quickFilterPreset || searchQuery || filterStatus || filterCategory || dateRangeStart || dateRangeEnd || budgetRangeMin || budgetRangeMax || progressRangeMin || progressRangeMax || selectedStatuses.length > 0 || selectedCategories.length > 0 || selectedPriorities.length > 0) && (
                 <button
                   onClick={clearAllFilters}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all"
+                  className="group relative px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 hover:from-gray-300 hover:to-gray-400 hover:shadow-md hover:scale-105 transition-all duration-300 border border-gray-300"
                 >
-                  🗑️ Clear All
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span className="text-base">🗑️</span>
+                    <span>Clear All</span>
+                  </span>
                 </button>
               )}
             </div>
 
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[300px]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                <input
-                  type="text"
-                  placeholder="Search projects by name, code, or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
-                />
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search projects by name, code, or location..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setSelectedStatuses([]);
-                  }}
-                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
-                >
-                  <option value="">All Status</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="completed">Completed</option>
-                  <option value="delayed">Delayed</option>
-                  <option value="pending">Pending</option>
-                  <option value="at_risk">At Risk</option>
-                </select>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                <div className="relative">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => {
+                      setFilterStatus(e.target.value);
+                      setSelectedStatuses([]);
+                    }}
+                    className="w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30 appearance-none cursor-pointer"
+                  >
+                    <option value="">All Status</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="delayed">Delayed</option>
+                    <option value="pending">Pending</option>
+                    <option value="at_risk">At Risk</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  value={filterCategory}
-                  onChange={(e) => {
-                    setFilterCategory(e.target.value);
-                    setSelectedCategories([]);
-                  }}
-                  className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all"
-                >
-                  <option value="">All Categories</option>
-                  <option value="infrastructure">Infrastructure</option>
-                  <option value="transportation">Transportation</option>
-                  <option value="health">Health</option>
-                  <option value="education">Education</option>
-                  <option value="social">Social Services</option>
-                  <option value="environment">Environment</option>
-                </select>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                <div className="relative">
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => {
+                      setFilterCategory(e.target.value);
+                      setSelectedCategories([]);
+                    }}
+                    className="w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30 appearance-none cursor-pointer"
+                  >
+                    <option value="">All Categories</option>
+                    <option value="infrastructure">Infrastructure</option>
+                    <option value="transportation">Transportation</option>
+                    <option value="health">Health</option>
+                    <option value="education">Education</option>
+                    <option value="social">Social Services</option>
+                    <option value="environment">Environment</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  className={`px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm ${
+                  className={`group relative px-5 py-3 rounded-xl font-semibold transition-all duration-300 overflow-hidden shadow-md ${
                     showAdvancedFilters
-                      ? `bg-gradient-to-r ${colors.gradient} text-white`
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                      : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 hover:shadow-lg hover:scale-105 border border-gray-300'
                   }`}
                 >
-                  {showAdvancedFilters ? '▼' : '▶'} Advanced Filters
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span className={`transition-transform duration-300 ${showAdvancedFilters ? 'rotate-90' : ''}`}>
+                      {showAdvancedFilters ? '▼' : '▶'}
+                    </span>
+                    <span>Advanced Filters</span>
+                  </span>
+                  {showAdvancedFilters && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  )}
                 </button>
                 <button
                   onClick={() => setShowSavedViews(!showSavedViews)}
-                  className="px-4 py-2.5 rounded-xl font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all shadow-sm"
+                  className="group relative px-5 py-3 rounded-xl font-semibold bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 hover:shadow-lg hover:scale-105 transition-all duration-300 shadow-md border border-gray-300 overflow-hidden"
                 >
-                  💾 Saved Views ({savedViews.length})
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span className="text-base">💾</span>
+                    <span>Saved Views ({savedViews.length})</span>
+                  </span>
                 </button>
                 <button
                   onClick={() => setShowColumnSettings(!showColumnSettings)}
-                  className="px-4 py-2.5 rounded-xl font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all shadow-sm"
+                  className="group relative px-5 py-3 rounded-xl font-semibold bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 hover:shadow-lg hover:scale-105 transition-all duration-300 shadow-md border border-gray-300 overflow-hidden"
                 >
-                  ⚙️ Columns
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span className="text-base">⚙️</span>
+                    <span>Columns</span>
+                  </span>
                 </button>
               </div>
             </div>
@@ -2903,70 +2971,82 @@ export default function ProjectLedgerCenter({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Date Range */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date (From)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date (From)</label>
                     <input
                       type="date"
                       value={dateRangeStart}
                       onChange={(e) => setDateRangeStart(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30 cursor-pointer"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date (To)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">End Date (To)</label>
                     <input
                       type="date"
                       value={dateRangeEnd}
                       onChange={(e) => setDateRangeEnd(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30 cursor-pointer"
                     />
                   </div>
 
                   {/* Budget Range */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Budget (₱)</label>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={budgetRangeMin}
-                      onChange={(e) => setBudgetRangeMin(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Min Budget (₱)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₱</span>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={budgetRangeMin}
+                        onChange={(e) => setBudgetRangeMin(e.target.value)}
+                        className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Budget (₱)</label>
-                    <input
-                      type="number"
-                      placeholder="No limit"
-                      value={budgetRangeMax}
-                      onChange={(e) => setBudgetRangeMax(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Max Budget (₱)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₱</span>
+                      <input
+                        type="number"
+                        placeholder="No limit"
+                        value={budgetRangeMax}
+                        onChange={(e) => setBudgetRangeMax(e.target.value)}
+                        className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
+                      />
+                    </div>
                   </div>
 
                   {/* Progress Range */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Progress (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="0"
-                      value={progressRangeMin}
-                      onChange={(e) => setProgressRangeMin(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Min Progress (%)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="0"
+                        value={progressRangeMin}
+                        onChange={(e) => setProgressRangeMin(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">%</span>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Progress (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="100"
-                      value={progressRangeMax}
-                      onChange={(e) => setProgressRangeMax(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Max Progress (%)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="100"
+                        value={progressRangeMax}
+                        onChange={(e) => setProgressRangeMax(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">%</span>
+                    </div>
                   </div>
                 </div>
 
@@ -2974,24 +3054,31 @@ export default function ProjectLedgerCenter({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   {/* Status Multi-Select */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status (Multiple)</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-lg p-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status (Multiple)</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                       {['ongoing', 'completed', 'delayed', 'pending', 'at_risk'].map(status => (
-                        <label key={status} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                          <input
-                            type="checkbox"
-                            checked={selectedStatuses.includes(status)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedStatuses([...selectedStatuses, status]);
-                                setFilterStatus('');
-                              } else {
-                                setSelectedStatuses(selectedStatuses.filter(s => s !== status));
-                              }
-                            }}
-                            className="rounded border-gray-300"
-                          />
-                          <span className="text-sm capitalize">{status.replace('_', ' ')}</span>
+                        <label key={status} className="group flex items-center space-x-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-sm">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={selectedStatuses.includes(status)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedStatuses([...selectedStatuses, status]);
+                                  setFilterStatus('');
+                                } else {
+                                  setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                                }
+                              }}
+                              className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all checked:bg-blue-600 checked:border-blue-600"
+                            />
+                            {selectedStatuses.includes(status) && (
+                              <svg className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium capitalize text-gray-700 group-hover:text-blue-700 transition-colors">{status.replace('_', ' ')}</span>
                         </label>
                       ))}
                     </div>
@@ -2999,24 +3086,31 @@ export default function ProjectLedgerCenter({
 
                   {/* Category Multi-Select */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Category (Multiple)</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-lg p-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Category (Multiple)</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                       {['infrastructure', 'transportation', 'health', 'education', 'social', 'environment'].map(category => (
-                        <label key={category} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                          <input
-                            type="checkbox"
-                            checked={selectedCategories.includes(category)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCategories([...selectedCategories, category]);
-                                setFilterCategory('');
-                              } else {
-                                setSelectedCategories(selectedCategories.filter(c => c !== category));
-                              }
-                            }}
-                            className="rounded border-gray-300"
-                          />
-                          <span className="text-sm capitalize">{category}</span>
+                        <label key={category} className="group flex items-center space-x-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-sm">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(category)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedCategories([...selectedCategories, category]);
+                                  setFilterCategory('');
+                                } else {
+                                  setSelectedCategories(selectedCategories.filter(c => c !== category));
+                                }
+                              }}
+                              className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all checked:bg-blue-600 checked:border-blue-600"
+                            />
+                            {selectedCategories.includes(category) && (
+                              <svg className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium capitalize text-gray-700 group-hover:text-blue-700 transition-colors">{category}</span>
                         </label>
                       ))}
                     </div>
@@ -3024,23 +3118,30 @@ export default function ProjectLedgerCenter({
 
                   {/* Priority Multi-Select */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority (Multiple)</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-lg p-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Priority (Multiple)</label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                       {['high', 'medium', 'low'].map(priority => (
-                        <label key={priority} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                          <input
-                            type="checkbox"
-                            checked={selectedPriorities.includes(priority)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedPriorities([...selectedPriorities, priority]);
-                              } else {
-                                setSelectedPriorities(selectedPriorities.filter(p => p !== priority));
-                              }
-                            }}
-                            className="rounded border-gray-300"
-                          />
-                          <span className="text-sm capitalize">{priority}</span>
+                        <label key={priority} className="group flex items-center space-x-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-sm">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={selectedPriorities.includes(priority)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedPriorities([...selectedPriorities, priority]);
+                                } else {
+                                  setSelectedPriorities(selectedPriorities.filter(p => p !== priority));
+                                }
+                              }}
+                              className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all checked:bg-blue-600 checked:border-blue-600"
+                            />
+                            {selectedPriorities.includes(priority) && (
+                              <svg className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium capitalize text-gray-700 group-hover:text-blue-700 transition-colors">{priority}</span>
                         </label>
                       ))}
                     </div>
@@ -3056,9 +3157,13 @@ export default function ProjectLedgerCenter({
                   <h3 className="text-lg font-bold text-gray-800">Saved Views</h3>
                   <button
                     onClick={() => setShowSaveViewModal(true)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium"
+                    className="group relative px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105 overflow-hidden"
                   >
-                    + Save Current View
+                    <span className="relative z-10 flex items-center gap-2">
+                      <span className="text-lg">+</span>
+                      <span>Save Current View</span>
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   </button>
                 </div>
                 {savedViews.length === 0 ? (
@@ -3076,15 +3181,17 @@ export default function ProjectLedgerCenter({
                         <div className="flex gap-2">
                           <button
                             onClick={() => loadView(view)}
-                            className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-sm font-medium"
+                            className="group relative px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 overflow-hidden"
                           >
-                            Load
+                            <span className="relative z-10">Load</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                           </button>
                           <button
                             onClick={() => deleteView(view.id)}
-                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all text-sm font-medium"
+                            className="group relative px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 overflow-hidden"
                           >
-                            Delete
+                            <span className="relative z-10">Delete</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                           </button>
                         </div>
                       </div>
@@ -3104,26 +3211,27 @@ export default function ProjectLedgerCenter({
                     placeholder="Enter view name..."
                     value={viewNameToSave}
                     onChange={(e) => setViewNameToSave(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         saveView(viewNameToSave);
                       }
                     }}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => saveView(viewNameToSave)}
-                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium"
+                      className="group relative flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105 overflow-hidden"
                     >
-                      Save
+                      <span className="relative z-10">Save</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                     </button>
                     <button
                       onClick={() => {
                         setShowSaveViewModal(false);
                         setViewNameToSave('');
                       }}
-                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                      className="group relative flex-1 px-4 py-3 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 rounded-xl hover:from-gray-300 hover:to-gray-400 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105"
                     >
                       Cancel
                     </button>
@@ -3155,13 +3263,20 @@ export default function ProjectLedgerCenter({
                   </p>
                   
                   {/* Search in Modal */}
-                  <input
-                    type="text"
-                    placeholder="Search projects..."
-                    value={comparisonSearchQuery}
-                    onChange={(e) => setComparisonSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
-                  />
+                  <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search projects..."
+                      value={comparisonSearchQuery}
+                      onChange={(e) => setComparisonSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:shadow-md transition-all duration-300 bg-white focus:bg-blue-50/30"
+                    />
+                  </div>
 
                   {/* Project List */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 max-h-96 overflow-y-auto">
@@ -3219,27 +3334,30 @@ export default function ProjectLedgerCenter({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex gap-3 justify-end">
                     <button
                       onClick={() => {
                         setShowComparisonModal(false);
                         setComparisonSearchQuery('');
                         setSelectedProjectsForComparison([]);
                       }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                      className="group relative px-5 py-2.5 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 rounded-xl hover:from-gray-300 hover:to-gray-400 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={startComparison}
                       disabled={selectedProjectsForComparison.length < 2}
-                      className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                      className={`group relative px-5 py-2.5 rounded-xl transition-all duration-300 font-semibold overflow-hidden ${
                         selectedProjectsForComparison.length < 2
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : `bg-gradient-to-r ${colors.gradient} text-white hover:shadow-lg`
+                          : `bg-gradient-to-r ${colors.gradient} text-white hover:shadow-lg hover:scale-105`
                       }`}
                     >
-                      Compare {selectedProjectsForComparison.length} Project{selectedProjectsForComparison.length !== 1 ? 's' : ''}
+                      <span className="relative z-10">Compare {selectedProjectsForComparison.length} Project{selectedProjectsForComparison.length !== 1 ? 's' : ''}</span>
+                      {selectedProjectsForComparison.length >= 2 && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -3250,21 +3368,28 @@ export default function ProjectLedgerCenter({
             {showColumnSettings && (
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Column Visibility</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-64 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50/50">
                   {Object.keys(visibleColumns).map(columnKey => (
-                    <label key={columnKey} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns[columnKey] || false}
-                        onChange={(e) => {
-                          setVisibleColumns({
-                            ...visibleColumns,
-                            [columnKey]: e.target.checked
-                          });
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                      <span className="text-sm capitalize">{columnKey.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    <label key={columnKey} className="group flex items-center space-x-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-sm">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[columnKey] || false}
+                          onChange={(e) => {
+                            setVisibleColumns({
+                              ...visibleColumns,
+                              [columnKey]: e.target.checked
+                            });
+                          }}
+                          className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all checked:bg-blue-600 checked:border-blue-600"
+                        />
+                        {visibleColumns[columnKey] && (
+                          <svg className="absolute top-0.5 left-0.5 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium capitalize text-gray-700 group-hover:text-blue-700 transition-colors">{columnKey.replace(/([A-Z])/g, ' $1').trim()}</span>
                     </label>
                   ))}
                 </div>
@@ -3444,9 +3569,14 @@ export default function ProjectLedgerCenter({
             {!projectId && (
               <button
                 onClick={() => setSelectedProject(null)}
-                className="mb-4 px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-semibold shadow-sm no-print"
+                className="group relative mb-4 px-5 py-2.5 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 rounded-xl hover:from-gray-300 hover:to-gray-400 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105 no-print overflow-hidden"
               >
-                ← Back to Projects
+                <span className="relative z-10 flex items-center gap-2">
+                  <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                  </svg>
+                  <span>Back to Projects</span>
+                </span>
               </button>
             )}
 
@@ -3454,156 +3584,181 @@ export default function ProjectLedgerCenter({
             <div className="flex justify-between items-center gap-3 mb-4 flex-wrap no-print">
               <div className="flex gap-3 items-center">
                 {/* Dashboard/Table/Compare Toggle */}
-                <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+                <div className="flex gap-2 bg-gray-100 p-1.5 rounded-xl shadow-inner">
                   <button
                     onClick={() => {
                       setViewMode('table');
                       setComparisonMode(false);
                     }}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                    className={`group relative px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 overflow-hidden ${
                       viewMode === 'table' && !comparisonMode
-                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
-                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200 hover:scale-105'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative z-10 flex items-center gap-2">
+                      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                       </svg>
-                      Table View
+                      <span>Table View</span>
                     </div>
+                    {viewMode === 'table' && !comparisonMode && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    )}
                   </button>
                   <button
                     onClick={() => {
                       setViewMode('dashboard');
                       setComparisonMode(false);
                     }}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                    className={`group relative px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 overflow-hidden ${
                       viewMode === 'dashboard'
-                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
-                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200 hover:scale-105'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative z-10 flex items-center gap-2">
+                      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                       </svg>
-                      Dashboard
+                      <span>Dashboard</span>
                     </div>
+                    {viewMode === 'dashboard' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    )}
                   </button>
                   <button
                     onClick={() => setShowComparisonModal(true)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                    className={`group relative px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 overflow-hidden ${
                       comparisonMode
-                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
-                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200 hover:scale-105'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative z-10 flex items-center gap-2">
+                      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                       </svg>
-                      Compare Projects
+                      <span>Compare Projects</span>
                     </div>
+                    {comparisonMode && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    )}
                   </button>
                   <button
                     onClick={() => {
                       setViewMode('timeline');
                       setComparisonMode(false);
                     }}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                    className={`group relative px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 overflow-hidden ${
                       viewMode === 'timeline'
-                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
-                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200 hover:scale-105'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="relative z-10 flex items-center gap-2">
+                      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                       </svg>
-                      Timeline
+                      <span>Timeline</span>
                     </div>
+                    {viewMode === 'timeline' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    )}
                   </button>
                 </div>
 
                 {/* Table View Type Toggle (only show in table mode) */}
                 {viewMode === 'table' && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 bg-gray-100 p-1.5 rounded-xl shadow-inner">
                     <button
                       onClick={() => setTableView('vertical')}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                      className={`group relative px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 overflow-hidden ${
                         tableView === 'vertical'
-                          ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                          : 'bg-transparent text-gray-700 hover:bg-gray-200 hover:scale-105'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="relative z-10 flex items-center gap-2">
+                        <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                         </svg>
-                        Vertical
+                        <span>Vertical</span>
                       </div>
+                      {tableView === 'vertical' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      )}
                     </button>
                     <button
                       onClick={() => setTableView('horizontal')}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                      className={`group relative px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 overflow-hidden ${
                         tableView === 'horizontal'
-                          ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg scale-105`
+                          : 'bg-transparent text-gray-700 hover:bg-gray-200 hover:scale-105'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="relative z-10 flex items-center gap-2">
+                        <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2H19a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
                         </svg>
-                        Horizontal
+                        <span>Horizontal</span>
                       </div>
+                      {tableView === 'horizontal' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      )}
                     </button>
                   </div>
                 )}
               </div>
               
               {/* Export & Print Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={exportToPDF}
                   disabled={loading}
-                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                  className={`group relative px-5 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 overflow-hidden ${
                     loading
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : `bg-gradient-to-r ${colors.gradient} text-white hover:shadow-xl hover:scale-105`
                   }`}
                   title="Export to PDF"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                   </svg>
-                  PDF
+                  <span className="relative z-10">PDF</span>
+                  {!loading && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  )}
                 </button>
                 <button
                   onClick={exportToExcel}
                   disabled={loading}
-                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                  className={`group relative px-5 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 overflow-hidden ${
                     loading
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-xl hover:scale-105'
+                      : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 hover:shadow-xl hover:scale-105'
                   }`}
                   title="Export to Excel"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
-                  Excel
+                  <span className="relative z-10">Excel</span>
+                  {!loading && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  )}
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 bg-gray-700 text-white hover:bg-gray-800 hover:shadow-xl hover:scale-105 no-print"
+                  className="group relative px-5 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white hover:from-gray-800 hover:to-gray-900 hover:shadow-xl hover:scale-105 no-print overflow-hidden"
                   title="Print"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                   </svg>
-                  Print
+                  <span className="relative z-10">Print</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 </button>
               </div>
             </div>
