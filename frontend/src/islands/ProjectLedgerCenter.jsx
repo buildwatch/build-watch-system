@@ -170,6 +170,8 @@ const formatDateTime = (dateString) => {
   }
 };
 
+// Helper function to normalize file URLs (will be defined inside component to access API_URL)
+
 export default function ProjectLedgerCenter({ 
   theme = 'blue',
   userRole = null,
@@ -200,6 +202,31 @@ export default function ProjectLedgerCenter({
 
   // Note: Removed useEffect for re-enrichment since we're not making API calls
   // The contact number should already be in the project data from the backend
+
+  // Helper function to normalize file URLs
+  const normalizeFileUrl = (file) => {
+    if (!file) return null;
+    
+    let url = '';
+    let name = '';
+    
+    if (typeof file === 'object' && file !== null) {
+      url = file.url || file.src || file.path || file.filePath || file.fileName || '';
+      name = file.name || file.originalName || file.fileName || 'File';
+    } else if (typeof file === 'string') {
+      url = file;
+      name = file.split('/').pop() || 'File';
+    }
+    
+    // Ensure URL is absolute
+    if (url && !url.startsWith('http') && !url.startsWith('//')) {
+      // If it's a relative path, prepend the API base URL
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      url = url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+    }
+    
+    return { url, name };
+  };
 
   // Helper function to normalize EIU data structure
   // Note: We do NOT make API calls to /api/users/ as that endpoint doesn't exist or requires System Admin
@@ -716,16 +743,22 @@ export default function ProjectLedgerCenter({
                              : null) ||
                            'N/A';
       
-      // Get photo/video/document proof counts
-      const photoCount = Array.isArray(approvedSubmission?.photoEvidence) 
-        ? approvedSubmission.photoEvidence.length 
-        : (approvedSubmission?.photoEvidence && approvedSubmission.photoEvidence !== null && approvedSubmission.photoEvidence !== 'null' ? 1 : 0);
-      const videoCount = Array.isArray(approvedSubmission?.videoEvidence) 
-        ? approvedSubmission.videoEvidence.length 
-        : (approvedSubmission?.videoEvidence && approvedSubmission.videoEvidence !== null && approvedSubmission.videoEvidence !== 'null' ? 1 : 0);
-      const documentCount = Array.isArray(approvedSubmission?.documentFiles) 
-        ? approvedSubmission.documentFiles.length 
-        : (approvedSubmission?.documentFiles && approvedSubmission.documentFiles !== null && approvedSubmission.documentFiles !== 'null' ? 1 : 0);
+      // Get photo/video/document proof arrays (store actual files, not just counts)
+      const photoEvidence = Array.isArray(approvedSubmission?.photoEvidence) 
+        ? approvedSubmission.photoEvidence 
+        : (approvedSubmission?.photoEvidence && approvedSubmission.photoEvidence !== null && approvedSubmission.photoEvidence !== 'null' 
+          ? [approvedSubmission.photoEvidence] 
+          : []);
+      const videoEvidence = Array.isArray(approvedSubmission?.videoEvidence) 
+        ? approvedSubmission.videoEvidence 
+        : (approvedSubmission?.videoEvidence && approvedSubmission.videoEvidence !== null && approvedSubmission.videoEvidence !== 'null' 
+          ? [approvedSubmission.videoEvidence] 
+          : []);
+      const documentFiles = Array.isArray(approvedSubmission?.documentFiles) 
+        ? approvedSubmission.documentFiles 
+        : (approvedSubmission?.documentFiles && approvedSubmission.documentFiles !== null && approvedSubmission.documentFiles !== 'null' 
+          ? [approvedSubmission.documentFiles] 
+          : []);
       
       // Get planned budget from milestone or submission (prioritize milestone)
       const milestonePlannedBudget = milestone.plannedBudget || milestone.budgetPlanned || 0;
@@ -794,9 +827,9 @@ export default function ProjectLedgerCenter({
         remainingBudget: remainingBudget,
         budgetBreakdownAllocation: approvedSubmission?.budgetBreakdownAllocation || 'N/A',
         physicalAccomplishmentGainedWeight: physicalAccomplishmentGainedWeight,
-        photoProof: photoCount > 0 ? `${photoCount} photo(s)` : 'N/A',
-        videoProof: videoCount > 0 ? `${videoCount} video(s)` : 'N/A',
-        documentProof: documentCount > 0 ? `${documentCount} document(s)` : 'N/A',
+        photoProof: photoEvidence,
+        videoProof: videoEvidence,
+        documentProof: documentFiles,
         physicalProgressDescription: approvedSubmission?.physicalProgressDescription || 'N/A',
         submittedBy: submitterName,
         remarksAndRecommendation: (() => {
@@ -1494,30 +1527,93 @@ export default function ProjectLedgerCenter({
                               <td className="px-6 py-4 text-gray-900">{typeof phase.physicalAccomplishmentGainedWeight === 'number' ? `${phase.physicalAccomplishmentGainedWeight}%` : phase.physicalAccomplishmentGainedWeight || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Photo Proof</td>
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Photo Proof</td>
                               <td className="px-6 py-4 text-gray-900">
-                                {phase.photoProof && phase.photoProof !== 'N/A' ? (
-                                  <span>{phase.photoProof}</span>
+                                {Array.isArray(phase.photoProof) && phase.photoProof.length > 0 ? (
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    {phase.photoProof.map((photo, idx) => {
+                                      const fileInfo = normalizeFileUrl(photo);
+                                      if (!fileInfo || !fileInfo.url) return null;
+                                      return (
+                                        <div key={idx} className="relative group cursor-pointer" onClick={() => window.open(fileInfo.url, '_blank')}>
+                                          <img 
+                                            src={fileInfo.url} 
+                                            alt={fileInfo.name || `Photo ${idx + 1}`}
+                                            className="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-blue-500 transition-all"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                          />
+                                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
+                                            <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                            </svg>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 ) : (
                                   <span className="text-gray-500">No photos available</span>
                                 )}
                               </td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Video Proof</td>
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Video Proof</td>
                               <td className="px-6 py-4 text-gray-900">
-                                {phase.videoProof && phase.videoProof !== 'N/A' ? (
-                                  <span>{phase.videoProof}</span>
+                                {Array.isArray(phase.videoProof) && phase.videoProof.length > 0 ? (
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    {phase.videoProof.map((video, idx) => {
+                                      const fileInfo = normalizeFileUrl(video);
+                                      if (!fileInfo || !fileInfo.url) return null;
+                                      return (
+                                        <div key={idx} className="relative group cursor-pointer bg-gray-800 rounded-lg overflow-hidden" onClick={() => window.open(fileInfo.url, '_blank')}>
+                                          <div className="w-full h-24 flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                              <path d="M8 5v14l11-7z"/>
+                                            </svg>
+                                          </div>
+                                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white px-2 py-1 text-xs truncate">
+                                            {fileInfo.name || `Video ${idx + 1}`}
+                                          </div>
+                                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
+                                            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">Click to play</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 ) : (
                                   <span className="text-gray-500">No videos available</span>
                                 )}
                               </td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
-                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Document Proof</td>
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Document Proof</td>
                               <td className="px-6 py-4 text-gray-900">
-                                {phase.documentProof && phase.documentProof !== 'N/A' ? (
-                                  <span>{phase.documentProof}</span>
+                                {Array.isArray(phase.documentProof) && phase.documentProof.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {phase.documentProof.map((doc, idx) => {
+                                      const fileInfo = normalizeFileUrl(doc);
+                                      if (!fileInfo || !fileInfo.url) return null;
+                                      return (
+                                        <a 
+                                          key={idx}
+                                          href={fileInfo.url} 
+                                          download={fileInfo.name}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                                        >
+                                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                          </svg>
+                                          <span className="text-sm text-gray-700 flex-1 truncate">{fileInfo.name || `Document ${idx + 1}`}</span>
+                                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                          </svg>
+                                        </a>
+                                      );
+                                    })}
+                                  </div>
                                 ) : (
                                   <span className="text-gray-500">No documents available</span>
                                 )}
@@ -1681,9 +1777,82 @@ export default function ProjectLedgerCenter({
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.remainingBudget || 0).replace('₱', '').trim()}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.budgetBreakdownAllocation || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{typeof phase.physicalAccomplishmentGainedWeight === 'number' ? `${phase.physicalAccomplishmentGainedWeight}%` : phase.physicalAccomplishmentGainedWeight || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.photoProof || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.videoProof || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.documentProof || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">
+                                  {Array.isArray(phase.photoProof) && phase.photoProof.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1">
+                                      {phase.photoProof.map((photo, idx) => {
+                                        const fileInfo = normalizeFileUrl(photo);
+                                        if (!fileInfo || !fileInfo.url) return null;
+                                        return (
+                                          <img 
+                                            key={idx}
+                                            src={fileInfo.url} 
+                                            alt={fileInfo.name || `Photo ${idx + 1}`}
+                                            className="w-12 h-12 object-cover rounded border border-gray-300 hover:border-blue-500 cursor-pointer transition-all"
+                                            onClick={() => window.open(fileInfo.url, '_blank')}
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                            title={fileInfo.name || `Photo ${idx + 1}`}
+                                          />
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500">N/A</span>
+                                  )}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">
+                                  {Array.isArray(phase.videoProof) && phase.videoProof.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1">
+                                      {phase.videoProof.map((video, idx) => {
+                                        const fileInfo = normalizeFileUrl(video);
+                                        if (!fileInfo || !fileInfo.url) return null;
+                                        return (
+                                          <div 
+                                            key={idx}
+                                            className="relative w-12 h-12 bg-gray-800 rounded border border-gray-300 hover:border-blue-500 cursor-pointer flex items-center justify-center group"
+                                            onClick={() => window.open(fileInfo.url, '_blank')}
+                                            title={fileInfo.name || `Video ${idx + 1}`}
+                                          >
+                                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                              <path d="M8 5v14l11-7z"/>
+                                            </svg>
+                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded"></div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500">N/A</span>
+                                  )}
+                                </td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">
+                                  {Array.isArray(phase.documentProof) && phase.documentProof.length > 0 ? (
+                                    <div className="space-y-1">
+                                      {phase.documentProof.map((doc, idx) => {
+                                        const fileInfo = normalizeFileUrl(doc);
+                                        if (!fileInfo || !fileInfo.url) return null;
+                                        return (
+                                          <a 
+                                            key={idx}
+                                            href={fileInfo.url} 
+                                            download={fileInfo.name}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 p-1 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors text-[10px]"
+                                            title={fileInfo.name || `Document ${idx + 1}`}
+                                          >
+                                            <svg className="w-3 h-3 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <span className="truncate max-w-[80px]">{fileInfo.name || `Doc ${idx + 1}`}</span>
+                                          </a>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500">N/A</span>
+                                  )}
+                                </td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.physicalProgressDescription || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.submittedBy || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs align-top bg-white">{phase.remarksAndRecommendation || 'N/A'}</td>
