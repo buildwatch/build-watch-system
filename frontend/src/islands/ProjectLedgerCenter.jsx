@@ -181,9 +181,42 @@ export default function ProjectLedgerCenter({
     }
   }, [projectId]);
 
+  // Re-enrich selected project if EIU data is missing (only once per project)
+  useEffect(() => {
+    const enrichSelectedProject = async () => {
+      if (selectedProject && selectedProject.eiuPersonnelId && !selectedProject._eiuEnriched) {
+        // Check if contact number is missing
+        const hasContactNumber = selectedProject.eiuPersonnel?.contactNumber || 
+                                 selectedProject.eiuPersonnel?.phoneNumber || 
+                                 selectedProject.eiuPersonnel?.phone;
+        
+        if (!hasContactNumber) {
+          console.log('📞 Contact number missing, re-enriching project...');
+          const enriched = await enrichProjectWithEIUData(selectedProject);
+          // Mark as enriched to prevent re-enrichment
+          enriched._eiuEnriched = true;
+          setSelectedProject(enriched);
+        } else {
+          // Mark as enriched even if contact number exists
+          selectedProject._eiuEnriched = true;
+        }
+      }
+    };
+    
+    enrichSelectedProject();
+  }, [selectedProject?.id]);
+
   // Helper function to enrich project with EIU user details
   const enrichProjectWithEIUData = async (project) => {
-    if (!project || !project.eiuPersonnelId) {
+    // Get the EIU user ID - try multiple sources
+    const eiuUserId = project.eiuPersonnelId || project.eiuPersonnel?.id || project.eiuPersonnel?.userId;
+    
+    if (!project || !eiuUserId) {
+      console.log('⚠️ No EIU user ID found for project:', {
+        eiuPersonnelId: project?.eiuPersonnelId,
+        'eiuPersonnel.id': project?.eiuPersonnel?.id,
+        'eiuPersonnel.userId': project?.eiuPersonnel?.userId
+      });
       return project;
     }
 
@@ -193,23 +226,28 @@ export default function ProjectLedgerCenter({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      console.log('📞 Fetching EIU user data for ID:', eiuUserId);
+      
       // Fetch user details from users API
-      const userResponse = await fetch(`${API_URL}/users/${project.eiuPersonnelId}`, { headers });
+      const userResponse = await fetch(`${API_URL}/users/${eiuUserId}`, { headers });
       
       if (userResponse.ok) {
         const userData = await userResponse.json();
         if (userData.success && userData.user) {
           const eiuUser = userData.user;
           console.log('📞 Fetched EIU user data:', eiuUser);
+          console.log('📞 Contact Number in fetched data:', eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone);
           
           // Merge EIU user details into project.eiuPersonnel
           if (project.eiuPersonnel) {
             project.eiuPersonnel = {
               ...project.eiuPersonnel,
               ...eiuUser,
-              // Ensure contact number is properly set
-              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone || project.eiuPersonnel.contactNumber,
-              phoneNumber: eiuUser.phoneNumber || eiuUser.phone || eiuUser.contactNumber || project.eiuPersonnel.phoneNumber,
+              // Ensure contact number is properly set - prioritize fetched data
+              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone || eiuUser.contact || 
+                             project.eiuPersonnel.contactNumber || project.eiuPersonnel.phoneNumber || project.eiuPersonnel.phone,
+              phoneNumber: eiuUser.phoneNumber || eiuUser.phone || eiuUser.contactNumber || 
+                          project.eiuPersonnel.phoneNumber || project.eiuPersonnel.phone || project.eiuPersonnel.contactNumber,
               // Ensure other fields are properly mapped
               fullName: eiuUser.fullName || eiuUser.name || project.eiuPersonnel.name,
               email: eiuUser.email || eiuUser.username || project.eiuPersonnel.email || project.eiuPersonnel.username,
@@ -223,19 +261,24 @@ export default function ProjectLedgerCenter({
             // If eiuPersonnel doesn't exist, create it from user data
             project.eiuPersonnel = {
               ...eiuUser,
-              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone,
+              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone || eiuUser.contact,
+              phoneNumber: eiuUser.phoneNumber || eiuUser.phone || eiuUser.contactNumber,
               fullName: eiuUser.fullName || eiuUser.name,
               email: eiuUser.email || eiuUser.username
             };
           }
           
           console.log('✅ Enriched project.eiuPersonnel:', project.eiuPersonnel);
+          console.log('✅ Final contactNumber:', project.eiuPersonnel.contactNumber);
+        } else {
+          console.log('⚠️ User data response not successful:', userData);
         }
       } else {
-        console.log('⚠️ Failed to fetch user data, status:', userResponse.status);
+        const errorText = await userResponse.text();
+        console.log('⚠️ Failed to fetch user data, status:', userResponse.status, 'Response:', errorText);
       }
     } catch (err) {
-      console.error('Error enriching project with EIU data:', err);
+      console.error('❌ Error enriching project with EIU data:', err);
     }
     
     return project;
@@ -692,7 +735,10 @@ export default function ProjectLedgerCenter({
                 {filteredProjects.map(project => (
                   <div
                     key={project.id}
-                    onClick={() => setSelectedProject(project)}
+                    onClick={async () => {
+                      const enrichedProject = await enrichProjectWithEIUData(project);
+                      setSelectedProject(enrichedProject);
+                    }}
                     className="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-xl cursor-pointer transition-all bg-white"
                   >
                     <h3 className="font-bold text-lg mb-2 text-gray-800">{project.name}</h3>
