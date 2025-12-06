@@ -215,6 +215,8 @@ export default function ProjectLedgerCenter({
   const [filterCategory, setFilterCategory] = useState('');
   const [tableView, setTableView] = useState('vertical'); // 'vertical' or 'horizontal'
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'dashboard' or 'compare' or 'timeline'
+  const [excelExportFormat, setExcelExportFormat] = useState('vertical'); // 'vertical' or 'horizontal' for Excel export
+  const [showExcelFormatMenu, setShowExcelFormatMenu] = useState(false);
   
   // Timeline/Gantt Chart State
   const [timelineZoom, setTimelineZoom] = useState('month'); // 'month', 'week', 'day'
@@ -1764,11 +1766,17 @@ export default function ProjectLedgerCenter({
   };
 
   // Export to Excel
-  const exportToExcel = async () => {
+  const exportToExcel = async (format = excelExportFormat) => {
     if (!displayProject) {
       alert('No project data available to export.');
       return;
     }
+
+    // Route to appropriate export function based on format
+    if (format === 'horizontal') {
+      return exportToExcelHorizontal();
+    }
+    // Continue with vertical export (existing code)
 
     try {
       setLoading(true);
@@ -2036,6 +2044,420 @@ export default function ProjectLedgerCenter({
     }
   };
 
+  // Export to Excel - Horizontal Table View
+  const exportToExcelHorizontal = async () => {
+    if (!displayProject) {
+      alert('No project data available to export.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const loaded = await loadExcelJSLibrary();
+      if (!loaded) {
+        alert('Failed to load Excel library. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const ExcelJS = window.ExcelJS;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Project Ledger');
+
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      // Helper function to convert column number to letter (supports up to ZZ)
+      const getColumnLetter = (colNum) => {
+        let result = '';
+        while (colNum > 0) {
+          colNum--;
+          result = String.fromCharCode(65 + (colNum % 26)) + result;
+          colNum = Math.floor(colNum / 26);
+        }
+        return result;
+      };
+
+      // Header row with enhanced styling
+      const headerCols = 44; // Total number of columns in horizontal view
+      const lastCol = getColumnLetter(headerCols);
+      worksheet.mergeCells(`A1:${lastCol}1`);
+      worksheet.getCell('A1').value = 'BUILD WATCH - Project Monitoring & Evaluation System';
+      worksheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+      worksheet.getCell('A1').fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2563EB' }
+      };
+      worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+      worksheet.getRow(1).height = 30;
+
+      worksheet.mergeCells(`A2:${lastCol}2`);
+      worksheet.getCell('A2').value = `Generated on ${currentDate} at ${currentTime}`;
+      worksheet.getCell('A2').font = { size: 11 };
+      worksheet.getCell('A2').alignment = { horizontal: 'center' };
+      worksheet.getRow(2).height = 20;
+
+      let row = 4;
+      let col = 1;
+
+      // Main Header Row (Row 4)
+      const mainHeaders = [
+        { text: 'Basic Project Information', span: 11 },
+        { text: 'EIU Partner Contractor', span: 7 },
+        { text: 'Timeline Information', span: 4 },
+        { text: 'Budget Information', span: 2 },
+        { text: 'Physical Accomplishment Information', span: 1 },
+        { text: 'Project Phases Update', span: 19 }
+      ];
+
+      mainHeaders.forEach(header => {
+        const startCol = getColumnLetter(col);
+        const endCol = getColumnLetter(col + header.span - 1);
+        worksheet.mergeCells(`${startCol}${row}:${endCol}${row}`);
+        const cell = worksheet.getCell(`${startCol}${row}`);
+        cell.value = header.text;
+        cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF2563EB' }
+        };
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        col += header.span;
+      });
+      worksheet.getRow(row).height = 25;
+      row++;
+
+      // Sub-header Row (Row 5) - Column Headers
+      col = 1;
+      const subHeaders = [
+        // Basic Project Information (11 columns)
+        'Project/Program Title', 'Project Code', 'Implementing Office', 'Category', 
+        'Location/Barangay', 'Priority', 'Funding Source', 'Created Date', 
+        'Project Description', 'Expected Outputs', 'Target Beneficiaries',
+        // EIU Partner Contractor (7 columns)
+        'Company Name', 'Email/Username', 'Contact Number', 'Group', 
+        'Department', 'Subrole', 'Company',
+        // Timeline Information (4 columns)
+        'Start Date', 'Target Completion Date', 'Expected Days of Completion', 'Actual Completion Date',
+        // Budget Information (2 columns)
+        'Total Budget Allocation (₱)', 'Budget Description',
+        // Physical Accomplishment Information (1 column)
+        'General Description',
+        // Project Phases Update (19 columns)
+        'Phase (Item of Work)', 'Description', 'Planned Budget', 'Breakdown Description',
+        'Budget Alloted Weight', 'Physical Accomplishment Weight', 'Start Date', 'Target Completion Date',
+        'Submission Date', 'Actual Phase Completion Date', 'Timeline Activities & Deliverables',
+        'Used Budget', 'Remaining Budget', 'Budget Breakdown & Allocation',
+        'Physical Accomplishment Gained Weight', 'Photo Proof', 'Video Proof', 'Document Proof',
+        'Physical Progress Description', 'Submitted By', 'Remarks and Recommendation'
+      ];
+
+      subHeaders.forEach((headerText, index) => {
+        const colLetter = getColumnLetter(col);
+        const cell = worksheet.getCell(`${colLetter}${row}`);
+        cell.value = headerText;
+        cell.font = { bold: true, size: 10 };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE5E7EB' }
+        };
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        col++;
+      });
+      worksheet.getRow(row).height = 30;
+      row++;
+
+      // Data Rows - Get phases
+      const phases = getProjectPhases(displayProject);
+      const eiuPartner = getEIUPartner(displayProject);
+      const physicalAccomplishment = displayProject.physicalProgressRequirements || 
+                                     displayProject.generalDescription || 
+                                     displayProject.physicalDescription || 
+                                     'N/A';
+
+      if (phases && phases.length > 0) {
+        phases.forEach((phase, phaseIndex) => {
+          col = 1;
+          
+          // Basic Project Information (only in first row)
+          if (phaseIndex === 0) {
+            const basicData = [
+              displayProject.name || 'N/A',
+              displayProject.projectCode || 'N/A',
+              displayProject.implementingOfficeName || 'N/A',
+              displayProject.category || 'N/A',
+              displayProject.location || 'N/A',
+              displayProject.priority || 'N/A',
+              formatFundingSource(displayProject.fundingSource),
+              formatDateForExport(displayProject.createdDate),
+              displayProject.description || 'N/A',
+              displayProject.expectedOutputs || 'N/A',
+              displayProject.targetBeneficiaries || 'N/A'
+            ];
+            
+            basicData.forEach((value, idx) => {
+              const colLetter = getColumnLetter(col);
+              const cell = worksheet.getCell(`${colLetter}${row}`);
+              if (phaseIndex === 0) {
+                cell.value = safeString(value, 'N/A');
+                cell.alignment = { wrapText: true, vertical: 'top' };
+                if (phases.length > 1) {
+                  worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                }
+              }
+              col++;
+            });
+          } else {
+            col += 11; // Skip basic project info columns
+          }
+
+          // EIU Partner Contractor (only in first row)
+          if (phaseIndex === 0) {
+            const eiuData = [
+              eiuPartner?.displayFullName || eiuPartner?.name || 'N/A',
+              eiuPartner?.displayEmail || eiuPartner?.email || 'N/A',
+              eiuPartner?.displayContact || eiuPartner?.contact || 'N/A',
+              eiuPartner?.displayGroup || eiuPartner?.group || 'N/A',
+              eiuPartner?.displayDepartment || eiuPartner?.department || 'N/A',
+              eiuPartner?.displaySubrole || eiuPartner?.subrole || 'N/A',
+              eiuPartner?.displayCompany || eiuPartner?.company || 'N/A'
+            ];
+            
+            eiuData.forEach((value) => {
+              const colLetter = getColumnLetter(col);
+              const cell = worksheet.getCell(`${colLetter}${row}`);
+              if (phaseIndex === 0) {
+                cell.value = safeString(value, 'N/A');
+                cell.alignment = { wrapText: true, vertical: 'top' };
+                if (phases.length > 1) {
+                  worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                }
+              }
+              col++;
+            });
+          } else {
+            col += 7; // Skip EIU columns
+          }
+
+          // Timeline Information (only in first row)
+          if (phaseIndex === 0) {
+            const timelineData = [
+              formatDateForExport(displayProject.startDate),
+              formatDateForExport(displayProject.targetCompletionDate),
+              displayProject.expectedDaysOfCompletion || 'N/A',
+              formatDateForExport(displayProject.completionDate)
+            ];
+            
+            timelineData.forEach((value) => {
+              const colLetter = getColumnLetter(col);
+              const cell = worksheet.getCell(`${colLetter}${row}`);
+              if (phaseIndex === 0) {
+                cell.value = safeString(value, 'N/A');
+                cell.alignment = { wrapText: true, vertical: 'top' };
+                if (phases.length > 1) {
+                  worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                }
+              }
+              col++;
+            });
+          } else {
+            col += 4; // Skip timeline columns
+          }
+
+          // Budget Information (only in first row)
+          if (phaseIndex === 0) {
+            const budgetData = [
+              formatCurrencyForExport(displayProject.totalBudget),
+              displayProject.budgetBreakdown || displayProject.budgetDescription || 'N/A'
+            ];
+            
+            budgetData.forEach((value) => {
+              const colLetter = getColumnLetter(col);
+              const cell = worksheet.getCell(`${colLetter}${row}`);
+              if (phaseIndex === 0) {
+                cell.value = safeString(value, 'N/A');
+                cell.alignment = { wrapText: true, vertical: 'top' };
+                if (phases.length > 1) {
+                  worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                }
+              }
+              col++;
+            });
+          } else {
+            col += 2; // Skip budget columns
+          }
+
+          // Physical Accomplishment Information (only in first row)
+          if (phaseIndex === 0) {
+            const colLetter = getColumnLetter(col);
+            const cell = worksheet.getCell(`${colLetter}${row}`);
+            cell.value = safeString(physicalAccomplishment, 'N/A');
+            cell.alignment = { wrapText: true, vertical: 'top' };
+            if (phases.length > 1) {
+              worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+            }
+            col++;
+          } else {
+            col += 1; // Skip physical accomplishment column
+          }
+
+          // Project Phases Update (each phase gets its own data)
+          const phaseData = [
+            phase.title || phase.name || 'N/A',
+            phase.description || 'N/A',
+            formatCurrencyForExport(phase.plannedBudget),
+            phase.breakdownDescription || 'N/A',
+            phase.budgetAllotedWeight || 'N/A',
+            phase.physicalAccomplishmentWeight || 'N/A',
+            formatDateForExport(phase.startDate),
+            formatDateForExport(phase.targetCompletionDate),
+            formatDateForExport(phase.submissionDate),
+            formatDateForExport(phase.actualPhaseCompletionDate),
+            phase.timelineActivities || 'N/A',
+            formatCurrencyForExport(phase.usedBudget),
+            formatCurrencyForExport(phase.remainingBudget),
+            phase.budgetBreakdownAllocation || 'N/A',
+            phase.physicalAccomplishmentGainedWeight || 'N/A',
+            Array.isArray(phase.photoProof) ? `${phase.photoProof.length} photo(s)` : (phase.photoProof || 'N/A'),
+            Array.isArray(phase.videoProof) ? `${phase.videoProof.length} video(s)` : (phase.videoProof || 'N/A'),
+            Array.isArray(phase.documentProof) ? `${phase.documentProof.length} document(s)` : (phase.documentProof || 'N/A'),
+            phase.physicalProgressDescription || 'N/A',
+            phase.submittedBy || 'N/A',
+            phase.remarksAndRecommendation || 'N/A'
+          ];
+
+          phaseData.forEach((value) => {
+            const colLetter = getColumnLetter(col);
+            const cell = worksheet.getCell(`${colLetter}${row}`);
+            cell.value = safeString(value, 'N/A');
+            cell.alignment = { wrapText: true, vertical: 'top' };
+            col++;
+          });
+
+          // Apply borders to all cells in this row
+          for (let c = 1; c <= headerCols; c++) {
+            const colLetter = getColumnLetter(c);
+            const cell = worksheet.getCell(`${colLetter}${row}`);
+            cell.border = {
+              top: { style: 'thin' },
+              left: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' }
+            };
+          }
+
+          worksheet.getRow(row).height = 20;
+          row++;
+        });
+      } else {
+        // No phases - still show project info in one row
+        col = 1;
+        const allData = [
+          // Basic Project Information
+          displayProject.name || 'N/A',
+          displayProject.projectCode || 'N/A',
+          displayProject.implementingOfficeName || 'N/A',
+          displayProject.category || 'N/A',
+          displayProject.location || 'N/A',
+          displayProject.priority || 'N/A',
+          formatFundingSource(displayProject.fundingSource),
+          formatDateForExport(displayProject.createdDate),
+          displayProject.description || 'N/A',
+          displayProject.expectedOutputs || 'N/A',
+          displayProject.targetBeneficiaries || 'N/A',
+          // EIU Partner Contractor
+          eiuPartner?.displayFullName || eiuPartner?.name || 'N/A',
+          eiuPartner?.displayEmail || eiuPartner?.email || 'N/A',
+          eiuPartner?.displayContact || eiuPartner?.contact || 'N/A',
+          eiuPartner?.displayGroup || eiuPartner?.group || 'N/A',
+          eiuPartner?.displayDepartment || eiuPartner?.department || 'N/A',
+          eiuPartner?.displaySubrole || eiuPartner?.subrole || 'N/A',
+          eiuPartner?.displayCompany || eiuPartner?.company || 'N/A',
+          // Timeline Information
+          formatDateForExport(displayProject.startDate),
+          formatDateForExport(displayProject.targetCompletionDate),
+          displayProject.expectedDaysOfCompletion || 'N/A',
+          formatDateForExport(displayProject.completionDate),
+          // Budget Information
+          formatCurrencyForExport(displayProject.totalBudget),
+          displayProject.budgetBreakdown || displayProject.budgetDescription || 'N/A',
+          // Physical Accomplishment Information
+          physicalAccomplishment,
+          // Project Phases Update (empty)
+          ...Array(19).fill('N/A')
+        ];
+
+        allData.forEach((value) => {
+          const colLetter = getColumnLetter(col);
+          const cell = worksheet.getCell(`${colLetter}${row}`);
+          cell.value = safeString(value, 'N/A');
+          cell.alignment = { wrapText: true, vertical: 'top' };
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+          col++;
+        });
+        worksheet.getRow(row).height = 20;
+        row++;
+      }
+
+      // Set column widths
+      const columnWidths = [
+        25, 15, 20, 15, 18, 12, 18, 15, 30, 25, 20, // Basic Project Info (11)
+        20, 20, 15, 12, 20, 15, 20, // EIU Partner (7)
+        15, 15, 12, 15, // Timeline (4)
+        18, 25, // Budget (2)
+        30, // Physical Accomplishment (1)
+        20, 25, 15, 20, 12, 15, 15, 15, 15, 15, 25, 15, 15, 20, 12, 12, 12, 25, 15, 30 // Phases (19)
+      ];
+
+      columnWidths.forEach((width, index) => {
+        const colLetter = getColumnLetter(index + 1);
+        worksheet.getColumn(colLetter).width = width;
+      });
+
+      const fileName = `Project-Ledger-${displayProject.projectCode || displayProject.id}-${now.toISOString().split('T')[0]}-Horizontal.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error exporting to Excel (Horizontal):', error);
+      alert('Failed to export Excel. Please try again.');
+      setLoading(false);
+    }
+  };
 
   // Print function
   const handlePrint = () => {
@@ -3712,7 +4134,7 @@ export default function ProjectLedgerCenter({
               </div>
               
               {/* Export & Print Buttons */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 <button
                   onClick={exportToPDF}
                   disabled={loading}
@@ -3731,24 +4153,95 @@ export default function ProjectLedgerCenter({
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   )}
                 </button>
-                <button
-                  onClick={exportToExcel}
-                  disabled={loading}
-                  className={`group relative px-5 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 overflow-hidden ${
-                    loading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 hover:shadow-xl hover:scale-105'
-                  }`}
-                  title="Export to Excel"
-                >
-                  <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  <span className="relative z-10">Excel</span>
-                  {!loading && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                {/* Excel Export with Format Selection */}
+                <div className="relative">
+                  <div className="flex">
+                    <button
+                      onClick={() => exportToExcel(excelExportFormat)}
+                      disabled={loading}
+                      className={`group relative px-5 py-3 rounded-l-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 overflow-hidden ${
+                        loading
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 hover:shadow-xl hover:scale-105'
+                      }`}
+                      title="Export to Excel"
+                    >
+                      <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <span className="relative z-10">Excel</span>
+                      {!loading && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowExcelFormatMenu(!showExcelFormatMenu)}
+                      disabled={loading}
+                      className={`px-2 py-3 rounded-r-xl font-semibold transition-all duration-300 shadow-lg border-l-2 border-green-500/30 ${
+                        loading
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800'
+                      }`}
+                      title="Select Export Format"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  {/* Format Selection Dropdown */}
+                  {showExcelFormatMenu && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowExcelFormatMenu(false)}
+                      ></div>
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border-2 border-gray-200 z-50">
+                        <div className="p-2">
+                          <div className="text-xs font-semibold text-gray-700 mb-2 px-2">Export Format:</div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExcelExportFormat('vertical');
+                              setShowExcelFormatMenu(false);
+                              exportToExcel('vertical');
+                            }}
+                            disabled={loading}
+                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-1 ${
+                              excelExportFormat === 'vertical'
+                                ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                                : 'hover:bg-gray-100 text-gray-700 border-2 border-transparent'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>📋</span>
+                              <span>Vertical Table View</span>
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExcelExportFormat('horizontal');
+                              setShowExcelFormatMenu(false);
+                              exportToExcel('horizontal');
+                            }}
+                            disabled={loading}
+                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                              excelExportFormat === 'horizontal'
+                                ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                                : 'hover:bg-gray-100 text-gray-700 border-2 border-transparent'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>📊</span>
+                              <span>Horizontal Table View</span>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
-                </button>
+                </div>
                 <button
                   onClick={handlePrint}
                   className="group relative px-5 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white hover:from-gray-800 hover:to-gray-900 hover:shadow-xl hover:scale-105 no-print overflow-hidden"
