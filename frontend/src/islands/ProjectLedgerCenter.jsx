@@ -858,9 +858,11 @@ export default function ProjectLedgerCenter({
           let result = remarksText || '';
           
           // Add approver information if available (matching MilestoneSubmissionModal format)
+          // Add proper spacing for better readability
           if (approverName || reviewDate) {
             if (result) {
-              result += '\n\n';
+              // Add extra spacing between remarks text and "Reviewed by:" section
+              result += '\n\n\n';
             }
             result += 'Reviewed by:';
             if (approverName) {
@@ -872,7 +874,8 @@ export default function ProjectLedgerCenter({
                 if (approverName) {
                   result += '\n•';
                 }
-                result += `\n${formattedDate}`;
+                // Add line break before date for better spacing
+                result += `\n\n${formattedDate}`;
               }
             }
           }
@@ -1855,7 +1858,7 @@ export default function ProjectLedgerCenter({
                                 </td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.physicalProgressDescription || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.submittedBy || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs align-top bg-white">{phase.remarksAndRecommendation || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs align-top bg-white whitespace-pre-wrap">{phase.remarksAndRecommendation || 'N/A'}</td>
                               </tr>
                             ))
                           ) : (
