@@ -963,7 +963,9 @@ export default function ProjectLedgerCenter({
       totalBudget: 0,
       averageProgress: 0,
       projectsByStatus: {},
+      projectsByStatusWithNames: {}, // Store project names by status
       budgetByCategory: {},
+      budgetByCategoryWithProjects: {}, // Store project names by category
       progressDistribution: {
         '0-20': 0,
         '21-40': 0,
@@ -971,7 +973,15 @@ export default function ProjectLedgerCenter({
         '61-80': 0,
         '81-100': 0
       },
+      progressDistributionWithProjects: {
+        '0-20': [],
+        '21-40': [],
+        '41-60': [],
+        '61-80': [],
+        '81-100': []
+      },
       projectsByPriority: {},
+      projectsByPriorityWithNames: {}, // Store project names by priority
       statusCounts: {
         ongoing: 0,
         completed: 0,
@@ -998,6 +1008,10 @@ export default function ProjectLedgerCenter({
       // Projects by Status
       const status = project.status || 'unknown';
       stats.projectsByStatus[status] = (stats.projectsByStatus[status] || 0) + 1;
+      if (!stats.projectsByStatusWithNames[status]) {
+        stats.projectsByStatusWithNames[status] = [];
+      }
+      stats.projectsByStatusWithNames[status].push(project.name || 'Unnamed Project');
       if (stats.statusCounts[status] !== undefined) {
         stats.statusCounts[status]++;
       }
@@ -1005,17 +1019,39 @@ export default function ProjectLedgerCenter({
       // Budget by Category
       const category = project.category || 'uncategorized';
       stats.budgetByCategory[category] = (stats.budgetByCategory[category] || 0) + budget;
+      if (!stats.budgetByCategoryWithProjects[category]) {
+        stats.budgetByCategoryWithProjects[category] = [];
+      }
+      stats.budgetByCategoryWithProjects[category].push({
+        name: project.name || 'Unnamed Project',
+        budget: budget
+      });
 
       // Progress Distribution
-      if (progress <= 20) stats.progressDistribution['0-20']++;
-      else if (progress <= 40) stats.progressDistribution['21-40']++;
-      else if (progress <= 60) stats.progressDistribution['41-60']++;
-      else if (progress <= 80) stats.progressDistribution['61-80']++;
-      else stats.progressDistribution['81-100']++;
+      if (progress <= 20) {
+        stats.progressDistribution['0-20']++;
+        stats.progressDistributionWithProjects['0-20'].push(project.name || 'Unnamed Project');
+      } else if (progress <= 40) {
+        stats.progressDistribution['21-40']++;
+        stats.progressDistributionWithProjects['21-40'].push(project.name || 'Unnamed Project');
+      } else if (progress <= 60) {
+        stats.progressDistribution['41-60']++;
+        stats.progressDistributionWithProjects['41-60'].push(project.name || 'Unnamed Project');
+      } else if (progress <= 80) {
+        stats.progressDistribution['61-80']++;
+        stats.progressDistributionWithProjects['61-80'].push(project.name || 'Unnamed Project');
+      } else {
+        stats.progressDistribution['81-100']++;
+        stats.progressDistributionWithProjects['81-100'].push(project.name || 'Unnamed Project');
+      }
 
       // Projects by Priority
       const priority = project.priority || 'medium';
       stats.projectsByPriority[priority] = (stats.projectsByPriority[priority] || 0) + 1;
+      if (!stats.projectsByPriorityWithNames[priority]) {
+        stats.projectsByPriorityWithNames[priority] = [];
+      }
+      stats.projectsByPriorityWithNames[priority].push(project.name || 'Unnamed Project');
     });
 
     stats.averageProgress = filteredProjects.length > 0 ? totalProgress / filteredProjects.length : 0;
@@ -3556,10 +3592,32 @@ export default function ProjectLedgerCenter({
                               ))}
                             </Pie>
                             <Tooltip 
-                              formatter={(value, name, props) => [
-                                `${value} projects (${((value / Object.values(dashboardStats.projectsByStatus).reduce((sum, c) => sum + c, 0)) * 100).toFixed(1)}%)`,
-                                props.payload.name
-                              ]}
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  const data = payload[0].payload;
+                                  const status = data.status;
+                                  const projectNames = dashboardStats.projectsByStatusWithNames[status] || [];
+                                  const total = Object.values(dashboardStats.projectsByStatus).reduce((sum, c) => sum + c, 0);
+                                  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
+                                  
+                                  return (
+                                    <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-3 max-w-xs">
+                                      <div className="font-semibold text-gray-800 mb-2">
+                                        {data.name}: {data.value} project{data.value !== 1 ? 's' : ''} ({percentage}%)
+                                      </div>
+                                      {projectNames.length > 0 && (
+                                        <div className="text-xs text-gray-600 mt-2 max-h-40 overflow-y-auto space-y-1 border-t border-gray-200 pt-2">
+                                          <div className="font-medium text-gray-700 mb-1">Projects:</div>
+                                          {projectNames.map((projectName, idx) => (
+                                            <div key={idx} className="truncate pl-2">• {projectName}</div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
                             />
                           </PieChart>
                         </ResponsiveContainer>
@@ -3645,15 +3703,31 @@ export default function ProjectLedgerCenter({
                             fontSize={12}
                           />
                           <Tooltip 
-                            formatter={(value, name, props) => [
-                              props.payload.formatted,
-                              'Budget'
-                            ]}
-                            contentStyle={{
-                              backgroundColor: '#fff',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              padding: '8px 12px'
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                const category = data.category;
+                                const projects = dashboardStats.budgetByCategoryWithProjects[category] || [];
+                                
+                                return (
+                                  <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-3 max-w-xs">
+                                    <div className="font-semibold text-gray-800 mb-2">
+                                      {data.name}: {data.formatted}
+                                    </div>
+                                    {projects.length > 0 && (
+                                      <div className="text-xs text-gray-600 mt-2 max-h-40 overflow-y-auto space-y-1 border-t border-gray-200 pt-2">
+                                        <div className="font-medium text-gray-700 mb-1">Projects:</div>
+                                        {projects.map((project, idx) => (
+                                          <div key={idx} className="truncate pl-2">
+                                            • {project.name}: {formatCurrency(project.budget)}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return null;
                             }}
                           />
                           <Bar 
@@ -3697,7 +3771,8 @@ export default function ProjectLedgerCenter({
                               range: `${range}%`,
                               count: count,
                               percentage: parseFloat(percentage),
-                              color: rangeColors[range]
+                              color: rangeColors[range],
+                              rangeKey: range
                             };
                           })}
                           layout="vertical"
@@ -3719,15 +3794,28 @@ export default function ProjectLedgerCenter({
                             fontSize={12}
                           />
                           <Tooltip 
-                            formatter={(value, name, props) => [
-                              `${value} projects (${props.payload.percentage}%)`,
-                              'Count'
-                            ]}
-                            contentStyle={{
-                              backgroundColor: '#fff',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px',
-                              padding: '8px 12px'
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                const projectNames = dashboardStats.progressDistributionWithProjects[data.rangeKey] || [];
+                                
+                                return (
+                                  <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-3 max-w-xs">
+                                    <div className="font-semibold text-gray-800 mb-2">
+                                      {data.range}: {data.count} project{data.count !== 1 ? 's' : ''} ({data.percentage}%)
+                                    </div>
+                                    {projectNames.length > 0 && (
+                                      <div className="text-xs text-gray-600 mt-2 max-h-40 overflow-y-auto space-y-1 border-t border-gray-200 pt-2">
+                                        <div className="font-medium text-gray-700 mb-1">Projects:</div>
+                                        {projectNames.map((projectName, idx) => (
+                                          <div key={idx} className="truncate pl-2">• {projectName}</div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return null;
                             }}
                           />
                           <Bar 
