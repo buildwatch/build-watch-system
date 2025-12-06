@@ -2716,6 +2716,12 @@ export default function ProjectLedgerCenter({
             margin: 1cm;
           }
         }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       `}</style>
       {/* Page Header */}
       <div className={`bg-white border-b ${colors.border} px-8 py-6 mb-0 -mx-8 -mt-8 no-print`}>
@@ -3267,21 +3273,165 @@ export default function ProjectLedgerCenter({
 
             {/* Project List */}
             {filteredProjects.length > 0 && !displayProject && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProjects.map(project => (
-                  <div
-                    key={project.id}
-                    onClick={() => {
-                      const enrichedProject = enrichProjectWithEIUData(project);
-                      setSelectedProject(enrichedProject);
-                    }}
-                    className="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-xl cursor-pointer transition-all bg-white"
-                  >
-                    <h3 className="font-bold text-lg mb-2 text-gray-800">{project.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">Code: {project.projectCode || 'N/A'}</p>
-                    <p className="text-sm text-gray-600">Location: {project.location || 'N/A'}</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map(project => {
+                  // Get project image
+                  const getProjectImage = () => {
+                    if (project.initialPhoto && project.initialPhoto !== '' && project.initialPhoto !== 'None') {
+                      if (project.initialPhoto.startsWith('http://') || project.initialPhoto.startsWith('https://')) {
+                        return project.initialPhoto;
+                      }
+                      return project.initialPhoto.startsWith('/') 
+                        ? `${API_URL.replace('/api', '')}${project.initialPhoto}` 
+                        : `${API_URL.replace('/api', '')}/${project.initialPhoto}`;
+                    }
+                    return `${API_URL.replace('/api', '')}/projects-page-header-bg.png`;
+                  };
+
+                  const projectImage = getProjectImage();
+                  const overallProgress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+                  
+                  // Get progress color
+                  const getProgressColor = (progress) => {
+                    if (progress >= 0 && progress <= 25) return 'bg-red-500';
+                    if (progress >= 26 && progress <= 50) return 'bg-yellow-500';
+                    if (progress >= 51 && progress <= 75) return 'bg-blue-500';
+                    if (progress >= 76 && progress <= 100) return 'bg-green-500';
+                    return 'bg-gray-500';
+                  };
+
+                  // Get status color
+                  const getStatusBadgeColor = (status) => {
+                    switch(status?.toLowerCase()) {
+                      case 'completed':
+                      case 'complete':
+                        return 'bg-green-100 text-green-700 border-green-200';
+                      case 'ongoing':
+                        return 'bg-blue-100 text-blue-700 border-blue-200';
+                      case 'delayed':
+                        return 'bg-red-100 text-red-700 border-red-200';
+                      case 'pending':
+                        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                      default:
+                        return 'bg-gray-100 text-gray-600 border-gray-200';
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={project.id}
+                      onClick={() => {
+                        const enrichedProject = enrichProjectWithEIUData(project);
+                        setSelectedProject(enrichedProject);
+                      }}
+                      className="group bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl hover:border-blue-400"
+                    >
+                      {/* Project Image with Background */}
+                      <div className="h-48 relative overflow-hidden">
+                        <img 
+                          src={projectImage}
+                          alt={project.name || 'Project Image'}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `${API_URL.replace('/api', '')}/projects-page-header-bg.png`;
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                        
+                        {/* Floating Status Badge */}
+                        <div className="absolute top-3 right-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusBadgeColor(project.status)}`}>
+                            {project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : 'Not Started'}
+                          </span>
+                        </div>
+
+                        {/* Category Badge */}
+                        <div className="absolute top-3 left-3">
+                          <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-semibold border border-white/30">
+                            {project.category ? project.category.charAt(0).toUpperCase() + project.category.slice(1) : 'Infrastructure'}
+                          </span>
+                        </div>
+
+                        {/* Progress Overlay */}
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs font-medium text-gray-700">Overall Progress</span>
+                              <span className="text-xs font-bold text-gray-900">{overallProgress.toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div 
+                                className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(overallProgress)}`}
+                                style={{ width: `${overallProgress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Project Details */}
+                      <div className="p-6">
+                        {/* Project Title */}
+                        <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 min-h-[3.5rem]">
+                          {project.name}
+                        </h3>
+
+                        {/* Project Code */}
+                        <div className="text-sm text-gray-500 mb-3">
+                          <span className="font-medium">Code:</span> {project.projectCode || 'N/A'}
+                        </div>
+
+                        {/* Project Description */}
+                        {project.description && (
+                          <div className="text-sm text-gray-600 mb-4 line-clamp-2 min-h-[2.5rem]">
+                            {project.description}
+                          </div>
+                        )}
+
+                        {/* Key Information Grid */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 font-medium">Location:</span>
+                            <span className="text-gray-800 text-right">{project.location || 'N/A'}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 font-medium">Implementing Office:</span>
+                            <span className="text-gray-800 text-right">{project.implementingOfficeName || project.implementingOffice || 'N/A'}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 font-medium">Budget:</span>
+                            <span className="text-gray-800 font-semibold">{formatCurrency(project.totalBudget || 0)}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 font-medium">Funding Source:</span>
+                            <span className="text-gray-800">{project.fundingSource === 'donor_fund' ? 'Municipal Development Fund' : project.fundingSource?.replace('_', ' ').toUpperCase() || 'N/A'}</span>
+                          </div>
+                        </div>
+
+                        {/* Priority Badge */}
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500 font-medium">Priority:</span>
+                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                              project.priority === 'high' ? 'bg-red-100 text-red-700' : 
+                              project.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {project.priority ? project.priority.toUpperCase() : 'MEDIUM'}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {project.startDate ? formatDate(project.startDate) : 'N/A'} - {project.targetCompletionDate ? formatDate(project.targetCompletionDate) : 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
