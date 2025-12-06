@@ -231,6 +231,22 @@ export default function ProjectLedgerCenter({
         if (projectId && data.project) {
           // Normalize project EIU data structure (no API calls)
           const enrichedProject = enrichProjectWithEIUData(data.project);
+          
+          // Fetch milestone submissions and attach to project
+          if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+            const submissions = await fetchMilestoneSubmissions(projectId);
+            
+            // Attach approved submissions to their milestones
+            enrichedProject.milestones.forEach(milestone => {
+              const milestoneSubmissions = submissions.filter(s => s.milestoneId === milestone.id);
+              const approvedSubmission = milestoneSubmissions.find(s => 
+                s.status === 'approved' || s.status === 'iu_approved'
+              );
+              milestone.submissions = milestoneSubmissions;
+              milestone.approvedSubmission = approvedSubmission;
+            });
+          }
+          
           setSelectedProject(enrichedProject);
           setProjects([enrichedProject]);
         } else {
@@ -248,6 +264,31 @@ export default function ProjectLedgerCenter({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch milestone submissions for a project
+  const fetchMilestoneSubmissions = async (projectId) => {
+    if (!projectId || !token) return [];
+    
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, { headers });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.submissions) {
+          return data.submissions || [];
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not fetch milestone submissions:', err);
+    }
+    
+    return [];
   };
 
   const fetchProjectDetails = async (id) => {
@@ -276,6 +317,22 @@ export default function ProjectLedgerCenter({
       if (data.success && data.project) {
         // Normalize project EIU data structure (no API calls)
         const enrichedProject = enrichProjectWithEIUData(data.project);
+        
+        // Fetch milestone submissions and attach to project
+        if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+          const submissions = await fetchMilestoneSubmissions(id);
+          
+          // Attach approved submissions to their milestones
+          enrichedProject.milestones.forEach(milestone => {
+            const milestoneSubmissions = submissions.filter(s => s.milestoneId === milestone.id);
+            const approvedSubmission = milestoneSubmissions.find(s => 
+              s.status === 'approved' || s.status === 'iu_approved'
+            );
+            milestone.submissions = milestoneSubmissions;
+            milestone.approvedSubmission = approvedSubmission;
+          });
+        }
+        
         setSelectedProject(enrichedProject);
       } else {
         setError(data.error || 'Failed to load project details');
@@ -436,26 +493,83 @@ export default function ProjectLedgerCenter({
       return [];
     }
 
-    const updates = project.updates || [];
-    const approvedUpdates = updates.filter(u => 
-      u.status === 'iu_approved' || u.status === 'secretariat_approved'
-    );
-
     return project.milestones.map(milestone => {
-      const milestoneUpdates = approvedUpdates.filter(u => 
-        u.milestoneUpdates?.some(mu => mu.milestoneId === milestone.id)
-      );
-
-      const latestUpdate = milestoneUpdates[0];
-      const milestoneUpdate = latestUpdate?.milestoneUpdates?.find(
-        mu => mu.milestoneId === milestone.id
-      );
-
+      // Get approved submission for this milestone
+      const approvedSubmission = milestone.approvedSubmission || 
+                                 milestone.submissions?.find(s => 
+                                   s.status === 'approved' || s.status === 'iu_approved'
+                                 );
+      
+      // Parse timeline activities if it's a JSON string
+      let timelineActivities = 'N/A';
+      if (approvedSubmission?.timelineActivitiesDeliverables) {
+        try {
+          const parsed = typeof approvedSubmission.timelineActivitiesDeliverables === 'string' 
+            ? JSON.parse(approvedSubmission.timelineActivitiesDeliverables)
+            : approvedSubmission.timelineActivitiesDeliverables;
+          
+          if (Array.isArray(parsed)) {
+            timelineActivities = parsed.map(activity => 
+              typeof activity === 'string' ? activity : activity.description || activity.name || activity
+            ).join(', ');
+          } else if (typeof parsed === 'string') {
+            timelineActivities = parsed;
+          }
+        } catch (e) {
+          timelineActivities = approvedSubmission.timelineActivitiesDeliverables;
+        }
+      }
+      
+      // Get submitter name
+      const submitterName = approvedSubmission?.submitter?.name || 
+                           approvedSubmission?.submitter?.fullName ||
+                           approvedSubmission?.submitterInfo?.name ||
+                           approvedSubmission?.submitterInfo?.fullName ||
+                           'N/A';
+      
+      // Get photo/video/document proof counts
+      const photoCount = Array.isArray(approvedSubmission?.photoEvidence) 
+        ? approvedSubmission.photoEvidence.length 
+        : (approvedSubmission?.photoEvidence ? 1 : 0);
+      const videoCount = Array.isArray(approvedSubmission?.videoEvidence) 
+        ? approvedSubmission.videoEvidence.length 
+        : (approvedSubmission?.videoEvidence ? 1 : 0);
+      const documentCount = Array.isArray(approvedSubmission?.documentFiles) 
+        ? approvedSubmission.documentFiles.length 
+        : (approvedSubmission?.documentFiles ? 1 : 0);
+      
       return {
         ...milestone,
-        update: milestoneUpdate,
-        submissionDate: latestUpdate?.createdAt,
-        submittedBy: latestUpdate?.submittedBy || 'N/A'
+        // Phase Information
+        description: milestone.description || 'N/A',
+        plannedBudget: milestone.plannedBudget || milestone.budgetPlanned || 0,
+        breakdownDescription: milestone.budgetBreakdown || milestone.budgetBreakdownDescription || 'N/A',
+        budgetAllotedWeight: milestone.budgetWeight || milestone.weight || 'N/A',
+        physicalAccomplishmentWeight: milestone.physicalWeight || milestone.weight || 'N/A',
+        startDate: milestone.timelineStartDate || milestone.startDate || null,
+        targetCompletionDate: milestone.timelineEndDate || milestone.dueDate || milestone.targetDate || null,
+        
+        // CONTRACTOR UPDATE (from approved submission)
+        submissionDate: approvedSubmission?.submittedAt || approvedSubmission?.submissionDate || null,
+        actualPhaseCompletionDate: approvedSubmission?.reviewedAt || approvedSubmission?.actualCompletionDate || null,
+        timelineActivities: timelineActivities,
+        usedBudget: approvedSubmission?.usedBudget || 0,
+        remainingBudget: approvedSubmission?.remainingBudget || 
+                        ((milestone.plannedBudget || milestone.budgetPlanned || 0) - (approvedSubmission?.usedBudget || 0)),
+        budgetBreakdownAllocation: approvedSubmission?.budgetBreakdownAllocation || 'N/A',
+        physicalAccomplishmentGainedWeight: approvedSubmission?.physicalProgressWeight || 
+                                           milestone.physicalWeight || 
+                                           milestone.weight || 
+                                           'N/A',
+        photoProof: photoCount > 0 ? `${photoCount} photo(s)` : 'N/A',
+        videoProof: videoCount > 0 ? `${videoCount} video(s)` : 'N/A',
+        documentProof: documentCount > 0 ? `${documentCount} document(s)` : 'N/A',
+        physicalProgressDescription: approvedSubmission?.physicalProgressDescription || 'N/A',
+        submittedBy: submitterName,
+        remarksAndRecommendation: approvedSubmission?.remarks || 
+                                 approvedSubmission?.remarksAndRecommendation || 
+                                 approvedSubmission?.reviewNotes || 
+                                 'N/A'
       };
     });
   };
@@ -933,19 +1047,19 @@ export default function ProjectLedgerCenter({
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Planned Budget</td>
-                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.plannedBudget || phase.budgetAllocation)}</td>
+                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.plannedBudget || 0)}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Breakdown Description</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.budgetBreakdown || phase.breakdownDescription || 'N/A'}</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.breakdownDescription || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Budget Alloted Weight</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.weight || phase.budgetWeight || 'N/A'}%</td>
+                              <td className="px-6 py-4 text-gray-900">{typeof phase.budgetAllotedWeight === 'number' ? `${phase.budgetAllotedWeight}%` : phase.budgetAllotedWeight || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Physical Accomplishment Weight</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.physicalWeight || phase.weight || 'N/A'}%</td>
+                              <td className="px-6 py-4 text-gray-900">{typeof phase.physicalAccomplishmentWeight === 'number' ? `${phase.physicalAccomplishmentWeight}%` : phase.physicalAccomplishmentWeight || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Start Date</td>
@@ -953,7 +1067,7 @@ export default function ProjectLedgerCenter({
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Target Completion Date</td>
-                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.dueDate || phase.targetDate)}</td>
+                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.targetCompletionDate)}</td>
                             </tr>
                             
                             {/* CONTRACTOR UPDATE Section - Always shown */}
@@ -968,39 +1082,33 @@ export default function ProjectLedgerCenter({
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Actual Phase Completion Date</td>
-                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.update?.actualCompletionDate || phase.update?.completionDate)}</td>
+                              <td className="px-6 py-4 text-gray-900">{formatDate(phase.actualPhaseCompletionDate)}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Timeline Activities & Deliverables</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.update?.timelineActivities || phase.update?.activities || 'N/A'}</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.timelineActivities || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Used Budget</td>
-                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.update?.usedBudget || phase.update?.budgetUsed || 0)}</td>
+                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.usedBudget || 0)}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Remaining Budget</td>
-                              <td className="px-6 py-4 text-gray-900">
-                                {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update?.usedBudget || phase.update?.budgetUsed || 0))}
-                              </td>
+                              <td className="px-6 py-4 text-gray-900">{formatCurrency(phase.remainingBudget || 0)}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Budget Breakdown & Allocation</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.update?.budgetBreakdown || phase.update?.budgetAllocation || 'N/A'}</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.budgetBreakdownAllocation || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Physical Accomplishment Gained Weight</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.update?.physicalAccomplishmentWeight || phase.update?.progress || 'N/A'}%</td>
+                              <td className="px-6 py-4 text-gray-900">{typeof phase.physicalAccomplishmentGainedWeight === 'number' ? `${phase.physicalAccomplishmentGainedWeight}%` : phase.physicalAccomplishmentGainedWeight || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Photo Proof</td>
                               <td className="px-6 py-4 text-gray-900">
-                                {phase.update?.photoProof && phase.update.photoProof.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {phase.update.photoProof.map((photo, idx) => (
-                                      <img key={idx} src={photo} alt={`Proof ${idx + 1}`} className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow" />
-                                    ))}
-                                  </div>
+                                {phase.photoProof && phase.photoProof !== 'N/A' ? (
+                                  <span>{phase.photoProof}</span>
                                 ) : (
                                   <span className="text-gray-500">No photos available</span>
                                 )}
@@ -1009,12 +1117,8 @@ export default function ProjectLedgerCenter({
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Video Proof</td>
                               <td className="px-6 py-4 text-gray-900">
-                                {phase.update?.videoProof && phase.update.videoProof.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {phase.update.videoProof.map((video, idx) => (
-                                      <video key={idx} src={video} controls className="w-48 h-32 object-cover rounded-lg border-2 border-gray-200 shadow-sm" />
-                                    ))}
-                                  </div>
+                                {phase.videoProof && phase.videoProof !== 'N/A' ? (
+                                  <span>{phase.videoProof}</span>
                                 ) : (
                                   <span className="text-gray-500">No videos available</span>
                                 )}
@@ -1023,14 +1127,8 @@ export default function ProjectLedgerCenter({
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Document Proof</td>
                               <td className="px-6 py-4 text-gray-900">
-                                {phase.update?.documentProof && phase.update.documentProof.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {phase.update.documentProof.map((doc, idx) => (
-                                      <a key={idx} href={doc} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                                        Document {idx + 1}
-                                      </a>
-                                    ))}
-                                  </div>
+                                {phase.documentProof && phase.documentProof !== 'N/A' ? (
+                                  <span>{phase.documentProof}</span>
                                 ) : (
                                   <span className="text-gray-500">No documents available</span>
                                 )}
@@ -1181,39 +1279,25 @@ export default function ProjectLedgerCenter({
                                 {/* Project Phases Update - Different per phase, shown in all rows */}
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{phase.title || phase.name || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.description || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.plannedBudget || phase.budgetAllocation || 0).replace('₱', '').trim()}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.budgetBreakdown || phase.breakdownDescription || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.weight || phase.budgetWeight || 'N/A'}%</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.physicalWeight || phase.weight || 'N/A'}%</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.plannedBudget || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.breakdownDescription || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{typeof phase.budgetAllotedWeight === 'number' ? `${phase.budgetAllotedWeight}%` : phase.budgetAllotedWeight || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{typeof phase.physicalAccomplishmentWeight === 'number' ? `${phase.physicalAccomplishmentWeight}%` : phase.physicalAccomplishmentWeight || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.startDate)}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.dueDate || phase.targetDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.targetCompletionDate)}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.submissionDate)}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.update?.actualCompletionDate || phase.update?.completionDate)}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.timelineActivities || phase.update?.activities || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.update?.usedBudget || phase.update?.budgetUsed || 0).replace('₱', '').trim()}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">
-                                  {formatCurrency((phase.plannedBudget || phase.budgetAllocation || 0) - (phase.update?.usedBudget || phase.update?.budgetUsed || 0)).replace('₱', '').trim()}
-                                </td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.budgetBreakdown || phase.update?.budgetAllocation || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.update?.physicalAccomplishmentWeight || phase.update?.progress || 'N/A'}%</td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                                  {phase.update?.photoProof && phase.update.photoProof.length > 0 
-                                    ? `${phase.update.photoProof.length} photo(s)` 
-                                    : 'N/A'}
-                                </td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                                  {phase.update?.videoProof && phase.update.videoProof.length > 0 
-                                    ? `${phase.update.videoProof.length} video(s)` 
-                                    : 'N/A'}
-                                </td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
-                                  {phase.update?.documentProof && phase.update.documentProof.length > 0 
-                                    ? `${phase.update.documentProof.length} document(s)` 
-                                    : 'N/A'}
-                                </td>
-                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.update?.physicalDescription || phase.update?.description || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(phase.actualPhaseCompletionDate)}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.timelineActivities || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.usedBudget || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.remainingBudget || 0).replace('₱', '').trim()}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.budgetBreakdownAllocation || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{typeof phase.physicalAccomplishmentGainedWeight === 'number' ? `${phase.physicalAccomplishmentGainedWeight}%` : phase.physicalAccomplishmentGainedWeight || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.photoProof || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.videoProof || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.documentProof || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.physicalProgressDescription || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.submittedBy || 'N/A'}</td>
-                                <td className="px-2 py-3 text-xs align-top bg-white">{phase.update?.remarks || phase.update?.recommendation || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs align-top bg-white">{phase.remarksAndRecommendation || 'N/A'}</td>
                               </tr>
                             ))
                           ) : (
