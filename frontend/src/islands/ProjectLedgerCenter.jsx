@@ -181,6 +181,66 @@ export default function ProjectLedgerCenter({
     }
   }, [projectId]);
 
+  // Helper function to enrich project with EIU user details
+  const enrichProjectWithEIUData = async (project) => {
+    if (!project || !project.eiuPersonnelId) {
+      return project;
+    }
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Fetch user details from users API
+      const userResponse = await fetch(`${API_URL}/users/${project.eiuPersonnelId}`, { headers });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.success && userData.user) {
+          const eiuUser = userData.user;
+          console.log('📞 Fetched EIU user data:', eiuUser);
+          
+          // Merge EIU user details into project.eiuPersonnel
+          if (project.eiuPersonnel) {
+            project.eiuPersonnel = {
+              ...project.eiuPersonnel,
+              ...eiuUser,
+              // Ensure contact number is properly set
+              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone || project.eiuPersonnel.contactNumber,
+              phoneNumber: eiuUser.phoneNumber || eiuUser.phone || eiuUser.contactNumber || project.eiuPersonnel.phoneNumber,
+              // Ensure other fields are properly mapped
+              fullName: eiuUser.fullName || eiuUser.name || project.eiuPersonnel.name,
+              email: eiuUser.email || eiuUser.username || project.eiuPersonnel.email || project.eiuPersonnel.username,
+              birthdate: eiuUser.birthdate || project.eiuPersonnel.birthdate,
+              group: eiuUser.group || project.eiuPersonnel.group || 'EIU',
+              department: eiuUser.department || project.eiuPersonnel.department,
+              subRole: eiuUser.subRole || eiuUser.subrole || project.eiuPersonnel.subRole || project.eiuPersonnel.subrole,
+              company: eiuUser.company || eiuUser.companyName || project.eiuPersonnel.company || project.eiuPersonnel.externalCompanyName
+            };
+          } else {
+            // If eiuPersonnel doesn't exist, create it from user data
+            project.eiuPersonnel = {
+              ...eiuUser,
+              contactNumber: eiuUser.contactNumber || eiuUser.phoneNumber || eiuUser.phone,
+              fullName: eiuUser.fullName || eiuUser.name,
+              email: eiuUser.email || eiuUser.username
+            };
+          }
+          
+          console.log('✅ Enriched project.eiuPersonnel:', project.eiuPersonnel);
+        }
+      } else {
+        console.log('⚠️ Failed to fetch user data, status:', userResponse.status);
+      }
+    } catch (err) {
+      console.error('Error enriching project with EIU data:', err);
+    }
+    
+    return project;
+  };
+
   const fetchProjects = async () => {
     try {
       setLoading(true);
@@ -206,10 +266,17 @@ export default function ProjectLedgerCenter({
       
       if (data.success) {
         if (projectId && data.project) {
-          setSelectedProject(data.project);
-          setProjects([data.project]);
+          // Enrich project with EIU user data
+          const enrichedProject = await enrichProjectWithEIUData(data.project);
+          setSelectedProject(enrichedProject);
+          setProjects([enrichedProject]);
         } else {
-          setProjects(data.projects || data.data || []);
+          // Enrich all projects with EIU user data
+          const projectsList = data.projects || data.data || [];
+          const enrichedProjects = await Promise.all(
+            projectsList.map(project => enrichProjectWithEIUData(project))
+          );
+          setProjects(enrichedProjects);
         }
       } else {
         setError(data.error || 'Failed to load projects');
@@ -246,7 +313,9 @@ export default function ProjectLedgerCenter({
       const data = await response.json();
       
       if (data.success && data.project) {
-        setSelectedProject(data.project);
+        // Enrich project with EIU user data
+        const enrichedProject = await enrichProjectWithEIUData(data.project);
+        setSelectedProject(enrichedProject);
       } else {
         setError(data.error || 'Failed to load project details');
       }
@@ -492,7 +561,11 @@ export default function ProjectLedgerCenter({
       console.log('\n👤 EIU PARTNER DEBUG:');
       console.log('  - EIU Partner Object:', eiuPartner);
       if (displayProject) {
+        console.log('  - project.eiuPersonnelId:', displayProject.eiuPersonnelId);
         console.log('  - project.eiuPersonnel:', displayProject.eiuPersonnel);
+        console.log('  - project.eiuPersonnel?.contactNumber:', displayProject.eiuPersonnel?.contactNumber);
+        console.log('  - project.eiuPersonnel?.phoneNumber:', displayProject.eiuPersonnel?.phoneNumber);
+        console.log('  - project.eiuPersonnel?.phone:', displayProject.eiuPersonnel?.phone);
         console.log('  - project.assignedEIU:', displayProject.assignedEIU);
         console.log('  - project.User:', displayProject.User);
         console.log('  - project.eiu:', displayProject.eiu);
@@ -502,6 +575,7 @@ export default function ProjectLedgerCenter({
         console.log('  - project.phoneNumber:', displayProject.phoneNumber);
         console.log('  - project.contact:', displayProject.contact);
         console.log('  - All project keys with "contact" or "phone":', Object.keys(displayProject).filter(k => k.toLowerCase().includes('contact') || k.toLowerCase().includes('phone')));
+        console.log('  - All eiuPersonnel keys:', displayProject.eiuPersonnel ? Object.keys(displayProject.eiuPersonnel) : 'N/A');
       }
       
       // Physical Accomplishment Debug
