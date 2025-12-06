@@ -214,7 +214,13 @@ export default function ProjectLedgerCenter({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [tableView, setTableView] = useState('vertical'); // 'vertical' or 'horizontal'
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'dashboard' or 'compare'
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'dashboard' or 'compare' or 'timeline'
+  
+  // Timeline/Gantt Chart State
+  const [timelineZoom, setTimelineZoom] = useState('month'); // 'month', 'week', 'day'
+  const [timelineStartDate, setTimelineStartDate] = useState('');
+  const [timelineEndDate, setTimelineEndDate] = useState('');
+  const [selectedTimelineProject, setSelectedTimelineProject] = useState(null);
   
   // Project Comparison State
   const [comparisonMode, setComparisonMode] = useState(false);
@@ -1057,6 +1063,111 @@ export default function ProjectLedgerCenter({
     const categories = Object.keys(dashboardStats.budgetByCategory);
     const categoryIndex = categories.indexOf(category);
     return categoryColors[categoryIndex % categoryColors.length];
+  };
+
+  // ==================== TIMELINE/GANTT CHART FUNCTIONS ====================
+  
+  // Calculate timeline data for Gantt chart
+  const calculateTimelineData = () => {
+    const timelineData = [];
+    
+    filteredProjects.forEach(project => {
+      const phases = getProjectPhases(project);
+      
+      if (phases.length > 0) {
+        phases.forEach((phase, phaseIndex) => {
+          const startDate = phase.startDate ? new Date(phase.startDate) : null;
+          const endDate = phase.targetCompletionDate ? new Date(phase.targetCompletionDate) : null;
+          
+          if (startDate && endDate) {
+            timelineData.push({
+              projectId: project.id,
+              projectName: project.name,
+              projectCode: project.projectCode,
+              phaseId: phase.id || `phase-${phaseIndex}`,
+              phaseName: phase.title || phase.description || `Phase ${phaseIndex + 1}`,
+              startDate: startDate,
+              endDate: endDate,
+              status: project.status || 'ongoing',
+              progress: parseFloat(phase.physicalAccomplishmentGainedWeight || project.overallProgress || 0),
+              priority: project.priority || 'medium',
+              category: project.category || 'uncategorized'
+            });
+          }
+        });
+      } else {
+        // If no phases, use project dates
+        const startDate = project.startDate ? new Date(project.startDate) : null;
+        const endDate = project.targetCompletionDate || project.endDate 
+          ? new Date(project.targetCompletionDate || project.endDate) 
+          : null;
+        
+        if (startDate && endDate) {
+          timelineData.push({
+            projectId: project.id,
+            projectName: project.name,
+            projectCode: project.projectCode,
+            phaseId: project.id,
+            phaseName: project.name,
+            startDate: startDate,
+            endDate: endDate,
+            status: project.status || 'ongoing',
+            progress: parseFloat(project.overallProgress || project.progress?.overall || 0),
+            priority: project.priority || 'medium',
+            category: project.category || 'uncategorized'
+          });
+        }
+      }
+    });
+    
+    return timelineData.sort((a, b) => a.startDate - b.startDate);
+  };
+
+  // Get timeline date range
+  const getTimelineDateRange = (timelineData) => {
+    if (timelineData.length === 0) {
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const end = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+      return { start, end };
+    }
+    
+    const dates = timelineData.flatMap(item => [item.startDate, item.endDate]);
+    const start = new Date(Math.min(...dates));
+    const end = new Date(Math.max(...dates));
+    
+    // Add padding
+    start.setMonth(start.getMonth() - 1);
+    end.setMonth(end.getMonth() + 1);
+    
+    return { start, end };
+  };
+
+  // Calculate days between dates
+  const getDaysBetween = (start, end) => {
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  };
+
+  // Get date position in timeline (percentage)
+  const getDatePosition = (date, timelineStart, timelineEnd) => {
+    const totalDays = getDaysBetween(timelineStart, timelineEnd);
+    const daysFromStart = getDaysBetween(timelineStart, date);
+    return (daysFromStart / totalDays) * 100;
+  };
+
+  // Format date for timeline header
+  const formatTimelineDate = (date, zoom) => {
+    if (zoom === 'day') {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (zoom === 'week') {
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      return `${weekStart.getDate()}/${weekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
   };
 
   // ==================== PROJECT COMPARISON FUNCTIONS ====================
@@ -3195,6 +3306,24 @@ export default function ProjectLedgerCenter({
                       Compare Projects
                     </div>
                   </button>
+                  <button
+                    onClick={() => {
+                      setViewMode('timeline');
+                      setComparisonMode(false);
+                    }}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                      viewMode === 'timeline'
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                      Timeline
+                    </div>
+                  </button>
                 </div>
 
                 {/* Table View Type Toggle (only show in table mode) */}
@@ -4178,6 +4307,266 @@ export default function ProjectLedgerCenter({
                     </div>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* Timeline/Gantt Chart View */}
+            {viewMode === 'timeline' && (
+              <div className="space-y-6">
+                {/* Timeline Controls */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-2xl font-bold text-gray-800">Project Timeline</h2>
+                      <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                        <button
+                          onClick={() => setTimelineZoom('month')}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                            timelineZoom === 'month'
+                              ? `bg-gradient-to-r ${colors.gradient} text-white`
+                              : 'text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Month
+                        </button>
+                        <button
+                          onClick={() => setTimelineZoom('week')}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                            timelineZoom === 'week'
+                              ? `bg-gradient-to-r ${colors.gradient} text-white`
+                              : 'text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Week
+                        </button>
+                        <button
+                          onClick={() => setTimelineZoom('day')}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                            timelineZoom === 'day'
+                              ? `bg-gradient-to-r ${colors.gradient} text-white`
+                              : 'text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Day
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={timelineStartDate}
+                        onChange={(e) => setTimelineStartDate(e.target.value)}
+                        placeholder="Start Date"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="date"
+                        value={timelineEndDate}
+                        onChange={(e) => setTimelineEndDate(e.target.value)}
+                        placeholder="End Date"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        onClick={() => {
+                          setTimelineStartDate('');
+                          setTimelineEndDate('');
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Export timeline as image
+                          const timelineElement = document.querySelector('[data-timeline-chart]');
+                          if (timelineElement) {
+                            // Use html2canvas or similar library to export
+                            alert('Timeline export functionality will be implemented. For now, you can use browser print/screenshot.');
+                          } else {
+                            alert('Timeline export functionality will be implemented.');
+                          }
+                        }}
+                        className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center gap-2`}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Export
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gantt Chart */}
+                {(() => {
+                  const timelineData = calculateTimelineData();
+                  const dateRange = getTimelineDateRange(timelineData);
+                  const effectiveStart = timelineStartDate ? new Date(timelineStartDate) : dateRange.start;
+                  const effectiveEnd = timelineEndDate ? new Date(timelineEndDate) : dateRange.end;
+                  const totalDays = getDaysBetween(effectiveStart, effectiveEnd);
+                  
+                  // Filter timeline data by date range if set
+                  const filteredTimelineData = timelineData.filter(item => {
+                    if (timelineStartDate && item.endDate < new Date(timelineStartDate)) return false;
+                    if (timelineEndDate && item.startDate > new Date(timelineEndDate)) return false;
+                    return true;
+                  });
+
+                  // Group by project
+                  const projectsMap = new Map();
+                  filteredTimelineData.forEach(item => {
+                    if (!projectsMap.has(item.projectId)) {
+                      projectsMap.set(item.projectId, {
+                        projectId: item.projectId,
+                        projectName: item.projectName,
+                        projectCode: item.projectCode,
+                        phases: []
+                      });
+                    }
+                    projectsMap.get(item.projectId).phases.push(item);
+                  });
+
+                  const projects = Array.from(projectsMap.values());
+
+                  if (projects.length === 0) {
+                    return (
+                      <div className="bg-white rounded-xl shadow-lg p-12 border border-gray-200 text-center">
+                        <p className="text-gray-500 text-lg">No timeline data available</p>
+                        <p className="text-gray-400 text-sm mt-2">Projects need start and end dates to appear on the timeline</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" data-timeline-chart>
+                      <div className="overflow-x-auto">
+                        <div className="min-w-full" style={{ minWidth: `${Math.max(800, totalDays * 2)}px` }}>
+                          {/* Timeline Header */}
+                          <div className="sticky top-0 z-20 bg-gray-50 border-b-2 border-gray-300">
+                            <div className="flex">
+                              <div className="w-64 p-4 border-r-2 border-gray-300 font-bold text-gray-800 bg-gray-100">
+                                Project / Phase
+                              </div>
+                              <div className="flex-1 relative">
+                                {/* Date labels */}
+                                <div className="flex h-12">
+                                  {(() => {
+                                    const labels = [];
+                                    const current = new Date(effectiveStart);
+                                    const step = timelineZoom === 'day' ? 1 : timelineZoom === 'week' ? 7 : 30;
+                                    
+                                    while (current <= effectiveEnd) {
+                                      const position = getDatePosition(current, effectiveStart, effectiveEnd);
+                                      labels.push(
+                                        <div
+                                          key={current.getTime()}
+                                          className="absolute border-l border-gray-300"
+                                          style={{ left: `${position}%` }}
+                                        >
+                                          <div className="px-2 py-1 text-xs font-medium text-gray-700 whitespace-nowrap">
+                                            {formatTimelineDate(current, timelineZoom)}
+                                          </div>
+                                        </div>
+                                      );
+                                      current.setDate(current.getDate() + step);
+                                    }
+                                    return labels;
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Timeline Rows */}
+                          <div className="divide-y divide-gray-200">
+                            {projects.map((project, projectIndex) => (
+                              <div key={project.projectId} className="hover:bg-gray-50 transition-colors">
+                                {/* Project Row */}
+                                <div className="flex min-h-[60px]">
+                                  <div className="w-64 p-4 border-r-2 border-gray-300 bg-gray-50 flex items-center">
+                                    <div className="flex-1">
+                                      <p className="font-semibold text-gray-800 text-sm">{project.projectName}</p>
+                                      <p className="text-xs text-gray-600">{project.projectCode}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 relative">
+                                    {project.phases.map((phase, phaseIndex) => {
+                                      const left = getDatePosition(phase.startDate, effectiveStart, effectiveEnd);
+                                      const width = getDatePosition(phase.endDate, effectiveStart, effectiveEnd) - left;
+                                      const isOverdue = phase.endDate < new Date() && phase.status !== 'completed';
+                                      
+                                      return (
+                                        <div
+                                          key={phase.phaseId}
+                                          className="absolute top-2 bottom-2 rounded cursor-pointer hover:opacity-80 transition-all group"
+                                          style={{
+                                            left: `${left}%`,
+                                            width: `${width}%`,
+                                            minWidth: '4px'
+                                          }}
+                                          onClick={() => {
+                                            const enrichedProject = filteredProjects.find(p => p.id === project.projectId);
+                                            if (enrichedProject) {
+                                              setSelectedProject(enrichedProject);
+                                              setViewMode('table');
+                                            }
+                                          }}
+                                          title={`${phase.phaseName}\n${formatDate(phase.startDate)} - ${formatDate(phase.endDate)}\nProgress: ${phase.progress.toFixed(0)}%`}
+                                        >
+                                          <div
+                                            className={`h-full rounded border-2 ${
+                                              isOverdue ? 'border-red-500' : 'border-white'
+                                            } shadow-sm`}
+                                            style={{
+                                              backgroundColor: getStatusColor(phase.status),
+                                              opacity: phase.progress / 100 || 0.7
+                                            }}
+                                          >
+                                            <div className="h-full flex items-center px-2">
+                                              <span className="text-xs font-medium text-white truncate">
+                                                {phase.phaseName}
+                                              </span>
+                                            </div>
+                                            {/* Progress indicator */}
+                                            <div
+                                              className="absolute bottom-0 left-0 h-1 bg-white/50 rounded-b"
+                                              style={{ width: `${phase.progress}%` }}
+                                            ></div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Timeline Legend */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Legend</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {['ongoing', 'completed', 'delayed', 'pending', 'at_risk'].map(status => (
+                      <div key={status} className="flex items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white shadow-sm"
+                          style={{ backgroundColor: getStatusColor(status) }}
+                        ></div>
+                        <span className="text-sm text-gray-700 capitalize">{status.replace('_', ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-xs text-gray-600">
+                      <strong>Tip:</strong> Click on any timeline bar to view project details. Darker colors indicate higher progress.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
