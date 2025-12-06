@@ -1943,7 +1943,7 @@ router.get('/public/:id', async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'email', 'role', 'subRole']
+          attributes: ['id', 'name', 'email', 'role', 'subRole', 'contactNumber', 'phoneNumber', 'phone', 'department', 'group', 'externalCompanyName', 'profilePicture']
         }
       ]
     });
@@ -2537,7 +2537,7 @@ router.get('/', authenticateToken, async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'username', 'role', 'subRole']
+          attributes: ['id', 'name', 'username', 'role', 'subRole', 'contactNumber', 'phoneNumber', 'phone', 'department', 'group', 'externalCompanyName', 'profilePicture']
         },
         {
           model: User,
@@ -2787,7 +2787,7 @@ router.get('/secretariat/submissions', authenticateToken, async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'username', 'role', 'subRole']
+          attributes: ['id', 'name', 'username', 'role', 'subRole', 'contactNumber', 'phoneNumber', 'phone', 'department', 'group', 'externalCompanyName', 'profilePicture']
         },
         {
           model: User,
