@@ -1,4 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from 'recharts';
 
 // Dynamic API URL helper - works for both localhost and production
 const getApiUrl = () => {
@@ -3079,188 +3094,261 @@ export default function ProjectLedgerCenter({
                   {/* Projects by Status Pie Chart */}
                   <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Projects by Status</h3>
-                    <div className="flex items-center justify-center">
-                      <svg width="250" height="250" viewBox="0 0 250 250" className="transform -rotate-90">
-                        {(() => {
-                          const statusData = Object.entries(dashboardStats.projectsByStatus);
-                          if (statusData.length === 0) {
-                            return (
-                              <text x="125" y="125" textAnchor="middle" fill="#6B7280" fontSize="14" transform="rotate(90 125 125)">
-                                No data
-                              </text>
-                            );
-                          }
-                          const total = statusData.reduce((sum, [, count]) => sum + count, 0);
-                          let currentAngle = 0;
-                          const radius = 100;
-                          const centerX = 125;
-                          const centerY = 125;
-                          
-                          return statusData.map(([status, count], index) => {
-                            const percentage = (count / total) * 100;
-                            const angle = (count / total) * 360;
-                            const startAngle = currentAngle;
-                            const endAngle = currentAngle + angle;
-                            
-                            const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-                            const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
-                            const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-                            const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
-                            
-                            const largeArc = angle > 180 ? 1 : 0;
-                            
-                            const pathData = [
-                              `M ${centerX} ${centerY}`,
-                              `L ${x1} ${y1}`,
-                              `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-                              'Z'
-                            ].join(' ');
-                            
-                            currentAngle += angle;
-                            
-                            return (
-                              <g key={status}>
-                                <path
-                                  d={pathData}
+                    {Object.entries(dashboardStats.projectsByStatus).length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No data available</p>
+                    ) : (
+                      <>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                              data={Object.entries(dashboardStats.projectsByStatus).map(([status, count]) => ({
+                                name: status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                                value: count,
+                                status: status
+                              }))}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              onClick={(data) => {
+                                const status = data.status;
+                                if (selectedStatuses.includes(status)) {
+                                  setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                                } else {
+                                  setSelectedStatuses([...selectedStatuses, status]);
+                                  setFilterStatus('');
+                                }
+                              }}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {Object.entries(dashboardStats.projectsByStatus).map(([status], index) => (
+                                <Cell 
+                                  key={`cell-${index}`} 
                                   fill={getStatusColor(status)}
-                                  stroke="white"
-                                  strokeWidth="2"
-                                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                                  onClick={() => {
-                                    if (selectedStatuses.includes(status)) {
-                                      setSelectedStatuses(selectedStatuses.filter(s => s !== status));
-                                    } else {
-                                      setSelectedStatuses([...selectedStatuses, status]);
-                                      setFilterStatus('');
-                                    }
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    transition: 'opacity 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.opacity = 0.8;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.opacity = 1;
                                   }}
                                 />
-                              </g>
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value, name, props) => [
+                                `${value} projects (${((value / Object.values(dashboardStats.projectsByStatus).reduce((sum, c) => sum + c, 0)) * 100).toFixed(1)}%)`,
+                                props.payload.name
+                              ]}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="mt-4 space-y-2">
+                          {Object.entries(dashboardStats.projectsByStatus).map(([status, count]) => {
+                            const total = Object.values(dashboardStats.projectsByStatus).reduce((sum, c) => sum + c, 0);
+                            const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                            return (
+                              <div key={status} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                                onClick={() => {
+                                  if (selectedStatuses.includes(status)) {
+                                    setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                                  } else {
+                                    setSelectedStatuses([...selectedStatuses, status]);
+                                    setFilterStatus('');
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-4 h-4 rounded-full"
+                                    style={{ backgroundColor: getStatusColor(status) }}
+                                  ></div>
+                                  <span className="text-sm font-medium text-gray-700 capitalize">
+                                    {status.replace('_', ' ')}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-gray-800">{count}</span>
+                                  <span className="text-xs text-gray-500">({percentage}%)</span>
+                                </div>
+                              </div>
                             );
-                          });
-                        })()}
-                      </svg>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      {Object.entries(dashboardStats.projectsByStatus).map(([status, count]) => {
-                        const total = Object.values(dashboardStats.projectsByStatus).reduce((sum, c) => sum + c, 0);
-                        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-                        return (
-                          <div key={status} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                            onClick={() => {
-                              if (selectedStatuses.includes(status)) {
-                                setSelectedStatuses(selectedStatuses.filter(s => s !== status));
-                              } else {
-                                setSelectedStatuses([...selectedStatuses, status]);
-                                setFilterStatus('');
-                              }
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div 
-                                className="w-4 h-4 rounded-full"
-                                style={{ backgroundColor: getStatusColor(status) }}
-                              ></div>
-                              <span className="text-sm font-medium text-gray-700 capitalize">
-                                {status.replace('_', ' ')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-gray-800">{count}</span>
-                              <span className="text-xs text-gray-500">({percentage}%)</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          })}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Budget by Category Bar Chart */}
                   <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Budget by Category</h3>
-                    <div className="space-y-4">
-                      {Object.entries(dashboardStats.budgetByCategory).length === 0 ? (
-                        <p className="text-gray-500 text-center py-8">No budget data available</p>
-                      ) : (
-                        Object.entries(dashboardStats.budgetByCategory)
-                          .sort(([, a], [, b]) => b - a)
-                          .map(([category, budget], index) => {
-                            const maxBudget = Math.max(...Object.values(dashboardStats.budgetByCategory));
-                            const percentage = maxBudget > 0 ? (budget / maxBudget) * 100 : 0;
-                            return (
-                              <div key={category} className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-gray-700 capitalize">
-                                    {category}
-                                  </span>
-                                  <span className="text-sm font-bold text-gray-800">
-                                    {formatCurrency(budget)}
-                                  </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                                  <div
-                                    className="h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-1"
-                                    style={{
-                                      width: `${percentage}%`,
-                                      backgroundColor: getCategoryColor(category, index)
-                                    }}
-                                  >
-                                    <span className="text-[10px] text-white font-medium">
-                                      {percentage > 10 ? `${percentage.toFixed(0)}%` : ''}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                      )}
-                    </div>
+                    {Object.entries(dashboardStats.budgetByCategory).length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No budget data available</p>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart
+                          data={Object.entries(dashboardStats.budgetByCategory)
+                            .sort(([, a], [, b]) => b - a)
+                            .map(([category, budget], index) => ({
+                              name: category.charAt(0).toUpperCase() + category.slice(1),
+                              budget: budget,
+                              formatted: formatCurrency(budget),
+                              category: category,
+                              color: getCategoryColor(category, index)
+                            }))}
+                          layout="vertical"
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                          onClick={(data) => {
+                            if (data && data.activePayload && data.activePayload[0]) {
+                              const category = data.activePayload[0].payload.category;
+                              if (selectedCategories.includes(category)) {
+                                setSelectedCategories(selectedCategories.filter(c => c !== category));
+                              } else {
+                                setSelectedCategories([...selectedCategories, category]);
+                                setFilterCategory('');
+                              }
+                            }
+                          }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            type="number" 
+                            tickFormatter={(value) => `₱${(value / 1000000).toFixed(1)}M`}
+                            stroke="#6b7280"
+                            fontSize={12}
+                          />
+                          <YAxis 
+                            dataKey="name" 
+                            type="category" 
+                            width={100}
+                            stroke="#6b7280"
+                            fontSize={12}
+                          />
+                          <Tooltip 
+                            formatter={(value, name, props) => [
+                              props.payload.formatted,
+                              'Budget'
+                            ]}
+                            contentStyle={{
+                              backgroundColor: '#fff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              padding: '8px 12px'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="budget" 
+                            radius={[0, 8, 8, 0]}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {Object.entries(dashboardStats.budgetByCategory)
+                              .sort(([, a], [, b]) => b - a)
+                              .map(([category], index) => (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={getCategoryColor(category, index)}
+                                />
+                              ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
 
                   {/* Progress Distribution Chart */}
                   <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Progress Distribution</h3>
-                    <div className="space-y-3">
-                      {Object.entries(dashboardStats.progressDistribution).map(([range, count]) => {
-                        const total = Object.values(dashboardStats.progressDistribution).reduce((sum, c) => sum + c, 0);
-                        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-                        const [min, max] = range.split('-').map(Number);
-                        const rangeColors = {
-                          '0-20': '#EF4444',
-                          '21-40': '#F59E0B',
-                          '41-60': '#3B82F6',
-                          '61-80': '#8B5CF6',
-                          '81-100': '#10B981'
-                        };
-                        return (
-                          <div key={range} className="space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-700">
-                                {range}%
-                              </span>
-                              <span className="text-sm font-bold text-gray-800">
-                                {count} projects ({percentage}%)
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                              <div
-                                className="h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
-                                style={{
-                                  width: `${percentage}%`,
-                                  backgroundColor: rangeColors[range]
-                                }}
-                              >
-                                {percentage > 5 && (
-                                  <span className="text-[10px] text-white font-medium">
-                                    {count}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {Object.entries(dashboardStats.progressDistribution).reduce((sum, [, count]) => sum + count, 0) === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No progress data available</p>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart
+                          data={Object.entries(dashboardStats.progressDistribution).map(([range, count]) => {
+                            const total = Object.values(dashboardStats.progressDistribution).reduce((sum, c) => sum + c, 0);
+                            const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                            const rangeColors = {
+                              '0-20': '#EF4444',
+                              '21-40': '#F59E0B',
+                              '41-60': '#3B82F6',
+                              '61-80': '#8B5CF6',
+                              '81-100': '#10B981'
+                            };
+                            return {
+                              range: `${range}%`,
+                              count: count,
+                              percentage: parseFloat(percentage),
+                              color: rangeColors[range]
+                            };
+                          })}
+                          layout="vertical"
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            type="number" 
+                            domain={[0, 'dataMax']}
+                            stroke="#6b7280"
+                            fontSize={12}
+                            tickFormatter={(value) => `${value}%`}
+                          />
+                          <YAxis 
+                            dataKey="range" 
+                            type="category" 
+                            width={80}
+                            stroke="#6b7280"
+                            fontSize={12}
+                          />
+                          <Tooltip 
+                            formatter={(value, name, props) => [
+                              `${value} projects (${props.payload.percentage}%)`,
+                              'Count'
+                            ]}
+                            contentStyle={{
+                              backgroundColor: '#fff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              padding: '8px 12px'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="count" 
+                            radius={[0, 8, 8, 0]}
+                          >
+                            {Object.entries(dashboardStats.progressDistribution).map(([range], index) => {
+                              const rangeColors = {
+                                '0-20': '#EF4444',
+                                '21-40': '#F59E0B',
+                                '41-60': '#3B82F6',
+                                '61-80': '#8B5CF6',
+                                '81-100': '#10B981'
+                              };
+                              return (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={rangeColors[range]}
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    transition: 'opacity 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (e.target) e.target.style.opacity = 0.8;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (e.target) e.target.style.opacity = 1;
+                                  }}
+                                />
+                              );
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
 
                   {/* Projects by Priority */}
