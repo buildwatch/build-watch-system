@@ -181,38 +181,16 @@ export default function ProjectLedgerCenter({
     }
   }, [projectId]);
 
-  // Re-enrich selected project if EIU data is missing (only once per project)
-  useEffect(() => {
-    const enrichSelectedProject = async () => {
-      if (selectedProject && selectedProject.eiuPersonnelId && !selectedProject._eiuEnriched) {
-        // Check if contact number is missing
-        const hasContactNumber = selectedProject.eiuPersonnel?.contactNumber || 
-                                 selectedProject.eiuPersonnel?.phoneNumber || 
-                                 selectedProject.eiuPersonnel?.phone;
-        
-        if (!hasContactNumber) {
-          console.log('📞 Contact number missing, re-enriching project...');
-          const enriched = await enrichProjectWithEIUData(selectedProject);
-          // Mark as enriched to prevent re-enrichment
-          enriched._eiuEnriched = true;
-          setSelectedProject(enriched);
-        } else {
-          // Mark as enriched even if contact number exists
-          selectedProject._eiuEnriched = true;
-        }
-      }
-    };
-    
-    enrichSelectedProject();
-  }, [selectedProject?.id]);
+  // Note: Removed useEffect for re-enrichment since we're not making API calls
+  // The contact number should already be in the project data from the backend
 
-  // Helper function to enrich project with EIU user details
-  // Note: The /api/users/:id endpoint may not exist or require System Admin
-  // So we rely on the project data already containing the contact number
-  const enrichProjectWithEIUData = async (project) => {
+  // Helper function to normalize EIU data structure
+  // Note: We do NOT make API calls to /api/users/ as that endpoint doesn't exist or requires System Admin
+  // The contact number should already be in the project data from the backend projects API
+  const enrichProjectWithEIUData = (project) => {
     // The contact number should already be in the project data from the backend
     // We just ensure the eiuPersonnel object is properly structured
-    if (project.eiuPersonnel) {
+    if (project && project.eiuPersonnel) {
       // Ensure contact number field exists (even if it's already there)
       // This helps with consistent field access
       if (!project.eiuPersonnel.contactNumber) {
@@ -251,16 +229,14 @@ export default function ProjectLedgerCenter({
       
       if (data.success) {
         if (projectId && data.project) {
-          // Enrich project with EIU user data
-          const enrichedProject = await enrichProjectWithEIUData(data.project);
+          // Normalize project EIU data structure (no API calls)
+          const enrichedProject = enrichProjectWithEIUData(data.project);
           setSelectedProject(enrichedProject);
           setProjects([enrichedProject]);
         } else {
-          // Enrich all projects with EIU user data
+          // Normalize all projects EIU data structure (no API calls)
           const projectsList = data.projects || data.data || [];
-          const enrichedProjects = await Promise.all(
-            projectsList.map(project => enrichProjectWithEIUData(project))
-          );
+          const enrichedProjects = projectsList.map(project => enrichProjectWithEIUData(project));
           setProjects(enrichedProjects);
         }
       } else {
@@ -298,8 +274,8 @@ export default function ProjectLedgerCenter({
       const data = await response.json();
       
       if (data.success && data.project) {
-        // Enrich project with EIU user data
-        const enrichedProject = await enrichProjectWithEIUData(data.project);
+        // Normalize project EIU data structure (no API calls)
+        const enrichedProject = enrichProjectWithEIUData(data.project);
         setSelectedProject(enrichedProject);
       } else {
         setError(data.error || 'Failed to load project details');
@@ -677,8 +653,8 @@ export default function ProjectLedgerCenter({
                 {filteredProjects.map(project => (
                   <div
                     key={project.id}
-                    onClick={async () => {
-                      const enrichedProject = await enrichProjectWithEIUData(project);
+                    onClick={() => {
+                      const enrichedProject = enrichProjectWithEIUData(project);
                       setSelectedProject(enrichedProject);
                     }}
                     className="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-xl cursor-pointer transition-all bg-white"
