@@ -752,34 +752,38 @@ export default function ProjectLedgerCenter({
       const userData = getCurrentUser();
       const organizationName = userData?.implementingOfficeName || userData?.office || userData?.department || 'MUNICIPAL ENGINEERING OFFICE';
 
-      // Header
+      // Header with enhanced styling
       doc.setFillColor(37, 99, 235);
-      doc.rect(0, 0, doc.internal.pageSize.getWidth(), 30, 'F');
+      doc.rect(0, 0, doc.internal.pageSize.getWidth(), 35, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
+      doc.setFontSize(20);
       doc.setFont(undefined, 'bold');
-      doc.text('BUILD WATCH', 10, 15);
-      doc.setFontSize(10);
+      doc.text('BUILD WATCH', doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
+      doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      doc.text('Project Monitoring & Evaluation System', 10, 22);
-      doc.text(`Generated on ${currentDate} at ${currentTime}`, doc.internal.pageSize.getWidth() - 10, 22, { align: 'right' });
+      doc.text('Project Monitoring & Evaluation System', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+      doc.setFontSize(9);
+      doc.text(`Generated on ${currentDate} at ${currentTime}`, doc.internal.pageSize.getWidth() / 2, 31, { align: 'center' });
 
-      let yPos = 40;
+      let yPos = 45;
 
-      // Project Information Section
+      // Project Information Section with enhanced styling
       doc.setFillColor(240, 240, 240);
-      doc.rect(10, yPos, doc.internal.pageSize.getWidth() - 20, 8, 'F');
+      doc.rect(10, yPos, doc.internal.pageSize.getWidth() - 20, 10, 'F');
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
+      doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('PROJECT LEDGER REPORT', 10, yPos + 5);
-      yPos += 15;
+      doc.text('PROJECT LEDGER REPORT', doc.internal.pageSize.getWidth() / 2, yPos + 6, { align: 'center' });
+      yPos += 18;
 
       // Basic Project Information
-      doc.setFontSize(12);
+      doc.setFontSize(13);
       doc.setFont(undefined, 'bold');
+      doc.setFillColor(229, 231, 235);
+      doc.rect(10, yPos - 3, doc.internal.pageSize.getWidth() - 20, 6, 'F');
+      doc.setTextColor(0, 0, 0);
       doc.text('Basic Project Information', 10, yPos);
-      yPos += 7;
+      yPos += 9;
       doc.setFont(undefined, 'normal');
       doc.setFontSize(10);
 
@@ -802,10 +806,11 @@ export default function ProjectLedgerCenter({
         doc.text(String(label), 10, yPos);
         doc.setFont(undefined, 'normal');
         const valueStr = safeString(value, 'N/A');
-        const lines = doc.splitTextToSize(valueStr, doc.internal.pageSize.getWidth() - 60);
-        doc.text(lines, 60, yPos);
-        yPos += lines.length * 5;
-        if (yPos > doc.internal.pageSize.getHeight() - 20) {
+        const maxWidth = doc.internal.pageSize.getWidth() - 70;
+        const lines = doc.splitTextToSize(valueStr, maxWidth);
+        doc.text(lines, 65, yPos);
+        yPos += Math.max(lines.length * 5, 6);
+        if (yPos > doc.internal.pageSize.getHeight() - 25) {
           doc.addPage();
           yPos = 20;
         }
@@ -816,28 +821,33 @@ export default function ProjectLedgerCenter({
       // EIU Partner Contractor
       const eiuPartner = getEIUPartner(displayProject);
       if (eiuPartner) {
+        doc.setFontSize(13);
         doc.setFont(undefined, 'bold');
+        doc.setFillColor(229, 231, 235);
+        doc.rect(10, yPos - 3, doc.internal.pageSize.getWidth() - 20, 6, 'F');
+        doc.setTextColor(0, 0, 0);
         doc.text('EIU Partner Contractor', 10, yPos);
-        yPos += 7;
+        yPos += 9;
         doc.setFont(undefined, 'normal');
         
         const eiuInfo = [
-          ['Company Name:', eiuPartner.displayFullName || 'N/A'],
-          ['Email/Username:', eiuPartner.displayEmail || 'N/A'],
-          ['Contact Number:', eiuPartner.displayContact || 'N/A'],
-          ['Group:', eiuPartner.displayGroup || 'N/A'],
-          ['Department:', eiuPartner.displayDepartment || 'N/A'],
-          ['Subrole:', eiuPartner.displaySubrole || 'N/A'],
-          ['Company:', eiuPartner.displayCompany || 'N/A']
+          ['Company Name:', eiuPartner.displayFullName || eiuPartner.name || 'N/A'],
+          ['Email/Username:', eiuPartner.displayEmail || eiuPartner.email || 'N/A'],
+          ['Contact Number:', eiuPartner.displayContact || eiuPartner.contact || 'N/A'],
+          ['Group:', eiuPartner.displayGroup || eiuPartner.group || 'N/A'],
+          ['Department:', eiuPartner.displayDepartment || eiuPartner.department || 'N/A'],
+          ['Subrole:', eiuPartner.displaySubrole || eiuPartner.subrole || 'N/A'],
+          ['Company:', eiuPartner.displayCompany || eiuPartner.company || 'N/A']
         ];
 
         eiuInfo.forEach(([label, value]) => {
           doc.setFont(undefined, 'bold');
           doc.text(String(label), 10, yPos);
           doc.setFont(undefined, 'normal');
-          doc.text(safeString(value, 'N/A'), 60, yPos);
-          yPos += 5;
-          if (yPos > doc.internal.pageSize.getHeight() - 20) {
+          const valueStr = safeString(value, 'N/A');
+          doc.text(valueStr, 65, yPos);
+          yPos += 6;
+          if (yPos > doc.internal.pageSize.getHeight() - 25) {
             doc.addPage();
             yPos = 20;
           }
@@ -846,9 +856,13 @@ export default function ProjectLedgerCenter({
       }
 
       // Timeline Information
+      doc.setFontSize(13);
       doc.setFont(undefined, 'bold');
+      doc.setFillColor(229, 231, 235);
+      doc.rect(10, yPos - 3, doc.internal.pageSize.getWidth() - 20, 6, 'F');
+      doc.setTextColor(0, 0, 0);
       doc.text('Timeline Information', 10, yPos);
-      yPos += 7;
+      yPos += 9;
       doc.setFont(undefined, 'normal');
       
       const timelineInfo = [
@@ -862,15 +876,19 @@ export default function ProjectLedgerCenter({
         doc.setFont(undefined, 'bold');
         doc.text(String(label), 10, yPos);
         doc.setFont(undefined, 'normal');
-        doc.text(safeString(value, 'N/A'), 60, yPos);
-        yPos += 5;
+        doc.text(safeString(value, 'N/A'), 65, yPos);
+        yPos += 6;
       });
       yPos += 5;
 
       // Budget Information
+      doc.setFontSize(13);
       doc.setFont(undefined, 'bold');
+      doc.setFillColor(229, 231, 235);
+      doc.rect(10, yPos - 3, doc.internal.pageSize.getWidth() - 20, 6, 'F');
+      doc.setTextColor(0, 0, 0);
       doc.text('Budget Information', 10, yPos);
-      yPos += 7;
+      yPos += 9;
       doc.setFont(undefined, 'normal');
       
       const budgetInfo = [
@@ -883,10 +901,11 @@ export default function ProjectLedgerCenter({
         doc.text(String(label), 10, yPos);
         doc.setFont(undefined, 'normal');
         const valueStr = safeString(value, 'N/A');
-        const lines = doc.splitTextToSize(valueStr, doc.internal.pageSize.getWidth() - 60);
-        doc.text(lines, 60, yPos);
-        yPos += lines.length * 5;
-        if (yPos > doc.internal.pageSize.getHeight() - 20) {
+        const maxWidth = doc.internal.pageSize.getWidth() - 70;
+        const lines = doc.splitTextToSize(valueStr, maxWidth);
+        doc.text(lines, 65, yPos);
+        yPos += Math.max(lines.length * 5, 6);
+        if (yPos > doc.internal.pageSize.getHeight() - 25) {
           doc.addPage();
           yPos = 20;
         }
@@ -900,14 +919,19 @@ export default function ProjectLedgerCenter({
         displayProject.physicalDescription, 
         'N/A'
       );
+      doc.setFontSize(13);
       doc.setFont(undefined, 'bold');
+      doc.setFillColor(229, 231, 235);
+      doc.rect(10, yPos - 3, doc.internal.pageSize.getWidth() - 20, 6, 'F');
+      doc.setTextColor(0, 0, 0);
       doc.text('Physical Accomplishment Information', 10, yPos);
-      yPos += 7;
+      yPos += 9;
       doc.setFont(undefined, 'normal');
-      const physicalLines = doc.splitTextToSize(physicalAccomplishment, doc.internal.pageSize.getWidth() - 20);
+      const maxWidth = doc.internal.pageSize.getWidth() - 20;
+      const physicalLines = doc.splitTextToSize(physicalAccomplishment, maxWidth);
       doc.text(physicalLines, 10, yPos);
-      yPos += physicalLines.length * 5;
-      if (yPos > doc.internal.pageSize.getHeight() - 20) {
+      yPos += Math.max(physicalLines.length * 5, 6);
+      if (yPos > doc.internal.pageSize.getHeight() - 25) {
         doc.addPage();
         yPos = 20;
       }
@@ -916,10 +940,13 @@ export default function ProjectLedgerCenter({
       // Project Phases Update
       const phases = getProjectPhases(displayProject);
       if (phases && phases.length > 0) {
+        doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
-        doc.setFontSize(12);
-        doc.text('PROJECT PHASES UPDATE', 10, yPos);
-        yPos += 10;
+        doc.setFillColor(229, 231, 235);
+        doc.rect(10, yPos - 3, doc.internal.pageSize.getWidth() - 20, 7, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.text('PROJECT PHASES UPDATE', doc.internal.pageSize.getWidth() / 2, yPos + 1, { align: 'center' });
+        yPos += 12;
 
         phases.forEach((phase, index) => {
           if (yPos > doc.internal.pageSize.getHeight() - 40) {
@@ -956,10 +983,11 @@ export default function ProjectLedgerCenter({
             doc.text(String(label), 15, yPos);
             doc.setFont(undefined, 'normal');
             const valueStr = safeString(value, 'N/A');
-            const lines = doc.splitTextToSize(valueStr, doc.internal.pageSize.getWidth() - 65);
-            doc.text(lines, 65, yPos);
-            yPos += lines.length * 5;
-            if (yPos > doc.internal.pageSize.getHeight() - 20) {
+            const maxWidth = doc.internal.pageSize.getWidth() - 75;
+            const lines = doc.splitTextToSize(valueStr, maxWidth);
+            doc.text(lines, 70, yPos);
+            yPos += Math.max(lines.length * 5, 6);
+            if (yPos > doc.internal.pageSize.getHeight() - 25) {
               doc.addPage();
               yPos = 20;
             }
@@ -1004,7 +1032,7 @@ export default function ProjectLedgerCenter({
       setLoading(true);
       const loaded = await loadExcelJSLibrary();
       if (!loaded) {
-        alert('Failed to load Excel library. Please try CSV format instead.');
+        alert('Failed to load Excel library. Please try again.');
         setLoading(false);
         return;
       }
@@ -1024,16 +1052,21 @@ export default function ProjectLedgerCenter({
         minute: '2-digit' 
       });
 
-      // Header row
-      worksheet.mergeCells('A1:D1');
+      // Header row with enhanced styling
+      worksheet.mergeCells('A1:B1');
       worksheet.getCell('A1').value = 'BUILD WATCH - Project Monitoring & Evaluation System';
-      worksheet.getCell('A1').font = { bold: true, size: 14 };
+      worksheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+      worksheet.getCell('A1').fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2563EB' }
+      };
       worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
-      worksheet.getRow(1).height = 25;
+      worksheet.getRow(1).height = 30;
 
-      worksheet.mergeCells('A2:D2');
+      worksheet.mergeCells('A2:B2');
       worksheet.getCell('A2').value = `Generated on ${currentDate} at ${currentTime}`;
-      worksheet.getCell('A2').font = { size: 10 };
+      worksheet.getCell('A2').font = { size: 11 };
       worksheet.getCell('A2').alignment = { horizontal: 'center' };
       worksheet.getRow(2).height = 20;
 
@@ -1041,7 +1074,13 @@ export default function ProjectLedgerCenter({
 
       // Basic Project Information
       worksheet.getCell(`A${row}`).value = 'Basic Project Information';
-      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
+      worksheet.getCell(`A${row}`).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE5E7EB' }
+      };
+      worksheet.mergeCells(`A${row}:B${row}`);
       row++;
 
       const basicInfo = [
@@ -1071,23 +1110,30 @@ export default function ProjectLedgerCenter({
       const eiuPartner = getEIUPartner(displayProject);
       if (eiuPartner) {
         worksheet.getCell(`A${row}`).value = 'EIU Partner Contractor';
-        worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+        worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
+        worksheet.getCell(`A${row}`).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE5E7EB' }
+        };
+        worksheet.mergeCells(`A${row}:B${row}`);
         row++;
 
         const eiuInfo = [
-          ['Company Name:', eiuPartner.displayFullName || 'N/A'],
-          ['Email/Username:', eiuPartner.displayEmail || 'N/A'],
-          ['Contact Number:', eiuPartner.displayContact || 'N/A'],
-          ['Group:', eiuPartner.displayGroup || 'N/A'],
-          ['Department:', eiuPartner.displayDepartment || 'N/A'],
-          ['Subrole:', eiuPartner.displaySubrole || 'N/A'],
-          ['Company:', eiuPartner.displayCompany || 'N/A']
+          ['Company Name:', eiuPartner.displayFullName || eiuPartner.name || 'N/A'],
+          ['Email/Username:', eiuPartner.displayEmail || eiuPartner.email || 'N/A'],
+          ['Contact Number:', eiuPartner.displayContact || eiuPartner.contact || 'N/A'],
+          ['Group:', eiuPartner.displayGroup || eiuPartner.group || 'N/A'],
+          ['Department:', eiuPartner.displayDepartment || eiuPartner.department || 'N/A'],
+          ['Subrole:', eiuPartner.displaySubrole || eiuPartner.subrole || 'N/A'],
+          ['Company:', eiuPartner.displayCompany || eiuPartner.company || 'N/A']
         ];
 
         eiuInfo.forEach(([label, value]) => {
           worksheet.getCell(`A${row}`).value = label;
           worksheet.getCell(`A${row}`).font = { bold: true };
-          worksheet.getCell(`B${row}`).value = value || 'N/A';
+          worksheet.getCell(`B${row}`).value = safeString(value, 'N/A');
+          worksheet.getCell(`B${row}`).alignment = { wrapText: true };
           row++;
         });
         row++;
@@ -1095,7 +1141,13 @@ export default function ProjectLedgerCenter({
 
       // Timeline Information
       worksheet.getCell(`A${row}`).value = 'Timeline Information';
-      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
+      worksheet.getCell(`A${row}`).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE5E7EB' }
+      };
+      worksheet.mergeCells(`A${row}:B${row}`);
       row++;
 
       const timelineInfo = [
@@ -1115,7 +1167,13 @@ export default function ProjectLedgerCenter({
 
       // Budget Information
       worksheet.getCell(`A${row}`).value = 'Budget Information';
-      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
+      worksheet.getCell(`A${row}`).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE5E7EB' }
+      };
+      worksheet.mergeCells(`A${row}:B${row}`);
       row++;
 
       const budgetInfo = [
@@ -1137,7 +1195,13 @@ export default function ProjectLedgerCenter({
                                      displayProject.physicalDescription || 
                                      'N/A';
       worksheet.getCell(`A${row}`).value = 'Physical Accomplishment Information';
-      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
+      worksheet.getCell(`A${row}`).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE5E7EB' }
+      };
+      worksheet.mergeCells(`A${row}:B${row}`);
       row++;
       worksheet.getCell(`A${row}`).value = physicalAccomplishment;
       worksheet.getCell(`A${row}`).alignment = { wrapText: true };
@@ -1147,7 +1211,13 @@ export default function ProjectLedgerCenter({
       const phases = getProjectPhases(displayProject);
       if (phases && phases.length > 0) {
         worksheet.getCell(`A${row}`).value = 'PROJECT PHASES UPDATE';
-        worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+        worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
+        worksheet.getCell(`A${row}`).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE5E7EB' }
+        };
+        worksheet.mergeCells(`A${row}:B${row}`);
         row++;
 
         phases.forEach((phase, index) => {
@@ -1183,11 +1253,29 @@ export default function ProjectLedgerCenter({
         });
       }
 
-      // Set column widths
-      worksheet.getColumn('A').width = 30;
-      worksheet.getColumn('B').width = 50;
-      worksheet.getColumn('C').width = 20;
-      worksheet.getColumn('D').width = 20;
+      // Set column widths with better spacing
+      worksheet.getColumn('A').width = 35;
+      worksheet.getColumn('B').width = 60;
+      worksheet.getColumn('C').width = 25;
+      worksheet.getColumn('D').width = 25;
+      
+      // Apply borders and styling to all data cells
+      for (let r = 1; r <= row; r++) {
+        const rowObj = worksheet.getRow(r);
+        rowObj.height = r <= 2 ? 25 : 20;
+        
+        ['A', 'B', 'C', 'D'].forEach(col => {
+          const cell = worksheet.getCell(`${col}${r}`);
+          if (r > 2) {
+            cell.border = {
+              top: { style: 'thin' },
+              left: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' }
+            };
+          }
+        });
+      }
 
       const fileName = `Project-Ledger-${displayProject.projectCode || displayProject.id}-${now.toISOString().split('T')[0]}.xlsx`;
       const buffer = await workbook.xlsx.writeBuffer();
@@ -1206,127 +1294,6 @@ export default function ProjectLedgerCenter({
     }
   };
 
-  // Export to CSV
-  const exportToCSV = () => {
-    if (!displayProject) {
-      alert('No project data available to export.');
-      return;
-    }
-
-    try {
-      const now = new Date();
-      const currentDate = now.toLocaleDateString('en-PH', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      const currentTime = now.toLocaleTimeString('en-PH', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-
-      const csvLines = [];
-      csvLines.push('BUILD WATCH - Project Monitoring & Evaluation System');
-      csvLines.push(`Generated on ${currentDate} at ${currentTime}`);
-      csvLines.push('');
-      csvLines.push('PROJECT LEDGER REPORT');
-      csvLines.push('');
-
-      // Basic Project Information
-      csvLines.push('Basic Project Information');
-      csvLines.push(`"Project/Program Title:","${safeString(displayProject.name, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Project Code:","${safeString(displayProject.projectCode, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Implementing Office:","${safeString(displayProject.implementingOfficeName, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Category:","${safeString(displayProject.category, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Location/Barangay:","${safeString(displayProject.location, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Priority:","${safeString(displayProject.priority, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Funding Source:","${safeString(formatFundingSource(displayProject.fundingSource), 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Created Date:","${formatDateForExport(displayProject.createdDate)}"`);
-      csvLines.push(`"Project Description:","${safeString(displayProject.description, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Expected Outputs:","${safeString(displayProject.expectedOutputs, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Target Beneficiaries:","${safeString(displayProject.targetBeneficiaries, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push('');
-
-      // EIU Partner Contractor
-      const eiuPartner = getEIUPartner(displayProject);
-      if (eiuPartner) {
-        csvLines.push('EIU Partner Contractor');
-        csvLines.push(`"Company Name:","${safeString(eiuPartner.displayFullName, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Email/Username:","${safeString(eiuPartner.displayEmail, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Contact Number:","${safeString(eiuPartner.displayContact, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Group:","${safeString(eiuPartner.displayGroup, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Department:","${safeString(eiuPartner.displayDepartment, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Subrole:","${safeString(eiuPartner.displaySubrole, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Company:","${safeString(eiuPartner.displayCompany, 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push('');
-      }
-
-      // Timeline Information
-      csvLines.push('Timeline Information');
-      csvLines.push(`"Start Date:","${formatDateForExport(displayProject.startDate)}"`);
-      csvLines.push(`"Target Completion Date:","${formatDateForExport(displayProject.targetCompletionDate)}"`);
-      csvLines.push(`"Expected Days of Completion:","${safeString(displayProject.expectedDaysOfCompletion, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Actual Completion Date:","${formatDateForExport(displayProject.completionDate)}"`);
-      csvLines.push('');
-
-      // Budget Information
-      csvLines.push('Budget Information');
-      csvLines.push(`"Total Budget Allocation:","${formatCurrencyForExport(displayProject.totalBudget)}"`);
-      csvLines.push(`"Budget Description:","${safeString(displayProject.budgetBreakdown || displayProject.budgetDescription, 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push('');
-
-      // Physical Accomplishment Information
-      const physicalAccomplishment = safeString(
-        displayProject.physicalProgressRequirements || 
-        displayProject.generalDescription || 
-        displayProject.physicalDescription,
-        'N/A'
-      );
-      csvLines.push('Physical Accomplishment Information');
-      csvLines.push(`"${physicalAccomplishment.replace(/"/g, '""')}"`);
-      csvLines.push('');
-
-      // Project Phases Update
-      const phases = getProjectPhases(displayProject);
-      if (phases && phases.length > 0) {
-        csvLines.push('PROJECT PHASES UPDATE');
-        phases.forEach((phase, index) => {
-          csvLines.push(`"Phase ${index + 1}: ${safeString(phase.title || phase.name, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Description:","${safeString(phase.description, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Planned Budget:","${formatCurrencyForExport(phase.plannedBudget)}"`);
-          csvLines.push(`"Breakdown Description:","${safeString(phase.breakdownDescription, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Start Date:","${formatDateForExport(phase.startDate)}"`);
-          csvLines.push(`"Target Completion Date:","${formatDateForExport(phase.targetCompletionDate)}"`);
-          csvLines.push(`"Submission Date:","${formatDateForExport(phase.submissionDate)}"`);
-          csvLines.push(`"Actual Phase Completion Date:","${formatDateForExport(phase.actualPhaseCompletionDate)}"`);
-          csvLines.push(`"Timeline Activities & Deliverables:","${safeString(phase.timelineActivities, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Used Budget:","${formatCurrencyForExport(phase.usedBudget)}"`);
-          csvLines.push(`"Remaining Budget:","${formatCurrencyForExport(phase.remainingBudget)}"`);
-          csvLines.push(`"Budget Breakdown & Allocation:","${safeString(phase.budgetBreakdownAllocation, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Physical Progress Description:","${safeString(phase.physicalProgressDescription, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Submitted By:","${safeString(phase.submittedBy, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Remarks and Recommendation:","${safeString(phase.remarksAndRecommendation, 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push('');
-        });
-      }
-
-      const csvContent = csvLines.join('\n');
-      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      const fileName = `Project-Ledger-${displayProject.projectCode || displayProject.id}-${now.toISOString().split('T')[0]}.csv`;
-      link.setAttribute('href', url);
-      link.setAttribute('download', fileName);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error exporting to CSV:', error);
-      alert('Failed to export CSV. Please try again.');
-    }
-  };
 
   // Print function
   const handlePrint = () => {
@@ -1500,7 +1467,15 @@ export default function ProjectLedgerCenter({
       group: displayGroup,
       department: displayDepartment,
       subrole: displaySubrole,
-      company: displayCompany // This is now the EIU's full name
+      company: displayCompany, // This is now the EIU's full name
+      // Also include display* properties for backward compatibility
+      displayFullName: displayFullName,
+      displayEmail: displayEmail,
+      displayContact: displayContact,
+      displayGroup: displayGroup,
+      displayDepartment: displayDepartment,
+      displaySubrole: displaySubrole,
+      displayCompany: displayCompany
     };
   };
 
@@ -2173,21 +2148,6 @@ export default function ProjectLedgerCenter({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                   Excel
-                </button>
-                <button
-                  onClick={exportToCSV}
-                  disabled={loading}
-                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 ${
-                    loading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-xl hover:scale-105'
-                  }`}
-                  title="Export to CSV"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  CSV
                 </button>
                 <button
                   onClick={handlePrint}
