@@ -232,6 +232,22 @@ export default function ProjectLedgerCenter({
           // Normalize project EIU data structure (no API calls)
           const enrichedProject = enrichProjectWithEIUData(data.project);
           
+          // Fetch complete milestone data for this project
+          if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+            try {
+              const milestonesResponse = await fetch(`${API_URL}/projects/${projectId}/milestones`, { headers });
+              if (milestonesResponse.ok) {
+                const milestonesData = await milestonesResponse.json();
+                if (milestonesData.success && milestonesData.milestones) {
+                  console.log(`📋 Fetched complete milestone data for project ${projectId}:`, milestonesData.milestones.length);
+                  enrichedProject.milestones = milestonesData.milestones;
+                }
+              }
+            } catch (err) {
+              console.warn(`⚠️ Could not fetch milestones for project ${projectId}:`, err);
+            }
+          }
+          
           // Fetch milestone submissions and attach to project
           if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
             console.log('📋 Fetching submissions for project:', projectId);
@@ -265,7 +281,54 @@ export default function ProjectLedgerCenter({
         } else {
           // Normalize all projects EIU data structure (no API calls)
           const projectsList = data.projects || data.data || [];
-          const enrichedProjects = projectsList.map(project => enrichProjectWithEIUData(project));
+          const enrichedProjects = await Promise.all(projectsList.map(async (project) => {
+            const enriched = enrichProjectWithEIUData(project);
+            
+            // Fetch complete milestone data for this project
+            if (enriched.milestones && enriched.milestones.length > 0) {
+              try {
+                const milestonesResponse = await fetch(`${API_URL}/projects/${enriched.id}/milestones`, { headers });
+                if (milestonesResponse.ok) {
+                  const milestonesData = await milestonesResponse.json();
+                  if (milestonesData.success && milestonesData.milestones) {
+                    console.log(`📋 Fetched complete milestone data for project ${enriched.id}:`, milestonesData.milestones.length);
+                    enriched.milestones = milestonesData.milestones;
+                  }
+                }
+              } catch (err) {
+                console.warn(`⚠️ Could not fetch milestones for project ${enriched.id}:`, err);
+              }
+            }
+            
+            // Fetch milestone submissions and attach to project
+            if (enriched.milestones && enriched.milestones.length > 0) {
+              console.log(`📋 Fetching submissions for project: ${enriched.id}`);
+              const submissions = await fetchMilestoneSubmissions(enriched.id);
+              console.log(`📋 Fetched ${submissions.length} submissions for project ${enriched.id}`);
+              
+              // Attach approved submissions to their milestones
+              enriched.milestones.forEach(milestone => {
+                const milestoneSubmissions = submissions.filter(s => s.milestoneId === milestone.id);
+                console.log(`📋 Milestone "${milestone.title}" (${milestone.id}): Found ${milestoneSubmissions.length} submissions`);
+                
+                const approvedSubmission = milestoneSubmissions.find(s => 
+                  s.status === 'approved' || s.status === 'iu_approved'
+                );
+                
+                if (approvedSubmission) {
+                  console.log(`✅ Found approved submission for "${milestone.title}":`, approvedSubmission);
+                } else {
+                  console.log(`⚠️ No approved submission found for "${milestone.title}"`);
+                  console.log('  - All submissions for this milestone:', milestoneSubmissions.map(s => ({ id: s.id, status: s.status })));
+                }
+                
+                milestone.submissions = milestoneSubmissions;
+                milestone.approvedSubmission = approvedSubmission;
+              });
+            }
+            
+            return enriched;
+          }));
           setProjects(enrichedProjects);
         }
       } else {
@@ -349,6 +412,22 @@ export default function ProjectLedgerCenter({
       if (data.success && data.project) {
         // Normalize project EIU data structure (no API calls)
         const enrichedProject = enrichProjectWithEIUData(data.project);
+        
+        // Fetch complete milestone data for this project
+        if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+          try {
+            const milestonesResponse = await fetch(`${API_URL}/projects/${id}/milestones`, { headers });
+            if (milestonesResponse.ok) {
+              const milestonesData = await milestonesResponse.json();
+              if (milestonesData.success && milestonesData.milestones) {
+                console.log(`📋 Fetched complete milestone data for project ${id}:`, milestonesData.milestones.length);
+                enrichedProject.milestones = milestonesData.milestones;
+              }
+            }
+          } catch (err) {
+            console.warn(`⚠️ Could not fetch milestones for project ${id}:`, err);
+          }
+        }
         
         // Fetch milestone submissions and attach to project
         if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
@@ -542,6 +621,7 @@ export default function ProjectLedgerCenter({
     console.log('📋 Processing phases for project:', project.id);
     console.log('📋 Number of milestones:', project.milestones.length);
     console.log('📋 Milestones:', project.milestones);
+    console.log('📋 First milestone keys:', project.milestones[0] ? Object.keys(project.milestones[0]) : 'No milestones');
 
     return project.milestones.map((milestone, index) => {
       console.log(`\n🔍 Processing milestone ${index + 1}:`, milestone.title);
