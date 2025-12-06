@@ -607,9 +607,44 @@ export default function ProjectLedgerCenter({
     // Extract fields with multiple fallback options (matching ProjectDetailsModal.astro)
     const fullName = eiuData.name || eiuData.fullName || `${eiuData.firstName || ''} ${eiuData.lastName || ''}`.trim();
     const email = eiuData.email || eiuData.username;
-    // Try multiple sources for contact number - also check project level
-    const contact = eiuData.contactNumber || eiuData.phoneNumber || eiuData.contact || eiuData.contact_number || eiuData.phone_number || 
-                    project.contactNumber || project.phoneNumber || project.contact;
+    
+    // Try multiple sources for contact number - also check milestone submissions' submitter data (like MilestoneSubmissionModal)
+    let contact = eiuData.contactNumber || eiuData.phoneNumber || eiuData.contact || eiuData.contact_number || eiuData.phone_number || 
+                  project.contactNumber || project.phoneNumber || project.contact;
+    
+    // If contact number is still not found, check milestone submissions' submitter data
+    if ((!contact || contact === 'N/A' || contact === null) && project.milestones) {
+      console.log('📞 Contact number not found in EIU data, checking milestone submissions...');
+      
+      // Check all milestone submissions for submitter contact number
+      for (const milestone of project.milestones) {
+        // Check approved submission first
+        if (milestone.approvedSubmission) {
+          const submitterContact = milestone.approvedSubmission.submitter?.contactNumber || 
+                                   milestone.approvedSubmission.submitterInfo?.contactNumber;
+          if (submitterContact) {
+            contact = submitterContact;
+            console.log('📞 Found contact number from approved submission:', contact);
+            break;
+          }
+        }
+        
+        // Check all submissions for this milestone
+        if (milestone.submissions && Array.isArray(milestone.submissions)) {
+          for (const submission of milestone.submissions) {
+            const submitterContact = submission.submitter?.contactNumber || 
+                                     submission.submitterInfo?.contactNumber;
+            if (submitterContact) {
+              contact = submitterContact;
+              console.log('📞 Found contact number from milestone submission:', contact);
+              break;
+            }
+          }
+          if (contact && contact !== 'N/A' && contact !== null) break;
+        }
+      }
+    }
+    
     const group = eiuData.group || eiuData.groupName || 'EIU';
     const department = eiuData.department || eiuData.departmentName;
     const subrole = eiuData.subRole || eiuData.subrole || eiuData.role;
