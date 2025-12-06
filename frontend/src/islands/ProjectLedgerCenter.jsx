@@ -1164,10 +1164,24 @@ export default function ProjectLedgerCenter({
       weekStart.setDate(date.getDate() - date.getDay());
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
-      return `${weekStart.getDate()}/${weekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}`;
+      return `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     }
+  };
+
+  // Get date step for timeline header
+  const getDateStep = (zoom) => {
+    if (zoom === 'day') return 1;
+    if (zoom === 'week') return 7;
+    return 30; // month
+  };
+
+  // Get minimum width for timeline bars
+  const getMinBarWidth = (zoom) => {
+    if (zoom === 'day') return 60; // pixels
+    if (zoom === 'week') return 80;
+    return 100; // month
   };
 
   // ==================== PROJECT COMPARISON FUNCTIONS ====================
@@ -4437,38 +4451,74 @@ export default function ProjectLedgerCenter({
                     );
                   }
 
+                  const dateStep = getDateStep(timelineZoom);
+                  const minBarWidth = getMinBarWidth(timelineZoom);
+                  // Calculate pixel per day based on zoom level for better visibility
+                  const pixelPerDay = timelineZoom === 'day' ? 8 : timelineZoom === 'week' ? 4 : 1.5;
+                  const timelineWidth = Math.max(1200, totalDays * pixelPerDay);
+                  
+                  // Calculate number of date labels to prevent overlap
+                  const numLabels = Math.ceil(totalDays / dateStep);
+                  const labelSpacing = 100 / numLabels;
+
                   return (
                     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" data-timeline-chart>
                       <div className="overflow-x-auto">
-                        <div className="min-w-full" style={{ minWidth: `${Math.max(800, totalDays * 2)}px` }}>
+                        <div style={{ minWidth: `${timelineWidth}px` }}>
                           {/* Timeline Header */}
-                          <div className="sticky top-0 z-20 bg-gray-50 border-b-2 border-gray-300">
+                          <div className="sticky top-0 z-20 bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-300 shadow-sm">
                             <div className="flex">
-                              <div className="w-64 p-4 border-r-2 border-gray-300 font-bold text-gray-800 bg-gray-100">
+                              <div className="w-64 p-4 border-r-2 border-gray-300 font-bold text-gray-800 bg-gray-100 flex-shrink-0">
                                 Project / Phase
                               </div>
-                              <div className="flex-1 relative">
-                                {/* Date labels */}
-                                <div className="flex h-12">
+                              <div className="flex-1 relative" style={{ minHeight: '60px' }}>
+                                {/* Date labels with better spacing */}
+                                <div className="relative h-full">
                                   {(() => {
                                     const labels = [];
                                     const current = new Date(effectiveStart);
-                                    const step = timelineZoom === 'day' ? 1 : timelineZoom === 'week' ? 7 : 30;
+                                    let labelIndex = 0;
+                                    
+                                    // For day view, show every 7 days to prevent overlap
+                                    // For week view, show every week
+                                    // For month view, show every month
+                                    const displayStep = timelineZoom === 'day' ? 7 : dateStep;
                                     
                                     while (current <= effectiveEnd) {
                                       const position = getDatePosition(current, effectiveStart, effectiveEnd);
+                                      const nextDate = new Date(current);
+                                      nextDate.setDate(current.getDate() + displayStep);
+                                      const nextPosition = getDatePosition(nextDate, effectiveStart, effectiveEnd);
+                                      const width = Math.max(5, nextPosition - position); // Minimum 5% width
+                                      
                                       labels.push(
                                         <div
                                           key={current.getTime()}
-                                          className="absolute border-l border-gray-300"
-                                          style={{ left: `${position}%` }}
+                                          className="absolute border-l-2 border-gray-400 h-full"
+                                          style={{ 
+                                            left: `${position}%`,
+                                            width: `${width}%`
+                                          }}
                                         >
-                                          <div className="px-2 py-1 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                            {formatTimelineDate(current, timelineZoom)}
+                                          <div className="absolute top-0 left-0 px-2 py-1.5 bg-white/95 rounded-br shadow-md border-r border-b border-gray-200">
+                                            <div className="text-xs font-bold text-gray-800 whitespace-nowrap leading-tight">
+                                              {formatTimelineDate(current, timelineZoom)}
+                                            </div>
+                                            {timelineZoom === 'day' && (
+                                              <div className="text-[10px] text-gray-500 mt-0.5">
+                                                {current.toLocaleDateString('en-US', { weekday: 'short' })}
+                                              </div>
+                                            )}
+                                            {timelineZoom === 'week' && (
+                                              <div className="text-[10px] text-gray-500 mt-0.5">
+                                                Week {Math.ceil((current.getDate()) / 7)}
+                                              </div>
+                                            )}
                                           </div>
                                         </div>
                                       );
-                                      current.setDate(current.getDate() + step);
+                                      current.setDate(current.getDate() + displayStep);
+                                      labelIndex++;
                                     }
                                     return labels;
                                   })()}
@@ -4480,29 +4530,32 @@ export default function ProjectLedgerCenter({
                           {/* Timeline Rows */}
                           <div className="divide-y divide-gray-200">
                             {projects.map((project, projectIndex) => (
-                              <div key={project.projectId} className="hover:bg-gray-50 transition-colors">
-                                {/* Project Row */}
-                                <div className="flex min-h-[60px]">
-                                  <div className="w-64 p-4 border-r-2 border-gray-300 bg-gray-50 flex items-center">
+                              <div key={project.projectId} className="hover:bg-gray-50/50 transition-colors">
+                                {/* Project Row - Increased height */}
+                                <div className="flex min-h-[80px]">
+                                  <div className="w-64 p-4 border-r-2 border-gray-300 bg-gray-50 flex items-center flex-shrink-0">
                                     <div className="flex-1">
-                                      <p className="font-semibold text-gray-800 text-sm">{project.projectName}</p>
-                                      <p className="text-xs text-gray-600">{project.projectCode}</p>
+                                      <p className="font-semibold text-gray-800 text-sm leading-tight">{project.projectName}</p>
+                                      <p className="text-xs text-gray-600 mt-1">{project.projectCode}</p>
                                     </div>
                                   </div>
-                                  <div className="flex-1 relative">
+                                  <div className="flex-1 relative" style={{ minHeight: '80px' }}>
                                     {project.phases.map((phase, phaseIndex) => {
                                       const left = getDatePosition(phase.startDate, effectiveStart, effectiveEnd);
                                       const width = getDatePosition(phase.endDate, effectiveStart, effectiveEnd) - left;
                                       const isOverdue = phase.endDate < new Date() && phase.status !== 'completed';
+                                      const barWidthPx = (width / 100) * timelineWidth;
+                                      const canShowText = barWidthPx >= minBarWidth;
                                       
                                       return (
                                         <div
                                           key={phase.phaseId}
-                                          className="absolute top-2 bottom-2 rounded cursor-pointer hover:opacity-80 transition-all group"
+                                          className="absolute top-3 bottom-3 rounded-lg cursor-pointer hover:scale-105 hover:shadow-lg transition-all group"
                                           style={{
                                             left: `${left}%`,
                                             width: `${width}%`,
-                                            minWidth: '4px'
+                                            minWidth: `${minBarWidth}px`,
+                                            zIndex: 10
                                           }}
                                           onClick={() => {
                                             const enrichedProject = filteredProjects.find(p => p.id === project.projectId);
@@ -4514,28 +4567,67 @@ export default function ProjectLedgerCenter({
                                           title={`${phase.phaseName}\n${formatDate(phase.startDate)} - ${formatDate(phase.endDate)}\nProgress: ${phase.progress.toFixed(0)}%`}
                                         >
                                           <div
-                                            className={`h-full rounded border-2 ${
-                                              isOverdue ? 'border-red-500' : 'border-white'
-                                            } shadow-sm`}
+                                            className={`h-full rounded-lg border-2 ${
+                                              isOverdue ? 'border-red-500 border-dashed' : 'border-white shadow-md'
+                                            }`}
                                             style={{
                                               backgroundColor: getStatusColor(phase.status),
-                                              opacity: phase.progress / 100 || 0.7
+                                              opacity: Math.max(0.85, phase.progress / 100 || 0.85)
                                             }}
                                           >
-                                            <div className="h-full flex items-center px-2">
-                                              <span className="text-xs font-medium text-white truncate">
-                                                {phase.phaseName}
-                                              </span>
-                                            </div>
-                                            {/* Progress indicator */}
+                                            {canShowText && (
+                                              <div className="h-full flex items-center px-3 py-1">
+                                                <span className="text-xs font-bold text-white drop-shadow-lg truncate">
+                                                  {phase.phaseName}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {!canShowText && (
+                                              <div className="h-full flex items-center justify-center">
+                                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                                              </div>
+                                            )}
+                                            {/* Progress indicator - more visible */}
                                             <div
-                                              className="absolute bottom-0 left-0 h-1 bg-white/50 rounded-b"
-                                              style={{ width: `${phase.progress}%` }}
+                                              className="absolute bottom-0 left-0 h-1.5 bg-white/70 rounded-b-lg"
+                                              style={{ width: `${Math.min(100, phase.progress)}%` }}
+                                            ></div>
+                                            {/* Status indicator dot */}
+                                            <div
+                                              className="absolute top-1 right-1 w-2 h-2 rounded-full border border-white"
+                                              style={{
+                                                backgroundColor: isOverdue ? '#EF4444' : phase.status === 'completed' ? '#10B981' : '#3B82F6'
+                                              }}
                                             ></div>
                                           </div>
                                         </div>
                                       );
                                     })}
+                                    {/* Grid lines for better readability */}
+                                    <div className="absolute inset-0 pointer-events-none">
+                                      {(() => {
+                                        const gridLines = [];
+                                        const current = new Date(effectiveStart);
+                                        const gridStep = timelineZoom === 'day' ? 1 : timelineZoom === 'week' ? 7 : 30;
+                                        
+                                        while (current <= effectiveEnd) {
+                                          const position = getDatePosition(current, effectiveStart, effectiveEnd);
+                                          gridLines.push(
+                                            <div
+                                              key={current.getTime()}
+                                              className={`absolute top-0 bottom-0 ${
+                                                timelineZoom === 'day' ? 'border-l border-gray-200' :
+                                                timelineZoom === 'week' ? 'border-l border-gray-300' :
+                                                'border-l-2 border-gray-300'
+                                              }`}
+                                              style={{ left: `${position}%` }}
+                                            ></div>
+                                          );
+                                          current.setDate(current.getDate() + gridStep);
+                                        }
+                                        return gridLines;
+                                      })()}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
