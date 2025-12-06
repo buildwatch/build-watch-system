@@ -701,6 +701,19 @@ export default function ProjectLedgerCenter({
     }
   };
 
+  // Helper function to safely convert any value to string for CSV/export
+  const safeString = (value, defaultValue = 'N/A') => {
+    if (value === null || value === undefined) return defaultValue;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'boolean') return String(value);
+    try {
+      return String(value);
+    } catch (e) {
+      return defaultValue;
+    }
+  };
+
   // Export to PDF
   const exportToPDF = async () => {
     if (!displayProject) {
@@ -786,9 +799,10 @@ export default function ProjectLedgerCenter({
 
       basicInfo.forEach(([label, value]) => {
         doc.setFont(undefined, 'bold');
-        doc.text(label, 10, yPos);
+        doc.text(String(label), 10, yPos);
         doc.setFont(undefined, 'normal');
-        const lines = doc.splitTextToSize(value || 'N/A', doc.internal.pageSize.getWidth() - 60);
+        const valueStr = safeString(value, 'N/A');
+        const lines = doc.splitTextToSize(valueStr, doc.internal.pageSize.getWidth() - 60);
         doc.text(lines, 60, yPos);
         yPos += lines.length * 5;
         if (yPos > doc.internal.pageSize.getHeight() - 20) {
@@ -819,9 +833,9 @@ export default function ProjectLedgerCenter({
 
         eiuInfo.forEach(([label, value]) => {
           doc.setFont(undefined, 'bold');
-          doc.text(label, 10, yPos);
+          doc.text(String(label), 10, yPos);
           doc.setFont(undefined, 'normal');
-          doc.text(value || 'N/A', 60, yPos);
+          doc.text(safeString(value, 'N/A'), 60, yPos);
           yPos += 5;
           if (yPos > doc.internal.pageSize.getHeight() - 20) {
             doc.addPage();
@@ -846,9 +860,9 @@ export default function ProjectLedgerCenter({
 
       timelineInfo.forEach(([label, value]) => {
         doc.setFont(undefined, 'bold');
-        doc.text(label, 10, yPos);
+        doc.text(String(label), 10, yPos);
         doc.setFont(undefined, 'normal');
-        doc.text(value || 'N/A', 60, yPos);
+        doc.text(safeString(value, 'N/A'), 60, yPos);
         yPos += 5;
       });
       yPos += 5;
@@ -866,9 +880,10 @@ export default function ProjectLedgerCenter({
 
       budgetInfo.forEach(([label, value]) => {
         doc.setFont(undefined, 'bold');
-        doc.text(label, 10, yPos);
+        doc.text(String(label), 10, yPos);
         doc.setFont(undefined, 'normal');
-        const lines = doc.splitTextToSize(value || 'N/A', doc.internal.pageSize.getWidth() - 60);
+        const valueStr = safeString(value, 'N/A');
+        const lines = doc.splitTextToSize(valueStr, doc.internal.pageSize.getWidth() - 60);
         doc.text(lines, 60, yPos);
         yPos += lines.length * 5;
         if (yPos > doc.internal.pageSize.getHeight() - 20) {
@@ -879,10 +894,12 @@ export default function ProjectLedgerCenter({
       yPos += 5;
 
       // Physical Accomplishment Information
-      const physicalAccomplishment = displayProject.physicalProgressRequirements || 
-                                     displayProject.generalDescription || 
-                                     displayProject.physicalDescription || 
-                                     'N/A';
+      const physicalAccomplishment = safeString(
+        displayProject.physicalProgressRequirements || 
+        displayProject.generalDescription || 
+        displayProject.physicalDescription, 
+        'N/A'
+      );
       doc.setFont(undefined, 'bold');
       doc.text('Physical Accomplishment Information', 10, yPos);
       yPos += 7;
@@ -912,7 +929,7 @@ export default function ProjectLedgerCenter({
 
           doc.setFont(undefined, 'bold');
           doc.setFontSize(11);
-          doc.text(`Phase ${index + 1}: ${phase.title || phase.name || 'N/A'}`, 10, yPos);
+          doc.text(`Phase ${index + 1}: ${safeString(phase.title || phase.name, 'N/A')}`, 10, yPos);
           yPos += 7;
           doc.setFont(undefined, 'normal');
           doc.setFontSize(10);
@@ -936,9 +953,10 @@ export default function ProjectLedgerCenter({
 
           phaseData.forEach(([label, value]) => {
             doc.setFont(undefined, 'bold');
-            doc.text(label, 15, yPos);
+            doc.text(String(label), 15, yPos);
             doc.setFont(undefined, 'normal');
-            const lines = doc.splitTextToSize(value || 'N/A', doc.internal.pageSize.getWidth() - 65);
+            const valueStr = safeString(value, 'N/A');
+            const lines = doc.splitTextToSize(valueStr, doc.internal.pageSize.getWidth() - 65);
             doc.text(lines, 65, yPos);
             yPos += lines.length * 5;
             if (yPos > doc.internal.pageSize.getHeight() - 20) {
@@ -1216,30 +1234,30 @@ export default function ProjectLedgerCenter({
 
       // Basic Project Information
       csvLines.push('Basic Project Information');
-      csvLines.push(`"Project/Program Title:","${(displayProject.name || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Project Code:","${(displayProject.projectCode || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Implementing Office:","${(displayProject.implementingOfficeName || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Category:","${(displayProject.category || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Location/Barangay:","${(displayProject.location || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Priority:","${(displayProject.priority || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Funding Source:","${formatFundingSource(displayProject.fundingSource).replace(/"/g, '""')}"`);
+      csvLines.push(`"Project/Program Title:","${safeString(displayProject.name, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Project Code:","${safeString(displayProject.projectCode, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Implementing Office:","${safeString(displayProject.implementingOfficeName, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Category:","${safeString(displayProject.category, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Location/Barangay:","${safeString(displayProject.location, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Priority:","${safeString(displayProject.priority, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Funding Source:","${safeString(formatFundingSource(displayProject.fundingSource), 'N/A').replace(/"/g, '""')}"`);
       csvLines.push(`"Created Date:","${formatDateForExport(displayProject.createdDate)}"`);
-      csvLines.push(`"Project Description:","${(displayProject.description || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Expected Outputs:","${(displayProject.expectedOutputs || 'N/A').replace(/"/g, '""')}"`);
-      csvLines.push(`"Target Beneficiaries:","${(displayProject.targetBeneficiaries || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Project Description:","${safeString(displayProject.description, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Expected Outputs:","${safeString(displayProject.expectedOutputs, 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Target Beneficiaries:","${safeString(displayProject.targetBeneficiaries, 'N/A').replace(/"/g, '""')}"`);
       csvLines.push('');
 
       // EIU Partner Contractor
       const eiuPartner = getEIUPartner(displayProject);
       if (eiuPartner) {
         csvLines.push('EIU Partner Contractor');
-        csvLines.push(`"Company Name:","${(eiuPartner.displayFullName || 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Email/Username:","${(eiuPartner.displayEmail || 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Contact Number:","${(eiuPartner.displayContact || 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Group:","${(eiuPartner.displayGroup || 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Department:","${(eiuPartner.displayDepartment || 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Subrole:","${(eiuPartner.displaySubrole || 'N/A').replace(/"/g, '""')}"`);
-        csvLines.push(`"Company:","${(eiuPartner.displayCompany || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Company Name:","${safeString(eiuPartner.displayFullName, 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Email/Username:","${safeString(eiuPartner.displayEmail, 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Contact Number:","${safeString(eiuPartner.displayContact, 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Group:","${safeString(eiuPartner.displayGroup, 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Department:","${safeString(eiuPartner.displayDepartment, 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Subrole:","${safeString(eiuPartner.displaySubrole, 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Company:","${safeString(eiuPartner.displayCompany, 'N/A').replace(/"/g, '""')}"`);
         csvLines.push('');
       }
 
@@ -1247,21 +1265,23 @@ export default function ProjectLedgerCenter({
       csvLines.push('Timeline Information');
       csvLines.push(`"Start Date:","${formatDateForExport(displayProject.startDate)}"`);
       csvLines.push(`"Target Completion Date:","${formatDateForExport(displayProject.targetCompletionDate)}"`);
-      csvLines.push(`"Expected Days of Completion:","${(displayProject.expectedDaysOfCompletion || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Expected Days of Completion:","${safeString(displayProject.expectedDaysOfCompletion, 'N/A').replace(/"/g, '""')}"`);
       csvLines.push(`"Actual Completion Date:","${formatDateForExport(displayProject.completionDate)}"`);
       csvLines.push('');
 
       // Budget Information
       csvLines.push('Budget Information');
       csvLines.push(`"Total Budget Allocation:","${formatCurrencyForExport(displayProject.totalBudget)}"`);
-      csvLines.push(`"Budget Description:","${(displayProject.budgetBreakdown || displayProject.budgetDescription || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Budget Description:","${safeString(displayProject.budgetBreakdown || displayProject.budgetDescription, 'N/A').replace(/"/g, '""')}"`);
       csvLines.push('');
 
       // Physical Accomplishment Information
-      const physicalAccomplishment = displayProject.physicalProgressRequirements || 
-                                     displayProject.generalDescription || 
-                                     displayProject.physicalDescription || 
-                                     'N/A';
+      const physicalAccomplishment = safeString(
+        displayProject.physicalProgressRequirements || 
+        displayProject.generalDescription || 
+        displayProject.physicalDescription,
+        'N/A'
+      );
       csvLines.push('Physical Accomplishment Information');
       csvLines.push(`"${physicalAccomplishment.replace(/"/g, '""')}"`);
       csvLines.push('');
@@ -1271,21 +1291,21 @@ export default function ProjectLedgerCenter({
       if (phases && phases.length > 0) {
         csvLines.push('PROJECT PHASES UPDATE');
         phases.forEach((phase, index) => {
-          csvLines.push(`"Phase ${index + 1}: ${(phase.title || phase.name || 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Description:","${(phase.description || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Phase ${index + 1}: ${safeString(phase.title || phase.name, 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Description:","${safeString(phase.description, 'N/A').replace(/"/g, '""')}"`);
           csvLines.push(`"Planned Budget:","${formatCurrencyForExport(phase.plannedBudget)}"`);
-          csvLines.push(`"Breakdown Description:","${(phase.breakdownDescription || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Breakdown Description:","${safeString(phase.breakdownDescription, 'N/A').replace(/"/g, '""')}"`);
           csvLines.push(`"Start Date:","${formatDateForExport(phase.startDate)}"`);
           csvLines.push(`"Target Completion Date:","${formatDateForExport(phase.targetCompletionDate)}"`);
           csvLines.push(`"Submission Date:","${formatDateForExport(phase.submissionDate)}"`);
           csvLines.push(`"Actual Phase Completion Date:","${formatDateForExport(phase.actualPhaseCompletionDate)}"`);
-          csvLines.push(`"Timeline Activities & Deliverables:","${(phase.timelineActivities || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Timeline Activities & Deliverables:","${safeString(phase.timelineActivities, 'N/A').replace(/"/g, '""')}"`);
           csvLines.push(`"Used Budget:","${formatCurrencyForExport(phase.usedBudget)}"`);
           csvLines.push(`"Remaining Budget:","${formatCurrencyForExport(phase.remainingBudget)}"`);
-          csvLines.push(`"Budget Breakdown & Allocation:","${(phase.budgetBreakdownAllocation || 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Physical Progress Description:","${(phase.physicalProgressDescription || 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Submitted By:","${(phase.submittedBy || 'N/A').replace(/"/g, '""')}"`);
-          csvLines.push(`"Remarks and Recommendation:","${(phase.remarksAndRecommendation || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Budget Breakdown & Allocation:","${safeString(phase.budgetBreakdownAllocation, 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Physical Progress Description:","${safeString(phase.physicalProgressDescription, 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Submitted By:","${safeString(phase.submittedBy, 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Remarks and Recommendation:","${safeString(phase.remarksAndRecommendation, 'N/A').replace(/"/g, '""')}"`);
           csvLines.push('');
         });
       }
