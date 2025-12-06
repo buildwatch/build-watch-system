@@ -234,14 +234,27 @@ export default function ProjectLedgerCenter({
           
           // Fetch milestone submissions and attach to project
           if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+            console.log('📋 Fetching submissions for project:', projectId);
             const submissions = await fetchMilestoneSubmissions(projectId);
+            console.log('📋 Fetched submissions:', submissions.length);
+            console.log('📋 Submissions data:', submissions);
             
             // Attach approved submissions to their milestones
             enrichedProject.milestones.forEach(milestone => {
               const milestoneSubmissions = submissions.filter(s => s.milestoneId === milestone.id);
+              console.log(`📋 Milestone "${milestone.title}" (${milestone.id}): Found ${milestoneSubmissions.length} submissions`);
+              
               const approvedSubmission = milestoneSubmissions.find(s => 
                 s.status === 'approved' || s.status === 'iu_approved'
               );
+              
+              if (approvedSubmission) {
+                console.log(`✅ Found approved submission for "${milestone.title}":`, approvedSubmission);
+              } else {
+                console.log(`⚠️ No approved submission found for "${milestone.title}"`);
+                console.log('  - All submissions for this milestone:', milestoneSubmissions.map(s => ({ id: s.id, status: s.status })));
+              }
+              
               milestone.submissions = milestoneSubmissions;
               milestone.approvedSubmission = approvedSubmission;
             });
@@ -268,7 +281,15 @@ export default function ProjectLedgerCenter({
 
   // Fetch milestone submissions for a project
   const fetchMilestoneSubmissions = async (projectId) => {
-    if (!projectId || !token) return [];
+    if (!projectId) {
+      console.log('⚠️ No projectId provided to fetchMilestoneSubmissions');
+      return [];
+    }
+    
+    if (!token) {
+      console.log('⚠️ No token available for fetching submissions');
+      return [];
+    }
     
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -276,16 +297,27 @@ export default function ProjectLedgerCenter({
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${API_URL}/milestones/milestone-submissions?projectId=${projectId}`, { headers });
+      const url = `${API_URL}/milestones/milestone-submissions?projectId=${projectId}`;
+      console.log('📡 Fetching milestone submissions from:', url);
+      
+      const response = await fetch(url, { headers });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('📡 Submissions API response:', data);
+        
         if (data.success && data.submissions) {
+          console.log(`✅ Successfully fetched ${data.submissions.length} submissions`);
           return data.submissions || [];
+        } else {
+          console.log('⚠️ API response not successful or no submissions:', data);
         }
+      } else {
+        const errorText = await response.text();
+        console.log('⚠️ Failed to fetch submissions, status:', response.status, 'Response:', errorText);
       }
     } catch (err) {
-      console.warn('⚠️ Could not fetch milestone submissions:', err);
+      console.error('❌ Error fetching milestone submissions:', err);
     }
     
     return [];
@@ -320,14 +352,27 @@ export default function ProjectLedgerCenter({
         
         // Fetch milestone submissions and attach to project
         if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+          console.log('📋 Fetching submissions for project details:', id);
           const submissions = await fetchMilestoneSubmissions(id);
+          console.log('📋 Fetched submissions for project details:', submissions.length);
+          console.log('📋 Submissions data:', submissions);
           
           // Attach approved submissions to their milestones
           enrichedProject.milestones.forEach(milestone => {
             const milestoneSubmissions = submissions.filter(s => s.milestoneId === milestone.id);
+            console.log(`📋 Milestone "${milestone.title}" (${milestone.id}): Found ${milestoneSubmissions.length} submissions`);
+            
             const approvedSubmission = milestoneSubmissions.find(s => 
               s.status === 'approved' || s.status === 'iu_approved'
             );
+            
+            if (approvedSubmission) {
+              console.log(`✅ Found approved submission for "${milestone.title}":`, approvedSubmission);
+            } else {
+              console.log(`⚠️ No approved submission found for "${milestone.title}"`);
+              console.log('  - All submissions for this milestone:', milestoneSubmissions.map(s => ({ id: s.id, status: s.status })));
+            }
+            
             milestone.submissions = milestoneSubmissions;
             milestone.approvedSubmission = approvedSubmission;
           });
@@ -490,15 +535,52 @@ export default function ProjectLedgerCenter({
 
   const getProjectPhases = (project) => {
     if (!project.milestones || project.milestones.length === 0) {
+      console.log('⚠️ No milestones found in project');
       return [];
     }
 
-    return project.milestones.map(milestone => {
+    console.log('📋 Processing phases for project:', project.id);
+    console.log('📋 Number of milestones:', project.milestones.length);
+    console.log('📋 Milestones:', project.milestones);
+
+    return project.milestones.map((milestone, index) => {
+      console.log(`\n🔍 Processing milestone ${index + 1}:`, milestone.title);
+      console.log('  - Milestone ID:', milestone.id);
+      console.log('  - Milestone keys:', Object.keys(milestone));
+      console.log('  - milestone.submissions:', milestone.submissions);
+      console.log('  - milestone.approvedSubmission:', milestone.approvedSubmission);
+      
       // Get approved submission for this milestone
       const approvedSubmission = milestone.approvedSubmission || 
                                  milestone.submissions?.find(s => 
                                    s.status === 'approved' || s.status === 'iu_approved'
                                  );
+      
+      console.log('  - Approved submission found:', !!approvedSubmission);
+      if (approvedSubmission) {
+        console.log('  - Approved submission keys:', Object.keys(approvedSubmission));
+        console.log('  - Approved submission data:', {
+          timelineActivitiesDeliverables: approvedSubmission.timelineActivitiesDeliverables,
+          usedBudget: approvedSubmission.usedBudget,
+          remainingBudget: approvedSubmission.remainingBudget,
+          budgetBreakdownAllocation: approvedSubmission.budgetBreakdownAllocation,
+          physicalProgressDescription: approvedSubmission.physicalProgressDescription,
+          submittedAt: approvedSubmission.submittedAt,
+          submissionDate: approvedSubmission.submissionDate,
+          reviewedAt: approvedSubmission.reviewedAt,
+          photoEvidence: approvedSubmission.photoEvidence,
+          videoEvidence: approvedSubmission.videoEvidence,
+          documentFiles: approvedSubmission.documentFiles,
+          submitter: approvedSubmission.submitter,
+          submitterInfo: approvedSubmission.submitterInfo,
+          remarks: approvedSubmission.remarks,
+          remarksAndRecommendation: approvedSubmission.remarksAndRecommendation,
+          reviewNotes: approvedSubmission.reviewNotes
+        });
+      } else {
+        console.log('  ⚠️ No approved submission found for this milestone');
+        console.log('  - All submissions:', milestone.submissions);
+      }
       
       // Parse timeline activities if it's a JSON string
       let timelineActivities = 'N/A';
@@ -509,58 +591,112 @@ export default function ProjectLedgerCenter({
             : approvedSubmission.timelineActivitiesDeliverables;
           
           if (Array.isArray(parsed)) {
-            timelineActivities = parsed.map(activity => 
-              typeof activity === 'string' ? activity : activity.description || activity.name || activity
-            ).join(', ');
+            timelineActivities = parsed.map(activity => {
+              if (typeof activity === 'string') return activity;
+              if (typeof activity === 'object') {
+                return activity.description || activity.name || activity.date || JSON.stringify(activity);
+              }
+              return String(activity);
+            }).join('; ');
           } else if (typeof parsed === 'string') {
             timelineActivities = parsed;
+          } else if (parsed) {
+            timelineActivities = String(parsed);
           }
         } catch (e) {
-          timelineActivities = approvedSubmission.timelineActivitiesDeliverables;
+          console.log('  ⚠️ Error parsing timelineActivitiesDeliverables:', e);
+          timelineActivities = approvedSubmission.timelineActivitiesDeliverables || 'N/A';
         }
       }
       
-      // Get submitter name
+      // Get submitter name - check multiple sources
       const submitterName = approvedSubmission?.submitter?.name || 
                            approvedSubmission?.submitter?.fullName ||
                            approvedSubmission?.submitterInfo?.name ||
                            approvedSubmission?.submitterInfo?.fullName ||
+                           (approvedSubmission?.submitterInfo && typeof approvedSubmission.submitterInfo === 'object' 
+                             ? (approvedSubmission.submitterInfo.name || approvedSubmission.submitterInfo.fullName)
+                             : null) ||
                            'N/A';
       
       // Get photo/video/document proof counts
       const photoCount = Array.isArray(approvedSubmission?.photoEvidence) 
         ? approvedSubmission.photoEvidence.length 
-        : (approvedSubmission?.photoEvidence ? 1 : 0);
+        : (approvedSubmission?.photoEvidence && approvedSubmission.photoEvidence !== null && approvedSubmission.photoEvidence !== 'null' ? 1 : 0);
       const videoCount = Array.isArray(approvedSubmission?.videoEvidence) 
         ? approvedSubmission.videoEvidence.length 
-        : (approvedSubmission?.videoEvidence ? 1 : 0);
+        : (approvedSubmission?.videoEvidence && approvedSubmission.videoEvidence !== null && approvedSubmission.videoEvidence !== 'null' ? 1 : 0);
       const documentCount = Array.isArray(approvedSubmission?.documentFiles) 
         ? approvedSubmission.documentFiles.length 
-        : (approvedSubmission?.documentFiles ? 1 : 0);
+        : (approvedSubmission?.documentFiles && approvedSubmission.documentFiles !== null && approvedSubmission.documentFiles !== 'null' ? 1 : 0);
       
-      return {
+      // Get planned budget from milestone or submission (prioritize milestone)
+      const milestonePlannedBudget = milestone.plannedBudget || milestone.budgetPlanned || 0;
+      const submissionPlannedBudget = approvedSubmission?.plannedBudget || 0;
+      const plannedBudget = parseFloat(milestonePlannedBudget || submissionPlannedBudget || 0);
+      
+      console.log('  💰 Budget Debug:', {
+        'milestone.plannedBudget': milestone.plannedBudget,
+        'milestone.budgetPlanned': milestone.budgetPlanned,
+        'approvedSubmission?.plannedBudget': approvedSubmission?.plannedBudget,
+        'final plannedBudget': plannedBudget
+      });
+      
+      // Get used budget from submission
+      const usedBudget = parseFloat(approvedSubmission?.usedBudget || 0);
+      
+      // Get remaining budget from submission or calculate
+      const remainingBudget = approvedSubmission?.remainingBudget !== undefined && approvedSubmission?.remainingBudget !== null
+        ? parseFloat(approvedSubmission.remainingBudget)
+        : (plannedBudget - usedBudget);
+      
+      // Get physical accomplishment weight from submission or milestone
+      const physicalAccomplishmentGainedWeight = approvedSubmission?.physicalWeight || 
+                                                 milestone.physicalWeight || 
+                                                 milestone.weight || 
+                                                 'N/A';
+      
+      // Get description from milestone (should always be in milestone)
+      const description = milestone.description || milestone.title || 'N/A';
+      
+      // Get breakdown description - prioritize milestone, fallback to submission
+      const breakdownDescription = milestone.budgetBreakdown || 
+                                   milestone.budgetBreakdownDescription || 
+                                   approvedSubmission?.budgetBreakdownAllocation || 
+                                   'N/A';
+      
+      // Get start date - prioritize submission (actual dates used), fallback to milestone
+      const startDate = approvedSubmission?.timelineStartDate || 
+                       milestone.timelineStartDate || 
+                       milestone.startDate || 
+                       null;
+      
+      // Get target completion date - prioritize submission (actual dates used), fallback to milestone
+      const targetCompletionDate = approvedSubmission?.timelineEndDate || 
+                                  milestone.timelineEndDate || 
+                                  milestone.dueDate || 
+                                  milestone.targetDate || 
+                                  null;
+      
+      const phaseData = {
         ...milestone,
-        // Phase Information
-        description: milestone.description || 'N/A',
-        plannedBudget: milestone.plannedBudget || milestone.budgetPlanned || 0,
-        breakdownDescription: milestone.budgetBreakdown || milestone.budgetBreakdownDescription || 'N/A',
+        // Phase Information - from milestone (with fallbacks)
+        description: description,
+        plannedBudget: plannedBudget,
+        breakdownDescription: breakdownDescription,
         budgetAllotedWeight: milestone.budgetWeight || milestone.weight || 'N/A',
         physicalAccomplishmentWeight: milestone.physicalWeight || milestone.weight || 'N/A',
-        startDate: milestone.timelineStartDate || milestone.startDate || null,
-        targetCompletionDate: milestone.timelineEndDate || milestone.dueDate || milestone.targetDate || null,
+        startDate: startDate,
+        targetCompletionDate: targetCompletionDate,
         
         // CONTRACTOR UPDATE (from approved submission)
         submissionDate: approvedSubmission?.submittedAt || approvedSubmission?.submissionDate || null,
         actualPhaseCompletionDate: approvedSubmission?.reviewedAt || approvedSubmission?.actualCompletionDate || null,
         timelineActivities: timelineActivities,
-        usedBudget: approvedSubmission?.usedBudget || 0,
-        remainingBudget: approvedSubmission?.remainingBudget || 
-                        ((milestone.plannedBudget || milestone.budgetPlanned || 0) - (approvedSubmission?.usedBudget || 0)),
+        usedBudget: usedBudget,
+        remainingBudget: remainingBudget,
         budgetBreakdownAllocation: approvedSubmission?.budgetBreakdownAllocation || 'N/A',
-        physicalAccomplishmentGainedWeight: approvedSubmission?.physicalProgressWeight || 
-                                           milestone.physicalWeight || 
-                                           milestone.weight || 
-                                           'N/A',
+        physicalAccomplishmentGainedWeight: physicalAccomplishmentGainedWeight,
         photoProof: photoCount > 0 ? `${photoCount} photo(s)` : 'N/A',
         videoProof: videoCount > 0 ? `${videoCount} video(s)` : 'N/A',
         documentProof: documentCount > 0 ? `${documentCount} document(s)` : 'N/A',
@@ -571,6 +707,25 @@ export default function ProjectLedgerCenter({
                                  approvedSubmission?.reviewNotes || 
                                  'N/A'
       };
+      
+      console.log(`  ✅ Phase data for "${milestone.title}":`, {
+        description: phaseData.description,
+        plannedBudget: phaseData.plannedBudget,
+        breakdownDescription: phaseData.breakdownDescription,
+        startDate: phaseData.startDate,
+        targetCompletionDate: phaseData.targetCompletionDate,
+        submissionDate: phaseData.submissionDate,
+        actualPhaseCompletionDate: phaseData.actualPhaseCompletionDate,
+        timelineActivities: phaseData.timelineActivities,
+        usedBudget: phaseData.usedBudget,
+        remainingBudget: phaseData.remainingBudget,
+        budgetBreakdownAllocation: phaseData.budgetBreakdownAllocation,
+        physicalProgressDescription: phaseData.physicalProgressDescription,
+        submittedBy: phaseData.submittedBy,
+        remarksAndRecommendation: phaseData.remarksAndRecommendation
+      });
+      
+      return phaseData;
     });
   };
 
@@ -667,11 +822,84 @@ export default function ProjectLedgerCenter({
       console.log('  - Number of phases:', phases.length);
       console.log('  - Phases:', phases);
       
+      if (displayProject && displayProject.milestones) {
+        console.log('\n📋 MILESTONES DEBUG:');
+        console.log('  - Number of milestones:', displayProject.milestones.length);
+        displayProject.milestones.forEach((milestone, idx) => {
+          console.log(`\n  Milestone ${idx + 1}: "${milestone.title}"`);
+          console.log('    - ID:', milestone.id);
+          console.log('    - Description:', milestone.description);
+          console.log('    - Planned Budget:', milestone.plannedBudget || milestone.budgetPlanned);
+          console.log('    - Budget Breakdown:', milestone.budgetBreakdown);
+          console.log('    - Timeline Start Date:', milestone.timelineStartDate || milestone.startDate);
+          console.log('    - Timeline End Date:', milestone.timelineEndDate || milestone.dueDate);
+          console.log('    - Submissions:', milestone.submissions);
+          console.log('    - Approved Submission:', milestone.approvedSubmission);
+          
+          if (milestone.approvedSubmission) {
+            const sub = milestone.approvedSubmission;
+            console.log('    - Approved Submission Data:');
+            console.log('      * timelineActivitiesDeliverables:', sub.timelineActivitiesDeliverables);
+            console.log('      * usedBudget:', sub.usedBudget);
+            console.log('      * remainingBudget:', sub.remainingBudget);
+            console.log('      * budgetBreakdownAllocation:', sub.budgetBreakdownAllocation);
+            console.log('      * physicalProgressDescription:', sub.physicalProgressDescription);
+            console.log('      * submittedAt:', sub.submittedAt);
+            console.log('      * submissionDate:', sub.submissionDate);
+            console.log('      * reviewedAt:', sub.reviewedAt);
+            console.log('      * photoEvidence:', sub.photoEvidence);
+            console.log('      * videoEvidence:', sub.videoEvidence);
+            console.log('      * documentFiles:', sub.documentFiles);
+            console.log('      * submitter:', sub.submitter);
+            console.log('      * submitterInfo:', sub.submitterInfo);
+            console.log('      * remarks:', sub.remarks);
+            console.log('      * remarksAndRecommendation:', sub.remarksAndRecommendation);
+            console.log('      * reviewNotes:', sub.reviewNotes);
+          } else {
+            console.log('    ⚠️ No approved submission found');
+            if (milestone.submissions && milestone.submissions.length > 0) {
+              console.log('    - Available submissions:', milestone.submissions.map(s => ({
+                id: s.id,
+                status: s.status,
+                milestoneId: s.milestoneId
+              })));
+            } else {
+              console.log('    - No submissions found for this milestone');
+            }
+          }
+        });
+      }
+      
+      if (phases && phases.length > 0) {
+        console.log('\n📋 PROCESSED PHASES DEBUG:');
+        phases.forEach((phase, idx) => {
+          console.log(`\n  Phase ${idx + 1}: "${phase.title || phase.name}"`);
+          console.log('    - Description:', phase.description);
+          console.log('    - Planned Budget:', phase.plannedBudget);
+          console.log('    - Breakdown Description:', phase.breakdownDescription);
+          console.log('    - Start Date:', phase.startDate);
+          console.log('    - Target Completion Date:', phase.targetCompletionDate);
+          console.log('    - Submission Date:', phase.submissionDate);
+          console.log('    - Actual Phase Completion Date:', phase.actualPhaseCompletionDate);
+          console.log('    - Timeline Activities:', phase.timelineActivities);
+          console.log('    - Used Budget:', phase.usedBudget);
+          console.log('    - Remaining Budget:', phase.remainingBudget);
+          console.log('    - Budget Breakdown & Allocation:', phase.budgetBreakdownAllocation);
+          console.log('    - Physical Progress Description:', phase.physicalProgressDescription);
+          console.log('    - Submitted By:', phase.submittedBy);
+          console.log('    - Remarks and Recommendation:', phase.remarksAndRecommendation);
+          console.log('    - Photo Proof:', phase.photoProof);
+          console.log('    - Video Proof:', phase.videoProof);
+          console.log('    - Document Proof:', phase.documentProof);
+        });
+      }
+      
       console.log('\n✅ ========== END DEBUG INFO ==========');
       return {
         displayProject,
         eiuPartner,
         phases,
+        milestones: displayProject?.milestones || [],
         fundingSource: {
           raw: displayProject?.fundingSource,
           formatted: formatFundingSource(displayProject?.fundingSource)
@@ -682,7 +910,28 @@ export default function ProjectLedgerCenter({
           physicalDescription: displayProject?.physicalDescription,
           requiredDocumentation: displayProject?.requiredDocumentation,
           final: displayProject?.physicalProgressRequirements || displayProject?.generalDescription || displayProject?.physicalDescription || displayProject?.requiredDocumentation || 'N/A'
-        }
+        },
+        phaseDetails: phases.map((phase, idx) => ({
+          index: idx + 1,
+          title: phase.title || phase.name,
+          description: phase.description,
+          plannedBudget: phase.plannedBudget,
+          breakdownDescription: phase.breakdownDescription,
+          startDate: phase.startDate,
+          targetCompletionDate: phase.targetCompletionDate,
+          submissionDate: phase.submissionDate,
+          actualPhaseCompletionDate: phase.actualPhaseCompletionDate,
+          timelineActivities: phase.timelineActivities,
+          usedBudget: phase.usedBudget,
+          remainingBudget: phase.remainingBudget,
+          budgetBreakdownAllocation: phase.budgetBreakdownAllocation,
+          physicalProgressDescription: phase.physicalProgressDescription,
+          submittedBy: phase.submittedBy,
+          remarksAndRecommendation: phase.remarksAndRecommendation,
+          photoProof: phase.photoProof,
+          videoProof: phase.videoProof,
+          documentProof: phase.documentProof
+        }))
       };
     };
   }
