@@ -214,7 +214,13 @@ export default function ProjectLedgerCenter({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [tableView, setTableView] = useState('vertical'); // 'vertical' or 'horizontal'
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'dashboard'
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'dashboard' or 'compare'
+  
+  // Project Comparison State
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [selectedProjectsForComparison, setSelectedProjectsForComparison] = useState([]);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [comparisonSearchQuery, setComparisonSearchQuery] = useState('');
   
   // Advanced Filtering State
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -1051,6 +1057,136 @@ export default function ProjectLedgerCenter({
     const categories = Object.keys(dashboardStats.budgetByCategory);
     const categoryIndex = categories.indexOf(category);
     return categoryColors[categoryIndex % categoryColors.length];
+  };
+
+  // ==================== PROJECT COMPARISON FUNCTIONS ====================
+  
+  // Calculate comparison metrics
+  const calculateComparisonMetrics = (projects) => {
+    if (projects.length < 2) return null;
+
+    const metrics = {
+      averageBudget: 0,
+      averageProgress: 0,
+      averageDaysToComplete: 0,
+      totalBudget: 0,
+      totalProgress: 0,
+      budgetVariances: [],
+      progressVariances: [],
+      timelineVariances: []
+    };
+
+    let totalBudget = 0;
+    let totalProgress = 0;
+    let totalDays = 0;
+    const validProjects = projects.filter(p => p);
+
+    validProjects.forEach(project => {
+      const budget = parseFloat(project.totalBudget || 0);
+      const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      
+      totalBudget += budget;
+      totalProgress += progress;
+
+      // Calculate days to complete
+      if (project.startDate && project.targetCompletionDate) {
+        const start = new Date(project.startDate);
+        const end = new Date(project.targetCompletionDate);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        totalDays += days;
+      }
+    });
+
+    metrics.averageBudget = validProjects.length > 0 ? totalBudget / validProjects.length : 0;
+    metrics.averageProgress = validProjects.length > 0 ? totalProgress / validProjects.length : 0;
+    metrics.averageDaysToComplete = validProjects.length > 0 ? totalDays / validProjects.length : 0;
+    metrics.totalBudget = totalBudget;
+    metrics.totalProgress = totalProgress;
+
+    // Calculate variances
+    validProjects.forEach(project => {
+      const budget = parseFloat(project.totalBudget || 0);
+      const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      
+      const budgetVariance = metrics.averageBudget > 0 
+        ? ((budget - metrics.averageBudget) / metrics.averageBudget) * 100 
+        : 0;
+      
+      const progressVariance = metrics.averageProgress > 0
+        ? progress - metrics.averageProgress
+        : 0;
+
+      metrics.budgetVariances.push({
+        projectId: project.id,
+        variance: budgetVariance,
+        isPositive: budgetVariance > 0
+      });
+
+      metrics.progressVariances.push({
+        projectId: project.id,
+        variance: progressVariance,
+        isPositive: progressVariance > 0
+      });
+
+      // Timeline variance
+      if (project.startDate && project.targetCompletionDate) {
+        const start = new Date(project.startDate);
+        const end = new Date(project.targetCompletionDate);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        const timelineVariance = metrics.averageDaysToComplete > 0
+          ? days - metrics.averageDaysToComplete
+          : 0;
+
+        metrics.timelineVariances.push({
+          projectId: project.id,
+          variance: timelineVariance,
+          isPositive: timelineVariance < 0 // Negative is better (shorter timeline)
+        });
+      }
+    });
+
+    return metrics;
+  };
+
+  // Get variance color
+  const getVarianceColor = (variance, isPositive, isTimeline = false) => {
+    if (isTimeline) {
+      // For timeline, negative variance (shorter) is better
+      return variance < 0 ? '#10B981' : variance > 0 ? '#EF4444' : '#6B7280';
+    }
+    // For budget/progress, depends on context
+    return isPositive ? '#10B981' : variance < 0 ? '#EF4444' : '#6B7280';
+  };
+
+  // Toggle project selection for comparison
+  const toggleProjectForComparison = (projectId) => {
+    if (selectedProjectsForComparison.includes(projectId)) {
+      setSelectedProjectsForComparison(selectedProjectsForComparison.filter(id => id !== projectId));
+    } else {
+      if (selectedProjectsForComparison.length < 4) {
+        setSelectedProjectsForComparison([...selectedProjectsForComparison, projectId]);
+      } else {
+        alert('You can compare up to 4 projects at a time.');
+      }
+    }
+  };
+
+  // Start comparison
+  const startComparison = () => {
+    if (selectedProjectsForComparison.length < 2) {
+      alert('Please select at least 2 projects to compare.');
+      return;
+    }
+    setComparisonMode(true);
+    setShowComparisonModal(false);
+    setViewMode('compare');
+  };
+
+  // Exit comparison mode
+  const exitComparison = () => {
+    setComparisonMode(false);
+    setSelectedProjectsForComparison([]);
+    setViewMode('table');
   };
 
   // ==================== EXPORT & PRINT FUNCTIONS ====================
@@ -2829,6 +2965,120 @@ export default function ProjectLedgerCenter({
               </div>
             )}
 
+            {/* Project Comparison Selection Modal */}
+            {showComparisonModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 no-print">
+                <div className="bg-white rounded-xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">Compare Projects</h3>
+                    <button
+                      onClick={() => {
+                        setShowComparisonModal(false);
+                        setComparisonSearchQuery('');
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Select 2-4 projects to compare side-by-side. ({selectedProjectsForComparison.length}/4 selected)
+                  </p>
+                  
+                  {/* Search in Modal */}
+                  <input
+                    type="text"
+                    placeholder="Search projects..."
+                    value={comparisonSearchQuery}
+                    onChange={(e) => setComparisonSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                  />
+
+                  {/* Project List */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 max-h-96 overflow-y-auto">
+                    {filteredProjects
+                      .filter(project => 
+                        !comparisonSearchQuery || 
+                        project.name?.toLowerCase().includes(comparisonSearchQuery.toLowerCase()) ||
+                        project.projectCode?.toLowerCase().includes(comparisonSearchQuery.toLowerCase())
+                      )
+                      .map(project => {
+                        const isSelected = selectedProjectsForComparison.includes(project.id);
+                        return (
+                          <div
+                            key={project.id}
+                            onClick={() => toggleProjectForComparison(project.id)}
+                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-800 mb-1">{project.name}</h4>
+                                <p className="text-sm text-gray-600 mb-2">Code: {project.projectCode || 'N/A'}</p>
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                    project.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {project.status || 'N/A'}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {formatCurrency(project.totalBudget || 0)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                isSelected
+                                  ? 'border-blue-500 bg-blue-500'
+                                  : 'border-gray-300'
+                              }`}>
+                                {isSelected && (
+                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => {
+                        setShowComparisonModal(false);
+                        setComparisonSearchQuery('');
+                        setSelectedProjectsForComparison([]);
+                      }}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={startComparison}
+                      disabled={selectedProjectsForComparison.length < 2}
+                      className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                        selectedProjectsForComparison.length < 2
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : `bg-gradient-to-r ${colors.gradient} text-white hover:shadow-lg`
+                      }`}
+                    >
+                      Compare {selectedProjectsForComparison.length} Project{selectedProjectsForComparison.length !== 1 ? 's' : ''}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Column Settings Panel */}
             {showColumnSettings && (
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg">
@@ -2892,12 +3142,15 @@ export default function ProjectLedgerCenter({
             {/* View Mode Toggle (Table/Dashboard) */}
             <div className="flex justify-between items-center gap-3 mb-4 flex-wrap no-print">
               <div className="flex gap-3 items-center">
-                {/* Dashboard/Table Toggle */}
+                {/* Dashboard/Table/Compare Toggle */}
                 <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
                   <button
-                    onClick={() => setViewMode('table')}
+                    onClick={() => {
+                      setViewMode('table');
+                      setComparisonMode(false);
+                    }}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                      viewMode === 'table'
+                      viewMode === 'table' && !comparisonMode
                         ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
                         : 'bg-transparent text-gray-700 hover:bg-gray-200'
                     }`}
@@ -2910,7 +3163,10 @@ export default function ProjectLedgerCenter({
                     </div>
                   </button>
                   <button
-                    onClick={() => setViewMode('dashboard')}
+                    onClick={() => {
+                      setViewMode('dashboard');
+                      setComparisonMode(false);
+                    }}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
                       viewMode === 'dashboard'
                         ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
@@ -2922,6 +3178,21 @@ export default function ProjectLedgerCenter({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                       </svg>
                       Dashboard
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setShowComparisonModal(true)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                      comparisonMode
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg`
+                        : 'bg-transparent text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      Compare Projects
                     </div>
                   </button>
                 </div>
@@ -3525,8 +3796,393 @@ export default function ProjectLedgerCenter({
               </div>
             )}
 
+            {/* Project Comparison View */}
+            {comparisonMode && viewMode === 'compare' && selectedProjectsForComparison.length >= 2 && (
+              <div className="space-y-6">
+                {/* Comparison Header */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800">Project Comparison</h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Comparing {selectedProjectsForComparison.length} projects side-by-side
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          // Export comparison to PDF (placeholder - can be enhanced)
+                          alert('Export to PDF functionality will be implemented');
+                        }}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-medium flex items-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Export PDF
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Export comparison to Excel (placeholder - can be enhanced)
+                          alert('Export to Excel functionality will be implemented');
+                        }}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-medium flex items-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Export Excel
+                      </button>
+                      <button
+                        onClick={exitComparison}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                      >
+                        Exit Comparison
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comparison Metrics Summary */}
+                {(() => {
+                  const comparisonProjects = filteredProjects.filter(p => 
+                    selectedProjectsForComparison.includes(p.id)
+                  );
+                  const metrics = calculateComparisonMetrics(comparisonProjects);
+                  
+                  if (!metrics) return null;
+
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-600 mb-1">Average Budget</p>
+                        <p className="text-2xl font-bold text-gray-800">{formatCurrency(metrics.averageBudget)}</p>
+                      </div>
+                      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-600 mb-1">Average Progress</p>
+                        <p className="text-2xl font-bold text-gray-800">{metrics.averageProgress.toFixed(1)}%</p>
+                      </div>
+                      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-600 mb-1">Total Budget</p>
+                        <p className="text-2xl font-bold text-gray-800">{formatCurrency(metrics.totalBudget)}</p>
+                      </div>
+                      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-600 mb-1">Average Timeline</p>
+                        <p className="text-2xl font-bold text-gray-800">{Math.round(metrics.averageDaysToComplete)} days</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Comparison Table */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className={`bg-gradient-to-r ${colors.headerBg} text-white`}>
+                          <th className="px-6 py-4 text-left text-sm font-bold border-r border-white/20">Metric</th>
+                          {selectedProjectsForComparison.map(projectId => {
+                            const project = filteredProjects.find(p => p.id === projectId);
+                            return project ? (
+                              <th key={projectId} className="px-6 py-4 text-left text-sm font-bold border-r border-white/20 min-w-[250px]">
+                                <div>
+                                  <p className="font-bold">{project.name}</p>
+                                  <p className="text-xs font-normal opacity-90">{project.projectCode || 'N/A'}</p>
+                                </div>
+                              </th>
+                            ) : null;
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {(() => {
+                          const comparisonProjects = filteredProjects.filter(p => 
+                            selectedProjectsForComparison.includes(p.id)
+                          );
+                          const metrics = calculateComparisonMetrics(comparisonProjects);
+                          
+                          if (!metrics) return null;
+
+                          return (
+                            <>
+                              {/* Basic Information */}
+                              <tr className="bg-gray-50">
+                                <td colSpan={selectedProjectsForComparison.length + 1} className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                                  BASIC INFORMATION
+                                </td>
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Status</td>
+                                {comparisonProjects.map(project => (
+                                  <td key={project.id} className="px-6 py-4">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                      project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                      project.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                      project.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {project.status || 'N/A'}
+                                    </span>
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Priority</td>
+                                {comparisonProjects.map(project => (
+                                  <td key={project.id} className="px-6 py-4">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                                      project.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                      project.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-green-100 text-green-800'
+                                    }`}>
+                                      {project.priority || 'N/A'}
+                                    </span>
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Category</td>
+                                {comparisonProjects.map(project => (
+                                  <td key={project.id} className="px-6 py-4 text-gray-900 capitalize">
+                                    {project.category || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Location</td>
+                                {comparisonProjects.map(project => (
+                                  <td key={project.id} className="px-6 py-4 text-gray-900">
+                                    {project.location || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
+
+                              {/* Budget Information */}
+                              <tr className="bg-gray-50">
+                                <td colSpan={selectedProjectsForComparison.length + 1} className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                                  BUDGET INFORMATION
+                                </td>
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Total Budget</td>
+                                {comparisonProjects.map((project, index) => {
+                                  const budget = parseFloat(project.totalBudget || 0);
+                                  const variance = metrics.budgetVariances[index];
+                                  return (
+                                    <td key={project.id} className="px-6 py-4">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-gray-900 font-medium">{formatCurrency(budget)}</span>
+                                        {variance && Math.abs(variance.variance) > 1 && (
+                                          <span className={`text-xs px-2 py-1 rounded ${
+                                            variance.isPositive 
+                                              ? 'bg-green-100 text-green-800' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}>
+                                            {variance.isPositive ? '+' : ''}{variance.variance.toFixed(1)}%
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+
+                              {/* Timeline Information */}
+                              <tr className="bg-gray-50">
+                                <td colSpan={selectedProjectsForComparison.length + 1} className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                                  TIMELINE INFORMATION
+                                </td>
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Start Date</td>
+                                {comparisonProjects.map(project => (
+                                  <td key={project.id} className="px-6 py-4 text-gray-900">
+                                    {formatDate(project.startDate) || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Target Completion</td>
+                                {comparisonProjects.map(project => (
+                                  <td key={project.id} className="px-6 py-4 text-gray-900">
+                                    {formatDate(project.targetCompletionDate || project.endDate) || 'N/A'}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Timeline (Days)</td>
+                                {comparisonProjects.map((project, index) => {
+                                  let days = 'N/A';
+                                  if (project.startDate && project.targetCompletionDate) {
+                                    const start = new Date(project.startDate);
+                                    const end = new Date(project.targetCompletionDate);
+                                    days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                                  }
+                                  const variance = metrics.timelineVariances[index];
+                                  return (
+                                    <td key={project.id} className="px-6 py-4">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-gray-900 font-medium">{days} days</span>
+                                        {variance && Math.abs(variance.variance) > 0 && (
+                                          <span className={`text-xs px-2 py-1 rounded ${
+                                            variance.isPositive 
+                                              ? 'bg-green-100 text-green-800' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}>
+                                            {variance.isPositive ? '-' : '+'}{Math.abs(variance.variance).toFixed(0)} days
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+
+                              {/* Progress Information */}
+                              <tr className="bg-gray-50">
+                                <td colSpan={selectedProjectsForComparison.length + 1} className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
+                                  PROGRESS INFORMATION
+                                </td>
+                              </tr>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Overall Progress</td>
+                                {comparisonProjects.map((project, index) => {
+                                  const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+                                  const variance = metrics.progressVariances[index];
+                                  return (
+                                    <td key={project.id} className="px-6 py-4">
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-gray-900 font-medium">{progress.toFixed(1)}%</span>
+                                          {variance && Math.abs(variance.variance) > 1 && (
+                                            <span className={`text-xs px-2 py-1 rounded ${
+                                              variance.isPositive 
+                                                ? 'bg-green-100 text-green-800' 
+                                                : 'bg-red-100 text-red-800'
+                                            }`}>
+                                              {variance.isPositive ? '+' : ''}{variance.variance.toFixed(1)}%
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                          <div
+                                            className={`h-2 rounded-full transition-all ${
+                                              progress >= 80 ? 'bg-green-500' :
+                                              progress >= 50 ? 'bg-blue-500' :
+                                              progress >= 25 ? 'bg-yellow-500' :
+                                              'bg-red-500'
+                                            }`}
+                                            style={{ width: `${progress}%` }}
+                                          ></div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            </>
+                          );
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Comparison Charts */}
+                {(() => {
+                  const comparisonProjects = filteredProjects.filter(p => 
+                    selectedProjectsForComparison.includes(p.id)
+                  );
+                  const metrics = calculateComparisonMetrics(comparisonProjects);
+                  
+                  if (!metrics) return null;
+
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Budget Comparison Chart */}
+                      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Budget Comparison</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={comparisonProjects.map(project => ({
+                            name: project.name?.substring(0, 20) + (project.name?.length > 20 ? '...' : ''),
+                            budget: parseFloat(project.totalBudget || 0),
+                            formatted: formatCurrency(project.totalBudget || 0)
+                          }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                            <XAxis 
+                              dataKey="name" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={80}
+                              stroke="#6b7280"
+                              fontSize={12}
+                            />
+                            <YAxis 
+                              tickFormatter={(value) => `₱${(value / 1000000).toFixed(1)}M`}
+                              stroke="#6b7280"
+                              fontSize={12}
+                            />
+                            <Tooltip 
+                              formatter={(value, name, props) => [
+                                props.payload.formatted,
+                                'Budget'
+                              ]}
+                              contentStyle={{
+                                backgroundColor: '#fff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                padding: '8px 12px'
+                              }}
+                            />
+                            <Bar dataKey="budget" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Progress Comparison Chart */}
+                      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Progress Comparison</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={comparisonProjects.map(project => ({
+                            name: project.name?.substring(0, 20) + (project.name?.length > 20 ? '...' : ''),
+                            progress: parseFloat(project.overallProgress || project.progress?.overall || 0)
+                          }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                            <XAxis 
+                              dataKey="name" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={80}
+                              stroke="#6b7280"
+                              fontSize={12}
+                            />
+                            <YAxis 
+                              domain={[0, 100]}
+                              tickFormatter={(value) => `${value}%`}
+                              stroke="#6b7280"
+                              fontSize={12}
+                            />
+                            <Tooltip 
+                              formatter={(value) => [`${value.toFixed(1)}%`, 'Progress']}
+                              contentStyle={{
+                                backgroundColor: '#fff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                padding: '8px 12px'
+                              }}
+                            />
+                            <Bar dataKey="progress" fill="#10B981" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* Modern Ledger Table Container */}
-            {viewMode === 'table' && (
+            {viewMode === 'table' && !comparisonMode && (
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
               {/* Build Watch Header */}
               <div className={`bg-gradient-to-r ${colors.headerBg} px-8 py-6 text-white relative overflow-hidden`}>
