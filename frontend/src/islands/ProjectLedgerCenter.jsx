@@ -607,6 +607,711 @@ export default function ProjectLedgerCenter({
   } else {
     console.log(`✅ All ${projects.length} projects are accessible for user (${currentUserRole})`);
   }
+
+  // ==================== EXPORT & PRINT FUNCTIONS ====================
+  
+  // Load jsPDF library dynamically
+  const loadJsPDFLibrary = async () => {
+    if (window.jsPDF || window.jspdf) {
+      return true;
+    }
+
+    const scripts = [
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+
+    for (const src of scripts) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+          document.head.appendChild(script);
+        });
+        
+        if (window.jsPDF || window.jspdf) {
+          // Load autoTable plugin
+          const autoTableScript = document.createElement('script');
+          autoTableScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js';
+          document.head.appendChild(autoTableScript);
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Failed to load jsPDF from ${src}:`, e);
+      }
+    }
+    return false;
+  };
+
+  // Load ExcelJS library dynamically
+  const loadExcelJSLibrary = async () => {
+    if (window.ExcelJS) {
+      return true;
+    }
+
+    const scripts = [
+      'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
+      'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'
+    ];
+
+    for (const src of scripts) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+          document.head.appendChild(script);
+        });
+        
+        if (window.ExcelJS) {
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Failed to load ExcelJS from ${src}:`, e);
+      }
+    }
+    return false;
+  };
+
+  // Format currency for export
+  const formatCurrencyForExport = (amount) => {
+    if (!amount || amount === 0 || amount === '0' || amount === 'N/A') return '₱0.00';
+    const num = parseFloat(amount);
+    if (isNaN(num)) return '₱0.00';
+    return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // Format date for export
+  const formatDateForExport = (dateString) => {
+    if (!dateString || dateString === 'N/A') return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      });
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
+  // Export to PDF
+  const exportToPDF = async () => {
+    if (!displayProject) {
+      alert('No project data available to export.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const loaded = await loadJsPDFLibrary();
+      if (!loaded) {
+        alert('Failed to load PDF library. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      let jsPDF = window.jsPDF?.jsPDF || window.jsPDF || window.jspdf?.jsPDF || window.jspdf;
+      if (!jsPDF || typeof jsPDF !== 'function') {
+        alert('PDF library failed to initialize. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const doc = new jsPDF(tableView === 'horizontal' ? 'l' : 'p', 'mm', 'a4');
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      const userData = getCurrentUser();
+      const organizationName = userData?.implementingOfficeName || userData?.office || userData?.department || 'MUNICIPAL ENGINEERING OFFICE';
+
+      // Header
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, doc.internal.pageSize.getWidth(), 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont(undefined, 'bold');
+      doc.text('BUILD WATCH', 10, 15);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text('Project Monitoring & Evaluation System', 10, 22);
+      doc.text(`Generated on ${currentDate} at ${currentTime}`, doc.internal.pageSize.getWidth() - 10, 22, { align: 'right' });
+
+      let yPos = 40;
+
+      // Project Information Section
+      doc.setFillColor(240, 240, 240);
+      doc.rect(10, yPos, doc.internal.pageSize.getWidth() - 20, 8, 'F');
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('PROJECT LEDGER REPORT', 10, yPos + 5);
+      yPos += 15;
+
+      // Basic Project Information
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Basic Project Information', 10, yPos);
+      yPos += 7;
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+
+      const basicInfo = [
+        ['Project/Program Title:', displayProject.name || 'N/A'],
+        ['Project Code:', displayProject.projectCode || 'N/A'],
+        ['Implementing Office:', displayProject.implementingOfficeName || 'N/A'],
+        ['Category:', displayProject.category || 'N/A'],
+        ['Location/Barangay:', displayProject.location || 'N/A'],
+        ['Priority:', displayProject.priority || 'N/A'],
+        ['Funding Source:', formatFundingSource(displayProject.fundingSource)],
+        ['Created Date:', formatDateForExport(displayProject.createdDate)],
+        ['Project Description:', displayProject.description || 'N/A'],
+        ['Expected Outputs:', displayProject.expectedOutputs || 'N/A'],
+        ['Target Beneficiaries:', displayProject.targetBeneficiaries || 'N/A']
+      ];
+
+      basicInfo.forEach(([label, value]) => {
+        doc.setFont(undefined, 'bold');
+        doc.text(label, 10, yPos);
+        doc.setFont(undefined, 'normal');
+        const lines = doc.splitTextToSize(value || 'N/A', doc.internal.pageSize.getWidth() - 60);
+        doc.text(lines, 60, yPos);
+        yPos += lines.length * 5;
+        if (yPos > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage();
+          yPos = 20;
+        }
+      });
+
+      yPos += 5;
+
+      // EIU Partner Contractor
+      const eiuPartner = getEIUPartner(displayProject);
+      if (eiuPartner) {
+        doc.setFont(undefined, 'bold');
+        doc.text('EIU Partner Contractor', 10, yPos);
+        yPos += 7;
+        doc.setFont(undefined, 'normal');
+        
+        const eiuInfo = [
+          ['Company Name:', eiuPartner.displayFullName || 'N/A'],
+          ['Email/Username:', eiuPartner.displayEmail || 'N/A'],
+          ['Contact Number:', eiuPartner.displayContact || 'N/A'],
+          ['Group:', eiuPartner.displayGroup || 'N/A'],
+          ['Department:', eiuPartner.displayDepartment || 'N/A'],
+          ['Subrole:', eiuPartner.displaySubrole || 'N/A'],
+          ['Company:', eiuPartner.displayCompany || 'N/A']
+        ];
+
+        eiuInfo.forEach(([label, value]) => {
+          doc.setFont(undefined, 'bold');
+          doc.text(label, 10, yPos);
+          doc.setFont(undefined, 'normal');
+          doc.text(value || 'N/A', 60, yPos);
+          yPos += 5;
+          if (yPos > doc.internal.pageSize.getHeight() - 20) {
+            doc.addPage();
+            yPos = 20;
+          }
+        });
+        yPos += 5;
+      }
+
+      // Timeline Information
+      doc.setFont(undefined, 'bold');
+      doc.text('Timeline Information', 10, yPos);
+      yPos += 7;
+      doc.setFont(undefined, 'normal');
+      
+      const timelineInfo = [
+        ['Start Date:', formatDateForExport(displayProject.startDate)],
+        ['Target Completion Date:', formatDateForExport(displayProject.targetCompletionDate)],
+        ['Expected Days of Completion:', displayProject.expectedDaysOfCompletion || 'N/A'],
+        ['Actual Completion Date:', formatDateForExport(displayProject.completionDate)]
+      ];
+
+      timelineInfo.forEach(([label, value]) => {
+        doc.setFont(undefined, 'bold');
+        doc.text(label, 10, yPos);
+        doc.setFont(undefined, 'normal');
+        doc.text(value || 'N/A', 60, yPos);
+        yPos += 5;
+      });
+      yPos += 5;
+
+      // Budget Information
+      doc.setFont(undefined, 'bold');
+      doc.text('Budget Information', 10, yPos);
+      yPos += 7;
+      doc.setFont(undefined, 'normal');
+      
+      const budgetInfo = [
+        ['Total Budget Allocation:', formatCurrencyForExport(displayProject.totalBudget)],
+        ['Budget Description:', displayProject.budgetBreakdown || displayProject.budgetDescription || 'N/A']
+      ];
+
+      budgetInfo.forEach(([label, value]) => {
+        doc.setFont(undefined, 'bold');
+        doc.text(label, 10, yPos);
+        doc.setFont(undefined, 'normal');
+        const lines = doc.splitTextToSize(value || 'N/A', doc.internal.pageSize.getWidth() - 60);
+        doc.text(lines, 60, yPos);
+        yPos += lines.length * 5;
+        if (yPos > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage();
+          yPos = 20;
+        }
+      });
+      yPos += 5;
+
+      // Physical Accomplishment Information
+      const physicalAccomplishment = displayProject.physicalProgressRequirements || 
+                                     displayProject.generalDescription || 
+                                     displayProject.physicalDescription || 
+                                     'N/A';
+      doc.setFont(undefined, 'bold');
+      doc.text('Physical Accomplishment Information', 10, yPos);
+      yPos += 7;
+      doc.setFont(undefined, 'normal');
+      const physicalLines = doc.splitTextToSize(physicalAccomplishment, doc.internal.pageSize.getWidth() - 20);
+      doc.text(physicalLines, 10, yPos);
+      yPos += physicalLines.length * 5;
+      if (yPos > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        yPos = 20;
+      }
+      yPos += 10;
+
+      // Project Phases Update
+      const phases = getProjectPhases(displayProject);
+      if (phases && phases.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(12);
+        doc.text('PROJECT PHASES UPDATE', 10, yPos);
+        yPos += 10;
+
+        phases.forEach((phase, index) => {
+          if (yPos > doc.internal.pageSize.getHeight() - 40) {
+            doc.addPage();
+            yPos = 20;
+          }
+
+          doc.setFont(undefined, 'bold');
+          doc.setFontSize(11);
+          doc.text(`Phase ${index + 1}: ${phase.title || phase.name || 'N/A'}`, 10, yPos);
+          yPos += 7;
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(10);
+
+          const phaseData = [
+            ['Description:', phase.description || 'N/A'],
+            ['Planned Budget:', formatCurrencyForExport(phase.plannedBudget)],
+            ['Breakdown Description:', phase.breakdownDescription || 'N/A'],
+            ['Start Date:', formatDateForExport(phase.startDate)],
+            ['Target Completion Date:', formatDateForExport(phase.targetCompletionDate)],
+            ['Submission Date:', formatDateForExport(phase.submissionDate)],
+            ['Actual Phase Completion Date:', formatDateForExport(phase.actualPhaseCompletionDate)],
+            ['Timeline Activities & Deliverables:', phase.timelineActivities || 'N/A'],
+            ['Used Budget:', formatCurrencyForExport(phase.usedBudget)],
+            ['Remaining Budget:', formatCurrencyForExport(phase.remainingBudget)],
+            ['Budget Breakdown & Allocation:', phase.budgetBreakdownAllocation || 'N/A'],
+            ['Physical Progress Description:', phase.physicalProgressDescription || 'N/A'],
+            ['Submitted By:', phase.submittedBy || 'N/A'],
+            ['Remarks and Recommendation:', phase.remarksAndRecommendation || 'N/A']
+          ];
+
+          phaseData.forEach(([label, value]) => {
+            doc.setFont(undefined, 'bold');
+            doc.text(label, 15, yPos);
+            doc.setFont(undefined, 'normal');
+            const lines = doc.splitTextToSize(value || 'N/A', doc.internal.pageSize.getWidth() - 65);
+            doc.text(lines, 65, yPos);
+            yPos += lines.length * 5;
+            if (yPos > doc.internal.pageSize.getHeight() - 20) {
+              doc.addPage();
+              yPos = 20;
+            }
+          });
+
+          yPos += 5;
+        });
+      }
+
+      // Footer
+      const totalPages = doc.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Page ${i} of ${totalPages} - ${organizationName}`,
+          doc.internal.pageSize.getWidth() / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      }
+
+      const fileName = `Project-Ledger-${displayProject.projectCode || displayProject.id}-${now.toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      alert('Failed to export PDF. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  // Export to Excel
+  const exportToExcel = async () => {
+    if (!displayProject) {
+      alert('No project data available to export.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const loaded = await loadExcelJSLibrary();
+      if (!loaded) {
+        alert('Failed to load Excel library. Please try CSV format instead.');
+        setLoading(false);
+        return;
+      }
+
+      const ExcelJS = window.ExcelJS;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Project Ledger');
+
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      // Header row
+      worksheet.mergeCells('A1:D1');
+      worksheet.getCell('A1').value = 'BUILD WATCH - Project Monitoring & Evaluation System';
+      worksheet.getCell('A1').font = { bold: true, size: 14 };
+      worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+      worksheet.getRow(1).height = 25;
+
+      worksheet.mergeCells('A2:D2');
+      worksheet.getCell('A2').value = `Generated on ${currentDate} at ${currentTime}`;
+      worksheet.getCell('A2').font = { size: 10 };
+      worksheet.getCell('A2').alignment = { horizontal: 'center' };
+      worksheet.getRow(2).height = 20;
+
+      let row = 4;
+
+      // Basic Project Information
+      worksheet.getCell(`A${row}`).value = 'Basic Project Information';
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      row++;
+
+      const basicInfo = [
+        ['Project/Program Title:', displayProject.name || 'N/A'],
+        ['Project Code:', displayProject.projectCode || 'N/A'],
+        ['Implementing Office:', displayProject.implementingOfficeName || 'N/A'],
+        ['Category:', displayProject.category || 'N/A'],
+        ['Location/Barangay:', displayProject.location || 'N/A'],
+        ['Priority:', displayProject.priority || 'N/A'],
+        ['Funding Source:', formatFundingSource(displayProject.fundingSource)],
+        ['Created Date:', formatDateForExport(displayProject.createdDate)],
+        ['Project Description:', displayProject.description || 'N/A'],
+        ['Expected Outputs:', displayProject.expectedOutputs || 'N/A'],
+        ['Target Beneficiaries:', displayProject.targetBeneficiaries || 'N/A']
+      ];
+
+      basicInfo.forEach(([label, value]) => {
+        worksheet.getCell(`A${row}`).value = label;
+        worksheet.getCell(`A${row}`).font = { bold: true };
+        worksheet.getCell(`B${row}`).value = value || 'N/A';
+        row++;
+      });
+
+      row++;
+
+      // EIU Partner Contractor
+      const eiuPartner = getEIUPartner(displayProject);
+      if (eiuPartner) {
+        worksheet.getCell(`A${row}`).value = 'EIU Partner Contractor';
+        worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+        row++;
+
+        const eiuInfo = [
+          ['Company Name:', eiuPartner.displayFullName || 'N/A'],
+          ['Email/Username:', eiuPartner.displayEmail || 'N/A'],
+          ['Contact Number:', eiuPartner.displayContact || 'N/A'],
+          ['Group:', eiuPartner.displayGroup || 'N/A'],
+          ['Department:', eiuPartner.displayDepartment || 'N/A'],
+          ['Subrole:', eiuPartner.displaySubrole || 'N/A'],
+          ['Company:', eiuPartner.displayCompany || 'N/A']
+        ];
+
+        eiuInfo.forEach(([label, value]) => {
+          worksheet.getCell(`A${row}`).value = label;
+          worksheet.getCell(`A${row}`).font = { bold: true };
+          worksheet.getCell(`B${row}`).value = value || 'N/A';
+          row++;
+        });
+        row++;
+      }
+
+      // Timeline Information
+      worksheet.getCell(`A${row}`).value = 'Timeline Information';
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      row++;
+
+      const timelineInfo = [
+        ['Start Date:', formatDateForExport(displayProject.startDate)],
+        ['Target Completion Date:', formatDateForExport(displayProject.targetCompletionDate)],
+        ['Expected Days of Completion:', displayProject.expectedDaysOfCompletion || 'N/A'],
+        ['Actual Completion Date:', formatDateForExport(displayProject.completionDate)]
+      ];
+
+      timelineInfo.forEach(([label, value]) => {
+        worksheet.getCell(`A${row}`).value = label;
+        worksheet.getCell(`A${row}`).font = { bold: true };
+        worksheet.getCell(`B${row}`).value = value || 'N/A';
+        row++;
+      });
+      row++;
+
+      // Budget Information
+      worksheet.getCell(`A${row}`).value = 'Budget Information';
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      row++;
+
+      const budgetInfo = [
+        ['Total Budget Allocation:', formatCurrencyForExport(displayProject.totalBudget)],
+        ['Budget Description:', displayProject.budgetBreakdown || displayProject.budgetDescription || 'N/A']
+      ];
+
+      budgetInfo.forEach(([label, value]) => {
+        worksheet.getCell(`A${row}`).value = label;
+        worksheet.getCell(`A${row}`).font = { bold: true };
+        worksheet.getCell(`B${row}`).value = value || 'N/A';
+        row++;
+      });
+      row++;
+
+      // Physical Accomplishment Information
+      const physicalAccomplishment = displayProject.physicalProgressRequirements || 
+                                     displayProject.generalDescription || 
+                                     displayProject.physicalDescription || 
+                                     'N/A';
+      worksheet.getCell(`A${row}`).value = 'Physical Accomplishment Information';
+      worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+      row++;
+      worksheet.getCell(`A${row}`).value = physicalAccomplishment;
+      worksheet.getCell(`A${row}`).alignment = { wrapText: true };
+      row += 2;
+
+      // Project Phases Update
+      const phases = getProjectPhases(displayProject);
+      if (phases && phases.length > 0) {
+        worksheet.getCell(`A${row}`).value = 'PROJECT PHASES UPDATE';
+        worksheet.getCell(`A${row}`).font = { bold: true, size: 12 };
+        row++;
+
+        phases.forEach((phase, index) => {
+          worksheet.getCell(`A${row}`).value = `Phase ${index + 1}: ${phase.title || phase.name || 'N/A'}`;
+          worksheet.getCell(`A${row}`).font = { bold: true, size: 11 };
+          row++;
+
+          const phaseData = [
+            ['Description:', phase.description || 'N/A'],
+            ['Planned Budget:', formatCurrencyForExport(phase.plannedBudget)],
+            ['Breakdown Description:', phase.breakdownDescription || 'N/A'],
+            ['Start Date:', formatDateForExport(phase.startDate)],
+            ['Target Completion Date:', formatDateForExport(phase.targetCompletionDate)],
+            ['Submission Date:', formatDateForExport(phase.submissionDate)],
+            ['Actual Phase Completion Date:', formatDateForExport(phase.actualPhaseCompletionDate)],
+            ['Timeline Activities & Deliverables:', phase.timelineActivities || 'N/A'],
+            ['Used Budget:', formatCurrencyForExport(phase.usedBudget)],
+            ['Remaining Budget:', formatCurrencyForExport(phase.remainingBudget)],
+            ['Budget Breakdown & Allocation:', phase.budgetBreakdownAllocation || 'N/A'],
+            ['Physical Progress Description:', phase.physicalProgressDescription || 'N/A'],
+            ['Submitted By:', phase.submittedBy || 'N/A'],
+            ['Remarks and Recommendation:', phase.remarksAndRecommendation || 'N/A']
+          ];
+
+          phaseData.forEach(([label, value]) => {
+            worksheet.getCell(`A${row}`).value = label;
+            worksheet.getCell(`A${row}`).font = { bold: true };
+            worksheet.getCell(`B${row}`).value = value || 'N/A';
+            worksheet.getCell(`B${row}`).alignment = { wrapText: true };
+            row++;
+          });
+          row++;
+        });
+      }
+
+      // Set column widths
+      worksheet.getColumn('A').width = 30;
+      worksheet.getColumn('B').width = 50;
+      worksheet.getColumn('C').width = 20;
+      worksheet.getColumn('D').width = 20;
+
+      const fileName = `Project-Ledger-${displayProject.projectCode || displayProject.id}-${now.toISOString().split('T')[0]}.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('Failed to export Excel. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    if (!displayProject) {
+      alert('No project data available to export.');
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      const csvLines = [];
+      csvLines.push('BUILD WATCH - Project Monitoring & Evaluation System');
+      csvLines.push(`Generated on ${currentDate} at ${currentTime}`);
+      csvLines.push('');
+      csvLines.push('PROJECT LEDGER REPORT');
+      csvLines.push('');
+
+      // Basic Project Information
+      csvLines.push('Basic Project Information');
+      csvLines.push(`"Project/Program Title:","${(displayProject.name || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Project Code:","${(displayProject.projectCode || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Implementing Office:","${(displayProject.implementingOfficeName || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Category:","${(displayProject.category || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Location/Barangay:","${(displayProject.location || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Priority:","${(displayProject.priority || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Funding Source:","${formatFundingSource(displayProject.fundingSource).replace(/"/g, '""')}"`);
+      csvLines.push(`"Created Date:","${formatDateForExport(displayProject.createdDate)}"`);
+      csvLines.push(`"Project Description:","${(displayProject.description || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Expected Outputs:","${(displayProject.expectedOutputs || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Target Beneficiaries:","${(displayProject.targetBeneficiaries || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push('');
+
+      // EIU Partner Contractor
+      const eiuPartner = getEIUPartner(displayProject);
+      if (eiuPartner) {
+        csvLines.push('EIU Partner Contractor');
+        csvLines.push(`"Company Name:","${(eiuPartner.displayFullName || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Email/Username:","${(eiuPartner.displayEmail || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Contact Number:","${(eiuPartner.displayContact || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Group:","${(eiuPartner.displayGroup || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Department:","${(eiuPartner.displayDepartment || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Subrole:","${(eiuPartner.displaySubrole || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push(`"Company:","${(eiuPartner.displayCompany || 'N/A').replace(/"/g, '""')}"`);
+        csvLines.push('');
+      }
+
+      // Timeline Information
+      csvLines.push('Timeline Information');
+      csvLines.push(`"Start Date:","${formatDateForExport(displayProject.startDate)}"`);
+      csvLines.push(`"Target Completion Date:","${formatDateForExport(displayProject.targetCompletionDate)}"`);
+      csvLines.push(`"Expected Days of Completion:","${(displayProject.expectedDaysOfCompletion || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push(`"Actual Completion Date:","${formatDateForExport(displayProject.completionDate)}"`);
+      csvLines.push('');
+
+      // Budget Information
+      csvLines.push('Budget Information');
+      csvLines.push(`"Total Budget Allocation:","${formatCurrencyForExport(displayProject.totalBudget)}"`);
+      csvLines.push(`"Budget Description:","${(displayProject.budgetBreakdown || displayProject.budgetDescription || 'N/A').replace(/"/g, '""')}"`);
+      csvLines.push('');
+
+      // Physical Accomplishment Information
+      const physicalAccomplishment = displayProject.physicalProgressRequirements || 
+                                     displayProject.generalDescription || 
+                                     displayProject.physicalDescription || 
+                                     'N/A';
+      csvLines.push('Physical Accomplishment Information');
+      csvLines.push(`"${physicalAccomplishment.replace(/"/g, '""')}"`);
+      csvLines.push('');
+
+      // Project Phases Update
+      const phases = getProjectPhases(displayProject);
+      if (phases && phases.length > 0) {
+        csvLines.push('PROJECT PHASES UPDATE');
+        phases.forEach((phase, index) => {
+          csvLines.push(`"Phase ${index + 1}: ${(phase.title || phase.name || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Description:","${(phase.description || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Planned Budget:","${formatCurrencyForExport(phase.plannedBudget)}"`);
+          csvLines.push(`"Breakdown Description:","${(phase.breakdownDescription || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Start Date:","${formatDateForExport(phase.startDate)}"`);
+          csvLines.push(`"Target Completion Date:","${formatDateForExport(phase.targetCompletionDate)}"`);
+          csvLines.push(`"Submission Date:","${formatDateForExport(phase.submissionDate)}"`);
+          csvLines.push(`"Actual Phase Completion Date:","${formatDateForExport(phase.actualPhaseCompletionDate)}"`);
+          csvLines.push(`"Timeline Activities & Deliverables:","${(phase.timelineActivities || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Used Budget:","${formatCurrencyForExport(phase.usedBudget)}"`);
+          csvLines.push(`"Remaining Budget:","${formatCurrencyForExport(phase.remainingBudget)}"`);
+          csvLines.push(`"Budget Breakdown & Allocation:","${(phase.budgetBreakdownAllocation || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Physical Progress Description:","${(phase.physicalProgressDescription || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Submitted By:","${(phase.submittedBy || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push(`"Remarks and Recommendation:","${(phase.remarksAndRecommendation || 'N/A').replace(/"/g, '""')}"`);
+          csvLines.push('');
+        });
+      }
+
+      const csvContent = csvLines.join('\n');
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const fileName = `Project-Ledger-${displayProject.projectCode || displayProject.id}-${now.toISOString().split('T')[0]}.csv`;
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting to CSV:', error);
+      alert('Failed to export CSV. Please try again.');
+    }
+  };
+
+  // Print function
+  const handlePrint = () => {
+    window.print();
+  };
   if (projects.length !== filteredProjects.length) {
     console.log(`🔐 Filtered ${projects.length} projects down to ${filteredProjects.length} based on user access (${currentUserRole})`);
   } else {
@@ -1237,8 +1942,46 @@ export default function ProjectLedgerCenter({
 
   return (
     <div className="w-full">
+      {/* Print Styles */}
+      <style jsx>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-content, .print-content * {
+            visibility: visible;
+          }
+          .print-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .print-content table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 10px;
+          }
+          .print-content th,
+          .print-content td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: left;
+          }
+          .print-content th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+          }
+          @page {
+            margin: 1cm;
+          }
+        }
+      `}</style>
       {/* Page Header */}
-      <div className={`bg-white border-b ${colors.border} px-8 py-6 mb-0 -mx-8 -mt-8`}>
+      <div className={`bg-white border-b ${colors.border} px-8 py-6 mb-0 -mx-8 -mt-8 no-print`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
@@ -1272,7 +2015,7 @@ export default function ProjectLedgerCenter({
       <main className="px-8 py-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
         {/* Search and Filter Section */}
         {!projectId && (
-          <div className="mb-6 space-y-4">
+          <div className="mb-6 space-y-4 no-print">
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[300px]">
                 <input
@@ -1333,49 +2076,110 @@ export default function ProjectLedgerCenter({
 
         {/* Project Ledger Table */}
         {displayProject && (
-          <div className="space-y-6">
+          <div className="space-y-6 print-content">
             {/* Back Button */}
             {!projectId && (
               <button
                 onClick={() => setSelectedProject(null)}
-                className="mb-4 px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-semibold shadow-sm"
+                className="mb-4 px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-semibold shadow-sm no-print"
               >
                 ← Back to Projects
               </button>
             )}
 
-            {/* View Toggle Buttons */}
-            <div className="flex justify-end gap-3 mb-4">
-              <button
-                onClick={() => setTableView('vertical')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
-                  tableView === 'vertical'
-                    ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
+            {/* View Toggle and Export Buttons */}
+            <div className="flex justify-between items-center gap-3 mb-4 flex-wrap no-print">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setTableView('vertical')}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                    tableView === 'vertical'
+                      ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    Vertical Table View
+                  </div>
+                </button>
+                <button
+                  onClick={() => setTableView('horizontal')}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                    tableView === 'horizontal'
+                      ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2H19a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                    </svg>
+                    Horizontal Table View
+                  </div>
+                </button>
+              </div>
+              
+              {/* Export & Print Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={exportToPDF}
+                  disabled={loading}
+                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                    loading
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : `bg-gradient-to-r ${colors.gradient} text-white hover:shadow-xl hover:scale-105`
+                  }`}
+                  title="Export to PDF"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                   </svg>
-                  Vertical Table View
-                </div>
-              </button>
-              <button
-                onClick={() => setTableView('horizontal')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
-                  tableView === 'horizontal'
-                    ? `bg-gradient-to-r ${colors.gradient} text-white shadow-xl`
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
+                  PDF
+                </button>
+                <button
+                  onClick={exportToExcel}
+                  disabled={loading}
+                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                    loading
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-xl hover:scale-105'
+                  }`}
+                  title="Export to Excel"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2H19a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
-                  Horizontal Table View
-                </div>
-              </button>
+                  Excel
+                </button>
+                <button
+                  onClick={exportToCSV}
+                  disabled={loading}
+                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 ${
+                    loading
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-xl hover:scale-105'
+                  }`}
+                  title="Export to CSV"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  CSV
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg flex items-center gap-2 bg-gray-700 text-white hover:bg-gray-800 hover:shadow-xl hover:scale-105 no-print"
+                  title="Print"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                  </svg>
+                  Print
+                </button>
+              </div>
             </div>
 
             {/* Modern Ledger Table Container */}
