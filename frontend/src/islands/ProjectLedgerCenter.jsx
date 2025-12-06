@@ -1525,7 +1525,7 @@ export default function ProjectLedgerCenter({
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Physical Progress Description</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.update?.physicalDescription || phase.update?.description || 'N/A'}</td>
+                              <td className="px-6 py-4 text-gray-900 whitespace-pre-wrap">{phase.physicalProgressDescription || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Submitted By</td>
@@ -1533,7 +1533,7 @@ export default function ProjectLedgerCenter({
                             </tr>
                             <tr className="border-b-2 border-gray-300 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Remarks and Recommendation</td>
-                              <td className="px-6 py-4 text-gray-900">{phase.update?.remarks || phase.update?.recommendation || 'N/A'}</td>
+                              <td className="px-6 py-4 text-gray-900 whitespace-pre-wrap">{phase.remarksAndRecommendation || 'N/A'}</td>
                             </tr>
                           </React.Fragment>
                         ))}
