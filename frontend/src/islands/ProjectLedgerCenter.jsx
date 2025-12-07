@@ -1411,6 +1411,115 @@ export default function ProjectLedgerCenter({
     return false;
   };
 
+  // Load html2canvas library dynamically
+  const loadHtml2CanvasLibrary = async () => {
+    if (window.html2canvas) {
+      return true;
+    }
+
+    const scripts = [
+      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+      'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+      'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+    ];
+
+    for (const src of scripts) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+          document.head.appendChild(script);
+        });
+        
+        if (window.html2canvas) {
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Failed to load html2canvas from ${src}:`, e);
+      }
+    }
+    return false;
+  };
+
+  // Export timeline as PNG image
+  const exportTimeline = async () => {
+    try {
+      setLoading(true);
+      const timelineElement = document.querySelector('[data-timeline-chart]');
+      
+      if (!timelineElement) {
+        alert('Timeline chart not found. Please ensure the timeline is visible.');
+        setLoading(false);
+        return;
+      }
+
+      // Load html2canvas library
+      const loaded = await loadHtml2CanvasLibrary();
+      if (!loaded) {
+        alert('Failed to load export library. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const html2canvas = window.html2canvas;
+      if (!html2canvas || typeof html2canvas !== 'function') {
+        alert('Export library failed to initialize. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Scroll to top of timeline to ensure full capture
+      timelineElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+      
+      // Wait a moment for scroll to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Capture the timeline element
+      const canvas = await html2canvas(timelineElement, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: timelineElement.scrollWidth,
+        windowHeight: timelineElement.scrollHeight,
+        width: timelineElement.scrollWidth,
+        height: timelineElement.scrollHeight
+      });
+
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          alert('Failed to generate image. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const now = new Date();
+        const fileName = `Project-Timeline-${now.toISOString().split('T')[0]}.png`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        setLoading(false);
+      }, 'image/png', 1.0);
+    } catch (error) {
+      console.error('Error exporting timeline:', error);
+      alert('Failed to export timeline. Please try again.');
+      setLoading(false);
+    }
+  };
+
   // Format currency for export
   const formatCurrencyForExport = (amount) => {
     if (!amount || amount === 0 || amount === '0' || amount === 'N/A') return '₱0.00';
@@ -5461,22 +5570,29 @@ export default function ProjectLedgerCenter({
                         Reset
                       </button>
                       <button
-                        onClick={() => {
-                          // Export timeline as image
-                          const timelineElement = document.querySelector('[data-timeline-chart]');
-                          if (timelineElement) {
-                            // Use html2canvas or similar library to export
-                            alert('Timeline export functionality will be implemented. For now, you can use browser print/screenshot.');
-                          } else {
-                            alert('Timeline export functionality will be implemented.');
-                          }
-                        }}
-                        className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center gap-2`}
+                        onClick={exportTimeline}
+                        disabled={loading}
+                        className={`px-4 py-2 bg-gradient-to-r ${colors.gradient} text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center gap-2 ${
+                          loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                        }`}
+                        title="Export Timeline as PNG"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                        Export
+                        {loading ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Exporting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            <span>Export</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
