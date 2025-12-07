@@ -1842,9 +1842,19 @@ export default function ProjectLedgerCenter({
       ];
 
       basicInfo.forEach(([label, value]) => {
-        worksheet.getCell(`A${row}`).value = label;
-        worksheet.getCell(`A${row}`).font = { bold: true };
-        worksheet.getCell(`B${row}`).value = value || 'N/A';
+        const cellA = worksheet.getCell(`A${row}`);
+        const cellB = worksheet.getCell(`B${row}`);
+        cellA.value = label;
+        cellA.font = { bold: true };
+        cellB.value = value || 'N/A';
+        cellB.alignment = { wrapText: true, vertical: 'top' };
+        
+        // Calculate row height based on content length (approximate: 1 line = 15px, max 10 lines)
+        const valueStr = safeString(value, 'N/A');
+        const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+        const rowObj = worksheet.getRow(row);
+        rowObj.height = Math.max(20, estimatedLines * 15);
+        
         row++;
       });
 
@@ -1874,10 +1884,19 @@ export default function ProjectLedgerCenter({
         ];
 
         eiuInfo.forEach(([label, value]) => {
-          worksheet.getCell(`A${row}`).value = label;
-          worksheet.getCell(`A${row}`).font = { bold: true };
-          worksheet.getCell(`B${row}`).value = safeString(value, 'N/A');
-          worksheet.getCell(`B${row}`).alignment = { wrapText: true };
+          const cellA = worksheet.getCell(`A${row}`);
+          const cellB = worksheet.getCell(`B${row}`);
+          cellA.value = label;
+          cellA.font = { bold: true };
+          cellB.value = safeString(value, 'N/A');
+          cellB.alignment = { wrapText: true, vertical: 'top' };
+          
+          // Calculate row height based on content length
+          const valueStr = safeString(value, 'N/A');
+          const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+          const rowObj = worksheet.getRow(row);
+          rowObj.height = Math.max(20, estimatedLines * 15);
+          
           row++;
         });
         row++;
@@ -1902,9 +1921,18 @@ export default function ProjectLedgerCenter({
       ];
 
       timelineInfo.forEach(([label, value]) => {
-        worksheet.getCell(`A${row}`).value = label;
-        worksheet.getCell(`A${row}`).font = { bold: true };
-        worksheet.getCell(`B${row}`).value = value || 'N/A';
+        const cellA = worksheet.getCell(`A${row}`);
+        const cellB = worksheet.getCell(`B${row}`);
+        cellA.value = label;
+        cellA.font = { bold: true };
+        cellB.value = value || 'N/A';
+        cellB.alignment = { wrapText: true, vertical: 'top' };
+        
+        const valueStr = safeString(value, 'N/A');
+        const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+        const rowObj = worksheet.getRow(row);
+        rowObj.height = Math.max(20, estimatedLines * 15);
+        
         row++;
       });
       row++;
@@ -1926,9 +1954,18 @@ export default function ProjectLedgerCenter({
       ];
 
       budgetInfo.forEach(([label, value]) => {
-        worksheet.getCell(`A${row}`).value = label;
-        worksheet.getCell(`A${row}`).font = { bold: true };
-        worksheet.getCell(`B${row}`).value = value || 'N/A';
+        const cellA = worksheet.getCell(`A${row}`);
+        const cellB = worksheet.getCell(`B${row}`);
+        cellA.value = label;
+        cellA.font = { bold: true };
+        cellB.value = value || 'N/A';
+        cellB.alignment = { wrapText: true, vertical: 'top' };
+        
+        const valueStr = safeString(value, 'N/A');
+        const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+        const rowObj = worksheet.getRow(row);
+        rowObj.height = Math.max(20, estimatedLines * 15);
+        
         row++;
       });
       row++;
@@ -1947,8 +1984,16 @@ export default function ProjectLedgerCenter({
       };
       worksheet.mergeCells(`A${row}:B${row}`);
       row++;
-      worksheet.getCell(`A${row}`).value = physicalAccomplishment;
-      worksheet.getCell(`A${row}`).alignment = { wrapText: true };
+      const physicalCell = worksheet.getCell(`A${row}`);
+      physicalCell.value = physicalAccomplishment;
+      physicalCell.alignment = { wrapText: true, vertical: 'top' };
+      
+      // Calculate row height for physical accomplishment
+      const physicalStr = safeString(physicalAccomplishment, 'N/A');
+      const estimatedLines = Math.min(Math.ceil(physicalStr.length / 120), 15);
+      const physicalRow = worksheet.getRow(row);
+      physicalRow.height = Math.max(30, estimatedLines * 15);
+      
       row += 2;
 
       // Project Phases Update
@@ -1987,10 +2032,19 @@ export default function ProjectLedgerCenter({
           ];
 
           phaseData.forEach(([label, value]) => {
-            worksheet.getCell(`A${row}`).value = label;
-            worksheet.getCell(`A${row}`).font = { bold: true };
-            worksheet.getCell(`B${row}`).value = value || 'N/A';
-            worksheet.getCell(`B${row}`).alignment = { wrapText: true };
+            const cellA = worksheet.getCell(`A${row}`);
+            const cellB = worksheet.getCell(`B${row}`);
+            cellA.value = label;
+            cellA.font = { bold: true };
+            cellB.value = value || 'N/A';
+            cellB.alignment = { wrapText: true, vertical: 'top' };
+            
+            // Calculate row height based on content length
+            const valueStr = safeString(value, 'N/A');
+            const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+            const rowObj = worksheet.getRow(row);
+            rowObj.height = Math.max(20, estimatedLines * 15);
+            
             row++;
           });
           row++;
@@ -2006,7 +2060,20 @@ export default function ProjectLedgerCenter({
       // Apply borders and styling to all data cells
       for (let r = 1; r <= row; r++) {
         const rowObj = worksheet.getRow(r);
-        rowObj.height = r <= 2 ? 25 : 20;
+        // Don't override height if it was already set dynamically
+        if (r <= 2) {
+          rowObj.height = r === 1 ? 30 : 20;
+        } else if (!rowObj.height || rowObj.height === 20) {
+          // Only set default height if not already set dynamically
+          const cellB = worksheet.getCell(`B${r}`);
+          if (cellB.value) {
+            const valueStr = safeString(cellB.value, '');
+            const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+            rowObj.height = Math.max(20, estimatedLines * 15);
+          } else {
+            rowObj.height = 20;
+          }
+        }
         
         ['A', 'B', 'C', 'D'].forEach(col => {
           const cell = worksheet.getCell(`${col}${r}`);
@@ -2017,6 +2084,10 @@ export default function ProjectLedgerCenter({
               bottom: { style: 'thin' },
               right: { style: 'thin' }
             };
+            // Ensure wrapText is enabled for all data cells
+            if (col === 'B' && cell.value) {
+              cell.alignment = { wrapText: true, vertical: 'top' };
+            }
           }
         });
       }
@@ -2222,6 +2293,17 @@ export default function ProjectLedgerCenter({
                 cell.alignment = { wrapText: true, vertical: 'top' };
                 if (phases.length > 1) {
                   worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                  // Calculate height for merged cells based on content
+                  const valueStr = safeString(value, 'N/A');
+                  const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), 10);
+                  const mergedHeight = Math.max(25, estimatedLines * 15);
+                  // Set height for all merged rows
+                  for (let mergeRow = row; mergeRow < row + phases.length; mergeRow++) {
+                    const mergeRowObj = worksheet.getRow(mergeRow);
+                    if (!mergeRowObj.height || mergeRowObj.height < mergedHeight) {
+                      mergeRowObj.height = mergedHeight;
+                    }
+                  }
                 }
               }
               col++;
@@ -2250,6 +2332,16 @@ export default function ProjectLedgerCenter({
                 cell.alignment = { wrapText: true, vertical: 'top' };
                 if (phases.length > 1) {
                   worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                  // Calculate height for merged cells
+                  const valueStr = safeString(value, 'N/A');
+                  const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), 10);
+                  const mergedHeight = Math.max(25, estimatedLines * 15);
+                  for (let mergeRow = row; mergeRow < row + phases.length; mergeRow++) {
+                    const mergeRowObj = worksheet.getRow(mergeRow);
+                    if (!mergeRowObj.height || mergeRowObj.height < mergedHeight) {
+                      mergeRowObj.height = mergedHeight;
+                    }
+                  }
                 }
               }
               col++;
@@ -2275,6 +2367,15 @@ export default function ProjectLedgerCenter({
                 cell.alignment = { wrapText: true, vertical: 'top' };
                 if (phases.length > 1) {
                   worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                  const valueStr = safeString(value, 'N/A');
+                  const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), 10);
+                  const mergedHeight = Math.max(25, estimatedLines * 15);
+                  for (let mergeRow = row; mergeRow < row + phases.length; mergeRow++) {
+                    const mergeRowObj = worksheet.getRow(mergeRow);
+                    if (!mergeRowObj.height || mergeRowObj.height < mergedHeight) {
+                      mergeRowObj.height = mergedHeight;
+                    }
+                  }
                 }
               }
               col++;
@@ -2298,6 +2399,15 @@ export default function ProjectLedgerCenter({
                 cell.alignment = { wrapText: true, vertical: 'top' };
                 if (phases.length > 1) {
                   worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+                  const valueStr = safeString(value, 'N/A');
+                  const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), 10);
+                  const mergedHeight = Math.max(25, estimatedLines * 15);
+                  for (let mergeRow = row; mergeRow < row + phases.length; mergeRow++) {
+                    const mergeRowObj = worksheet.getRow(mergeRow);
+                    if (!mergeRowObj.height || mergeRowObj.height < mergedHeight) {
+                      mergeRowObj.height = mergedHeight;
+                    }
+                  }
                 }
               }
               col++;
@@ -2314,6 +2424,22 @@ export default function ProjectLedgerCenter({
             cell.alignment = { wrapText: true, vertical: 'top' };
             if (phases.length > 1) {
               worksheet.mergeCells(`${colLetter}${row}:${colLetter}${row + phases.length - 1}`);
+              // Calculate height for physical accomplishment (can be very long)
+              const valueStr = safeString(physicalAccomplishment, 'N/A');
+              const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), 15);
+              const mergedHeight = Math.max(30, estimatedLines * 15);
+              for (let mergeRow = row; mergeRow < row + phases.length; mergeRow++) {
+                const mergeRowObj = worksheet.getRow(mergeRow);
+                if (!mergeRowObj.height || mergeRowObj.height < mergedHeight) {
+                  mergeRowObj.height = mergedHeight;
+                }
+              }
+            } else {
+              // Single phase - still calculate height
+              const valueStr = safeString(physicalAccomplishment, 'N/A');
+              const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), 15);
+              const rowObj = worksheet.getRow(row);
+              rowObj.height = Math.max(30, estimatedLines * 15);
             }
             col++;
           } else {
@@ -2353,7 +2479,8 @@ export default function ProjectLedgerCenter({
             col++;
           });
 
-          // Apply borders to all cells in this row
+          // Apply borders to all cells in this row and calculate max content length
+          let maxContentLength = 0;
           for (let c = 1; c <= headerCols; c++) {
             const colLetter = getColumnLetter(c);
             const cell = worksheet.getCell(`${colLetter}${row}`);
@@ -2363,9 +2490,20 @@ export default function ProjectLedgerCenter({
               bottom: { style: 'thin' },
               right: { style: 'thin' }
             };
+            
+            // Track longest content for row height calculation
+            if (cell.value) {
+              const valueStr = safeString(cell.value, '');
+              // Estimate lines based on content length (average 60-80 chars per line for wrapped text)
+              const estimatedLines = Math.ceil(valueStr.length / 70);
+              maxContentLength = Math.max(maxContentLength, estimatedLines);
+            }
           }
 
-          worksheet.getRow(row).height = 20;
+          // Set dynamic row height based on content (minimum 20, max 10 lines = 150px)
+          const rowObj = worksheet.getRow(row);
+          rowObj.height = Math.max(25, Math.min(maxContentLength * 15, 150));
+          
           row++;
         });
       } else {
@@ -2408,6 +2546,7 @@ export default function ProjectLedgerCenter({
           ...Array(19).fill('N/A')
         ];
 
+        let maxContentLength = 0;
         allData.forEach((value) => {
           const colLetter = getColumnLetter(col);
           const cell = worksheet.getCell(`${colLetter}${row}`);
@@ -2419,9 +2558,19 @@ export default function ProjectLedgerCenter({
             bottom: { style: 'thin' },
             right: { style: 'thin' }
           };
+          
+          // Track longest content for row height calculation
+          const valueStr = safeString(value, 'N/A');
+          const estimatedLines = Math.ceil(valueStr.length / 70);
+          maxContentLength = Math.max(maxContentLength, estimatedLines);
+          
           col++;
         });
-        worksheet.getRow(row).height = 20;
+        
+        // Set dynamic row height based on content
+        const rowObj = worksheet.getRow(row);
+        rowObj.height = Math.max(25, Math.min(maxContentLength * 15, 150));
+        
         row++;
       }
 
