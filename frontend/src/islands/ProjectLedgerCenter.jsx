@@ -2040,10 +2040,16 @@ export default function ProjectLedgerCenter({
             cellB.alignment = { wrapText: true, vertical: 'top' };
             
             // Calculate row height based on content length
+            // For long description fields, allow more lines
             const valueStr = safeString(value, 'N/A');
-            const estimatedLines = Math.min(Math.ceil(valueStr.length / 80), 10);
+            const isLongDescriptionField = label.includes('Description') || 
+                                         label.includes('Activities') || 
+                                         label.includes('Allocation') || 
+                                         label.includes('Remarks');
+            const maxLines = isLongDescriptionField ? 20 : 10; // Allow up to 20 lines for long descriptions
+            const estimatedLines = Math.min(Math.ceil(valueStr.length / 70), maxLines);
             const rowObj = worksheet.getRow(row);
-            rowObj.height = Math.max(20, estimatedLines * 15);
+            rowObj.height = Math.max(25, estimatedLines * 15);
             
             row++;
           });
@@ -2480,7 +2486,20 @@ export default function ProjectLedgerCenter({
           });
 
           // Apply borders to all cells in this row and calculate max content length
+          // Long description columns across all sections:
+          // Column 11 = Project Description (Basic Project Information)
+          // Column 26 = Budget Description (Budget Information)
+          // Column 27 = General Description (Physical Accomplishment Information)
+          // Column 29 = Description (Project Phases Update)
+          // Column 31 = Breakdown Description (Project Phases Update)
+          // Column 38 = Timeline Activities & Deliverables (Project Phases Update)
+          // Column 41 = Budget Breakdown & Allocation (Project Phases Update)
+          // Column 46 = Physical Progress Description (Project Phases Update)
+          // Column 48 = Remarks and Recommendation (Project Phases Update)
+          
           let maxContentLength = 0;
+          let maxLongDescriptionLength = 0;
+          
           for (let c = 1; c <= headerCols; c++) {
             const colLetter = getColumnLetter(c);
             const cell = worksheet.getCell(`${colLetter}${row}`);
@@ -2496,13 +2515,28 @@ export default function ProjectLedgerCenter({
               const valueStr = safeString(cell.value, '');
               // Estimate lines based on content length (average 60-80 chars per line for wrapped text)
               const estimatedLines = Math.ceil(valueStr.length / 70);
-              maxContentLength = Math.max(maxContentLength, estimatedLines);
+              
+              // Check if this is a long description column
+              // These are columns: 11 (Project Description), 26 (Budget Description), 27 (General Description),
+              // 29 (Description), 31 (Breakdown Description), 38 (Timeline Activities),
+              // 41 (Budget Breakdown & Allocation), 46 (Physical Progress Description), 48 (Remarks)
+              const isLongDescriptionCol = [11, 26, 27, 29, 31, 38, 41, 46, 48].includes(c);
+              
+              if (isLongDescriptionCol) {
+                // For long description fields, allow up to 20 lines
+                const longDescLines = Math.min(estimatedLines, 20);
+                maxLongDescriptionLength = Math.max(maxLongDescriptionLength, longDescLines);
+              } else {
+                maxContentLength = Math.max(maxContentLength, estimatedLines);
+              }
             }
           }
 
-          // Set dynamic row height based on content (minimum 20, max 10 lines = 150px)
+          // Set dynamic row height based on content
+          // Prioritize long description fields (can be up to 20 lines = 300px)
+          const maxLines = Math.max(maxContentLength, maxLongDescriptionLength);
           const rowObj = worksheet.getRow(row);
-          rowObj.height = Math.max(25, Math.min(maxContentLength * 15, 150));
+          rowObj.height = Math.max(30, Math.min(maxLines * 15, 300)); // Max 300px for very long descriptions
           
           row++;
         });
