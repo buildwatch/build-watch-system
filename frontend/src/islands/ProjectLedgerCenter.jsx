@@ -1522,7 +1522,7 @@ export default function ProjectLedgerCenter({
       doc.setFontSize(10);
 
       const basicInfo = [
-        ['Project/Program Title:', displayProject.name || 'N/A'],
+        ['Project Title:', displayProject.name || 'N/A'],
         ['Status:', displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'],
         ['Overall Progress:', `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`],
         ['Project Code:', displayProject.projectCode || 'N/A'],
@@ -1826,7 +1826,7 @@ export default function ProjectLedgerCenter({
       row++;
 
       const basicInfo = [
-        ['Project/Program Title:', displayProject.name || 'N/A'],
+        ['Project Title:', displayProject.name || 'N/A'],
         ['Status:', displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'],
         ['Overall Progress:', `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`],
         ['Project Code:', displayProject.projectCode || 'N/A'],
@@ -2141,7 +2141,7 @@ export default function ProjectLedgerCenter({
       col = 1;
       const subHeaders = [
         // Basic Project Information (13 columns)
-        'Project/Program Title', 'Status', 'Overall Progress', 'Project Code', 'Implementing Office', 'Category', 
+        'Project Title', 'Status', 'Overall Progress', 'Project Code', 'Implementing Office', 'Category', 
         'Location/Barangay', 'Priority', 'Funding Source', 'Created Date', 
         'Project Description', 'Expected Outputs', 'Target Beneficiaries',
         // EIU Partner Contractor (7 columns)
@@ -5582,7 +5582,7 @@ export default function ProjectLedgerCenter({
                       </td>
                     </tr>
                     <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 w-1/3">Project/Program Title</td>
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50 w-1/3">Project Title</td>
                       <td className="px-6 py-4 text-gray-900">{displayProject.name || 'N/A'}</td>
                     </tr>
                     <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
@@ -5968,7 +5968,7 @@ export default function ProjectLedgerCenter({
                           {/* Sub-header Row */}
                           <tr className={`${colors.tableHeaderBg} text-white`}>
                             {/* Basic Project Information */}
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Project/Program Title</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Project Title</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Status</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Overall Progress</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Project Code</th>
