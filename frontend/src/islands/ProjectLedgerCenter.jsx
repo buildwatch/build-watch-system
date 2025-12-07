@@ -1523,6 +1523,8 @@ export default function ProjectLedgerCenter({
 
       const basicInfo = [
         ['Project/Program Title:', displayProject.name || 'N/A'],
+        ['Status:', displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'],
+        ['Overall Progress:', `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`],
         ['Project Code:', displayProject.projectCode || 'N/A'],
         ['Implementing Office:', displayProject.implementingOfficeName || 'N/A'],
         ['Category:', displayProject.category || 'N/A'],
@@ -1825,6 +1827,8 @@ export default function ProjectLedgerCenter({
 
       const basicInfo = [
         ['Project/Program Title:', displayProject.name || 'N/A'],
+        ['Status:', displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'],
+        ['Overall Progress:', `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`],
         ['Project Code:', displayProject.projectCode || 'N/A'],
         ['Implementing Office:', displayProject.implementingOfficeName || 'N/A'],
         ['Category:', displayProject.category || 'N/A'],
@@ -2077,7 +2081,7 @@ export default function ProjectLedgerCenter({
       };
 
       // Header row with enhanced styling
-      const headerCols = 44; // Total number of columns in horizontal view
+      const headerCols = 46; // Total number of columns in horizontal view (13 Basic Project Info + 7 EIU + 4 Timeline + 2 Budget + 1 Physical + 19 Phases)
       const lastCol = getColumnLetter(headerCols);
       worksheet.mergeCells(`A1:${lastCol}1`);
       worksheet.getCell('A1').value = 'BUILD WATCH - Project Monitoring & Evaluation System';
@@ -2101,7 +2105,7 @@ export default function ProjectLedgerCenter({
 
       // Main Header Row (Row 4)
       const mainHeaders = [
-        { text: 'Basic Project Information', span: 11 },
+        { text: 'Basic Project Information', span: 13 },
         { text: 'EIU Partner Contractor', span: 7 },
         { text: 'Timeline Information', span: 4 },
         { text: 'Budget Information', span: 2 },
@@ -2136,8 +2140,8 @@ export default function ProjectLedgerCenter({
       // Sub-header Row (Row 5) - Column Headers
       col = 1;
       const subHeaders = [
-        // Basic Project Information (11 columns)
-        'Project/Program Title', 'Project Code', 'Implementing Office', 'Category', 
+        // Basic Project Information (13 columns)
+        'Project/Program Title', 'Status', 'Overall Progress', 'Project Code', 'Implementing Office', 'Category', 
         'Location/Barangay', 'Priority', 'Funding Source', 'Created Date', 
         'Project Description', 'Expected Outputs', 'Target Beneficiaries',
         // EIU Partner Contractor (7 columns)
@@ -2196,6 +2200,8 @@ export default function ProjectLedgerCenter({
           if (phaseIndex === 0) {
             const basicData = [
               displayProject.name || 'N/A',
+              displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A',
+              `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`,
               displayProject.projectCode || 'N/A',
               displayProject.implementingOfficeName || 'N/A',
               displayProject.category || 'N/A',
@@ -2221,7 +2227,7 @@ export default function ProjectLedgerCenter({
               col++;
             });
           } else {
-            col += 11; // Skip basic project info columns
+            col += 13; // Skip basic project info columns
           }
 
           // EIU Partner Contractor (only in first row)
@@ -2368,6 +2374,8 @@ export default function ProjectLedgerCenter({
         const allData = [
           // Basic Project Information
           displayProject.name || 'N/A',
+          displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A',
+          `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`,
           displayProject.projectCode || 'N/A',
           displayProject.implementingOfficeName || 'N/A',
           displayProject.category || 'N/A',
@@ -2419,7 +2427,7 @@ export default function ProjectLedgerCenter({
 
       // Set column widths
       const columnWidths = [
-        25, 15, 20, 15, 18, 12, 18, 15, 30, 25, 20, // Basic Project Info (11)
+        25, 12, 15, 15, 20, 15, 18, 12, 18, 15, 30, 25, 20, // Basic Project Info (13) - added Status and Overall Progress
         20, 20, 15, 12, 20, 15, 20, // EIU Partner (7)
         15, 15, 12, 15, // Timeline (4)
         18, 25, // Budget (2)
@@ -5578,6 +5586,40 @@ export default function ProjectLedgerCenter({
                       <td className="px-6 py-4 text-gray-900">{displayProject.name || 'N/A'}</td>
                     </tr>
                     <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Status</td>
+                      <td className="px-6 py-4 text-gray-900">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          displayProject.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          displayProject.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                          displayProject.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Overall Progress</td>
+                      <td className="px-6 py-4 text-gray-900">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className={`h-2.5 rounded-full transition-all duration-500 ${
+                                (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 76 ? 'bg-green-500' :
+                                (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 51 ? 'bg-blue-500' :
+                                (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 26 ? 'bg-yellow-500' :
+                                'bg-red-500'
+                              }`}
+                              style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-700 min-w-[50px]">
+                            {(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Project Code</td>
                       <td className="px-6 py-4 text-gray-900">{displayProject.projectCode || 'N/A'}</td>
                     </tr>
@@ -5916,7 +5958,7 @@ export default function ProjectLedgerCenter({
                         <thead className="sticky top-0 z-10">
                           {/* Main Header Row */}
                           <tr className={`${colors.tableHeaderBg} text-white border-b-2 border-white`}>
-                            <th colSpan="11" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Basic Project Information</th>
+                            <th colSpan="13" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Basic Project Information</th>
                             <th colSpan="7" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">EIU Partner Contractor</th>
                             <th colSpan="4" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Timeline Information</th>
                             <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Budget Information</th>
@@ -5927,6 +5969,8 @@ export default function ProjectLedgerCenter({
                           <tr className={`${colors.tableHeaderBg} text-white`}>
                             {/* Basic Project Information */}
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[200px] leading-tight">Project/Program Title</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Status</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Overall Progress</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Project Code</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Implementing Office</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Category</th>
@@ -5993,6 +6037,34 @@ export default function ProjectLedgerCenter({
                                   <>
                                     {/* Basic Project Information */}
                                     <td rowSpan={phases.length} className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
+                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold inline-block ${
+                                        displayProject.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                        displayProject.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                        displayProject.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'}
+                                      </span>
+                                    </td>
+                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                      <div className="flex flex-col items-center gap-1">
+                                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                          <div
+                                            className={`h-2 rounded-full transition-all ${
+                                              (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 76 ? 'bg-green-500' :
+                                              (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 51 ? 'bg-blue-500' :
+                                              (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 26 ? 'bg-yellow-500' :
+                                              'bg-red-500'
+                                            }`}
+                                            style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
+                                          ></div>
+                                        </div>
+                                        <span className="text-[10px] font-semibold text-gray-700">
+                                          {(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    </td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.projectCode || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
@@ -6132,6 +6204,34 @@ export default function ProjectLedgerCenter({
                           <tr className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
                               {/* Basic Project Information */}
                             <td className="px-3 py-3 text-xs border-r border-gray-400 align-top font-medium bg-white">{displayProject.name || 'N/A'}</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                <span className={`px-2 py-1 rounded-full text-[10px] font-semibold inline-block ${
+                                  displayProject.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  displayProject.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
+                                  displayProject.status === 'delayed' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'}
+                                </span>
+                              </td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">
+                                <div className="flex flex-col items-center gap-1">
+                                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className={`h-2 rounded-full transition-all ${
+                                        (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 76 ? 'bg-green-500' :
+                                        (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 51 ? 'bg-blue-500' :
+                                        (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 26 ? 'bg-yellow-500' :
+                                        'bg-red-500'
+                                      }`}
+                                      style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-[10px] font-semibold text-gray-700">
+                                    {(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{displayProject.projectCode || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{displayProject.implementingOfficeName || displayProject.implementingUnitName || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white capitalize">{displayProject.category || 'N/A'}</td>
