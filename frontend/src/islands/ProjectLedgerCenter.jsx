@@ -2497,6 +2497,18 @@ export default function ProjectLedgerCenter({
           // Column 46 = Physical Progress Description (Project Phases Update)
           // Column 48 = Remarks and Recommendation (Project Phases Update)
           
+          // Column widths array (for accurate line calculation)
+          const columnWidths = [
+            25, 12, 15, 15, 20, 15, 18, 12, 18, 15, 40, 25, 20, // Basic Project Info (13) - Project Description: 40
+            20, 20, 15, 12, 20, 15, 20, // EIU Partner (7)
+            15, 15, 12, 15, // Timeline (4)
+            18, 35, // Budget (2) - Budget Description: 35
+            40, // Physical Accomplishment (1) - General Description: 40
+            20, 35, 15, 30, 15, 18, 15, 15, 15, 35, 30, 15, 15, 35, 18, 15, 15, 15, 30, 15, 40 // Project Phases (19)
+            // Description: 35, Breakdown Description: 30, Timeline Activities: 35, Budget Breakdown: 30,
+            // Physical Progress Description: 30, Remarks: 40
+          ];
+          
           let maxContentLength = 0;
           let maxLongDescriptionLength = 0;
           
@@ -2513,8 +2525,15 @@ export default function ProjectLedgerCenter({
             // Track longest content for row height calculation
             if (cell.value) {
               const valueStr = safeString(cell.value, '');
-              // Estimate lines based on content length (average 60-80 chars per line for wrapped text)
-              const estimatedLines = Math.ceil(valueStr.length / 70);
+              
+              // Get column width for accurate line calculation
+              const colWidth = columnWidths[c - 1] || 15;
+              // Excel character width: approximately 7 pixels per character, column width is in character units
+              // Account for padding and borders (subtract ~2 characters)
+              const effectiveWidth = Math.max(1, colWidth - 2);
+              // Estimate lines: characters per line = effective width * 1.2 (to account for wrapping)
+              const charsPerLine = Math.max(10, effectiveWidth * 1.2);
+              const estimatedLines = Math.ceil(valueStr.length / charsPerLine);
               
               // Check if this is a long description column
               // These are columns: 11 (Project Description), 26 (Budget Description), 27 (General Description),
@@ -2523,8 +2542,8 @@ export default function ProjectLedgerCenter({
               const isLongDescriptionCol = [11, 26, 27, 29, 31, 38, 41, 46, 48].includes(c);
               
               if (isLongDescriptionCol) {
-                // For long description fields, allow up to 20 lines
-                const longDescLines = Math.min(estimatedLines, 20);
+                // For long description fields, allow up to 25 lines (more generous)
+                const longDescLines = Math.min(estimatedLines, 25);
                 maxLongDescriptionLength = Math.max(maxLongDescriptionLength, longDescLines);
               } else {
                 maxContentLength = Math.max(maxContentLength, estimatedLines);
@@ -2533,10 +2552,11 @@ export default function ProjectLedgerCenter({
           }
 
           // Set dynamic row height based on content
-          // Prioritize long description fields (can be up to 20 lines = 300px)
+          // Prioritize long description fields (can be up to 25 lines = 375px)
           const maxLines = Math.max(maxContentLength, maxLongDescriptionLength);
           const rowObj = worksheet.getRow(row);
-          rowObj.height = Math.max(30, Math.min(maxLines * 15, 300)); // Max 300px for very long descriptions
+          // Use 16px per line for better spacing, max 400px for very long descriptions
+          rowObj.height = Math.max(35, Math.min(maxLines * 16, 400));
           
           row++;
         });
@@ -2610,12 +2630,14 @@ export default function ProjectLedgerCenter({
 
       // Set column widths
       const columnWidths = [
-        25, 12, 15, 15, 20, 15, 18, 12, 18, 15, 30, 25, 20, // Basic Project Info (13) - added Status and Overall Progress
+        25, 12, 15, 15, 20, 15, 18, 12, 18, 15, 40, 25, 20, // Basic Project Info (13) - Project Description increased to 40
         20, 20, 15, 12, 20, 15, 20, // EIU Partner (7)
         15, 15, 12, 15, // Timeline (4)
-        18, 25, // Budget (2)
-        30, // Physical Accomplishment (1)
-        20, 25, 15, 20, 12, 15, 15, 15, 15, 15, 25, 15, 15, 20, 12, 12, 12, 25, 15, 30 // Phases (19)
+        18, 35, // Budget (2) - Budget Description increased to 35
+        40, // Physical Accomplishment (1) - General Description increased to 40
+        20, 35, 15, 30, 15, 18, 15, 15, 15, 35, 30, 15, 15, 35, 18, 15, 15, 15, 30, 15, 40 // Phases (19)
+        // Description: 35, Breakdown Description: 30, Timeline Activities: 35, Budget Breakdown: 30,
+        // Physical Progress Description: 30, Remarks: 40
       ];
 
       columnWidths.forEach((width, index) => {
