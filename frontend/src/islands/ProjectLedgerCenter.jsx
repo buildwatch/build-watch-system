@@ -446,9 +446,6 @@ export default function ProjectLedgerCenter({
         setProgressRangeMin('80');
         setProgressRangeMax('100');
         break;
-      case 'needsAttention':
-        setSelectedStatuses(['delayed', 'at_risk', 'pending']);
-        break;
       case 'recentlyUpdated':
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -927,9 +924,6 @@ export default function ProjectLedgerCenter({
           const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
           matchesQuickFilter = progress >= 80 && progress < 100;
           break;
-        case 'needsAttention':
-          matchesQuickFilter = project.status === 'delayed' || project.status === 'at_risk' || project.status === 'pending';
-          break;
         case 'recentlyUpdated':
           const updatedDate = project.updatedAt ? new Date(project.updatedAt) : null;
           if (updatedDate) {
@@ -987,9 +981,7 @@ export default function ProjectLedgerCenter({
       statusCounts: {
         ongoing: 0,
         completed: 0,
-        delayed: 0,
-        pending: 0,
-        at_risk: 0
+        delayed: 0
       }
     };
 
@@ -1069,8 +1061,6 @@ export default function ProjectLedgerCenter({
       'ongoing': '#3B82F6', // blue
       'completed': '#10B981', // green
       'delayed': '#EF4444', // red
-      'pending': '#F59E0B', // amber
-      'at_risk': '#F97316', // orange
       'unknown': '#6B7280' // gray
     };
     return colors[status] || colors['unknown'];
@@ -3232,22 +3222,6 @@ export default function ProjectLedgerCenter({
                 )}
               </button>
               <button
-                onClick={() => applyQuickFilter('needsAttention')}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
-                  quickFilterPreset === 'needsAttention'
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/50 scale-105'
-                    : 'bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700 hover:from-yellow-100 hover:to-yellow-200 hover:shadow-md hover:scale-105 border border-yellow-200'
-                }`}
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  <span className="text-base">⚡</span>
-                  <span>Needs Attention</span>
-                </span>
-                {quickFilterPreset === 'needsAttention' && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                )}
-              </button>
-              <button
                 onClick={() => applyQuickFilter('recentlyUpdated')}
                 className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 overflow-hidden ${
                   quickFilterPreset === 'recentlyUpdated'
@@ -3309,8 +3283,6 @@ export default function ProjectLedgerCenter({
                     <option value="ongoing">Ongoing</option>
                     <option value="completed">Completed</option>
                     <option value="delayed">Delayed</option>
-                    <option value="pending">Pending</option>
-                    <option value="at_risk">At Risk</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3478,7 +3450,7 @@ export default function ProjectLedgerCenter({
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Status (Multiple)</label>
                     <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                      {['ongoing', 'completed', 'delayed', 'pending', 'at_risk'].map(status => (
+                      {['ongoing', 'completed', 'delayed'].map(status => (
                         <label key={status} className="group flex items-center space-x-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-sm">
                           <div className="relative">
                             <input
@@ -3857,8 +3829,6 @@ export default function ProjectLedgerCenter({
                         return 'bg-blue-100 text-blue-700 border-blue-200';
                       case 'delayed':
                         return 'bg-red-100 text-red-700 border-red-200';
-                      case 'pending':
-                        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
                       default:
                         return 'bg-gray-100 text-gray-600 border-gray-200';
                     }
@@ -4702,8 +4672,10 @@ export default function ProjectLedgerCenter({
                 {/* Status Breakdown Table */}
                 <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">Status Breakdown</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {Object.entries(dashboardStats.statusCounts).map(([status, count]) => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {Object.entries(dashboardStats.statusCounts)
+                      .filter(([status]) => status !== 'pending' && status !== 'at_risk')
+                      .map(([status, count]) => (
                       <div 
                         key={status}
                         className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-all text-center"
@@ -5529,7 +5501,7 @@ export default function ProjectLedgerCenter({
                 <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">Legend</h3>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {['ongoing', 'completed', 'delayed', 'pending', 'at_risk'].map(status => (
+                    {['ongoing', 'completed', 'delayed'].map(status => (
                       <div key={status} className="flex items-center gap-2">
                         <div
                           className="w-6 h-6 rounded border-2 border-white shadow-sm"
