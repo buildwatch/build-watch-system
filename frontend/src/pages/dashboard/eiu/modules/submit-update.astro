@@ -8805,19 +8805,10 @@ loading = false;
      const endDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || selectedProject.endDate;
      
      if (startDate && endDate) {
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
-      
-      // Parse end date
-      const endDateObj = new Date(endDate);
-      endDateObj.setHours(0, 0, 0, 0);
-      const endDateStr = endDateObj.toISOString().split('T')[0];
-      
-      // Calculate max date: min(End Date, Today)
-      // This ensures we don't allow dates after today, and also don't exceed the end date
-      const maxDate = endDateStr <= todayStr ? endDateStr : todayStr;
+      // Maximum date is the End Date (not Today)
+      // Users can select any date from Start Date down to End Date
+      // Dates exceeding the End Date are not allowed
+      const maxDate = endDate;
        
        // Set min and max attributes on the date input
        dateInput.min = startDate;
@@ -8826,19 +8817,14 @@ loading = false;
        // Update info text
        if (infoDiv) {
          const startDateObj = new Date(startDate);
-         const maxDateObj = new Date(maxDate);
-         if (maxDate === todayStr) {
-           infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and today (${maxDateObj.toLocaleDateString()})`;
-         } else {
-           infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and ${maxDateObj.toLocaleDateString()}`;
-         }
+         const endDateObj = new Date(endDate);
+         infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and ${endDateObj.toLocaleDateString()}`;
        }
        
        console.log(`📅 Activity date constraints set for milestone ${milestoneId}:`, {
          min: startDate,
          max: maxDate,
          endDate: endDate,
-         today: todayStr,
          milestone: milestone.title || milestone.name
        });
      } else {
@@ -10527,24 +10513,10 @@ window.restoreVideosFromStorage = function(milestoneId) {
     const startDate = milestone.timelineStartDate || milestone.plannedStartDate || milestone.timelineDivision?.startDate || milestone.timeline?.startDate || milestone.startDate || selectedProject.startDate;
     const endDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || selectedProject.endDate;
     
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
-    
-    // Calculate max date: min(End Date, Today)
-    // This ensures we don't allow dates after today, and also don't exceed the end date
+    // Maximum date is the End Date (not Today)
+    // Users can select any date from Start Date down to End Date
+    // Dates exceeding the End Date are not allowed
     let maxDate = endDate || '';
-    if (endDate) {
-      const endDateObj = new Date(endDate);
-      endDateObj.setHours(0, 0, 0, 0);
-      const endDateStr = endDateObj.toISOString().split('T')[0];
-      // Use the earlier of endDate or today as the maximum
-      maxDate = endDateStr <= todayStr ? endDateStr : todayStr;
-    } else {
-      // If no end date, use today as max
-      maxDate = todayStr;
-    }
     
     const activity = {
       id: activityId,
