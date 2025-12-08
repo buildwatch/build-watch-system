@@ -280,19 +280,18 @@ const handleClick = () => {
       </div>
     </div>
 
-    <!-- Progress Breakdown -->
+    <!-- Budget Division Utilization Progress -->
     <div class="space-y-2 mb-4">
-      <div class="flex justify-between items-center text-xs">
-        <span class="text-gray-600">Timeline:</span>
-        <span class={`font-semibold ${theme.accent}`}>{timelineProgress.toFixed(1)}%</span>
-      </div>
-      <div class="flex justify-between items-center text-xs">
-        <span class="text-gray-600">Budget:</span>
+      <div class="flex justify-between items-center text-xs mb-1">
+        <span class="text-gray-600 font-medium">Budget Division Utilization:</span>
         <span class={`font-semibold ${theme.accent}`}>{budgetProgress.toFixed(1)}%</span>
       </div>
-      <div class="flex justify-between items-center text-xs">
-        <span class="text-gray-600">Physical:</span>
-        <span class={`font-semibold ${theme.accent}`}>{physicalProgress.toFixed(1)}%</span>
+      <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+        <div 
+          class={`h-2 rounded-full transition-all duration-2000 ease-out ${getProgressColor(budgetProgress)} budget-progress-bar-fill`}
+          style={`width: 0%`}
+          data-progress={budgetProgress}
+        ></div>
       </div>
     </div>
 
@@ -371,7 +370,8 @@ const handleClick = () => {
     overflow: hidden;
   }
   
-  .progress-bar-fill {
+  .progress-bar-fill,
+  .budget-progress-bar-fill {
     transform-origin: left;
     animation: fillProgress 2s ease-out forwards;
   }
@@ -389,7 +389,7 @@ const handleClick = () => {
 <script>
   // Live filling animation for progress bars
   function animateProgressBars() {
-    const progressBars = document.querySelectorAll('.progress-bar-fill');
+    const progressBars = document.querySelectorAll('.progress-bar-fill, .budget-progress-bar-fill');
     
     progressBars.forEach(bar => {
       const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
@@ -407,8 +407,8 @@ const handleClick = () => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const progressBar = entry.target.querySelector('.progress-bar-fill');
-          if (progressBar) {
+          const progressBars = entry.target.querySelectorAll('.progress-bar-fill, .budget-progress-bar-fill');
+          progressBars.forEach(progressBar => {
             const progress = parseFloat(progressBar.getAttribute('data-progress')) || 0;
             progressBar.style.setProperty('--progress-width', `${progress}%`);
             
@@ -416,7 +416,7 @@ const handleClick = () => {
             progressBar.style.animation = 'none';
             progressBar.offsetHeight; // Trigger reflow
             progressBar.style.animation = 'fillProgress 2s ease-out forwards';
-          }
+          });
         }
       });
     }, {
