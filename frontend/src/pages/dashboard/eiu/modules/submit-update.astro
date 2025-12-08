@@ -8806,19 +8806,19 @@ loading = false;
      
      if (startDate && endDate) {
       // Maximum date is the End Date (not Today)
-      // Users can select any date from Start Date down to End Date
+      // Users can select any date up to End Date (including dates before Start Date for advance activities)
       // Dates exceeding the End Date are not allowed
+      // No minimum date constraint - allows advance activities before Start Date
       const maxDate = endDate;
        
-       // Set min and max attributes on the date input
-       dateInput.min = startDate;
+       // Set max attribute on the date input (no min constraint to allow advance activities)
+       dateInput.min = '';
        dateInput.max = maxDate;
        
        // Update info text
        if (infoDiv) {
-         const startDateObj = new Date(startDate);
          const endDateObj = new Date(endDate);
-         infoDiv.textContent = `Select a date between ${startDateObj.toLocaleDateString()} and ${endDateObj.toLocaleDateString()}`;
+         infoDiv.textContent = `Select any date up to ${endDateObj.toLocaleDateString()} (advance activities before start date are allowed)`;
        }
        
        console.log(`📅 Activity date constraints set for milestone ${milestoneId}:`, {
@@ -10514,8 +10514,9 @@ window.restoreVideosFromStorage = function(milestoneId) {
     const endDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || selectedProject.endDate;
     
     // Maximum date is the End Date (not Today)
-    // Users can select any date from Start Date down to End Date
+    // Users can select any date up to End Date (including dates before Start Date for advance activities)
     // Dates exceeding the End Date are not allowed
+    // No minimum date constraint - allows advance activities before Start Date
     let maxDate = endDate || '';
     
     const activity = {
@@ -10545,7 +10546,6 @@ window.restoreVideosFromStorage = function(milestoneId) {
                   type="date" 
                   id="activity-${milestoneId}-${activityId}-date"
                   class="enhanced-date-picker w-full px-3 py-2 text-sm border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-blue-400 shadow-sm hover:shadow-md"
-                  min="${startDate || ''}"
                   max="${maxDate || ''}"
                   onchange="updateTimelineActivity('${milestoneId}', ${activityId}, 'date', this.value); validateTimelineActivities('${milestoneId}');"
                   required
