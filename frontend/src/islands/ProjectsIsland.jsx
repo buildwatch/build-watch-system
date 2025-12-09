@@ -1056,7 +1056,7 @@ export default function ProjectsIsland() {
               <div className="absolute top-8 right-8 w-32 h-32 bg-gradient-to-br from-blue-400/8 to-indigo-400/6 rounded-full blur-3xl animate-pulse"></div>
               <div className="absolute bottom-8 left-8 w-40 h-40 bg-gradient-to-br from-emerald-400/6 to-blue-400/8 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
               
-              <div className="relative bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/50"
+              <div className="relative bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/50 w-full"
                    style={{
                      background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 50%, rgba(239,246,255,0.98) 100%)',
                      boxShadow: '0 32px 64px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
@@ -1122,11 +1122,11 @@ export default function ProjectsIsland() {
                     </div>
                   </div>
                 </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-[1400px] w-full">
+              <div className="w-full">
+                <table className="w-full table-auto">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-500 to-blue-600 border-b border-blue-100">
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[20%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1136,7 +1136,7 @@ export default function ProjectsIsland() {
                           Project Details
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[10%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1147,7 +1147,7 @@ export default function ProjectsIsland() {
                           Location
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[12%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1157,7 +1157,7 @@ export default function ProjectsIsland() {
                           Office & Funding
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[12%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1167,7 +1167,7 @@ export default function ProjectsIsland() {
                           Overall Progress
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[12%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1177,7 +1177,7 @@ export default function ProjectsIsland() {
                           Budget
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[18%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1187,7 +1187,7 @@ export default function ProjectsIsland() {
                           Timeline
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[8%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1197,7 +1197,7 @@ export default function ProjectsIsland() {
                           Status
                         </div>
                       </th>
-                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                      <th className="px-4 py-4 font-bold text-left text-sm text-white uppercase tracking-wider w-[8%]">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1225,13 +1225,13 @@ export default function ProjectsIsland() {
                           style={{ cursor: 'pointer' }}
                           title="Click to view project details"
                         >
-                          <td className="px-6 py-6">
+                          <td className="px-4 py-4">
                             <div className="space-y-2">
-                              <div className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-300 text-base leading-tight">
+                              <div className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-300 text-sm leading-tight">
                                 {proj.name}
                               </div>
                               {proj.code && (
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-600">
+                                <div className="inline-flex items-center gap-2 px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-600">
                                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h4c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                                   </svg>
@@ -1240,42 +1240,42 @@ export default function ProjectsIsland() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-6">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
                               </div>
-                              <span className="font-medium text-gray-900">{proj.location || 'N/A'}</span>
+                              <span className="font-medium text-gray-900 text-sm">{proj.location || 'N/A'}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-6">
-                            <div className="space-y-2">
-                              <div className="font-semibold text-gray-900">{proj.implementingUnitName || 'Municipal Engineer Office'}</div>
-                              <div className="inline-flex items-center gap-2 px-2 py-1 bg-blue-50 rounded-md text-xs font-medium text-blue-700">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <td className="px-4 py-4">
+                            <div className="space-y-1">
+                              <div className="font-semibold text-gray-900 text-sm">{proj.implementingUnitName || 'Municipal Engineer Office'}</div>
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 rounded-md text-xs font-medium text-blue-700">
+                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                                   <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
                                 </svg>
                                 {proj.fundingSource || 'local_fund'}
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-6">
+                          <td className="px-4 py-4">
                             <div className="space-y-2">
                               {(() => {
                                 // NEW SYSTEM: Use overall progress from API
                                 const overallProgress = parseFloat(proj.progress?.overall || proj.overallProgress || proj.progress || 0);
                                 return overallProgress > 0 ? (
                                   <>
-                                    <div className="flex items-center justify-between text-sm text-gray-600">
+                                    <div className="flex items-center justify-between text-xs text-gray-600">
                                       <span className="font-medium">Progress</span>
                                       <span className="font-bold text-blue-600">{overallProgress.toFixed(1)}%</span>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                                       <div 
-                                        className="h-3 rounded-full transition-all duration-2000 ease-out shadow-sm project-progress-bar-fill"
+                                        className="h-2.5 rounded-full transition-all duration-2000 ease-out shadow-sm project-progress-bar-fill"
                                         style={{ 
                                           width: '0%',
                                           backgroundColor: getProgressColor(overallProgress)
@@ -1286,26 +1286,26 @@ export default function ProjectsIsland() {
                                     </div>
                                   </>
                                 ) : (
-                                  <div className="text-sm text-gray-500">No progress yet</div>
+                                  <div className="text-xs text-gray-500">No progress yet</div>
                                 );
                               })()}
                             </div>
                           </td>
-                          <td className="px-6 py-6">
-                            <div className="space-y-3">
-                              <div className="font-bold text-gray-900 text-lg">{formatBudget(proj.budget || proj.totalBudget)}</div>
+                          <td className="px-4 py-4">
+                            <div className="space-y-2">
+                              <div className="font-bold text-gray-900 text-sm">{formatBudget(proj.budget || proj.totalBudget)}</div>
                               {(() => {
                                 // NEW SYSTEM: Show Budget Division Utilization
                                 const budgetProgress = parseFloat(proj.progress?.budget || proj.budgetProgress || 0);
                                 return budgetProgress > 0 ? (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-sm text-gray-600">
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between text-xs text-gray-600">
                                       <span className="font-medium">Budget Utilization</span>
                                       <span className="font-bold text-green-600">{budgetProgress.toFixed(1)}%</span>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                                       <div 
-                                        className="h-3 rounded-full transition-all duration-2000 ease-out shadow-sm budget-progress-bar-fill"
+                                        className="h-2.5 rounded-full transition-all duration-2000 ease-out shadow-sm budget-progress-bar-fill"
                                         style={{ 
                                           width: '0%',
                                           backgroundColor: getProgressColor(budgetProgress)
@@ -1321,35 +1321,35 @@ export default function ProjectsIsland() {
                               })()}
                             </div>
                           </td>
-                          <td className="px-6 py-6">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-xs">
-                                <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <td className="px-4 py-4">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <div className="w-5 h-5 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                   </svg>
                                 </div>
                                 <span className="font-medium text-gray-900">Start: {formatDate(proj.startDate) || 'N/A'}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-xs">
-                                <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
-                                  <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <div className="w-5 h-5 bg-green-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                   </svg>
                                 </div>
                                 <span className="font-medium text-gray-900">Target: {formatDate(proj.targetCompletionDate || proj.targetDateOfCompletion || proj.endDate) || 'N/A'}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-xs">
-                                <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
-                                  <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <div className="w-5 h-5 bg-purple-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                   </svg>
                                 </div>
                                 <span className="font-medium text-gray-900">Actual: {formatDate(proj.completionDate || proj.actualCompletionDate) || '–'}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-xs">
-                                <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
-                                  <svg className="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <div className="w-5 h-5 bg-orange-100 rounded-lg flex items-center justify-center">
+                                  <svg className="w-2.5 h-2.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                   </svg>
                                 </div>
@@ -1357,21 +1357,21 @@ export default function ProjectsIsland() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-6">
-                            <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold shadow-sm ${getStatusColor(proj.status)}`}>
-                              <div className={`w-3 h-3 rounded-full mr-3 ${proj.status?.toLowerCase() === 'ongoing' ? 'bg-blue-500' : proj.status?.toLowerCase() === 'completed' ? 'bg-green-500' : proj.status?.toLowerCase() === 'delayed' ? 'bg-red-500' : 'bg-gray-500'} animate-pulse`}></div>
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${getStatusColor(proj.status)}`}>
+                              <div className={`w-2 h-2 rounded-full mr-2 ${proj.status?.toLowerCase() === 'ongoing' ? 'bg-blue-500' : proj.status?.toLowerCase() === 'completed' ? 'bg-green-500' : proj.status?.toLowerCase() === 'delayed' ? 'bg-red-500' : 'bg-gray-500'} animate-pulse`}></div>
                               {proj.status || 'Not Started'}
                             </span>
                           </td>
-                          <td className="px-6 py-6">
+                          <td className="px-4 py-4">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.location.href = `/project/${proj.id}?tab=feedback`;
                               }}
-                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-xs rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group"
                             >
-                              <svg className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                               </svg>
                               <span>Feedback</span>
