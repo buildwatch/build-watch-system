@@ -11153,7 +11153,37 @@ This compilation report has been generated automatically based on approved EIU m
                   <h4 class="font-bold text-black group-hover:text-[#0A6A9A] transition-colors duration-300">${milestone.title}</h4>
                   <div class="flex flex-wrap items-center gap-3 mt-2">
                     <span class="px-3 py-1 text-xs font-medium rounded-full bg-${statusConfig.bgColor} text-${statusConfig.textColor}">${statusConfig.message}</span>
-                    <span class="text-sm text-gray-600 bg-white/70 px-2 py-1 rounded-lg">Weight: ${milestone.weight || 0}%</span>
+                    <span class="text-sm text-gray-600 bg-white/70 px-2 py-1 rounded-lg">${(() => {
+                      // Calculate Budget Utilization Gained Weight: "X%/Y%" format
+                      // Get project and milestones data
+                      const currentSelectedProject = typeof selectedProject !== 'undefined' ? selectedProject : (typeof window !== 'undefined' && window.selectedProject ? window.selectedProject : null);
+                      const allMilestones = currentSelectedProject?.milestones || sortedMilestones || milestones || [];
+                      
+                      // Calculate total project budget
+                      const totalProjectBudget = parseFloat(currentSelectedProject?.totalBudget || 0) || 
+                        allMilestones.reduce((sum, m) => {
+                          const mb = parseFloat(m.plannedBudget || m.budgetPlanned || 0);
+                          return sum + mb;
+                        }, 0);
+                      
+                      // Calculate budget allotted weight for this milestone
+                      const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || 0);
+                      const budgetAllotedWeight = totalProjectBudget > 0 
+                        ? parseFloat(((plannedBudget / totalProjectBudget) * 100).toFixed(2))
+                        : parseFloat(milestone.weight || 0);
+                      
+                      // Get approved submission
+                      const submissionsMap = window.milestoneSubmissionsMap || {};
+                      const approvedSubmission = milestone.submissions?.find(s => s.status === 'approved' || s.status === 'iu_approved') || 
+                                                 submissionsMap[milestone.id]?.find(s => s.status === 'approved' || s.status === 'iu_approved');
+                      
+                      // Calculate budget utilization gained weight
+                      const usedBudget = parseFloat(approvedSubmission?.usedBudget || milestone.usedBudget || 0);
+                      const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
+                      const budgetUtilizationGained = budgetUtilizationPercent * (budgetAllotedWeight / 100);
+                      
+                      return `Weight: ${budgetUtilizationGained.toFixed(2)}%/${budgetAllotedWeight.toFixed(2)}%`;
+                    })()}</span>
                     <span class="text-sm ${isOverdue ? 'text-red-600 font-medium bg-red-50' : 'text-gray-500 bg-gray-50'} px-2 py-1 rounded-lg">Due: ${milestone.dueDate}${isOverdue ? ' (OVERDUE)' : ''}</span>
                   </div>
                 </div>
@@ -11162,37 +11192,35 @@ This compilation report has been generated automatically based on approved EIU m
                 <div class="text-right">
                   <div class="text-sm text-gray-500 mb-1">Progress</div>
                   <div class="text-xl font-bold text-[#0D7DB5]">${(() => {
-                    // Use calculateMilestoneProgress to get actual progress
-                    // Always ensure progressData has overall progress from selectedProject
+                    // NEW SYSTEM: Calculate Physical Accomplishment Gained Weight: "X%/Y%" format
+                    // Get project and milestones data
                     const currentSelectedProject = typeof selectedProject !== 'undefined' ? selectedProject : (typeof window !== 'undefined' && window.selectedProject ? window.selectedProject : null);
-                    const currentProgressData = progressData || {};
+                    const allMilestones = currentSelectedProject?.milestones || sortedMilestones || milestones || [];
                     
-                    // Always merge selectedProject's overall progress into progressData
-                    const overallProgress = currentSelectedProject ? parseFloat(currentSelectedProject.overallProgress || currentSelectedProject.progress?.overall || 0) : 
-                                          (currentProgressData.progress ? parseFloat(currentProgressData.progress.overall || 0) : 0);
+                    // Calculate even weight per milestone (100% / number of milestones)
+                    const milestoneCount = allMilestones.length;
+                    const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
                     
-                    const finalProgressData = {
-                      ...currentProgressData,
-                      progress: {
-                        ...(currentProgressData.progress || {}),
-                        overall: overallProgress,
-                        timeline: currentSelectedProject ? parseFloat(currentSelectedProject.timelineProgress || currentSelectedProject.progress?.timeline || 0) : (currentProgressData.progress?.timeline || 0),
-                        budget: currentSelectedProject ? parseFloat(currentSelectedProject.budgetProgress || currentSelectedProject.progress?.budget || 0) : (currentProgressData.progress?.budget || 0),
-                        physical: currentSelectedProject ? parseFloat(currentSelectedProject.physicalProgress || currentSelectedProject.progress?.physical || 0) : (currentProgressData.progress?.physical || 0)
-                      }
-                    };
-                    
-                    // Get submissionsMap if available (from displayMilestones context)
+                    // Get approved submission
                     const submissionsMap = window.milestoneSubmissionsMap || {};
-                    const calculatedProgress = calculateMilestoneProgress(milestone, finalProgressData, submissionsMap);
-                    console.log(`🎯 Milestone "${milestone.title}" final calculated progress: ${calculatedProgress}%`, {
-                      milestoneStatus: milestone.status,
-                      isCompleted: milestone.status === 'completed' || milestone.status === 'approved',
-                      overallProgress: overallProgress,
-                      calculatedProgress: calculatedProgress
-                    });
-                    return calculatedProgress.toFixed(2);
-                  })()}%</div>
+                    const approvedSubmission = milestone.submissions?.find(s => s.status === 'approved' || s.status === 'iu_approved') || 
+                                               submissionsMap[milestone.id]?.find(s => s.status === 'approved' || s.status === 'iu_approved');
+                    
+                    // Check if milestone has Physical Division input AND is approved
+                    const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                                           milestone.physicalStatus === 'approved' ||
+                                           (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+                                            approvedSubmission.physicalProgressDescription.trim() !== '');
+                    const isApproved = approvedSubmission !== null && approvedSubmission !== undefined ||
+                                     milestone.status === 'approved' ||
+                                     milestone.status === 'completed' ||
+                                     milestone.physicalStatus === 'approved';
+                    
+                    // Milestone's contribution to overall progress (evenWeight if approved with physical input, 0 otherwise)
+                    const milestoneContribution = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
+                    
+                    return `${milestoneContribution.toFixed(2)}%/${evenWeightPerMilestone.toFixed(2)}%`;
+                  })()}</div>
                 </div>
                 <div class="icon-container-small bg-gradient-to-br from-gray-600 to-gray-700 toggle-chevron hover:scale-110 hover:rotate-3 transition-all duration-300 border-2 border-gray-500 hover:border-gray-400 rounded-xl">
                   <svg id="milestone-${milestone.id}-icon" class="w-4 h-4 text-white transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
