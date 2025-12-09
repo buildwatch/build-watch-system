@@ -1258,13 +1258,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           return 0;
         });
         
+        // NEW SYSTEM: Calculate even weight per milestone
+        const milestoneCount = sortedMilestones.length;
+        const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+        
         sortedMilestones.forEach((milestone, index) => {
           const milestoneId = milestone.id;
           const milestoneStart = milestone.startDate ? new Date(milestone.startDate) : startDate;
           const milestoneDue = milestone.dueDate ? new Date(milestone.dueDate) : endDate;
-          
-          // Get progress from milestone or approved submissions
-          let milestoneProgress = parseFloat(milestone.progress || 0);
           
           // Check if milestone is completed
           const isCompleted = milestone.status === 'completed' || milestone.status === 'approved';
@@ -1276,34 +1277,39 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             s.status === 'approved' || s.status === 'iu_approved'
           );
           
-          if (approvedSubmissions.length > 0) {
-            // Get the latest approved submission
-            const latestSubmission = approvedSubmissions.sort((a, b) => 
-              new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0)
-            )[0];
+          // Get latest approved submission
+          const latestSubmission = approvedSubmissions.length > 0
+            ? approvedSubmissions.sort((a, b) => 
+                new Date(b.submittedAt || b.createdAt || 0) - new Date(a.submittedAt || a.createdAt || 0)
+              )[0]
+            : null;
+          
+          if (latestSubmission) {
             actualEnd = new Date(latestSubmission.submittedAt || latestSubmission.createdAt);
-            
-            // Use progress from submission if available
-            if (latestSubmission.progress !== undefined && latestSubmission.progress !== null) {
-              milestoneProgress = parseFloat(latestSubmission.progress);
-            } else if (isCompleted && milestoneProgress === 0) {
-              // Calculate from divisions using the approved submission data
-              milestoneProgress = calculateMilestoneProgressFromDivisions(milestone, latestSubmission);
-              if (milestoneProgress === 0) milestoneProgress = 100; // Fallback
-            }
-          } else if (isCompleted && milestoneProgress === 0) {
-            // Calculate from divisions
-            milestoneProgress = calculateMilestoneProgressFromDivisions(milestone);
-            if (milestoneProgress === 0) milestoneProgress = 100; // Fallback
           }
           
-          const weight = parseFloat(milestone.weight || 0);
+          // NEW SYSTEM: Calculate milestone's contribution to overall progress
+          // Only count if milestone has Physical Division input AND is approved
+          const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                                 milestone.physicalStatus === 'approved' ||
+                                 (latestSubmission && latestSubmission.physicalProgressDescription && 
+                                  latestSubmission.physicalProgressDescription.trim() !== '');
+          const isApproved = latestSubmission !== undefined ||
+                           milestone.status === 'approved' ||
+                           milestone.status === 'completed' ||
+                           milestone.physicalStatus === 'approved';
           
-          // Only add to cumulative if milestone has actual progress
-          // Cumulative progress = sum of (milestone progress * milestone weight / 100) for all milestones with progress
-          if (milestoneProgress > 0) {
-          cumulativeProgress += milestoneProgress * (weight / 100);
-          }
+          // Milestone's contribution to overall progress (evenWeight if approved with physical input, 0 otherwise)
+          const milestoneContributionToOverall = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
+          
+          // Use even weight (NEW SYSTEM)
+          const weight = evenWeightPerMilestone;
+          
+          // Progress is the milestone's contribution to overall progress
+          const milestoneProgress = milestoneContributionToOverall;
+          
+          // Add to cumulative progress
+          cumulativeProgress += milestoneProgress;
           
           timelineItems.push({
             id: milestone.id,
@@ -1311,11 +1317,11 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
             startDate: milestoneStart,
             dueDate: milestoneDue,
             actualEndDate: actualEnd,
-            progress: milestoneProgress,
+            progress: milestoneProgress, // Contribution to overall progress
             status: milestone.status || 'pending',
             isCompleted,
             isDelayed: !isCompleted && milestoneDue < today,
-            weight: weight
+            weight: weight // Even weight per milestone
           });
           
           // Build progress trend
@@ -2563,6 +2569,30 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                           }
                         }
                         
+                        // NEW SYSTEM: Calculate even weight per milestone
+                        const milestoneCount = projectMilestones.length;
+                        const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+                        
+                        // Calculate milestone's contribution to overall progress
+                        // Only count if milestone has Physical Division input AND is approved
+                        const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                                               milestone.physicalStatus === 'approved' ||
+                                               (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+                                                approvedSubmission.physicalProgressDescription.trim() !== '');
+                        const isApproved = approvedSubmission !== undefined ||
+                                         milestone.status === 'approved' ||
+                                         milestone.status === 'completed' ||
+                                         milestone.physicalStatus === 'approved';
+                        
+                        // Milestone's contribution to overall progress (evenWeight if approved with physical input, 0 otherwise)
+                        const milestoneContributionToOverall = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
+                        
+                        // Calculate Budget Division Utilization for this milestone
+                        const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || approvedSubmission?.plannedBudget || 0);
+                        const usedBudget = parseFloat(approvedSubmission?.usedBudget || milestone.usedBudget || 0);
+                        const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
+                        const budgetDivisionUtilization = budgetUtilizationPercent * (evenWeightPerMilestone / 100);
+                        
                         return (
                           <div key={milestone.id || idx} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
                             <div className="flex items-start justify-between mb-4">
@@ -2576,11 +2606,24 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                 {displayStatus}
                               </span>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
+                            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-4">
                               <div>
                                 <p className="text-sm text-gray-500">Weight</p>
                                 <p className="text-lg font-semibold text-gray-900">
-                                  {parseFloat(milestone.weight || 0).toFixed(1)}%
+                                  {evenWeightPerMilestone.toFixed(2)}%
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Overall Progress</p>
+                                <p className="text-lg font-semibold text-blue-600">
+                                  {milestoneContributionToOverall.toFixed(2)}/{evenWeightPerMilestone.toFixed(2)}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">Contribution</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Budget Division Utilization</p>
+                                <p className="text-lg font-semibold text-green-600">
+                                  {budgetDivisionUtilization.toFixed(2)}%
                                 </p>
                               </div>
                               <div>
@@ -2604,12 +2647,6 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                 <p className="text-sm text-gray-500">Due Date</p>
                                 <p className="text-lg font-semibold text-gray-900">
                                   {formatDate(milestone.dueDate)}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Progress</p>
-                                <p className="text-lg font-semibold text-gray-900">
-                                  {progress.toFixed(1)}%
                                 </p>
                               </div>
                             </div>

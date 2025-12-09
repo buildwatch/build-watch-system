@@ -2555,7 +2555,7 @@ export default function DashboardCenter({ theme = 'green', role = null }) {
                               <div>
                                 <span className="text-gray-500">Progress:</span>
                                 <span className="ml-1 font-semibold text-gray-700">
-                                  {(parseFloat(project.overallProgress) || parseFloat(project.progress) || 0).toFixed(1)}%
+                                  {(parseFloat(project.progress?.overall) || parseFloat(project.overallProgress) || parseFloat(project.progress) || 0).toFixed(1)}%
                                 </span>
                               </div>
                             </div>

@@ -893,7 +893,7 @@ export default function ProjectLedgerCenter({
     // Progress range filter
     let matchesProgressRange = true;
     if (progressRangeMin || progressRangeMax) {
-      const projectProgress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      const projectProgress = parseFloat(project.progress?.overall || project.overallProgress || 0);
       if (progressRangeMin && projectProgress < parseFloat(progressRangeMin)) {
         matchesProgressRange = false;
       }
@@ -921,7 +921,7 @@ export default function ProjectLedgerCenter({
           matchesQuickFilter = project.priority === 'high';
           break;
         case 'nearCompletion':
-          const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+          const progress = parseFloat(project.progress?.overall || project.overallProgress || 0);
           matchesQuickFilter = progress >= 80 && progress < 100;
           break;
         case 'recentlyUpdated':
@@ -996,7 +996,7 @@ export default function ProjectLedgerCenter({
       stats.totalBudget += budget;
 
       // Average Progress
-      const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      const progress = parseFloat(project.progress?.overall || project.overallProgress || 0);
       totalProgress += progress;
 
       // Projects by Status
@@ -1236,7 +1236,7 @@ export default function ProjectLedgerCenter({
 
     validProjects.forEach(project => {
       const budget = parseFloat(project.totalBudget || 0);
-      const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      const progress = parseFloat(project.progress?.overall || project.overallProgress || 0);
       
       totalBudget += budget;
       totalProgress += progress;
@@ -1259,7 +1259,7 @@ export default function ProjectLedgerCenter({
     // Calculate variances
     validProjects.forEach(project => {
       const budget = parseFloat(project.totalBudget || 0);
-      const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+      const progress = parseFloat(project.progress?.overall || project.overallProgress || 0);
       
       const budgetVariance = metrics.averageBudget > 0 
         ? ((budget - metrics.averageBudget) / metrics.averageBudget) * 100 
@@ -1633,7 +1633,7 @@ export default function ProjectLedgerCenter({
       const basicInfo = [
         ['Project Title:', displayProject.name || 'N/A'],
         ['Status:', displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'],
-        ['Overall Progress:', `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`],
+        ['Overall Progress:', `${(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%`],
         ['Project Code:', displayProject.projectCode || 'N/A'],
         ['Implementing Office:', displayProject.implementingOfficeName || 'N/A'],
         ['Category:', displayProject.category || 'N/A'],
@@ -1937,7 +1937,7 @@ export default function ProjectLedgerCenter({
       const basicInfo = [
         ['Project Title:', displayProject.name || 'N/A'],
         ['Status:', displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A'],
-        ['Overall Progress:', `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`],
+        ['Overall Progress:', `${(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%`],
         ['Project Code:', displayProject.projectCode || 'N/A'],
         ['Implementing Office:', displayProject.implementingOfficeName || 'N/A'],
         ['Category:', displayProject.category || 'N/A'],
@@ -2387,7 +2387,7 @@ export default function ProjectLedgerCenter({
             const basicData = [
               displayProject.name || 'N/A',
               displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A',
-              `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`,
+              `${(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%`,
               displayProject.projectCode || 'N/A',
               displayProject.implementingOfficeName || 'N/A',
               displayProject.category || 'N/A',
@@ -2676,7 +2676,7 @@ export default function ProjectLedgerCenter({
           // Basic Project Information
           displayProject.name || 'N/A',
           displayProject.status ? displayProject.status.charAt(0).toUpperCase() + displayProject.status.slice(1) : 'N/A',
-          `${(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%`,
+          `${(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%`,
           displayProject.projectCode || 'N/A',
           displayProject.implementingOfficeName || 'N/A',
           displayProject.category || 'N/A',
@@ -4130,7 +4130,7 @@ export default function ProjectLedgerCenter({
                   };
 
                   const projectImage = getProjectImage();
-                  const overallProgress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+                  const overallProgress = parseFloat(project.progress?.overall || project.overallProgress || 0);
                   
                   // Get progress color
                   const getProgressColor = (progress) => {
@@ -5041,7 +5041,7 @@ export default function ProjectLedgerCenter({
                           ? new Date(project.targetCompletionDate || project.endDate) 
                           : null;
                         const today = new Date();
-                        const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+                        const progress = parseFloat(project.progress?.overall || project.overallProgress || 0);
                         
                         // Calculate timeline position (simplified)
                         let timelineWidth = 0;
@@ -5370,7 +5370,7 @@ export default function ProjectLedgerCenter({
                               <tr className="border-b border-gray-200 hover:bg-gray-50">
                                 <td className="px-6 py-4 font-semibold text-gray-700 bg-gray-50">Overall Progress</td>
                                 {comparisonProjects.map((project, index) => {
-                                  const progress = parseFloat(project.overallProgress || project.progress?.overall || 0);
+                                  const progress = parseFloat(project.progress?.overall || project.overallProgress || 0);
                                   const variance = metrics.progressVariances[index];
                                   return (
                                     <td key={project.id} className="px-6 py-4">
@@ -5468,7 +5468,7 @@ export default function ProjectLedgerCenter({
                         <ResponsiveContainer width="100%" height={250}>
                           <BarChart data={comparisonProjects.map(project => ({
                             name: project.name?.substring(0, 20) + (project.name?.length > 20 ? '...' : ''),
-                            progress: parseFloat(project.overallProgress || project.progress?.overall || 0)
+                            progress: parseFloat(project.progress?.overall || project.overallProgress || 0)
                           }))}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                             <XAxis 
@@ -5926,9 +5926,9 @@ export default function ProjectLedgerCenter({
                           <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
                             <div
                               className={`h-2.5 rounded-full transition-all duration-500 ${
-                                (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 76 ? 'bg-green-500' :
-                                (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 51 ? 'bg-blue-500' :
-                                (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 26 ? 'bg-yellow-500' :
+                                (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 76 ? 'bg-green-500' :
+                                (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 51 ? 'bg-blue-500' :
+                                (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 26 ? 'bg-yellow-500' :
                                 'bg-red-500'
                               }`}
                               style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
@@ -6373,9 +6373,9 @@ export default function ProjectLedgerCenter({
                                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                                           <div
                                             className={`h-2 rounded-full transition-all ${
-                                              (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 76 ? 'bg-green-500' :
-                                              (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 51 ? 'bg-blue-500' :
-                                              (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 26 ? 'bg-yellow-500' :
+                                              (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 76 ? 'bg-green-500' :
+                                              (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 51 ? 'bg-blue-500' :
+                                              (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 26 ? 'bg-yellow-500' :
                                               'bg-red-500'
                                             }`}
                                             style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
@@ -6540,9 +6540,9 @@ export default function ProjectLedgerCenter({
                                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                                     <div
                                       className={`h-2 rounded-full transition-all ${
-                                        (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 76 ? 'bg-green-500' :
-                                        (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 51 ? 'bg-blue-500' :
-                                        (parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)) >= 26 ? 'bg-yellow-500' :
+                                        (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 76 ? 'bg-green-500' :
+                                        (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 51 ? 'bg-blue-500' :
+                                        (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 26 ? 'bg-yellow-500' :
                                         'bg-red-500'
                                       }`}
                                       style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
