@@ -137,23 +137,23 @@ class ProgressCalculationService {
       let overallProgress, divisionProgress, internalDivisionProgress;
       
       // Calculate milestone-based progress (NEW SYSTEM: evenly split milestones)
-      const milestoneProgressData = await this.calculateMilestoneProgress(projectId);
-      
+        const milestoneProgressData = await this.calculateMilestoneProgress(projectId);
+        
       // Calculate Budget Division progress separately (utilized/allocated per milestone)
-      divisionProgress = await this.calculateDivisionProgress(projectId);
-      
-      // Calculate internal division progress (percentage within each division)
-      internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
-      
+        divisionProgress = await this.calculateDivisionProgress(projectId);
+        
+        // Calculate internal division progress (percentage within each division)
+        internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
+        
       // NEW OVERALL PROGRESS CALCULATION:
       // Overall progress is based on evenly split milestones
       // Only milestones with Physical Division input AND approved by LGU-IU count
       // Each milestone contributes its full allotted weight (e.g., 3 milestones = 33.33% each)
-      const totalWeight = milestoneProgressData.totalWeight || 100;
-      const calculatedProgress = totalWeight > 0 
-        ? (milestoneProgressData.appliedWeight / totalWeight) * 100 
-        : 0;
-      overallProgress = Math.round(Math.min(100, Math.max(0, calculatedProgress)) * 100) / 100;
+        const totalWeight = milestoneProgressData.totalWeight || 100;
+        const calculatedProgress = totalWeight > 0 
+          ? (milestoneProgressData.appliedWeight / totalWeight) * 100 
+          : 0;
+        overallProgress = Math.round(Math.min(100, Math.max(0, calculatedProgress)) * 100) / 100;
       
       console.log(`📊 [calculateProjectProgress] NEW calculation results:`, {
         overall: overallProgress,
@@ -520,20 +520,46 @@ class ProgressCalculationService {
     })));
 
     // Calculate weighted budget utilization for each milestone
+    // IMPORTANT: Only calculate for milestones that have approved submissions with budget data
     milestones.forEach((milestone) => {
       const submission = approvedSubmissions.find(s => s.milestoneId === milestone.id);
       
+      // Skip if no approved submission for this milestone
+      if (!submission) {
+        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}) has no approved submission, skipping`);
+        return;
+      }
+      
       // Get planned/allocated budget (prioritize milestone, then submission)
-      const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || submission?.plannedBudget || submission?.budgetPlanned || 0);
+      // Handle DECIMAL types from Sequelize - convert to number first
+      const milestonePlanned = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || 0);
+      const submissionPlanned = parseFloat(submission?.plannedBudget || submission?.budgetPlanned || 0);
+      // Use milestone planned budget if > 0, otherwise use submission planned budget
+      const plannedBudget = milestonePlanned > 0 ? milestonePlanned : submissionPlanned;
       
       // Get used/utilized budget (prioritize submission, then milestone)
-      const usedBudget = parseFloat(submission?.usedBudget || submission?.budgetDivision?.usedBudget || milestone.usedBudget || 0);
+      // Handle DECIMAL types from Sequelize - convert to number first
+      const submissionUsed = parseFloat(submission?.usedBudget || submission?.budgetDivision?.usedBudget || 0);
+      const milestoneUsed = parseFloat(milestone.usedBudget || 0);
+      // Use submission used budget if > 0, otherwise use milestone used budget
+      const usedBudget = submissionUsed > 0 ? submissionUsed : milestoneUsed;
+      
+      console.log(`🔍 [calculateDivisionProgress] Milestone "${milestone.title}" budget data extraction:`, {
+        milestonePlannedBudget: milestone.plannedBudget,
+        milestoneBudgetPlanned: milestone.budgetPlanned,
+        submissionPlannedBudget: submission?.plannedBudget,
+        submissionBudgetPlanned: submission?.budgetPlanned,
+        finalPlannedBudget: plannedBudget,
+        submissionUsedBudget: submission?.usedBudget,
+        milestoneUsedBudget: milestone.usedBudget,
+        finalUsedBudget: usedBudget
+      });
       
       // Get milestone weight (use even weight per milestone)
       const milestoneWeight = evenWeightPerMilestone;
       
-      // Only calculate if milestone has planned budget (to avoid division by zero)
-      if (plannedBudget > 0) {
+      // Only calculate if milestone has planned budget AND used budget (to avoid division by zero and meaningless calculations)
+      if (plannedBudget > 0 && usedBudget > 0) {
         // Calculate utilization percentage for this milestone
         // Example: 1M / 2.5M = 40% utilization
         const milestoneUtilizationPercent = (usedBudget / plannedBudget) * 100;
@@ -545,8 +571,8 @@ class ProgressCalculationService {
         totalWeightedUtilization += weightedContribution;
         
         console.log(`💰 [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}):`, {
-          hasApprovedSubmission: !!submission,
-          submissionId: submission?.id,
+          hasApprovedSubmission: true,
+          submissionId: submission.id,
           plannedBudget: plannedBudget,
           usedBudget: usedBudget,
           utilizationPercent: milestoneUtilizationPercent.toFixed(2) + '%',
@@ -556,8 +582,12 @@ class ProgressCalculationService {
           runningTotal: totalWeightedUtilization.toFixed(2) + '%'
         });
       } else {
-        // Milestone has no planned budget, so no contribution
-        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}) has no planned budget (${plannedBudget}), skipping`);
+        // Milestone has no planned budget or no used budget
+        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}) skipped:`, {
+          plannedBudget: plannedBudget,
+          usedBudget: usedBudget,
+          reason: plannedBudget === 0 ? 'no planned budget' : 'no used budget'
+        });
       }
     });
 
