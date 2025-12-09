@@ -3115,11 +3115,11 @@ export default function ProjectLedgerCenter({
       const physicalAccomplishmentGainedWeight = `${physicalAccomplishmentGained.toFixed(2)}%/${evenWeightPerPhase.toFixed(2)}%`;
       
       // Calculate Budget Utilization Gained Weight: "X%/Y%" format
-      // X = (usedBudget / plannedBudget) * evenWeightPerPhase
-      // Y = evenWeightPerPhase
+      // X = (usedBudget / plannedBudget) * budgetAllotedWeight
+      // Y = budgetAllotedWeight (each phase has its own budget allotted weight)
       const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
-      const budgetUtilizationGained = budgetUtilizationPercent * (evenWeightPerPhase / 100);
-      const budgetUtilizationGainedWeight = `${budgetUtilizationGained.toFixed(2)}%/${evenWeightPerPhase.toFixed(2)}%`;
+      const budgetUtilizationGained = budgetUtilizationPercent * (budgetAllotedWeight / 100);
+      const budgetUtilizationGainedWeight = `${budgetUtilizationGained.toFixed(2)}%/${budgetAllotedWeight.toFixed(2)}%`;
       
       // Get description from milestone (should always be in milestone)
       const description = milestone.description || milestone.title || 'N/A';
