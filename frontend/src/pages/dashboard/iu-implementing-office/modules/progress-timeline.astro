@@ -6438,9 +6438,9 @@ This compilation report has been generated automatically based on approved EIU m
             <label class="text-sm font-semibold text-gray-700">Current Overall Progress</label>
           </div>
           <div class="flex items-center gap-2">
-            <p class="font-bold text-blue-600 text-xl">${submission.project?.overallProgress || 0}%</p>
+            <p class="font-bold text-blue-600 text-xl">${submission.project?.progress?.overall || submission.project?.overallProgress || 0}%</p>
             <div class="flex-1 bg-gray-200 rounded-full h-2">
-              <div class="bg-blue-500 h-2 rounded-full" style="width: ${submission.project?.overallProgress || 0}%"></div>
+              <div class="bg-blue-500 h-2 rounded-full" style="width: ${submission.project?.progress?.overall || submission.project?.overallProgress || 0}%"></div>
             </div>
           </div>
         </div>

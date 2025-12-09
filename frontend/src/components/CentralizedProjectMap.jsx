@@ -390,10 +390,10 @@ export default function CentralizedProjectMap({
 
           const marker = L.marker([lat, lng], { icon: customIcon }).addTo(mapInstance.current);
           
-          // Get progress value
-          const progressValue = parseFloat(project.overallProgress) || 
-                               parseFloat(project.progress) || 
-                               parseFloat(project.progress?.overall) || 0;
+          // Get progress value - NEW SYSTEM: prioritize calculated API value (project.progress?.overall)
+          const progressValue = parseFloat(project.progress?.overall) || 
+                               parseFloat(project.overallProgress) || 
+                               parseFloat(project.progress) || 0;
 
           // Create popup content with better styling to prevent cutoff
           marker.bindPopup(`

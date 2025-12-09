@@ -1586,12 +1586,12 @@ export default function DocumentCenter({
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-xs font-medium text-gray-700">Overall Progress</span>
-                        <span className="text-xs font-bold text-gray-900">{(parseFloat(project.overallProgress) || 0).toFixed(1)}%</span>
+                        <span className="text-xs font-bold text-gray-900">{(parseFloat(project.progress?.overall || project.overallProgress) || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                         <div 
                           className="h-2 rounded-full transition-all duration-2000 ease-out bg-blue-500"
-                          style={{ width: `${Math.min(100, parseFloat(project.overallProgress) || 0)}%` }}
+                          style={{ width: `${Math.min(100, parseFloat(project.progress?.overall || project.overallProgress) || 0)}%` }}
                         ></div>
                       </div>
                     </div>

@@ -693,11 +693,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
           project.status = 'completed';
         }
         
-        // Ensure overallProgress is set from project or progress data
-        if (!project.overallProgress || project.overallProgress === 0) {
-          if (projectResult.progress?.overall) {
-            project.overallProgress = projectResult.progress.overall;
-          } else if (projectResult.project?.overallProgress) {
+        // Ensure overallProgress is set from project or progress data - NEW SYSTEM: prioritize progress.overall
+        // Always use calculated progress from API first
+        if (projectResult.progress?.overall !== undefined) {
+          project.overallProgress = projectResult.progress.overall;
+        } else if (projectResult.project?.progress?.overall !== undefined) {
+          project.overallProgress = projectResult.project.progress.overall;
+        } else if (!project.overallProgress || project.overallProgress === 0) {
+          if (projectResult.project?.overallProgress) {
             project.overallProgress = projectResult.project.overallProgress;
           }
         }
@@ -1351,7 +1354,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         today,
         timelineItems,
         progressData,
-        overallProgress: calculatedOverallProgress > 0 ? calculatedOverallProgress : parseFloat(project.overallProgress || 0)
+        overallProgress: calculatedOverallProgress > 0 ? calculatedOverallProgress : parseFloat(project.progress?.overall || project.overallProgress || 0)
       };
       
       console.log('📅 [Timeline Debug] Final timeline data:', timelineDataResult);
@@ -1777,7 +1780,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
         `Location: ${selectedProject.location || 'N/A'}`,
         `Total Budget: ${formatCurrency(selectedProject.totalBudget)}`,
         `Used Budget: ${formatCurrency(selectedProject.amountSpent || selectedProject.usedBudget || 0)}`,
-        `Overall Progress: ${selectedProject.overallProgress != null ? parseFloat(selectedProject.overallProgress).toFixed(1) : '0.0'}%`,
+        `Overall Progress: ${selectedProject.progress?.overall != null ? parseFloat(selectedProject.progress.overall).toFixed(1) : (selectedProject.overallProgress != null ? parseFloat(selectedProject.overallProgress).toFixed(1) : '0.0')}%`,
         `Start Date: ${selectedProject.startDate ? formatDate(selectedProject.startDate) : 'N/A'}`,
         `End Date: ${selectedProject.endDate ? formatDate(selectedProject.endDate) : 'N/A'}`
       ];
@@ -2079,7 +2082,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                 </div>
                 <div class="info-item">
                     <label>Overall Progress</label>
-                    <value>${selectedProject.overallProgress != null ? parseFloat(selectedProject.overallProgress).toFixed(1) : '0.0'}%</value>
+                    <value>${selectedProject.progress?.overall != null ? parseFloat(selectedProject.progress.overall).toFixed(1) : (selectedProject.overallProgress != null ? parseFloat(selectedProject.overallProgress).toFixed(1) : '0.0')}%</value>
                 </div>
                 <div class="info-item">
                     <label>Start Date</label>
@@ -2430,7 +2433,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                       <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
                         <h3 className="text-sm font-medium opacity-90 mb-2">Overall Progress</h3>
                         <p className="text-2xl font-bold">
-                          {parseFloat(selectedProject.overallProgress || 0).toFixed(1)}%
+                          {parseFloat(selectedProject.progress?.overall || selectedProject.overallProgress || 0).toFixed(1)}%
                         </p>
                       </div>
                       <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
@@ -3520,11 +3523,15 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                               <div className="bg-white/60 rounded-lg p-3">
                                 <p className="text-xs text-gray-600 mb-1">Final Progress</p>
                                 <p className="text-sm font-semibold text-gray-900">
-                                  {selectedProject.overallProgress != null 
-                                    ? (typeof selectedProject.overallProgress === 'number' 
-                                        ? selectedProject.overallProgress.toFixed(1) 
-                                        : parseFloat(selectedProject.overallProgress || 0).toFixed(1))
-                                    : '100.0'}%
+                                  {selectedProject.progress?.overall != null 
+                                    ? (typeof selectedProject.progress.overall === 'number' 
+                                        ? selectedProject.progress.overall.toFixed(1) 
+                                        : parseFloat(selectedProject.progress.overall || 0).toFixed(1))
+                                    : (selectedProject.overallProgress != null 
+                                        ? (typeof selectedProject.overallProgress === 'number' 
+                                            ? selectedProject.overallProgress.toFixed(1) 
+                                            : parseFloat(selectedProject.overallProgress || 0).toFixed(1))
+                                        : '100.0')}%
                                 </p>
                               </div>
                               <div className="bg-white/60 rounded-lg p-3">
