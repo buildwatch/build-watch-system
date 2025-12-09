@@ -3120,11 +3120,12 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
 
   // Function to render ProjectCard component HTML (matching ProjectCard.astro structure)
   function renderProjectCardHTML(project) {
-    // Calculate progress values
-    const overallProgress = isNaN(parseFloat(project.overallProgress || project.progress)) ? 0 : parseFloat(project.overallProgress || project.progress || 0);
-    const timelineProgress = isNaN(parseFloat(project.timelineProgress)) ? 0 : parseFloat(project.timelineProgress || 0);
-    const budgetProgress = isNaN(parseFloat(project.budgetProgress)) ? 0 : parseFloat(project.budgetProgress || 0);
-    const physicalProgress = isNaN(parseFloat(project.physicalProgress)) ? 0 : parseFloat(project.physicalProgress || 0);
+    // NEW SYSTEM: Calculate progress values - prioritize calculated values from API
+    const overallProgress = isNaN(parseFloat(project.progress?.overall || project.overallProgress || project.progress || 0)) ? 0 : parseFloat(project.progress?.overall || project.overallProgress || project.progress || 0);
+    const budgetProgress = isNaN(parseFloat(project.progress?.budget || project.budgetProgress || 0)) ? 0 : parseFloat(project.progress?.budget || project.budgetProgress || 0);
+    // Timeline and Physical now match Overall Progress (new system)
+    const timelineProgress = overallProgress;
+    const physicalProgress = overallProgress;
     
     // Format budget
     const formatBudget = (amount) => {
@@ -4078,13 +4079,33 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       const statusColor = getMilestoneStatusColor(status, milestone, hasApprovedSubmission, hasApprovedDivisions);
       const statusText = getMilestoneStatusText(status, milestone, hasApprovedSubmission, hasApprovedDivisions);
       
-      // Calculate milestone's actual progress percentage using division-based calculation
-      let progress = calculateMilestoneProgress(milestone);
+      // NEW SYSTEM: Calculate milestone's contribution to overall progress
+      // Get project milestones to calculate even weight
+      const projectMilestones = selectedProject?.milestones || milestones || [];
+      const milestoneCount = projectMilestones.length;
+      const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+      
+      // Check if milestone is approved with physical input
+      const approvedSubmission = milestone.submissions?.find(s => s.status === 'approved' || s.status === 'iu_approved');
+      const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                               milestone.physicalStatus === 'approved' ||
+                               (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+                                approvedSubmission.physicalProgressDescription.trim() !== '');
+      const isApproved = (approvedSubmission !== null && approvedSubmission !== undefined) ||
+                       milestone.status === 'approved' ||
+                       milestone.status === 'completed' ||
+                       milestone.physicalStatus === 'approved';
+      
+      // Milestone contribution is the even weight if approved with physical input, otherwise 0
+      const milestoneContribution = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
+      
+      // For display, use contribution (not the old calculated progress)
+      let progress = milestoneContribution;
       
       // Ensure progress is valid
       progress = isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress));
       
-      console.log(`📊 [${milestone.title}] Final progress:`, progress);
+      console.log(`📊 [${milestone.title}] Final progress: ${progress}%/${evenWeightPerMilestone}%`);
       const startDate = milestone.timelineStartDate ? new Date(milestone.timelineStartDate).toLocaleDateString() : 'N/A';
       const endDate = milestone.timelineEndDate ? new Date(milestone.timelineEndDate).toLocaleDateString() : 'N/A';
       
@@ -4108,10 +4129,10 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
             <div class="mb-4">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-sm font-medium text-gray-700">Progress</span>
-                <span class="text-sm font-bold text-gray-900">${progress.toFixed(2)}%</span>
+                <span class="text-sm font-bold text-gray-900">${progress.toFixed(2)}%/${evenWeightPerMilestone.toFixed(2)}%</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="h-2 rounded-full transition-all duration-1000 bg-blue-600" style="width: ${progress}%"></div>
+                <div class="h-2 rounded-full transition-all duration-1000 bg-blue-600" style="width: ${evenWeightPerMilestone > 0 ? (progress / evenWeightPerMilestone) * 100 : 0}%"></div>
               </div>
             </div>
           </div>
@@ -4418,8 +4439,26 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
                           Math.ceil((new Date(projectData.targetCompletionDate) - new Date(projectData.startDate)) / (1000 * 60 * 60 * 24)) : 
                           null);
     
-    // Calculate milestone's actual progress percentage using division-based calculation
-    let progress = calculateMilestoneProgress(milestone);
+    // NEW SYSTEM: Calculate milestone's contribution to overall progress
+    const projectMilestones = projectData?.milestones || currentProject?.milestones || [];
+    const milestoneCount = projectMilestones.length;
+    const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+    
+    // Check if milestone is approved with physical input
+    const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                             milestone.physicalStatus === 'approved' ||
+                             (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+                              approvedSubmission.physicalProgressDescription.trim() !== '');
+    const isApproved = (approvedSubmission !== null && approvedSubmission !== undefined) ||
+                     milestone.status === 'approved' ||
+                     milestone.status === 'completed' ||
+                     milestone.physicalStatus === 'approved';
+    
+    // Milestone contribution is the even weight if approved with physical input, otherwise 0
+    const milestoneContribution = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
+    
+    // For display, use contribution (not the old calculated progress)
+    let progress = milestoneContribution;
     
     // Ensure progress is a valid number
     progress = isNaN(progress) ? 0 : Math.max(0, Math.min(100, progress));
@@ -4498,9 +4537,9 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
               <label class="block text-sm font-medium text-gray-700 mb-1">Progress</label>
               <div class="flex items-center gap-2">
                 <div class="flex-1 bg-gray-200 rounded-full h-2">
-                  <div class="bg-green-500 h-2 rounded-full" style="width: ${progress.toFixed(2)}%"></div>
+                  <div class="bg-green-500 h-2 rounded-full" style="width: ${evenWeightPerMilestone > 0 ? (progress / evenWeightPerMilestone) * 100 : 0}%"></div>
                 </div>
-                <span class="text-sm font-medium text-gray-700">${progress.toFixed(2)}%</span>
+                <span class="text-sm font-medium text-gray-700">${progress.toFixed(2)}%/${evenWeightPerMilestone.toFixed(2)}%</span>
               </div>
             </div>
           </div>
