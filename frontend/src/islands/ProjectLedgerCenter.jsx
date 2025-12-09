@@ -533,23 +533,31 @@ export default function ProjectLedgerCenter({
           const enrichedProject = enrichProjectWithEIUData(data.project);
           
           // Fetch complete milestone data for this project
-          if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
-            try {
-              const milestonesResponse = await fetch(`${API_URL}/projects/${projectId}/milestones`, { headers });
-              if (milestonesResponse.ok) {
-                const milestonesData = await milestonesResponse.json();
-                if (milestonesData.success && milestonesData.milestones) {
-                  console.log(`📋 Fetched complete milestone data for project ${projectId}:`, milestonesData.milestones.length);
-                  enrichedProject.milestones = milestonesData.milestones;
-                }
+          // Use public endpoint for public users, authenticated endpoint for logged-in users
+          try {
+            const milestonesEndpoint = isPublic 
+              ? `${API_URL}/milestones/project/${projectId}/public`
+              : `${API_URL}/projects/${projectId}/milestones`;
+            const milestonesResponse = await fetch(milestonesEndpoint, { headers });
+            if (milestonesResponse.ok) {
+              const milestonesData = await milestonesResponse.json();
+              if (milestonesData.success && milestonesData.milestones) {
+                console.log(`📋 Fetched complete milestone data for project ${projectId}:`, milestonesData.milestones.length);
+                enrichedProject.milestones = milestonesData.milestones;
+              } else if (milestonesData.milestones) {
+                // Handle case where response doesn't have success field
+                console.log(`📋 Fetched milestone data (no success field):`, milestonesData.milestones.length);
+                enrichedProject.milestones = milestonesData.milestones;
               }
-            } catch (err) {
-              console.warn(`⚠️ Could not fetch milestones for project ${projectId}:`, err);
+            } else {
+              console.warn(`⚠️ Failed to fetch milestones, status: ${milestonesResponse.status}`);
             }
+          } catch (err) {
+            console.warn(`⚠️ Could not fetch milestones for project ${projectId}:`, err);
           }
           
-          // Fetch milestone submissions and attach to project
-          if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+          // Fetch milestone submissions and attach to project (only for authenticated users)
+          if (!isPublic && enrichedProject.milestones && enrichedProject.milestones.length > 0) {
             console.log('📋 Fetching submissions for project:', projectId);
             const submissions = await fetchMilestoneSubmissions(projectId);
             console.log('📋 Fetched submissions:', submissions.length);
@@ -574,6 +582,19 @@ export default function ProjectLedgerCenter({
               milestone.submissions = milestoneSubmissions;
               milestone.approvedSubmission = approvedSubmission;
             });
+          } else if (isPublic && enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+            // For public users, try to get approved submissions from the public project endpoint
+            // The public endpoint should include approved submissions in the milestones
+            console.log('📋 Public user - checking milestones for approved submissions');
+            enrichedProject.milestones.forEach(milestone => {
+              // Check if milestone has submission data embedded
+              if (milestone.submissions && Array.isArray(milestone.submissions)) {
+                const approvedSubmission = milestone.submissions.find(s => 
+                  s.status === 'approved' || s.status === 'iu_approved'
+                );
+                milestone.approvedSubmission = approvedSubmission;
+              }
+            });
           }
           
           setSelectedProject(enrichedProject);
@@ -585,23 +606,31 @@ export default function ProjectLedgerCenter({
             const enriched = enrichProjectWithEIUData(project);
             
             // Fetch complete milestone data for this project
-            if (enriched.milestones && enriched.milestones.length > 0) {
-              try {
-                const milestonesResponse = await fetch(`${API_URL}/projects/${enriched.id}/milestones`, { headers });
-                if (milestonesResponse.ok) {
-                  const milestonesData = await milestonesResponse.json();
-                  if (milestonesData.success && milestonesData.milestones) {
-                    console.log(`📋 Fetched complete milestone data for project ${enriched.id}:`, milestonesData.milestones.length);
-                    enriched.milestones = milestonesData.milestones;
-                  }
+            // Use public endpoint for public users, authenticated endpoint for logged-in users
+            try {
+              const milestonesEndpoint = isPublic 
+                ? `${API_URL}/milestones/project/${enriched.id}/public`
+                : `${API_URL}/projects/${enriched.id}/milestones`;
+              const milestonesResponse = await fetch(milestonesEndpoint, { headers });
+              if (milestonesResponse.ok) {
+                const milestonesData = await milestonesResponse.json();
+                if (milestonesData.success && milestonesData.milestones) {
+                  console.log(`📋 Fetched complete milestone data for project ${enriched.id}:`, milestonesData.milestones.length);
+                  enriched.milestones = milestonesData.milestones;
+                } else if (milestonesData.milestones) {
+                  // Handle case where response doesn't have success field
+                  console.log(`📋 Fetched milestone data (no success field):`, milestonesData.milestones.length);
+                  enriched.milestones = milestonesData.milestones;
                 }
-              } catch (err) {
-                console.warn(`⚠️ Could not fetch milestones for project ${enriched.id}:`, err);
+              } else {
+                console.warn(`⚠️ Failed to fetch milestones for project ${enriched.id}, status: ${milestonesResponse.status}`);
               }
+            } catch (err) {
+              console.warn(`⚠️ Could not fetch milestones for project ${enriched.id}:`, err);
             }
             
-            // Fetch milestone submissions and attach to project
-            if (enriched.milestones && enriched.milestones.length > 0) {
+            // Fetch milestone submissions and attach to project (only for authenticated users)
+            if (!isPublic && enriched.milestones && enriched.milestones.length > 0) {
               console.log(`📋 Fetching submissions for project: ${enriched.id}`);
               const submissions = await fetchMilestoneSubmissions(enriched.id);
               console.log(`📋 Fetched ${submissions.length} submissions for project ${enriched.id}`);
@@ -624,6 +653,19 @@ export default function ProjectLedgerCenter({
                 
                 milestone.submissions = milestoneSubmissions;
                 milestone.approvedSubmission = approvedSubmission;
+              });
+            } else if (isPublic && enriched.milestones && enriched.milestones.length > 0) {
+              // For public users, try to get approved submissions from the public project endpoint
+              // The public endpoint should include approved submissions in the milestones
+              console.log(`📋 Public user - checking milestones for approved submissions for project ${enriched.id}`);
+              enriched.milestones.forEach(milestone => {
+                // Check if milestone has submission data embedded
+                if (milestone.submissions && Array.isArray(milestone.submissions)) {
+                  const approvedSubmission = milestone.submissions.find(s => 
+                    s.status === 'approved' || s.status === 'iu_approved'
+                  );
+                  milestone.approvedSubmission = approvedSubmission;
+                }
               });
             }
             
@@ -714,23 +756,31 @@ export default function ProjectLedgerCenter({
         const enrichedProject = enrichProjectWithEIUData(data.project);
         
         // Fetch complete milestone data for this project
-        if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
-          try {
-            const milestonesResponse = await fetch(`${API_URL}/projects/${id}/milestones`, { headers });
-            if (milestonesResponse.ok) {
-              const milestonesData = await milestonesResponse.json();
-              if (milestonesData.success && milestonesData.milestones) {
-                console.log(`📋 Fetched complete milestone data for project ${id}:`, milestonesData.milestones.length);
-                enrichedProject.milestones = milestonesData.milestones;
-              }
+        // Use public endpoint for public users, authenticated endpoint for logged-in users
+        try {
+          const milestonesEndpoint = isPublic 
+            ? `${API_URL}/milestones/project/${id}/public`
+            : `${API_URL}/projects/${id}/milestones`;
+          const milestonesResponse = await fetch(milestonesEndpoint, { headers });
+          if (milestonesResponse.ok) {
+            const milestonesData = await milestonesResponse.json();
+            if (milestonesData.success && milestonesData.milestones) {
+              console.log(`📋 Fetched complete milestone data for project ${id}:`, milestonesData.milestones.length);
+              enrichedProject.milestones = milestonesData.milestones;
+            } else if (milestonesData.milestones) {
+              // Handle case where response doesn't have success field
+              console.log(`📋 Fetched milestone data (no success field):`, milestonesData.milestones.length);
+              enrichedProject.milestones = milestonesData.milestones;
             }
-          } catch (err) {
-            console.warn(`⚠️ Could not fetch milestones for project ${id}:`, err);
+          } else {
+            console.warn(`⚠️ Failed to fetch milestones for project ${id}, status: ${milestonesResponse.status}`);
           }
+        } catch (err) {
+          console.warn(`⚠️ Could not fetch milestones for project ${id}:`, err);
         }
         
-        // Fetch milestone submissions and attach to project
-        if (enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+        // Fetch milestone submissions and attach to project (only for authenticated users)
+        if (!isPublic && enrichedProject.milestones && enrichedProject.milestones.length > 0) {
           console.log('📋 Fetching submissions for project details:', id);
           const submissions = await fetchMilestoneSubmissions(id);
           console.log('📋 Fetched submissions for project details:', submissions.length);
@@ -754,6 +804,19 @@ export default function ProjectLedgerCenter({
             
             milestone.submissions = milestoneSubmissions;
             milestone.approvedSubmission = approvedSubmission;
+          });
+        } else if (isPublic && enrichedProject.milestones && enrichedProject.milestones.length > 0) {
+          // For public users, try to get approved submissions from the public project endpoint
+          // The public endpoint should include approved submissions in the milestones
+          console.log('📋 Public user - checking milestones for approved submissions in project details');
+          enrichedProject.milestones.forEach(milestone => {
+            // Check if milestone has submission data embedded
+            if (milestone.submissions && Array.isArray(milestone.submissions)) {
+              const approvedSubmission = milestone.submissions.find(s => 
+                s.status === 'approved' || s.status === 'iu_approved'
+              );
+              milestone.approvedSubmission = approvedSubmission;
+            }
           });
         }
         
@@ -6646,7 +6709,13 @@ export default function ProjectLedgerCenter({
                               {/* Physical Accomplishment Information */}
                               <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.physicalProgressRequirements || displayProject.generalDescription || displayProject.physicalDescription || displayProject.requiredDocumentation || 'N/A'}</td>
                               
-                              {/* Project Phases Update - Empty when no phases */}
+                              {/* Project Phases Update - Empty when no phases (all 19 columns) */}
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
+                              <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>

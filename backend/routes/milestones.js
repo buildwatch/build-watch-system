@@ -333,9 +333,41 @@ router.get('/project/:projectId/public', async (req, res) => {
       order: [['order', 'ASC'], ['dueDate', 'ASC']]
     });
 
+    // Get approved milestone submissions for public viewing
+    const milestoneIds = milestones.map(m => m.id);
+    const approvedSubmissions = await MilestoneSubmission.findAll({
+      where: {
+        projectId: projectId,
+        milestoneId: { [Op.in]: milestoneIds },
+        status: { [Op.in]: ['approved', 'iu_approved'] }
+      },
+      attributes: [
+        'id', 'milestoneId', 'projectId', 'status', 'submittedAt', 'reviewedAt',
+        'timelineActivitiesDeliverables', 'usedBudget', 'remainingBudget', 
+        'budgetBreakdownAllocation', 'physicalProgressDescription',
+        'photoEvidence', 'videoEvidence', 'documentFiles',
+        'remarks', 'remarksAndRecommendation', 'reviewNotes'
+      ],
+      order: [['submittedAt', 'DESC']],
+      raw: true
+    });
+
+    // Attach approved submissions to their milestones
+    const milestonesWithSubmissions = milestones.map(milestone => {
+      const milestoneData = milestone.toJSON();
+      const milestoneSubmissions = approvedSubmissions.filter(s => s.milestoneId === milestone.id);
+      const latestApprovedSubmission = milestoneSubmissions.length > 0 ? milestoneSubmissions[0] : null;
+      
+      return {
+        ...milestoneData,
+        submissions: milestoneSubmissions,
+        approvedSubmission: latestApprovedSubmission
+      };
+    });
+
     res.json({
       success: true,
-      milestones
+      milestones: milestonesWithSubmissions
     });
   } catch (error) {
     console.error('Error fetching public milestones:', error);

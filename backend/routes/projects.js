@@ -2002,10 +2002,12 @@ router.get('/public/:id', async (req, res) => {
       totalBudget: project.totalBudget,
       budgetUpdateFrequency: project.budgetUpdateFrequency,
       budgetBreakdown: project.budgetBreakdown,
+      budgetDescription: project.budgetDescription || project.budgetBreakdown, // Add budgetDescription for public
       budgetProgress: progressData.progress?.internalBudget || progressData.progress?.budget || 0,
       physicalUpdateFrequency: project.physicalUpdateFrequency,
       requiredDocumentation: project.requiredDocumentation,
       physicalProgressRequirements: project.physicalProgressRequirements,
+      generalDescription: project.generalDescription || project.physicalProgressRequirements || project.physicalDescription || project.requiredDocumentation, // Add generalDescription for public
       initialPhoto: project.initialPhoto,
       physicalProgress: progressData.progress?.internalPhysical || progressData.progress?.physical || 0,
       overallProgress: progressData.progress?.overall || 0,
