@@ -2035,9 +2035,10 @@ loading = false;
     projectsData.forEach(project => {
       // Use new field names from backend
       const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
-      const timelineProgress = parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
       const budgetProgress = parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
-      const physicalProgress = parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
+      // NEW SYSTEM: Timeline and Physical Progress match Overall Progress (milestone-based system)
+      const timelineProgress = overallProgress;
+      const physicalProgress = overallProgress;
       
       // Determine project status based on the three main statuses
       const projectStatus = project.status || 'ongoing';
@@ -2320,9 +2321,10 @@ loading = false;
           
           // Use progress data from backend or fallback to project data
           const overallProgress = progressData?.progress?.overall || parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
-          const timelineProgress = progressData?.progress?.internalTimeline || parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
           const budgetProgress = progressData?.progress?.internalBudget || parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
-          const physicalProgress = progressData?.progress?.internalPhysical || parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
+          // NEW SYSTEM: Timeline and Physical Progress match Overall Progress (milestone-based system)
+          const timelineProgress = overallProgress;
+          const physicalProgress = overallProgress;
 
           const card = document.querySelector(`[data-project-id="${project.id}"]`);
           if (card) {
@@ -2903,10 +2905,10 @@ loading = false;
 
     // Update progress bars using calculated progress from ProgressCalculationService
     const overallProgress = localProgressData?.progress?.overall || parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
-    // Use internal division progress (percentage within each division) instead of contribution to overall
-    const timelineProgress = localProgressData?.progress?.internalTimeline || parseFloat(project.progress?.timeline || project.progress?.internalTimeline || project.progress?.timelineProgress || project.timelineProgress || 0);
     const budgetProgress = localProgressData?.progress?.internalBudget || parseFloat(project.progress?.budget || project.progress?.internalBudget || project.progress?.budgetProgress || project.budgetProgress || 0);
-    const physicalProgress = localProgressData?.progress?.internalPhysical || parseFloat(project.progress?.physical || project.progress?.internalPhysical || project.progress?.physicalProgress || project.physicalProgress || 0);
+    // NEW SYSTEM: Timeline and Physical Progress match Overall Progress (milestone-based system)
+    const timelineProgress = overallProgress;
+    const physicalProgress = overallProgress;
     
     // Progress elements moved to Project Management Dashboard - updated by updateProjectManagementDashboard()
 
@@ -5178,11 +5180,12 @@ This compilation report has been generated automatically based on approved EIU m
       }
     }
 
-    // Update progress cards - use actual project overall progress instead of averaging divisions
-    const timelineProgress = parseFloat(project.progress?.timeline || project.timelineProgress || 0);
-    const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
-    const physicalProgress = parseFloat(project.progress?.physical || project.physicalProgress || 0);
+    // Update progress cards - NEW SYSTEM: Timeline and Physical match Overall Progress
     const overallProgress = parseFloat(project.progress?.overall || project.progress?.overallProgress || project.overallProgress || 0);
+    const budgetProgress = parseFloat(project.progress?.budget || project.budgetProgress || 0);
+    // Timeline and Physical Progress now match Overall Progress (new milestone-based system)
+    const timelineProgress = overallProgress;
+    const physicalProgress = overallProgress;
 
     document.getElementById('overallProgress').textContent = `${overallProgress.toFixed(2)}%`;
     document.getElementById('timelineProgress').textContent = `${timelineProgress.toFixed(1)}%`;
@@ -5605,6 +5608,17 @@ This compilation report has been generated automatically based on approved EIU m
           milestoneId: submission.milestoneId,
           status: submission.status
         });
+        // Attach updated project progress data to submission
+        if (selectedProject && submission.projectId === selectedProject.id) {
+          submission.project = {
+            ...(submission.project || {}),
+            progress: {
+              ...(submission.project?.progress || {}),
+              overall: parseFloat(selectedProject.progress?.overall || selectedProject.overallProgress || 0)
+            },
+            overallProgress: parseFloat(selectedProject.progress?.overall || selectedProject.overallProgress || 0)
+          };
+        }
         return renderMilestoneSubmissionCard(submission);
       }).join('');
       
@@ -6471,9 +6485,23 @@ This compilation report has been generated automatically based on approved EIU m
             <label class="text-sm font-semibold text-gray-700">Current Overall Progress</label>
           </div>
           <div class="flex items-center gap-2">
-            <p class="font-bold text-blue-600 text-xl">${submission.project?.progress?.overall || submission.project?.overallProgress || 0}%</p>
+            <p class="font-bold text-blue-600 text-xl">${(() => {
+              // Prioritize selectedProject's progress if available, then submission.project's progress
+              const currentSelectedProject = typeof selectedProject !== 'undefined' ? selectedProject : (typeof window !== 'undefined' && window.selectedProject ? window.selectedProject : null);
+              if (currentSelectedProject && submission.projectId === currentSelectedProject.id) {
+                return parseFloat(currentSelectedProject.progress?.overall || currentSelectedProject.overallProgress || 0).toFixed(1);
+              }
+              return parseFloat(submission.project?.progress?.overall || submission.project?.overallProgress || 0).toFixed(1);
+            })()}%</p>
             <div class="flex-1 bg-gray-200 rounded-full h-2">
-              <div class="bg-blue-500 h-2 rounded-full" style="width: ${submission.project?.progress?.overall || submission.project?.overallProgress || 0}%"></div>
+              <div class="bg-blue-500 h-2 rounded-full" style="width: ${(() => {
+                // Prioritize selectedProject's progress if available, then submission.project's progress
+                const currentSelectedProject = typeof selectedProject !== 'undefined' ? selectedProject : (typeof window !== 'undefined' && window.selectedProject ? window.selectedProject : null);
+                if (currentSelectedProject && submission.projectId === currentSelectedProject.id) {
+                  return parseFloat(currentSelectedProject.progress?.overall || currentSelectedProject.overallProgress || 0);
+                }
+                return parseFloat(submission.project?.progress?.overall || submission.project?.overallProgress || 0);
+              })()}%"></div>
             </div>
           </div>
         </div>
