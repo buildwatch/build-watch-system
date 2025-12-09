@@ -57,9 +57,11 @@ const themeColors = {
 const theme = themeColors[userTheme];
 
 // Calculate progress values - ensure they are valid numbers
-const overallProgress = isNaN(parseFloat(project.overallProgress || project.progress)) ? 0 : parseFloat(project.overallProgress || project.progress || 0);
+// NEW SYSTEM: Overall progress is based on evenly split milestones, budget is weighted utilization
+const overallProgress = isNaN(parseFloat(project.overallProgress || project.progress?.overall || project.progress)) ? 0 : parseFloat(project.overallProgress || project.progress?.overall || project.progress || 0);
 const timelineProgress = isNaN(parseFloat(project.timelineProgress)) ? 0 : parseFloat(project.timelineProgress || 0);
-const budgetProgress = isNaN(parseFloat(project.budgetProgress)) ? 0 : parseFloat(project.budgetProgress || 0);
+// Budget progress: prioritize budgetUtilizationPercentage, then budgetProgress, then progress.budget
+const budgetProgress = isNaN(parseFloat(project.budgetUtilizationPercentage || project.budgetProgress || project.progress?.budget)) ? 0 : parseFloat(project.budgetUtilizationPercentage || project.budgetProgress || project.progress?.budget || 0);
 const physicalProgress = isNaN(parseFloat(project.physicalProgress)) ? 0 : parseFloat(project.physicalProgress || 0);
 
 // Dynamic progress color based on percentage

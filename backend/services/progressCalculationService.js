@@ -130,58 +130,37 @@ class ProgressCalculationService {
         order: [['createdAt', 'DESC']]
       });
 
-      // Check if project has direct progress fields that are more recent
-      const hasDirectProgress = project.overallProgress !== null && project.overallProgress !== undefined && 
-                               project.timelineProgress !== null && project.timelineProgress !== undefined &&
-                               project.budgetProgress !== null && project.budgetProgress !== undefined &&
-                               project.physicalProgress !== null && project.physicalProgress !== undefined;
+      // ALWAYS use new milestone-based calculation (NEW SYSTEM)
+      // Do not use cached direct progress fields - always recalculate for accuracy
+      debugLog(`🔍 [calculateProjectProgress] Using NEW milestone-based calculation for project ${projectId}`);
       
       let overallProgress, divisionProgress, internalDivisionProgress;
       
-      if (hasDirectProgress && project.lastProgressUpdate) {
-        // Use direct progress fields from database (more accurate for recent updates)
-        console.log(`🔍 Using direct progress fields for project ${projectId}:`, {
-          overall: project.overallProgress,
-          timeline: project.timelineProgress,
-          budget: project.budgetProgress,
-          physical: project.physicalProgress,
-          lastUpdate: project.lastProgressUpdate
-        });
-        
-        overallProgress = parseFloat(project.overallProgress) || 0;
-        divisionProgress = {
-          timeline: parseFloat(project.timelineProgress) || 0,
-          budget: parseFloat(project.budgetProgress) || 0,
-          physical: parseFloat(project.physicalProgress) || 0
-        };
-        internalDivisionProgress = {
-          timeline: parseFloat(project.timelineProgress) || 0,
-          budget: parseFloat(project.budgetProgress) || 0,
-          physical: parseFloat(project.physicalProgress) || 0
-        };
-      } else {
-        // Fallback to milestone-based calculation
-        debugLog(`🔍 [calculateProjectProgress] Using milestone-based calculation for project ${projectId}`);
-        
-        // Calculate milestone-based progress (NEW SYSTEM: evenly split milestones)
-        const milestoneProgressData = await this.calculateMilestoneProgress(projectId);
-        
-        // Calculate Budget Division progress separately (utilized/allocated per milestone)
-        divisionProgress = await this.calculateDivisionProgress(projectId);
-        
-        // Calculate internal division progress (percentage within each division)
-        internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
-        
-        // NEW OVERALL PROGRESS CALCULATION:
-        // Overall progress is based on evenly split milestones
-        // Only milestones with Physical Division input AND approved by LGU-IU count
-        // Each milestone contributes its full allotted weight (e.g., 10 milestones = 10% each)
-        const totalWeight = milestoneProgressData.totalWeight || 100;
-        const calculatedProgress = totalWeight > 0 
-          ? (milestoneProgressData.appliedWeight / totalWeight) * 100 
-          : 0;
-        overallProgress = Math.round(Math.min(100, Math.max(0, calculatedProgress)) * 100) / 100;
-      }
+      // Calculate milestone-based progress (NEW SYSTEM: evenly split milestones)
+      const milestoneProgressData = await this.calculateMilestoneProgress(projectId);
+      
+      // Calculate Budget Division progress separately (utilized/allocated per milestone)
+      divisionProgress = await this.calculateDivisionProgress(projectId);
+      
+      // Calculate internal division progress (percentage within each division)
+      internalDivisionProgress = await this.calculateInternalDivisionProgress(projectId);
+      
+      // NEW OVERALL PROGRESS CALCULATION:
+      // Overall progress is based on evenly split milestones
+      // Only milestones with Physical Division input AND approved by LGU-IU count
+      // Each milestone contributes its full allotted weight (e.g., 3 milestones = 33.33% each)
+      const totalWeight = milestoneProgressData.totalWeight || 100;
+      const calculatedProgress = totalWeight > 0 
+        ? (milestoneProgressData.appliedWeight / totalWeight) * 100 
+        : 0;
+      overallProgress = Math.round(Math.min(100, Math.max(0, calculatedProgress)) * 100) / 100;
+      
+      console.log(`📊 [calculateProjectProgress] NEW calculation results:`, {
+        overall: overallProgress,
+        budget: divisionProgress.budget,
+        appliedWeight: milestoneProgressData.appliedWeight,
+        totalWeight: milestoneProgressData.totalWeight
+      });
       
       // Calculate milestone-based progress for milestone data (already calculated above, but need for response)
       const milestoneProgress = await this.calculateMilestoneProgress(projectId);
@@ -252,7 +231,9 @@ class ProgressCalculationService {
           physicalProgressRequirements: project.physicalProgressRequirements,
           amountSpent: amountSpent,
           status: project.status === 'complete' ? 'completed' : project.status, // Normalize status for API
-          overallProgress: project.overallProgress || overallProgress, // Ensure progress is included
+          overallProgress: overallProgress, // Always use calculated value (NEW SYSTEM)
+          budgetProgress: divisionProgress.budget, // Always use calculated value (NEW SYSTEM)
+          budgetUtilizationPercentage: divisionProgress.budget, // Alias for clarity
           completionDate: project.completionDate,
           actualCompletionDate: project.actualCompletionDate,
           workflowStatus: project.workflowStatus,
@@ -276,6 +257,7 @@ class ProgressCalculationService {
           timeline: divisionProgress.timeline,
           budget: divisionProgress.budget,
           physical: divisionProgress.physical,
+          budgetUtilizationPercentage: divisionProgress.budget, // Alias for clarity
           // Internal division progress (percentage within each division)
           internalTimeline: internalDivisionProgress.timeline,
           internalBudget: internalDivisionProgress.budget,
@@ -397,17 +379,29 @@ class ProgressCalculationService {
       );
       
       // Check if milestone has Physical Division input
-      const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
-                               milestone.physicalStatus === 'approved' ||
-                               (update && update.physicalDescription && update.physicalDescription.trim() !== '') ||
-                               (approvedSubmission && approvedSubmission.physicalProgressDescription && 
-                                approvedSubmission.physicalProgressDescription.trim() !== '');
+      // Priority: approvedSubmission > milestone.physicalStatus > milestone.physicalDescription > update
+      const hasPhysicalInput = 
+        (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+         approvedSubmission.physicalProgressDescription.trim() !== '') ||
+        milestone.physicalStatus === 'approved' ||
+        (milestone.physicalDescription && milestone.physicalDescription.trim() !== '') ||
+        (update && update.physicalDescription && update.physicalDescription.trim() !== '');
       
       // Check if milestone is approved by LGU-IU
+      // Priority: approvedSubmission > milestone.status > milestone.physicalStatus
       const isApproved = approvedSubmission !== undefined ||
                          milestone.status === 'approved' ||
                          milestone.status === 'completed' ||
                          milestone.physicalStatus === 'approved';
+      
+      debugLog(`🔍 [calculateMilestoneProgress] Milestone "${milestone.title}" check:`, {
+        hasApprovedSubmission: approvedSubmission !== undefined,
+        milestoneStatus: milestone.status,
+        physicalStatus: milestone.physicalStatus,
+        hasPhysicalDescription: !!(milestone.physicalDescription && milestone.physicalDescription.trim() !== ''),
+        hasPhysicalInput: hasPhysicalInput,
+        isApproved: isApproved
+      });
       
       // NEW LOGIC: Only count milestones with Physical Division input AND approved by LGU-IU
       let status = milestone.status || update?.status || 'pending';
@@ -522,21 +516,24 @@ class ProgressCalculationService {
     milestones.forEach((milestone) => {
       const submission = approvedSubmissions.find(s => s.milestoneId === milestone.id);
       
-      // Get planned/allocated budget
+      // Get planned/allocated budget (prioritize milestone, then submission)
       const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || submission?.plannedBudget || submission?.budgetPlanned || 0);
       
-      // Get used/utilized budget
+      // Get used/utilized budget (prioritize submission, then milestone)
       const usedBudget = parseFloat(submission?.usedBudget || submission?.budgetDivision?.usedBudget || milestone.usedBudget || 0);
       
       // Get milestone weight (use even weight per milestone)
       const milestoneWeight = evenWeightPerMilestone;
       
-      if (plannedBudget > 0 && usedBudget > 0) {
-        // Calculate utilization percentage for this milestone (e.g., 2M / 2.5M = 80%)
+      // Only calculate if milestone has planned budget (to avoid division by zero)
+      if (plannedBudget > 0) {
+        // Calculate utilization percentage for this milestone
+        // Example: 1M / 2.5M = 40% utilization
         const milestoneUtilizationPercent = (usedBudget / plannedBudget) * 100;
         
         // Calculate weighted contribution: utilization * (weight / 100)
-        // Example: 80% utilization * (33.33% / 100) = 26.66%
+        // Example: 40% utilization * (33.33% / 100) = 13.33%
+        // Formula: (usedBudget / plannedBudget) * (milestoneWeight / 100)
         const weightedContribution = milestoneUtilizationPercent * (milestoneWeight / 100);
         totalWeightedUtilization += weightedContribution;
         
@@ -545,8 +542,12 @@ class ProgressCalculationService {
           usedBudget: usedBudget,
           utilizationPercent: milestoneUtilizationPercent.toFixed(2) + '%',
           milestoneWeight: milestoneWeight.toFixed(2) + '%',
-          weightedContribution: weightedContribution.toFixed(2) + '%'
+          weightedContribution: weightedContribution.toFixed(2) + '%',
+          calculation: `(${usedBudget} / ${plannedBudget}) * (${milestoneWeight}% / 100) = ${weightedContribution.toFixed(2)}%`
         });
+      } else {
+        // Milestone has no planned budget, so no contribution
+        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" has no planned budget, skipping`);
       }
     });
 
