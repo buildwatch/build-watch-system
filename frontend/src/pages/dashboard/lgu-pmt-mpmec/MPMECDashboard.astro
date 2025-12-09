@@ -104,14 +104,25 @@ try {
                 const budget = parseFloat(project.totalBudget) || 0;
                 
                 // Update the project object with the new progress data - ensure valid numbers
-                project.progress = progress;
-                project.overallProgress = isNaN(parseFloat(progress.overall)) ? 0 : parseFloat(progress.overall || 0);
-                project.timelineProgress = isNaN(parseFloat(progress.internalTimeline)) ? 0 : parseFloat(progress.internalTimeline || 0);
-                project.budgetProgress = isNaN(parseFloat(progress.internalBudget)) ? 0 : parseFloat(progress.internalBudget || 0);
-                project.physicalProgress = isNaN(parseFloat(progress.internalPhysical)) ? 0 : parseFloat(progress.internalPhysical || 0);
+                // NEW SYSTEM: Use calculated progress values (milestone-based overall, weighted budget utilization)
+                const overallProgress = isNaN(parseFloat(progress.overall)) ? 0 : parseFloat(progress.overall || 0);
+                const budgetProgress = isNaN(parseFloat(progress.budget)) ? 0 : parseFloat(progress.budget || 0);
+                // Timeline and Physical now match Overall Progress (new system)
+                const timelineProgress = overallProgress;
+                const physicalProgress = overallProgress;
                 
-                // Calculate utilized budget based on budget progress
-                const budgetProgress = parseFloat(progress.internalBudget || 0);
+                project.progress = {
+                  overall: overallProgress,
+                  budget: budgetProgress,
+                  timeline: timelineProgress,
+                  physical: physicalProgress
+                };
+                project.overallProgress = overallProgress;
+                project.budgetProgress = budgetProgress;
+                project.timelineProgress = timelineProgress;
+                project.physicalProgress = physicalProgress;
+                
+                // Calculate utilized budget based on budget progress (weighted utilization)
                 totalUtilizedBudget += (budget * budgetProgress / 100);
                 
                 // Add to total progress

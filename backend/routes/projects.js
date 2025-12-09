@@ -2807,15 +2807,27 @@ router.get('/secretariat/submissions', authenticateToken, async (req, res) => {
     const projectsWithProgress = await Promise.all(projects.map(async (project) => {
       try {
         const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, req.user.role);
+        // NEW SYSTEM: Use calculated progress values (milestone-based overall, weighted budget utilization)
+        const overallProgress = Math.round((progressData.progress?.overall || 0) * 100) / 100;
+        const budgetProgress = Math.round((progressData.progress?.budget || 0) * 100) / 100;
+        // Timeline and Physical now match Overall Progress (new system)
+        const timelineProgress = overallProgress;
+        const physicalProgress = overallProgress;
+        
         return {
           ...project.toJSON(),
+          // Attach progress in the format expected by ProjectCard component
           progress: {
-            // Use internal division progress (percentage within each division) instead of contribution to overall
-            timelineProgress: Math.round(progressData.progress.internalTimeline * 100) / 100,
-            budgetProgress: Math.round(progressData.progress.internalBudget * 100) / 100,
-            physicalProgress: Math.round(progressData.progress.internalPhysical * 100) / 100,
-            overallProgress: Math.round(progressData.progress.overall * 100) / 100
-          }
+            overall: overallProgress,
+            budget: budgetProgress,
+            timeline: timelineProgress,
+            physical: physicalProgress
+          },
+          // Also attach as direct fields for backward compatibility
+          overallProgress: overallProgress,
+          budgetProgress: budgetProgress,
+          timelineProgress: timelineProgress,
+          physicalProgress: physicalProgress
         };
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);

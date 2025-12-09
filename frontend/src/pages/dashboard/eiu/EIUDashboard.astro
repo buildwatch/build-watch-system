@@ -83,8 +83,9 @@ try {
         stats.utilizedBudget = `₱${utilizedBudget.toLocaleString()}`;
         
         // Calculate average progress from actual project data
+        // NEW SYSTEM: Prioritize calculated progress from API
         const avgProgress = projects.length > 0 
-          ? projects.reduce((sum, p) => sum + parseFloat(p.overallProgress || 0), 0) / projects.length
+          ? projects.reduce((sum, p) => sum + parseFloat(p.progress?.overall || p.overallProgress || 0), 0) / projects.length
           : 0;
         stats.averageProgress = Math.round(avgProgress);
         

@@ -1939,10 +1939,12 @@ loading = false;
     if (!selectedProject) return;
 
     // Get progress values directly from the project data, ensuring they're numbers
-    const overallProgress = parseFloat(selectedProject.overallProgress || 0) || 0;
-    const timelineProgress = parseFloat(selectedProject.timelineProgress || 0) || 0;
-    const budgetProgress = parseFloat(selectedProject.budgetProgress || 0) || 0;
-    const physicalProgress = parseFloat(selectedProject.physicalProgress || 0) || 0;
+    // NEW SYSTEM: Prioritize calculated progress from API
+    const overallProgress = parseFloat(selectedProject.progress?.overall || selectedProject.overallProgress || 0) || 0;
+    const budgetProgress = parseFloat(selectedProject.progress?.budget || selectedProject.budgetProgress || 0) || 0;
+    // Timeline and Physical now match Overall Progress (new system)
+    const timelineProgress = overallProgress;
+    const physicalProgress = overallProgress;
 
     console.log('Project progress data:', {
       overall: overallProgress,

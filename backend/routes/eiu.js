@@ -193,44 +193,13 @@ router.get('/projects', authenticateToken, requireEIU, async (req, res) => {
       try {
         const progressData = await ProgressCalculationService.calculateProjectProgress(project.id, 'eiu');
         
-        // Use direct progress fields from database if available, otherwise calculate from milestones
-        let overallProgress = 0;
-        let timelineProgress = 0;
-        let budgetProgress = 0;
-        let physicalProgress = 0;
-        
-        if (project.overallProgress !== null && project.overallProgress !== undefined && 
-            project.timelineProgress !== null && project.timelineProgress !== undefined &&
-            project.budgetProgress !== null && project.budgetProgress !== undefined &&
-            project.physicalProgress !== null && project.physicalProgress !== undefined) {
-          // Use direct progress fields from database (more accurate for recent updates)
-          overallProgress = parseFloat(project.overallProgress) || 0;
-          timelineProgress = parseFloat(project.timelineProgress) || 0;
-          budgetProgress = parseFloat(project.budgetProgress) || 0;
-          physicalProgress = parseFloat(project.physicalProgress) || 0;
-          
-          console.log(`🔍 EIU using direct progress fields for project ${project.id}:`, {
-            overall: overallProgress,
-            timeline: timelineProgress,
-            budget: budgetProgress,
-            physical: physicalProgress
-          });
-        } else {
-          // Fallback to milestone-based calculation
-          if (progressData.milestones && progressData.milestones.milestones && progressData.milestones.milestones.length > 0) {
-            progressData.milestones.milestones.forEach(milestone => {
-              const weight = parseFloat(milestone.weight || 0);
-              const approvedDivisions = [milestone.timelineStatus === 'approved', milestone.budgetStatus === 'approved', milestone.physicalStatus === 'approved'].filter(Boolean).length;
-              const milestoneContribution = (approvedDivisions / 3) * weight;
-              overallProgress += milestoneContribution;
-            });
-          }
-          
-          // Use progress data from service for individual divisions
-          timelineProgress = progressData.progress?.timeline || 0;
-          budgetProgress = progressData.progress?.budget || 0;
-          physicalProgress = progressData.progress?.physical || 0;
-        }
+        // NEW SYSTEM: Always use calculated progress from ProgressCalculationService
+        // This ensures the new milestone-based calculation is used (even weight per milestone)
+        const overallProgress = Math.round((progressData.progress?.overall || 0) * 100) / 100;
+        const budgetProgress = Math.round((progressData.progress?.budget || 0) * 100) / 100; // Weighted budget utilization
+        // Timeline and Physical now match Overall Progress (new system)
+        const timelineProgress = overallProgress;
+        const physicalProgress = overallProgress;
         
         // Check delayed status for ongoing projects
         let delayInfo = null;
@@ -261,24 +230,15 @@ router.get('/projects', authenticateToken, requireEIU, async (req, res) => {
           timelineProgress: timelineProgress,
           budgetProgress: budgetProgress,
           physicalProgress: physicalProgress,
-          overallProgress: Math.round(overallProgress * 100) / 100,
-          delayInfo, // Add delay information
-          // Add debug information
-          _debug: {
-            usingDirectFields: project.overallProgress !== null && project.overallProgress !== undefined,
-            calculatedTimeline: timelineProgress,
-            calculatedBudget: budgetProgress,
-            calculatedPhysical: physicalProgress,
-            calculatedOverall: Math.round(overallProgress * 100) / 100,
-            serviceTimeline: progressData.progress?.internalTimeline,
-            serviceBudget: progressData.progress?.internalBudget,
-            servicePhysical: progressData.progress?.internalPhysical,
-            serviceOverall: progressData.progress?.overall,
-            originalTimeline: project.timelineProgress,
-            originalBudget: project.budgetProgress,
-            originalPhysical: project.physicalProgress,
-            originalOverall: project.overallProgress
-          }
+          overallProgress: overallProgress,
+          // Attach progress in the format expected by ProjectCard component
+          progress: {
+            overall: overallProgress,
+            budget: budgetProgress,
+            timeline: timelineProgress,
+            physical: physicalProgress
+          },
+          delayInfo // Add delay information
         };
       } catch (error) {
         console.error(`Error calculating progress for project ${project.id}:`, error);

@@ -95,9 +95,8 @@ try {
         
         const utilizedBudget = assignedProjects.reduce((sum, p) => {
           const budget = parseFloat(p.totalBudget || 0);
-          // Use budget division progress for utilized budget calculation (only approved divisions)
-          // The backend now returns budgetProgress directly from ProgressCalculationService
-          const budgetProgress = parseFloat(p.budgetProgress || 0);
+          // NEW SYSTEM: Use calculated budget progress from API (weighted budget utilization)
+          const budgetProgress = parseFloat(p.progress?.budget || p.budgetProgress || 0);
           return sum + (budget * budgetProgress / 100);
         }, 0);
         projectStats.utilizedBudget = `₱${utilizedBudget.toLocaleString()}`;
