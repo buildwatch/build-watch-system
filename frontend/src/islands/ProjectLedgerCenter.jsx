@@ -2344,7 +2344,7 @@ export default function ProjectLedgerCenter({
         'Budget Alloted Weight', 'Physical Accomplishment Weight', 'Start Date', 'Target Completion Date',
         'Submission Date', 'Actual Phase Completion Date', 'Timeline Activities & Deliverables',
         'Used Budget', 'Remaining Budget', 'Budget Breakdown & Allocation',
-        'Physical Accomplishment Gained Weight', 'Photo Proof', 'Video Proof', 'Document Proof',
+        'Physical Accomplishment Gained Weight', 'Budget Utilization Gained Weight', 'Photo Proof', 'Video Proof', 'Document Proof',
         'Physical Progress Description', 'Submitted By', 'Remarks and Recommendation'
       ];
 
@@ -2578,6 +2578,7 @@ export default function ProjectLedgerCenter({
             formatCurrencyForExport(phase.remainingBudget),
             phase.budgetBreakdownAllocation || 'N/A',
             phase.physicalAccomplishmentGainedWeight || 'N/A',
+            phase.budgetUtilizationGainedWeight || 'N/A',
             Array.isArray(phase.photoProof) ? `${phase.photoProof.length} photo(s)` : (phase.photoProof || 'N/A'),
             Array.isArray(phase.videoProof) ? `${phase.videoProof.length} video(s)` : (phase.videoProof || 'N/A'),
             Array.isArray(phase.documentProof) ? `${phase.documentProof.length} document(s)` : (phase.documentProof || 'N/A'),
@@ -2966,6 +2967,17 @@ export default function ProjectLedgerCenter({
     console.log('📋 Milestones:', project.milestones);
     console.log('📋 First milestone keys:', project.milestones[0] ? Object.keys(project.milestones[0]) : 'No milestones');
 
+    // Calculate total project budget (sum of all planned budgets or use project.totalBudget)
+    const totalProjectBudget = parseFloat(project.totalBudget || 0) || 
+      project.milestones.reduce((sum, m) => {
+        const mb = parseFloat(m.plannedBudget || m.budgetPlanned || 0);
+        return sum + mb;
+      }, 0);
+    
+    // Calculate even weight per phase (100% / number of phases)
+    const phaseCount = project.milestones.length;
+    const evenWeightPerPhase = phaseCount > 0 ? 100 / phaseCount : 0;
+
     return project.milestones.map((milestone, index) => {
       console.log(`\n🔍 Processing milestone ${index + 1}:`, milestone.title);
       console.log('  - Milestone ID:', milestone.id);
@@ -3068,7 +3080,8 @@ export default function ProjectLedgerCenter({
         'milestone.plannedBudget': milestone.plannedBudget,
         'milestone.budgetPlanned': milestone.budgetPlanned,
         'approvedSubmission?.plannedBudget': approvedSubmission?.plannedBudget,
-        'final plannedBudget': plannedBudget
+        'final plannedBudget': plannedBudget,
+        'totalProjectBudget': totalProjectBudget
       });
       
       // Get used budget from submission
@@ -3079,11 +3092,34 @@ export default function ProjectLedgerCenter({
         ? parseFloat(approvedSubmission.remainingBudget)
         : (plannedBudget - usedBudget);
       
-      // Get physical accomplishment weight from submission or milestone
-      const physicalAccomplishmentGainedWeight = approvedSubmission?.physicalWeight || 
-                                                 milestone.physicalWeight || 
-                                                 milestone.weight || 
-                                                 'N/A';
+      // Calculate Budget Allotted Weight: (plannedBudget / totalProjectBudget) * 100
+      const budgetAllotedWeight = totalProjectBudget > 0 
+        ? parseFloat(((plannedBudget / totalProjectBudget) * 100).toFixed(2))
+        : 0;
+      
+      // Physical Accomplishment Weight: 100% / number of phases (even weight distribution)
+      const physicalAccomplishmentWeight = parseFloat(evenWeightPerPhase.toFixed(2));
+      
+      // Calculate Physical Accomplishment Gained Weight: "X%/Y%" format
+      // X = evenWeightPerPhase if approved with physical input, 0 otherwise
+      // Y = evenWeightPerPhase
+      const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                               milestone.physicalStatus === 'approved' ||
+                               (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+                                approvedSubmission.physicalProgressDescription.trim() !== '');
+      const isApproved = approvedSubmission !== null && approvedSubmission !== undefined ||
+                        milestone.status === 'approved' ||
+                        milestone.status === 'completed' ||
+                        milestone.physicalStatus === 'approved';
+      const physicalAccomplishmentGained = (isApproved && hasPhysicalInput) ? evenWeightPerPhase : 0;
+      const physicalAccomplishmentGainedWeight = `${physicalAccomplishmentGained.toFixed(2)}%/${evenWeightPerPhase.toFixed(2)}%`;
+      
+      // Calculate Budget Utilization Gained Weight: "X%/Y%" format
+      // X = (usedBudget / plannedBudget) * evenWeightPerPhase
+      // Y = evenWeightPerPhase
+      const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
+      const budgetUtilizationGained = budgetUtilizationPercent * (evenWeightPerPhase / 100);
+      const budgetUtilizationGainedWeight = `${budgetUtilizationGained.toFixed(2)}%/${evenWeightPerPhase.toFixed(2)}%`;
       
       // Get description from milestone (should always be in milestone)
       const description = milestone.description || milestone.title || 'N/A';
@@ -3113,8 +3149,8 @@ export default function ProjectLedgerCenter({
         description: description,
         plannedBudget: plannedBudget,
         breakdownDescription: breakdownDescription,
-        budgetAllotedWeight: milestone.budgetWeight || milestone.weight || 'N/A',
-        physicalAccomplishmentWeight: milestone.physicalWeight || milestone.weight || 'N/A',
+        budgetAllotedWeight: budgetAllotedWeight,
+        physicalAccomplishmentWeight: physicalAccomplishmentWeight,
         startDate: startDate,
         targetCompletionDate: targetCompletionDate,
         
@@ -3126,6 +3162,7 @@ export default function ProjectLedgerCenter({
         remainingBudget: remainingBudget,
         budgetBreakdownAllocation: approvedSubmission?.budgetBreakdownAllocation || 'N/A',
         physicalAccomplishmentGainedWeight: physicalAccomplishmentGainedWeight,
+        budgetUtilizationGainedWeight: budgetUtilizationGainedWeight,
         photoProof: photoEvidence,
         videoProof: videoEvidence,
         documentProof: documentFiles,
@@ -6159,6 +6196,10 @@ export default function ProjectLedgerCenter({
                               <td className="px-6 py-4 text-gray-900">{typeof phase.physicalAccomplishmentGainedWeight === 'number' ? `${phase.physicalAccomplishmentGainedWeight}%` : phase.physicalAccomplishmentGainedWeight || 'N/A'}</td>
                             </tr>
                             <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
+                              <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30">Budget Utilization Gained Weight</td>
+                              <td className="px-6 py-4 text-gray-900">{phase.budgetUtilizationGainedWeight || 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b border-gray-200 hover:bg-indigo-50/30 transition-colors">
                               <td className="px-6 py-4 font-semibold text-gray-700 bg-indigo-50/30 align-top">Photo Proof</td>
                               <td className="px-6 py-4 text-gray-900">
                                 {Array.isArray(phase.photoProof) && phase.photoProof.length > 0 ? (
@@ -6340,6 +6381,7 @@ export default function ProjectLedgerCenter({
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Remaining Budget</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[180px] leading-tight">Budget Breakdown & Allocation</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[140px] leading-tight">Physical Accomplishment Gained Weight</th>
+                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[140px] leading-tight">Budget Utilization Gained Weight</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Photo Proof</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Video Proof</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Document Proof</th>
@@ -6439,6 +6481,7 @@ export default function ProjectLedgerCenter({
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-right bg-white">{formatCurrency(phase.remainingBudget || 0).replace('₱', '').trim()}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{phase.budgetBreakdownAllocation || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{typeof phase.physicalAccomplishmentGainedWeight === 'number' ? `${phase.physicalAccomplishmentGainedWeight}%` : phase.physicalAccomplishmentGainedWeight || 'N/A'}</td>
+                                <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{phase.budgetUtilizationGainedWeight || 'N/A'}</td>
                                 <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">
                                   {Array.isArray(phase.photoProof) && phase.photoProof.length > 0 ? (
                                     <div className="flex flex-wrap gap-1">
