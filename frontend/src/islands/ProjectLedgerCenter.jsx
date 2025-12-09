@@ -1140,7 +1140,7 @@ export default function ProjectLedgerCenter({
             startDate: startDate,
             endDate: endDate,
             status: project.status || 'ongoing',
-            progress: parseFloat(project.overallProgress || project.progress?.overall || 0),
+            progress: parseFloat(project.progress?.overall || project.overallProgress || 0),
             priority: project.priority || 'medium',
             category: project.category || 'uncategorized'
           });
@@ -5931,11 +5931,11 @@ export default function ProjectLedgerCenter({
                                 (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 26 ? 'bg-yellow-500' :
                                 'bg-red-500'
                               }`}
-                              style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
+                              style={{ width: `${parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)}%` }}
                             ></div>
                           </div>
                           <span className="text-sm font-semibold text-gray-700 min-w-[50px]">
-                            {(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%
+                            {(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%
                           </span>
                         </div>
                       </td>
@@ -6378,11 +6378,11 @@ export default function ProjectLedgerCenter({
                                               (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 26 ? 'bg-yellow-500' :
                                               'bg-red-500'
                                             }`}
-                                            style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
+                                            style={{ width: `${parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)}%` }}
                                           ></div>
                                         </div>
                                         <span className="text-[10px] font-semibold text-gray-700">
-                                          {(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%
+                                          {(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%
                                         </span>
                                       </div>
                                     </td>
@@ -6545,11 +6545,11 @@ export default function ProjectLedgerCenter({
                                         (parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)) >= 26 ? 'bg-yellow-500' :
                                         'bg-red-500'
                                       }`}
-                                      style={{ width: `${parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)}%` }}
+                                      style={{ width: `${parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)}%` }}
                                     ></div>
                                   </div>
                                   <span className="text-[10px] font-semibold text-gray-700">
-                                    {(parseFloat(displayProject.overallProgress || displayProject.progress?.overall || 0)).toFixed(1)}%
+                                    {(parseFloat(displayProject.progress?.overall || displayProject.overallProgress || 0)).toFixed(1)}%
                                   </span>
                                 </div>
                               </td>
