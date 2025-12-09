@@ -670,7 +670,15 @@ export default function ProjectsIsland() {
             budget: project.totalBudget,
             totalBudget: project.totalBudget, // Keep original field name for ProjectCard
             status: project.status,
-            progress: project.overallProgress || project.progress?.overall || project.progress?.overallProgress || 0,
+            // NEW SYSTEM: Attach full progress object for new calculation system
+            progress: {
+              overall: project.overallProgress || project.progress?.overall || project.progress?.overallProgress || 0,
+              budget: project.budgetProgress || project.progress?.budget || 0,
+              timeline: project.timelineProgress || project.progress?.timeline || 0,
+              physical: project.physicalProgress || project.progress?.physical || 0
+            },
+            // Legacy support - keep direct fields for backward compatibility
+            overallProgress: project.overallProgress || project.progress?.overall || project.progress?.overallProgress || 0,
             timelineProgress: project.timelineProgress || project.progress?.timeline || 0,
             budgetProgress: project.budgetProgress || project.progress?.budget || 0,
             physicalProgress: project.physicalProgress || project.progress?.physical || 0,
@@ -839,6 +847,7 @@ export default function ProjectsIsland() {
   // Progress bar animation effect
   useEffect(() => {
     const animateProgressBars = () => {
+      // Animate overall progress bars
       const progressBars = document.querySelectorAll('.project-progress-bar-fill');
       progressBars.forEach((bar, index) => {
         const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
@@ -855,6 +864,25 @@ export default function ProjectsIsland() {
         setTimeout(() => {
           bar.style.width = `${progress}%`;
         }, 100 + (index * 200)); // Stagger animations
+      });
+      
+      // Animate budget progress bars
+      const budgetProgressBars = document.querySelectorAll('.budget-progress-bar-fill');
+      budgetProgressBars.forEach((bar, index) => {
+        const progress = parseFloat(bar.getAttribute('data-progress')) || 0;
+        const colorClass = bar.getAttribute('data-progress-color') || '#6B7280';
+        
+        // Apply the color
+        bar.style.backgroundColor = colorClass;
+        
+        // Reset and start animation
+        bar.style.width = '0%';
+        bar.offsetHeight; // Trigger reflow
+        
+        // Start animation after a small delay (staggered from overall progress bars)
+        setTimeout(() => {
+          bar.style.width = `${progress}%`;
+        }, 200 + (index * 200)); // Stagger animations
       });
     };
 
@@ -1095,7 +1123,7 @@ export default function ProjectsIsland() {
                   </div>
                 </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="min-w-[1400px] w-full">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-500 to-blue-600 border-b border-blue-100">
                       <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
@@ -1133,10 +1161,20 @@ export default function ProjectsIsland() {
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                          </div>
+                          Overall Progress
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                             </svg>
                           </div>
-                          Budget & Progress
+                          Budget
                         </div>
                       </th>
                       <th className="px-6 py-4 font-bold text-left text-sm text-white uppercase tracking-wider">
@@ -1225,27 +1263,62 @@ export default function ProjectsIsland() {
                             </div>
                           </td>
                           <td className="px-6 py-6">
+                            <div className="space-y-2">
+                              {(() => {
+                                // NEW SYSTEM: Use overall progress from API
+                                const overallProgress = parseFloat(proj.progress?.overall || proj.overallProgress || proj.progress || 0);
+                                return overallProgress > 0 ? (
+                                  <>
+                                    <div className="flex items-center justify-between text-sm text-gray-600">
+                                      <span className="font-medium">Progress</span>
+                                      <span className="font-bold text-blue-600">{overallProgress.toFixed(1)}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                      <div 
+                                        className="h-3 rounded-full transition-all duration-2000 ease-out shadow-sm project-progress-bar-fill"
+                                        style={{ 
+                                          width: '0%',
+                                          backgroundColor: getProgressColor(overallProgress)
+                                        }}
+                                        data-progress={overallProgress}
+                                        data-progress-color={getProgressColor(overallProgress)}
+                                      ></div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-gray-500">No progress yet</div>
+                                );
+                              })()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-6">
                             <div className="space-y-3">
                               <div className="font-bold text-gray-900 text-lg">{formatBudget(proj.budget || proj.totalBudget)}</div>
-                              {proj.progress > 0 && (
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-sm text-gray-600">
-                                    <span className="font-medium">Progress</span>
-                                    <span className="font-bold text-blue-600">{proj.progress}%</span>
+                              {(() => {
+                                // NEW SYSTEM: Show Budget Division Utilization
+                                const budgetProgress = parseFloat(proj.progress?.budget || proj.budgetProgress || 0);
+                                return budgetProgress > 0 ? (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm text-gray-600">
+                                      <span className="font-medium">Budget Utilization</span>
+                                      <span className="font-bold text-green-600">{budgetProgress.toFixed(1)}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                      <div 
+                                        className="h-3 rounded-full transition-all duration-2000 ease-out shadow-sm budget-progress-bar-fill"
+                                        style={{ 
+                                          width: '0%',
+                                          backgroundColor: getProgressColor(budgetProgress)
+                                        }}
+                                        data-progress={budgetProgress}
+                                        data-progress-color={getProgressColor(budgetProgress)}
+                                      ></div>
+                                    </div>
                                   </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                                    <div 
-                                      className="h-3 rounded-full transition-all duration-2000 ease-out shadow-sm project-progress-bar-fill"
-                                      style={{ 
-                                        width: '0%',
-                                        backgroundColor: getProgressColor(parseFloat(proj.progress) || 0)
-                                      }}
-                                      data-progress={parseFloat(proj.progress) || 0}
-                                      data-progress-color={getProgressColor(parseFloat(proj.progress) || 0)}
-                                    ></div>
-                                  </div>
-                                </div>
-                              )}
+                                ) : (
+                                  <div className="text-xs text-gray-500">No budget utilization yet</div>
+                                );
+                              })()}
                             </div>
                           </td>
                           <td className="px-6 py-6">
