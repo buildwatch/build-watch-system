@@ -81,7 +81,8 @@ async function debugProgressCalculation(projectCode = null) {
       console.log(`   project.budgetProgress:`, project.budgetProgress);
       
       const calculatedBudget = project.progress?.budget || project.budgetUtilizationPercentage || project.budgetProgress || 0;
-      console.log(`   ✅ Calculated Budget Progress: ${calculatedBudget.toFixed(2)}%`);
+      const budgetValue = typeof calculatedBudget === 'number' ? calculatedBudget : parseFloat(calculatedBudget) || 0;
+      console.log(`   ✅ Calculated Budget Progress: ${budgetValue.toFixed(2)}%`);
       
       // Check milestones
       if (project.milestones && Array.isArray(project.milestones)) {

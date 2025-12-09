@@ -126,9 +126,12 @@ const calculateProjectProgress = async (project, userRole = 'any') => {
     }
     
     return {
-      // Use internal division progress (percentage within each division) instead of contribution to overall
+      // NEW SYSTEM: Use calculated progress values
+      // overall: based on evenly split milestones (only approved milestones with physical input count)
+      // budget: weighted budget division utilization (utilization % × milestone weight)
+      // timeline/physical: no longer used in overall progress, but kept for backward compatibility
       timeline: Math.round((progressData.progress?.internalTimeline || 0) * 100) / 100,
-      budget: Math.round((progressData.progress?.internalBudget || 0) * 100) / 100,
+      budget: Math.round((progressData.progress?.budget || 0) * 100) / 100, // Use budget division utilization, not internalBudget
       physical: Math.round((progressData.progress?.internalPhysical || 0) * 100) / 100,
       overall: Math.round((progressData.progress?.overall || 0) * 100) / 100
     };
