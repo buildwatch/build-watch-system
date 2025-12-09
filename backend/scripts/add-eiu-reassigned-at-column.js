@@ -7,15 +7,15 @@ async function addEiuReassignedAtColumn() {
     const sequelize = db.sequelize;
     const queryInterface = sequelize.getQueryInterface();
     
-    // Check if column already exists
-    const tableDescription = await queryInterface.describeTable('Projects');
+    // Check if column already exists (table name is lowercase 'projects')
+    const tableDescription = await queryInterface.describeTable('projects');
     if (tableDescription.eiuReassignedAt) {
       console.log('✅ Column eiuReassignedAt already exists');
       return;
     }
     
-    // Add the column
-    await queryInterface.addColumn('Projects', 'eiuReassignedAt', {
+    // Add the column (table name is lowercase 'projects')
+    await queryInterface.addColumn('projects', 'eiuReassignedAt', {
       type: db.Sequelize.DATE,
       allowNull: true,
       comment: 'Date and time when EIU was reassigned to a new partner contractor'
