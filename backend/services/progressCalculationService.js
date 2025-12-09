@@ -475,18 +475,18 @@ class ProgressCalculationService {
 
   /**
    * Calculate Budget Division progress (NEW SYSTEM)
-   * Budget Division progress is calculated separately as utilized/allocated per milestone
+   * Budget Division progress is calculated as weighted utilization per milestone
+   * Formula: (usedBudget / plannedBudget) * (milestoneWeight / 100) for each milestone, then sum
+   * Example: Phase 1 with 33.33% weight, 2M used / 2.5M planned = 80% utilization
+   * Budget Division = 80% * 33.33% = 26.66%
    * This is NOT added to overall progress - it's a separate metric
-   * Returns average budget utilization across all milestones
    */
   static async calculateDivisionProgress(projectId) {
     const project = await Project.findByPk(projectId);
     
-    // NEW SYSTEM: Only calculate Budget Division progress
-    // Timeline and Physical are no longer part of division progress calculation
+    // NEW SYSTEM: Calculate Budget Division as weighted utilization
     let budgetProgress = 0;
-    let totalBudgetUtilization = 0;
-    let milestoneCount = 0;
+    let totalWeightedUtilization = 0;
 
     console.log(`🔍 [calculateDivisionProgress] Starting NEW Budget Division calculation for project ${projectId}`);
     
@@ -495,6 +495,10 @@ class ProgressCalculationService {
       where: { projectId },
       order: [['order', 'ASC']]
     });
+
+    // Calculate even weight per milestone (same as overall progress calculation)
+    const milestoneCount = milestones.length;
+    const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
 
     // Get approved milestone submissions to get budget data
     const approvedSubmissions = await MilestoneSubmission.findAll({
@@ -512,8 +516,9 @@ class ProgressCalculationService {
     });
 
     console.log(`📊 [calculateDivisionProgress] Found ${approvedSubmissions.length} approved submissions and ${milestones.length} milestones`);
+    console.log(`📊 [calculateDivisionProgress] Even weight per milestone: ${evenWeightPerMilestone}%`);
 
-    // Calculate budget utilization for each milestone
+    // Calculate weighted budget utilization for each milestone
     milestones.forEach((milestone) => {
       const submission = approvedSubmissions.find(s => s.milestoneId === milestone.id);
       
@@ -523,28 +528,34 @@ class ProgressCalculationService {
       // Get used/utilized budget
       const usedBudget = parseFloat(submission?.usedBudget || submission?.budgetDivision?.usedBudget || milestone.usedBudget || 0);
       
-      if (plannedBudget > 0) {
-        // Calculate utilization percentage for this milestone (e.g., 95/100 = 95%)
-        const milestoneUtilization = (usedBudget / plannedBudget) * 100;
-        totalBudgetUtilization += milestoneUtilization;
-        milestoneCount++;
+      // Get milestone weight (use even weight per milestone)
+      const milestoneWeight = evenWeightPerMilestone;
+      
+      if (plannedBudget > 0 && usedBudget > 0) {
+        // Calculate utilization percentage for this milestone (e.g., 2M / 2.5M = 80%)
+        const milestoneUtilizationPercent = (usedBudget / plannedBudget) * 100;
+        
+        // Calculate weighted contribution: utilization * (weight / 100)
+        // Example: 80% utilization * (33.33% / 100) = 26.66%
+        const weightedContribution = milestoneUtilizationPercent * (milestoneWeight / 100);
+        totalWeightedUtilization += weightedContribution;
         
         console.log(`💰 [calculateDivisionProgress] Milestone "${milestone.title}":`, {
           plannedBudget: plannedBudget,
           usedBudget: usedBudget,
-          utilization: milestoneUtilization.toFixed(2) + '%'
+          utilizationPercent: milestoneUtilizationPercent.toFixed(2) + '%',
+          milestoneWeight: milestoneWeight.toFixed(2) + '%',
+          weightedContribution: weightedContribution.toFixed(2) + '%'
         });
       }
     });
 
-    // Calculate average budget utilization across all milestones
-    if (milestoneCount > 0) {
-      budgetProgress = totalBudgetUtilization / milestoneCount;
-    }
+    // Budget Division Progress is the sum of all weighted contributions
+    budgetProgress = totalWeightedUtilization;
 
     console.log(`📈 Final Budget Division progress for project ${projectId}:`, {
       budgetProgress: budgetProgress.toFixed(2) + '%',
-      milestoneCount: milestoneCount
+      totalWeightedUtilization: totalWeightedUtilization.toFixed(2) + '%'
     });
 
     // Round to 2 decimal places
