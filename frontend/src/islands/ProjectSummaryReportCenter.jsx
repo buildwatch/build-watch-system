@@ -2530,43 +2530,14 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                           // Also update the milestone object for calculation
                           milestone.usedBudget = usedBudget;
                         }
+                        // Ensure usedBudget is a number
+                        if (!usedBudget) {
+                          usedBudget = parseFloat(approvedSubmission?.usedBudget || milestone.usedBudget || 0);
+                        }
                         
                         // Ensure submissions array is attached to milestone for calculation
                         if (!milestone.submissions || milestone.submissions.length === 0) {
                           milestone.submissions = milestoneSubmissions;
-                        }
-                        
-                        // Debug logging
-                        console.log(`🔍 [${milestone.title}] Milestone Tab Progress Calculation:`, {
-                          milestoneId: milestone.id,
-                          milestoneWeight: milestone.weight,
-                          plannedBudget: milestone.plannedBudget || milestone.budgetPlanned,
-                          usedBudget: milestone.usedBudget,
-                          usedBudgetFromSubmission: approvedSubmission?.usedBudget,
-                          hasSubmissions: !!milestone.submissions,
-                          submissionsCount: milestone.submissions?.length || 0,
-                          hasApprovedSubmission: !!approvedSubmission,
-                          timelineStatus: milestone.timelineStatus,
-                          budgetStatus: milestone.budgetStatus,
-                          physicalStatus: milestone.physicalStatus,
-                          milestoneProgress: milestone.progress
-                        });
-                        
-                        // Use milestone.progress if it was already calculated correctly, otherwise calculate it
-                        let progress = milestone.progress && milestone.progress > 0 && milestone.progress !== 100
-                          ? parseFloat(milestone.progress) 
-                          : calculateMilestoneProgressFromDivisions(milestone, approvedSubmission);
-                        
-                        console.log(`📊 [${milestone.title}] Final progress:`, progress, '(from milestone.progress:', milestone.progress, ')');
-                        
-                        // Fallback to milestone.progress if calculation returns 0
-                        if (progress === 0 || isNaN(progress)) {
-                          progress = parseFloat(milestone.progress || 0);
-                          if (progress === 0 || isNaN(progress)) {
-                            console.log(`⚠️ [${milestone.title}] Both calculation and milestone.progress are 0, this should not happen`);
-                          } else {
-                            console.log(`⚠️ [${milestone.title}] Using milestone.progress as fallback:`, progress);
-                          }
                         }
                         
                         // NEW SYSTEM: Calculate even weight per milestone
@@ -2589,9 +2560,24 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                         
                         // Calculate Budget Division Utilization for this milestone
                         const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || approvedSubmission?.plannedBudget || 0);
-                        const usedBudget = parseFloat(approvedSubmission?.usedBudget || milestone.usedBudget || 0);
                         const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
                         const budgetDivisionUtilization = budgetUtilizationPercent * (evenWeightPerMilestone / 100);
+                        
+                        // Debug logging
+                        console.log(`🔍 [${milestone.title}] Milestone Tab Progress Calculation:`, {
+                          milestoneId: milestone.id,
+                          evenWeightPerMilestone: evenWeightPerMilestone,
+                          milestoneContributionToOverall: milestoneContributionToOverall,
+                          plannedBudget: plannedBudget,
+                          usedBudget: usedBudget,
+                          budgetUtilizationPercent: budgetUtilizationPercent,
+                          budgetDivisionUtilization: budgetDivisionUtilization,
+                          hasSubmissions: !!milestone.submissions,
+                          submissionsCount: milestone.submissions?.length || 0,
+                          hasApprovedSubmission: !!approvedSubmission,
+                          hasPhysicalInput: hasPhysicalInput,
+                          isApproved: isApproved
+                        });
                         
                         return (
                           <div key={milestone.id || idx} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
