@@ -1294,7 +1294,8 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                  milestone.physicalStatus === 'approved' ||
                                  (latestSubmission && latestSubmission.physicalProgressDescription && 
                                   latestSubmission.physicalProgressDescription.trim() !== '');
-          const isApproved = latestSubmission !== undefined ||
+          // isApproved should be true only if there's an actual approved submission OR milestone status is approved/completed
+          const isApproved = (latestSubmission !== null && latestSubmission !== undefined) ||
                            milestone.status === 'approved' ||
                            milestone.status === 'completed' ||
                            milestone.physicalStatus === 'approved';
@@ -2439,7 +2440,9 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                       <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
                         <h3 className="text-sm font-medium opacity-90 mb-2">Overall Progress</h3>
                         <p className="text-2xl font-bold">
-                          {parseFloat(selectedProject.progress?.overall || selectedProject.overallProgress || 0).toFixed(1)}%
+                          {timelineData && timelineData.overallProgress !== undefined 
+                            ? timelineData.overallProgress.toFixed(1)
+                            : parseFloat(selectedProject.progress?.overall || selectedProject.overallProgress || 0).toFixed(1)}%
                         </p>
                       </div>
                       <div className={`bg-gradient-to-br ${theme.secondary} text-white rounded-xl p-6 shadow-lg`}>
@@ -3548,15 +3551,17 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                               <div className="bg-white/60 rounded-lg p-3">
                                 <p className="text-xs text-gray-600 mb-1">Final Progress</p>
                                 <p className="text-sm font-semibold text-gray-900">
-                                  {selectedProject.progress?.overall != null 
-                                    ? (typeof selectedProject.progress.overall === 'number' 
-                                        ? selectedProject.progress.overall.toFixed(1) 
-                                        : parseFloat(selectedProject.progress.overall || 0).toFixed(1))
-                                    : (selectedProject.overallProgress != null 
-                                        ? (typeof selectedProject.overallProgress === 'number' 
-                                            ? selectedProject.overallProgress.toFixed(1) 
-                                            : parseFloat(selectedProject.overallProgress || 0).toFixed(1))
-                                        : '100.0')}%
+                                  {timelineData && timelineData.overallProgress !== undefined
+                                    ? timelineData.overallProgress.toFixed(1)
+                                    : (selectedProject.progress?.overall != null 
+                                        ? (typeof selectedProject.progress.overall === 'number' 
+                                            ? selectedProject.progress.overall.toFixed(1) 
+                                            : parseFloat(selectedProject.progress.overall || 0).toFixed(1))
+                                        : (selectedProject.overallProgress != null 
+                                            ? (typeof selectedProject.overallProgress === 'number' 
+                                                ? selectedProject.overallProgress.toFixed(1) 
+                                                : parseFloat(selectedProject.overallProgress || 0).toFixed(1))
+                                            : '0.0'))}%
                                 </p>
                               </div>
                               <div className="bg-white/60 rounded-lg p-3">
