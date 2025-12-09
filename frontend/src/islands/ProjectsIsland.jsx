@@ -927,28 +927,8 @@ export default function ProjectsIsland() {
 
   return (
     <div className="w-full font-[Montserrat] px-2" data-projects-island>
-      {/* Enhanced View Switcher with Analytics Button */}
-      <div className="flex flex-row justify-between items-center gap-4 mb-8">
-        {/* Project Analytics and Statistics Button (Left Side) */}
-        <button 
-          onClick={() => {
-            if (window.showProjectStatisticsModal) {
-              window.showProjectStatisticsModal();
-            }
-          }}
-          className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold text-base group"
-        >
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-colors">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-          </div>
-          <span>Project Analytics and Statistics</span>
-          <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-        </button>
-
+      {/* Enhanced View Switcher */}
+      <div className="flex flex-row justify-end items-center gap-4 mb-8">
         {/* View Switcher Buttons (Right Side) - Enhanced Width */}
         <div className="inline-flex items-center bg-white/95 backdrop-blur-sm rounded-2xl p-2 shadow-xl border border-blue-100/50">
           {VIEW_OPTIONS.map((opt, index) => (
@@ -1353,7 +1333,26 @@ export default function ProjectsIsland() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                   </svg>
                                 </div>
-                                <span className="font-medium text-gray-900">Days: {proj.expectedDaysOfCompletion || '–'}</span>
+                                <span className="font-medium text-gray-900">
+                                  Days: {(() => {
+                                    // Calculate Expected Days from startDate and endDate (same logic as ProjectDetailsModal)
+                                    if (proj.expectedDaysOfCompletion) {
+                                      return `${proj.expectedDaysOfCompletion} days`;
+                                    }
+                                    if (proj.startDate && (proj.endDate || proj.targetCompletionDate || proj.targetDateOfCompletion)) {
+                                      try {
+                                        const start = new Date(proj.startDate);
+                                        const end = new Date(proj.endDate || proj.targetCompletionDate || proj.targetDateOfCompletion);
+                                        const diffTime = Math.abs(end - start);
+                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        return `${diffDays} days`;
+                                      } catch (e) {
+                                        return 'N/A';
+                                      }
+                                    }
+                                    return 'N/A';
+                                  })()}
+                                </span>
                               </div>
                             </div>
                           </td>
