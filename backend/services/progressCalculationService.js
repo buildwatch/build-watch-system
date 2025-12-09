@@ -511,6 +511,13 @@ class ProgressCalculationService {
 
     console.log(`📊 [calculateDivisionProgress] Found ${approvedSubmissions.length} approved submissions and ${milestones.length} milestones`);
     console.log(`📊 [calculateDivisionProgress] Even weight per milestone: ${evenWeightPerMilestone}%`);
+    console.log(`📊 [calculateDivisionProgress] Approved submissions details:`, approvedSubmissions.map(s => ({
+      id: s.id,
+      milestoneId: s.milestoneId,
+      usedBudget: s.usedBudget,
+      plannedBudget: s.plannedBudget,
+      budgetUtilizationPercentage: s.budgetUtilizationPercentage
+    })));
 
     // Calculate weighted budget utilization for each milestone
     milestones.forEach((milestone) => {
@@ -537,17 +544,20 @@ class ProgressCalculationService {
         const weightedContribution = milestoneUtilizationPercent * (milestoneWeight / 100);
         totalWeightedUtilization += weightedContribution;
         
-        console.log(`💰 [calculateDivisionProgress] Milestone "${milestone.title}":`, {
+        console.log(`💰 [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}):`, {
+          hasApprovedSubmission: !!submission,
+          submissionId: submission?.id,
           plannedBudget: plannedBudget,
           usedBudget: usedBudget,
           utilizationPercent: milestoneUtilizationPercent.toFixed(2) + '%',
           milestoneWeight: milestoneWeight.toFixed(2) + '%',
           weightedContribution: weightedContribution.toFixed(2) + '%',
-          calculation: `(${usedBudget} / ${plannedBudget}) * (${milestoneWeight}% / 100) = ${weightedContribution.toFixed(2)}%`
+          calculation: `(${usedBudget} / ${plannedBudget}) * (${milestoneWeight}% / 100) = ${weightedContribution.toFixed(2)}%`,
+          runningTotal: totalWeightedUtilization.toFixed(2) + '%'
         });
       } else {
         // Milestone has no planned budget, so no contribution
-        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" has no planned budget, skipping`);
+        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}) has no planned budget (${plannedBudget}), skipping`);
       }
     });
 
