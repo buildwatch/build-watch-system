@@ -1663,9 +1663,9 @@ export default function ProjectLedgerCenter({
 
       yPos += 5;
 
-      // EIU Partner Contractor
+      // EIU Partner Contractor - Hidden for public users
       const eiuPartner = getEIUPartner(displayProject);
-      if (eiuPartner) {
+      if (!isPublic && eiuPartner) {
         doc.setFontSize(13);
         doc.setFont(undefined, 'bold');
         doc.setFillColor(229, 231, 235);
@@ -1969,9 +1969,9 @@ export default function ProjectLedgerCenter({
 
       row++;
 
-      // EIU Partner Contractor
+      // EIU Partner Contractor - Hidden for public users
       const eiuPartner = getEIUPartner(displayProject);
-      if (eiuPartner) {
+      if (!isPublic && eiuPartner) {
         worksheet.getCell(`A${row}`).value = 'EIU Partner Contractor';
         worksheet.getCell(`A${row}`).font = { bold: true, size: 13 };
         worksheet.getCell(`A${row}`).fill = {
@@ -2292,7 +2292,7 @@ export default function ProjectLedgerCenter({
       // Main Header Row (Row 4)
       const mainHeaders = [
         { text: 'Basic Project Information', span: 13 },
-        { text: 'EIU Partner Contractor', span: 7 },
+        ...(!isPublic ? [{ text: 'EIU Partner Contractor', span: 7 }] : []),
         { text: 'Timeline Information', span: 4 },
         { text: 'Budget Information', span: 2 },
         { text: 'Physical Accomplishment Information', span: 1 },
@@ -2330,9 +2330,9 @@ export default function ProjectLedgerCenter({
         'Project Title', 'Status', 'Overall Progress', 'Project Code', 'Implementing Office', 'Category', 
         'Location/Barangay', 'Priority', 'Funding Source', 'Created Date', 
         'Project Description', 'Expected Outputs', 'Target Beneficiaries',
-        // EIU Partner Contractor (7 columns)
-        'Company Name', 'Email/Username', 'Contact Number', 'Group', 
-        'Department', 'Subrole', 'Company',
+        // EIU Partner Contractor (7 columns) - Hidden for public users
+        ...(!isPublic ? ['Company Name', 'Email/Username', 'Contact Number', 'Group', 
+        'Department', 'Subrole', 'Company'] : []),
         // Timeline Information (4 columns)
         'Start Date', 'Target Completion Date', 'Expected Days of Completion', 'Actual Completion Date',
         // Budget Information (2 columns)
@@ -2427,8 +2427,8 @@ export default function ProjectLedgerCenter({
             col += 13; // Skip basic project info columns
           }
 
-          // EIU Partner Contractor (only in first row)
-          if (phaseIndex === 0) {
+          // EIU Partner Contractor (only in first row) - Hidden for public users
+          if (!isPublic && phaseIndex === 0) {
             const eiuData = [
               eiuPartner?.displayFullName || eiuPartner?.name || 'N/A',
               eiuPartner?.displayEmail || eiuPartner?.email || 'N/A',
@@ -2688,14 +2688,16 @@ export default function ProjectLedgerCenter({
           displayProject.description || 'N/A',
           displayProject.expectedOutputs || 'N/A',
           displayProject.targetBeneficiaries || 'N/A',
-          // EIU Partner Contractor
-          eiuPartner?.displayFullName || eiuPartner?.name || 'N/A',
-          eiuPartner?.displayEmail || eiuPartner?.email || 'N/A',
-          eiuPartner?.displayContact || eiuPartner?.contact || 'N/A',
-          eiuPartner?.displayGroup || eiuPartner?.group || 'N/A',
-          eiuPartner?.displayDepartment || eiuPartner?.department || 'N/A',
-          eiuPartner?.displaySubrole || eiuPartner?.subrole || 'N/A',
-          eiuPartner?.displayCompany || eiuPartner?.company || 'N/A',
+          // EIU Partner Contractor - Hidden for public users
+          ...(!isPublic ? [
+            eiuPartner?.displayFullName || eiuPartner?.name || 'N/A',
+            eiuPartner?.displayEmail || eiuPartner?.email || 'N/A',
+            eiuPartner?.displayContact || eiuPartner?.contact || 'N/A',
+            eiuPartner?.displayGroup || eiuPartner?.group || 'N/A',
+            eiuPartner?.displayDepartment || eiuPartner?.department || 'N/A',
+            eiuPartner?.displaySubrole || eiuPartner?.subrole || 'N/A',
+            eiuPartner?.displayCompany || eiuPartner?.company || 'N/A'
+          ] : []),
           // Timeline Information
           formatDateForExport(displayProject.startDate),
           formatDateForExport(displayProject.targetCompletionDate),
@@ -3285,6 +3287,7 @@ export default function ProjectLedgerCenter({
   const displayProject = selectedProject || (filteredProjects.length === 1 ? filteredProjects[0] : null);
   const phases = displayProject ? getProjectPhases(displayProject) : [];
   const eiuPartner = displayProject ? getEIUPartner(displayProject) : null;
+  const isPublic = !getToken() || userRole === 'public';
 
   // Debugging function - accessible from browser console
   // Usage: window.debugProjectLedger()
@@ -6018,8 +6021,8 @@ export default function ProjectLedgerCenter({
                       <td className="px-6 py-4 text-gray-900">{displayProject.targetBeneficiaries || 'N/A'}</td>
                     </tr>
 
-                    {/* EIU Partner Contractor */}
-                    {eiuPartner && (
+                    {/* EIU Partner Contractor - Hidden for public users */}
+                    {!isPublic && eiuPartner && (
                       <>
                         <tr className="bg-blue-50">
                           <td colSpan="2" className="px-6 py-3 font-bold text-gray-800 border-b-2 border-gray-300">
@@ -6321,7 +6324,7 @@ export default function ProjectLedgerCenter({
                           {/* Main Header Row */}
                           <tr className={`${colors.tableHeaderBg} text-white border-b-2 border-white`}>
                             <th colSpan="13" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Basic Project Information</th>
-                            <th colSpan="7" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">EIU Partner Contractor</th>
+                            {!isPublic && <th colSpan="7" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">EIU Partner Contractor</th>}
                             <th colSpan="4" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Timeline Information</th>
                             <th colSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center bg-opacity-100">Budget Information</th>
                             <th rowSpan="2" className="px-3 py-3 text-xs font-bold border-r border-white/30 border-b border-white/30 text-center align-middle bg-opacity-100 min-w-[200px]">Physical Accomplishment Information</th>
@@ -6344,14 +6347,18 @@ export default function ProjectLedgerCenter({
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[180px] leading-tight">Expected Outputs</th>
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Target Beneficiaries</th>
                             
-                            {/* EIU Partner Contractor */}
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company Name</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Email/Username</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Contact Number</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Group</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Department</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Subrole</th>
-                            <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company</th>
+                            {/* EIU Partner Contractor - Hidden for public users */}
+                            {!isPublic && (
+                              <>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company Name</th>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Email/Username</th>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Contact Number</th>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Group</th>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[120px] leading-tight">Department</th>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Subrole</th>
+                                <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[150px] leading-tight">Company</th>
+                              </>
+                            )}
                             
                             {/* Timeline Information */}
                             <th className="px-2 py-2 text-[10px] font-semibold border-r border-white/30 text-center bg-opacity-100 min-w-[100px] leading-tight">Start Date</th>
@@ -6439,14 +6446,18 @@ export default function ProjectLedgerCenter({
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.targetBeneficiaries || 'N/A'}</td>
                                     
-                                    {/* EIU Partner Contractor */}
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
-                                    <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                    {/* EIU Partner Contractor - Hidden for public users */}
+                                    {!isPublic && (
+                                      <>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
+                                        <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                      </>
+                                    )}
                                     
                                     {/* Timeline Information */}
                                     <td rowSpan={phases.length} className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.startDate)}</td>
@@ -6607,14 +6618,18 @@ export default function ProjectLedgerCenter({
                               <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.expectedOutputs || 'N/A'}</td>
                               <td className="px-2 py-3 text-xs border-r border-gray-400 align-top bg-white">{displayProject.targetBeneficiaries || 'N/A'}</td>
                               
-                              {/* EIU Partner Contractor */}
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
-                              <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                              {/* EIU Partner Contractor - Hidden for public users */}
+                              {!isPublic && (
+                                <>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.email || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.contact || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                </>
+                              )}
                               
                               {/* Timeline Information */}
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white">{formatDate(displayProject.startDate)}</td>
