@@ -1443,14 +1443,19 @@ router.get('/public', async (req, res) => {
         priority: projectData.priority,
         fundingSource: projectData.fundingSource,
         status: projectData.status === 'complete' ? 'completed' : projectData.status, // Normalize status
+        expectedOutputs: projectData.expectedOutputs,
+        targetBeneficiaries: projectData.targetBeneficiaries,
         startDate: projectData.startDate,
         endDate: projectData.endDate,
         completionDate: projectData.completionDate,
         totalBudget: projectData.totalBudget, // Show budget but not breakdown
+        budgetDescription: projectData.budgetDescription || projectData.budgetBreakdown, // Add budgetDescription for public
         overallProgress: projectData.progress?.overall || projectData.progress?.overallProgress || projectData.overallProgress || 0,
         timelineProgress: projectData.progress?.timeline || projectData.progress?.timelineProgress || 0,
         budgetProgress: projectData.progress?.budget || projectData.progress?.budgetProgress || 0,
         physicalProgress: projectData.progress?.physical || projectData.progress?.physicalProgress || 0,
+        physicalProgressRequirements: projectData.physicalProgressRequirements,
+        generalDescription: projectData.generalDescription || projectData.physicalProgressRequirements || projectData.physicalDescription || projectData.requiredDocumentation, // Add generalDescription for public
         implementingOfficeName: projectData.implementingOfficeName || 'N/A',
         eiuPersonnelName: projectData.eiuPersonnelName || null,
         hasExternalPartner: projectData.hasExternalPartner,
