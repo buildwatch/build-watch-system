@@ -139,7 +139,7 @@ const { submission } = Astro.props;
       </div>
       <div>
         <span class="text-gray-600">Overall Progress:</span>
-        <div class="font-bold text-blue-600">{submission.progress?.overall || submission.overallProgress || 0}%</div>
+        <div class="font-bold text-blue-600">{submission.project?.progress?.overall || submission.progress?.overall || submission.overallProgress || 0}%</div>
       </div>
     </div>
   </div>

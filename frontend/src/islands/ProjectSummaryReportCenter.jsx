@@ -3208,7 +3208,7 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                             <div className="flex items-center justify-between mb-4">
                               <h4 className="text-lg font-semibold text-gray-900">Total Project Progress</h4>
                               <span className="text-lg font-bold text-gray-900">
-                                {timelineData.timelineItems.reduce((sum, item) => sum + (item.progress || 0), 0).toFixed(1)}% / {timelineData.timelineItems.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0).toFixed(1)}%
+                                {timelineData.timelineItems.reduce((sum, item) => sum + (item.progress || 0), 0).toFixed(2)}%
                               </span>
                             </div>
                             <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
@@ -3219,15 +3219,17 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                               />
                               {/* Total progress fill with animation */}
                               {(() => {
+                                // NEW SYSTEM: Total progress is the sum of milestone contributions (not percentage of total weight)
                                 const totalProgress = timelineData.timelineItems.reduce((sum, item) => sum + (item.progress || 0), 0);
                                 const totalWeight = timelineData.timelineItems.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
-                                const fillPercentage = totalWeight > 0 ? (totalProgress / totalWeight) * 100 : 0;
+                                // Progress bar width should be totalProgress% of 100% (not fillPercentage of totalWeight)
+                                // Example: 33.33% contribution = 33.33% of the full 100% bar
                                 return (
                                   <div
                                     className="absolute top-0 left-0 h-full rounded-full progress-bar-fill-timeline bg-gradient-to-r from-blue-500 to-green-500"
                                     style={{ 
-                                      width: `${fillPercentage}%`,
-                                      maxWidth: `${totalWeight}%`
+                                      width: `${totalProgress}%`,
+                                      maxWidth: '100%'
                                     }}
                                     data-progress={totalProgress}
                                     data-weight={totalWeight}

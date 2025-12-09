@@ -3592,18 +3592,51 @@ loading = false;
         </div>
 
         <!-- Basic Milestone Info -->
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
           <div class="bg-gray-50 p-3 rounded-lg">
-            <span class="text-gray-600 block text-xs">Total Weight</span>
-            <span class="font-semibold text-lg">${milestone.weight}%</span>
+            <span class="text-gray-600 block text-xs">Weight</span>
+            <span class="font-semibold text-lg">${(() => {
+              const milestoneCount = processedMilestones.length;
+              const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+              return evenWeightPerMilestone.toFixed(2);
+            })()}%</span>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600 block text-xs">Overall Progress</span>
+            <span class="font-semibold text-lg">${(() => {
+              const milestoneCount = processedMilestones.length;
+              const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+              const approvedSubmission = milestone.submissions?.find(s => s.status === 'approved' || s.status === 'iu_approved') || 
+                                         submissionsMap[milestone.id]?.find(s => s.status === 'approved' || s.status === 'iu_approved');
+              const hasPhysicalInput = milestone.physicalDescription && milestone.physicalDescription.trim() !== '' ||
+                                       milestone.physicalStatus === 'approved' ||
+                                       (approvedSubmission && approvedSubmission.physicalProgressDescription && 
+                                        approvedSubmission.physicalProgressDescription.trim() !== '');
+              const isApproved = approvedSubmission !== undefined ||
+                               milestone.status === 'approved' ||
+                               milestone.status === 'completed' ||
+                               milestone.physicalStatus === 'approved';
+              const milestoneContribution = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
+              return `${milestoneContribution.toFixed(2)}/${evenWeightPerMilestone.toFixed(2)}`;
+            })()}</span>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-600 block text-xs">Budget Division Utilization</span>
+            <span class="font-semibold text-lg text-green-600">${(() => {
+              const milestoneCount = processedMilestones.length;
+              const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+              const approvedSubmission = milestone.submissions?.find(s => s.status === 'approved' || s.status === 'iu_approved') || 
+                                         submissionsMap[milestone.id]?.find(s => s.status === 'approved' || s.status === 'iu_approved');
+              const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || approvedSubmission?.plannedBudget || 0);
+              const usedBudget = parseFloat(approvedSubmission?.usedBudget || milestone.usedBudget || 0);
+              const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
+              const budgetDivisionUtilization = budgetUtilizationPercent * (evenWeightPerMilestone / 100);
+              return budgetDivisionUtilization.toFixed(2);
+            })()}%</span>
           </div>
           <div class="bg-gray-50 p-3 rounded-lg">
             <span class="text-gray-600 block text-xs">Planned Budget</span>
             <span class="font-semibold text-lg">₱${(milestone.plannedBudget || 0).toLocaleString()}</span>
-          </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <span class="text-gray-600 block text-xs">Progress</span>
-            <span class="font-semibold text-lg">${calculateMilestoneProgress(milestone, progressData, submissionsMap)}%</span>
           </div>
         </div>
 
