@@ -210,6 +210,11 @@ module.exports = (sequelize) => {
       allowNull: true,
       comment: 'ID of the EIU Personnel assigned to this project (if hasExternalPartner is true)'
     },
+    eiuReassignedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Date and time when EIU was reassigned to a new partner contractor'
+    },
     
     // Approval workflow
     approvedBySecretariat: {

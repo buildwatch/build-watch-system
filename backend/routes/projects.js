@@ -325,7 +325,7 @@ router.get('/compiled-reports', authenticateToken, requireRole(['LGU-PMT']), asy
             {
               model: User,
               as: 'eiuPersonnel',
-              attributes: ['id', 'name', 'email']
+              attributes: ['id', 'name', 'fullName', 'email']
             }
           ]
         },
@@ -421,7 +421,7 @@ router.get('/compiled-reports/:reportId', authenticateToken, requireRole(['LGU-P
             {
               model: User,
               as: 'eiuPersonnel',
-              attributes: ['id', 'name', 'email']
+              attributes: ['id', 'name', 'fullName', 'email']
             }
           ]
         },
@@ -480,7 +480,7 @@ router.get('/compiled-reports/:reportId/download', authenticateToken, requireRol
             {
               model: User,
               as: 'eiuPersonnel',
-              attributes: ['id', 'name', 'email']
+              attributes: ['id', 'name', 'fullName', 'email']
             },
             {
               model: ProjectUpdate,
@@ -1458,6 +1458,12 @@ router.get('/public', async (req, res) => {
         generalDescription: projectData.generalDescription || projectData.physicalProgressRequirements || projectData.physicalDescription || projectData.requiredDocumentation, // Add generalDescription for public
         implementingOfficeName: projectData.implementingOfficeName || 'N/A',
         eiuPersonnelName: projectData.eiuPersonnelName || null,
+        eiuPersonnel: projectData.eiuPersonnel ? {
+          id: projectData.eiuPersonnel.id,
+          name: projectData.eiuPersonnel.name,
+          fullName: projectData.eiuPersonnel.fullName
+        } : null,
+        eiuReassignedAt: projectData.eiuReassignedAt,
         hasExternalPartner: projectData.hasExternalPartner,
         initialPhoto: projectData.initialPhoto,
         latitude: projectData.latitude,
@@ -1951,7 +1957,7 @@ router.get('/public/:id', async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'email', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
+          attributes: ['id', 'name', 'fullName', 'email', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
         }
       ]
     });
@@ -2038,8 +2044,10 @@ router.get('/public/:id', async (req, res) => {
       eiuPersonnel: project.eiuPersonnel ? {
         id: project.eiuPersonnel.id,
         name: project.eiuPersonnel.name,
+        fullName: project.eiuPersonnel.fullName,
         role: project.eiuPersonnel.role
-      } : null
+      } : null,
+      eiuReassignedAt: project.eiuReassignedAt
     };
 
     res.json({
@@ -2547,7 +2555,7 @@ router.get('/', authenticateToken, async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'username', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
+          attributes: ['id', 'name', 'fullName', 'username', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
         },
         {
           model: User,
@@ -2593,7 +2601,7 @@ router.get('/', authenticateToken, async (req, res) => {
           {
             model: User,
             as: 'eiuPersonnel',
-            attributes: ['id', 'name', 'username', 'role', 'subRole']
+            attributes: ['id', 'name', 'fullName', 'username', 'role', 'subRole']
           },
           {
             model: User,
@@ -2797,7 +2805,7 @@ router.get('/secretariat/submissions', authenticateToken, async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'username', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
+          attributes: ['id', 'name', 'fullName', 'username', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
         },
         {
           model: User,
@@ -3242,7 +3250,20 @@ router.put('/:id', authenticateToken, requireRole(['iu', 'LGU-IU']), async (req,
           finalUpdateData[field] = updateData[field];
         }
       });
+      
+      // Set reassignment timestamp if EIU is being changed
+      if (updateData.eiuPersonnelId && project.eiuPersonnelId && project.eiuPersonnelId !== updateData.eiuPersonnelId) {
+        finalUpdateData.eiuReassignedAt = new Date();
+        console.log('🔍 [BACKEND EIU DEBUG] EIU reassignment detected - setting eiuReassignedAt timestamp');
+      }
+      
       console.log('🔍 [BACKEND EIU DEBUG] Filtered update data for non-draft project:', finalUpdateData);
+    } else if (isEIUReassignment && project.workflowStatus === 'draft') {
+      // For draft projects, also track reassignment
+      if (updateData.eiuPersonnelId && project.eiuPersonnelId && project.eiuPersonnelId !== updateData.eiuPersonnelId) {
+        finalUpdateData.eiuReassignedAt = new Date();
+        console.log('🔍 [BACKEND EIU DEBUG] EIU reassignment detected for draft project - setting eiuReassignedAt timestamp');
+      }
     }
 
     // Validate milestones if provided
@@ -4003,7 +4024,7 @@ router.get('/compilation/summary', authenticateToken, async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'email', 'department']
+          attributes: ['id', 'name', 'fullName', 'email', 'department']
         }
       ]
     });
@@ -4466,7 +4487,7 @@ router.get('/:projectId/compiled-report', authenticateToken, async (req, res) =>
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['name', 'role', 'subRole']
+          attributes: ['id', 'name', 'fullName', 'role', 'subRole']
         },
         {
           model: ProjectUpdate,
@@ -4618,7 +4639,7 @@ router.get('/:projectId/generate-report', authenticateToken, async (req, res) =>
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['name', 'role', 'subRole']
+          attributes: ['id', 'name', 'fullName', 'role', 'subRole']
         },
         {
           model: ProjectUpdate,
@@ -6743,7 +6764,7 @@ router.get('/:id/export-report', authenticateToken, async (req, res) => {
         {
           model: User,
           as: 'eiuPersonnel',
-          attributes: ['id', 'name', 'email', 'department']
+          attributes: ['id', 'name', 'fullName', 'email', 'department']
         },
         {
           model: ProjectMilestone,
@@ -7290,7 +7311,7 @@ router.get('/compiled-reports', authenticateToken, requireRole(['LGU-PMT']), asy
             {
               model: User,
               as: 'eiuPersonnel',
-              attributes: ['id', 'name', 'email']
+              attributes: ['id', 'name', 'fullName', 'email']
             }
           ]
         },
@@ -7365,7 +7386,7 @@ router.get('/compiled-reports/:reportId', authenticateToken, requireRole(['LGU-P
             {
               model: User,
               as: 'eiuPersonnel',
-              attributes: ['id', 'name', 'email']
+              attributes: ['id', 'name', 'fullName', 'email']
             },
             {
               model: ProjectUpdate,
@@ -7443,7 +7464,7 @@ router.get('/compiled-reports/:reportId/download', authenticateToken, requireRol
             {
               model: User,
               as: 'eiuPersonnel',
-              attributes: ['id', 'name', 'email']
+              attributes: ['id', 'name', 'fullName', 'email']
             },
             {
               model: ProjectUpdate,
