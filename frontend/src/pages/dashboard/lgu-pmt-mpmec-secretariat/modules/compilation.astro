@@ -4081,7 +4081,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
       
       // NEW SYSTEM: Calculate milestone's contribution to overall progress
       // Get project milestones to calculate even weight
-      const projectMilestones = selectedProject?.milestones || milestones || [];
+      const projectMilestones = window.currentProject?.milestones || milestones || [];
       const milestoneCount = projectMilestones.length;
       const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
       
@@ -4440,7 +4440,7 @@ import SubmissionHistoryAnalytics from '../../../../islands/SubmissionHistoryAna
                           null);
     
     // NEW SYSTEM: Calculate milestone's contribution to overall progress
-    const projectMilestones = projectData?.milestones || currentProject?.milestones || [];
+    const projectMilestones = projectData?.milestones || window.currentProject?.milestones || [];
     const milestoneCount = projectMilestones.length;
     const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
     
