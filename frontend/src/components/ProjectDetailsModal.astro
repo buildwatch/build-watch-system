@@ -633,7 +633,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
           <!-- EIU Reassignment Note -->
           <div id="eiuReassignmentNote" class="hidden">
             <div class="p-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <p class="text-xs text-amber-800 leading-relaxed">
+              <p class="text-xs text-amber-800 leading-relaxed whitespace-nowrap">
                 <span class="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span id="eiuReassignmentName" class="font-semibold">-</span>, effective as of <span id="eiuReassignmentDate" class="font-semibold">-</span>.
               </p>
             </div>
@@ -2189,40 +2189,79 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
     });
 
     // Display EIU Reassignment Note if applicable
+    console.log('🔍 [EIU NOTE DEBUG] Checking for EIU reassignment note:', {
+      eiuReassignedAt: project.eiuReassignedAt,
+      hasEiuPersonnel: !!project.eiuPersonnel,
+      hasEiuPersonnelName: !!project.eiuPersonnelName,
+      eiuPersonnel: project.eiuPersonnel,
+      eiuPersonnelName: project.eiuPersonnelName
+    });
+    
     const eiuReassignmentNote = document.getElementById('eiuReassignmentNote');
     const eiuReassignmentName = document.getElementById('eiuReassignmentName');
     const eiuReassignmentDate = document.getElementById('eiuReassignmentDate');
     
-    if (project.eiuReassignedAt && (project.eiuPersonnel || project.eiuPersonnelName)) {
-      if (eiuReassignmentNote) {
-        eiuReassignmentNote.classList.remove('hidden');
-        const eiuName = project.eiuPersonnel?.fullName || project.eiuPersonnel?.name || project.eiuPersonnelName || 'N/A';
-        if (eiuReassignmentName) {
-          eiuReassignmentName.textContent = eiuName;
-        }
-        if (eiuReassignmentDate) {
-          try {
-            const reassignedDate = new Date(project.eiuReassignedAt);
-            if (!isNaN(reassignedDate.getTime())) {
-              eiuReassignmentDate.textContent = reassignedDate.toLocaleString('en-PH', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              });
-            } else {
-              eiuReassignmentDate.textContent = project.eiuReassignedAt;
-            }
-          } catch (e) {
+    console.log('🔍 [EIU NOTE DEBUG] Elements found:', {
+      noteElement: !!eiuReassignmentNote,
+      nameElement: !!eiuReassignmentName,
+      dateElement: !!eiuReassignmentDate
+    });
+    
+    // Get EIU name
+    const eiuName = project.eiuPersonnel?.fullName || project.eiuPersonnel?.name || project.eiuPersonnelName || null;
+    const hasEiuReassignment = project.eiuReassignedAt && eiuName;
+    
+    console.log('🔍 [EIU NOTE DEBUG] Will display note:', hasEiuReassignment, 'EIU Name:', eiuName);
+    
+    if (hasEiuReassignment && eiuReassignmentNote) {
+      console.log('✅ [EIU NOTE DEBUG] Displaying EIU reassignment note');
+      eiuReassignmentNote.classList.remove('hidden');
+      eiuReassignmentNote.style.display = '';
+      
+      if (eiuReassignmentName) {
+        eiuReassignmentName.textContent = eiuName;
+        console.log('✅ [EIU NOTE DEBUG] Set EIU name:', eiuName);
+      }
+      
+      if (eiuReassignmentDate) {
+        try {
+          const reassignedDate = new Date(project.eiuReassignedAt);
+          if (!isNaN(reassignedDate.getTime())) {
+            const formattedDate = reassignedDate.toLocaleString('en-PH', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+            eiuReassignmentDate.textContent = formattedDate;
+            console.log('✅ [EIU NOTE DEBUG] Set reassignment date:', formattedDate);
+          } else {
             eiuReassignmentDate.textContent = project.eiuReassignedAt;
+            console.log('⚠️ [EIU NOTE DEBUG] Invalid date, using raw value:', project.eiuReassignedAt);
           }
+        } catch (e) {
+          eiuReassignmentDate.textContent = project.eiuReassignedAt;
+          console.error('❌ [EIU NOTE DEBUG] Error formatting date:', e);
         }
       }
+      
+      // Verify the note is visible
+      setTimeout(() => {
+        const isVisible = !eiuReassignmentNote.classList.contains('hidden') && eiuReassignmentNote.offsetParent !== null;
+        console.log('🔍 [EIU NOTE DEBUG] Note visibility check:', {
+          hasHiddenClass: eiuReassignmentNote.classList.contains('hidden'),
+          offsetParent: eiuReassignmentNote.offsetParent !== null,
+          display: window.getComputedStyle(eiuReassignmentNote).display,
+          isVisible: isVisible
+        });
+      }, 100);
     } else {
+      console.log('❌ [EIU NOTE DEBUG] Not displaying note - condition not met or element not found');
       if (eiuReassignmentNote) {
         eiuReassignmentNote.classList.add('hidden');
+        eiuReassignmentNote.style.display = 'none';
       }
     }
   }
