@@ -6664,7 +6664,25 @@ export default function ProjectLedgerCenter({
                                 <td className="px-2 py-3 text-xs align-top bg-white whitespace-pre-wrap">{phase.remarksAndRecommendation || 'N/A'}</td>
                               </tr>
                             ))
-                          ) : (
+                          ) : null}
+                          
+                          {/* EIU Reassignment Note Row - Show after all phases if applicable */}
+                          {!isPublic && displayProject.eiuReassignedAt && (displayProject.eiuPersonnel || displayProject.eiuPersonnelName) && phases.length > 0 && (
+                            <tr className="border-b-2 border-amber-300 bg-amber-50">
+                              <td colSpan="13" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              {!isPublic && (
+                                <td colSpan="7" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50 text-amber-800 leading-relaxed">
+                                  <span className="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span className="font-semibold">{displayProject.eiuPersonnel?.fullName || displayProject.eiuPersonnel?.name || displayProject.eiuPersonnelName || 'N/A'}</span>, effective as of {formatDateTime(displayProject.eiuReassignedAt)}.
+                                </td>
+                              )}
+                              <td colSpan="4" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              <td colSpan="2" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              <td className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              <td colSpan="19" className="px-3 py-3 text-xs bg-amber-50"></td>
+                            </tr>
+                          )}
+                          
+                          {phases.length === 0 ? (
                             // If no phases, show one row with project info only
                           <tr className="border-b border-gray-400 hover:bg-blue-50/30 transition-colors">
                               {/* Basic Project Information */}
@@ -6717,32 +6735,7 @@ export default function ProjectLedgerCenter({
                                   <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
                                   <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
                                   <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
-                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">
-                                    {eiuPartner?.company || 'N/A'}
-                                    {/* EIU Reassignment Note */}
-                                    {displayProject.eiuReassignedAt && (displayProject.eiuPersonnel || displayProject.eiuPersonnelName) && (
-                                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-[10px]">
-                                        <p className="text-amber-800 leading-tight">
-                                          <span className="font-semibold">Note:</span> Realigned to <span className="font-semibold">{displayProject.eiuPersonnel?.fullName || displayProject.eiuPersonnel?.name || displayProject.eiuPersonnelName || 'N/A'}</span> on {(() => {
-                                            try {
-                                              const reassignedDate = new Date(displayProject.eiuReassignedAt);
-                                              if (isNaN(reassignedDate.getTime())) return displayProject.eiuReassignedAt;
-                                              return reassignedDate.toLocaleString('en-PH', {
-                                                year: 'numeric',
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                                hour12: true
-                                              });
-                                            } catch (e) {
-                                              return displayProject.eiuReassignedAt;
-                                            }
-                                          })()}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
                                 </>
                               )}
                               
@@ -6788,6 +6781,22 @@ export default function ProjectLedgerCenter({
                               <td className="px-2 py-3 text-xs border-r border-gray-400 text-center bg-white text-gray-500">N/A</td>
                               <td className="px-2 py-3 text-xs text-center bg-white text-gray-500">N/A</td>
                           </tr>
+                          ) : null}
+                          
+                          {/* EIU Reassignment Note Row - Show after project row if no phases and note exists */}
+                          {phases.length === 0 && !isPublic && displayProject.eiuReassignedAt && (displayProject.eiuPersonnel || displayProject.eiuPersonnelName) && (
+                            <tr className="border-b-2 border-amber-300 bg-amber-50">
+                              <td colSpan="13" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              {!isPublic && (
+                                <td colSpan="7" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50 text-amber-800 leading-relaxed">
+                                  <span className="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span className="font-semibold">{displayProject.eiuPersonnel?.fullName || displayProject.eiuPersonnel?.name || displayProject.eiuPersonnelName || 'N/A'}</span>, effective as of {formatDateTime(displayProject.eiuReassignedAt)}.
+                                </td>
+                              )}
+                              <td colSpan="4" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              <td colSpan="2" className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              <td className="px-3 py-3 text-xs border-r border-gray-400 bg-amber-50"></td>
+                              <td colSpan="19" className="px-3 py-3 text-xs bg-amber-50"></td>
+                            </tr>
                           )}
                         </tbody>
                       </table>

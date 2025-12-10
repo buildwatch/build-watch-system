@@ -3525,6 +3525,40 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                 {/* Report Tab */}
                 {activeTab === 'audit' && (
                   <div className="space-y-6">
+                    {/* EIU Reassignment Note - Always show at top of Report tab */}
+                    {selectedProject && selectedProject.eiuReassignedAt && (selectedProject.eiuPersonnel || selectedProject.eiuPersonnelName) && (
+                      <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-amber-900 mb-2">EIU Reassignment Notice</h4>
+                            <p className="text-sm text-amber-800 leading-relaxed">
+                              <span className="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span className="font-semibold">{selectedProject.eiuPersonnel?.fullName || selectedProject.eiuPersonnel?.name || selectedProject.eiuPersonnelName || 'N/A'}</span>, effective as of {(() => {
+                                try {
+                                  const reassignedDate = new Date(selectedProject.eiuReassignedAt);
+                                  if (isNaN(reassignedDate.getTime())) return selectedProject.eiuReassignedAt;
+                                  return reassignedDate.toLocaleString('en-PH', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  });
+                                } catch (e) {
+                                  return selectedProject.eiuReassignedAt;
+                                }
+                              })()}.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Project Completion Summary Section - Show if project is completed */}
                     {selectedProject && (selectedProject.status === 'complete' || selectedProject.status === 'completed' || selectedProject.status === 'COMPLETED') && (
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 shadow-lg">
