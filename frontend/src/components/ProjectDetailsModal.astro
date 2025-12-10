@@ -2543,7 +2543,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       
       // Enhanced milestone data extraction with ProgressCalculationService structure
       const title = milestone.title || milestone.name || milestone.milestoneName || milestone.itemOfWork || `Milestone ${index + 1}`;
-      const weight = parseFloat(milestone.weight || milestone.milestoneWeight || milestone.percentage || 0);
+      const weight = (parseFloat(milestone.weight || milestone.milestoneWeight || milestone.percentage || 0) || 0);
       const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || milestone.budget || milestone.milestonebudget || milestone.allocatedBudget || 0);
       const dueDate = milestone.dueDate || milestone.deadline || milestone.targetDate || milestone.completionDate;
       const description = milestone.description || milestone.details || milestone.summary || 'No description provided';
@@ -2603,14 +2603,14 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       });
       
       // Timeline Division data - Enhanced extraction with ProgressCalculationService fields
-      const timelineWeight = parseFloat(milestone.timelineWeight || milestone.timelineDivision?.weight || milestone.timeline?.weight || 33.33);
+      const timelineWeight = parseFloat(milestone.timelineWeight || milestone.timelineDivision?.weight || milestone.timeline?.weight || 33.33) || 0;
       const timelineStartDate = milestone.timelineStartDate || milestone.plannedStartDate || milestone.timelineDivision?.startDate || milestone.timeline?.startDate || milestone.startDate;
       const timelineEndDate = milestone.timelineEndDate || milestone.plannedEndDate || milestone.timelineDivision?.endDate || milestone.timeline?.endDate || milestone.endDate || dueDate;
       const timelineDescription = milestone.timelineDescription || milestone.timelineDivision?.description || milestone.timeline?.description || 'Timeline requirements not specified';
       const timelineStatus = milestone.timelineStatus || 'pending';
       
       // Budget Division data - Enhanced extraction with ProgressCalculationService fields
-      const budgetWeight = parseFloat(milestone.budgetWeight || milestone.budgetDivision?.weight || milestone.budget?.weight || 33.33);
+      const budgetWeight = parseFloat(milestone.budgetWeight || milestone.budgetDivision?.weight || milestone.budget?.weight || 33.33) || 0;
       const budgetPlanned = parseFloat(milestone.budgetPlanned || milestone.budgetDivision?.plannedBudget || milestone.budget?.planned || plannedBudget);
       
       // FIXED: Enhanced budget breakdown extraction - check all possible field names and avoid empty fallback
@@ -2656,7 +2656,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       });
       
       // Physical Division data - Enhanced extraction with ProgressCalculationService fields
-      const physicalWeight = parseFloat(milestone.physicalWeight || milestone.physicalDivision?.weight || milestone.physical?.weight || 33.34);
+      const physicalWeight = parseFloat(milestone.physicalWeight || milestone.physicalDivision?.weight || milestone.physical?.weight || 33.34) || 0;
       const physicalProofType = milestone.physicalProofType || milestone.proofTypes || milestone.physicalProofTypes || milestone.physicalDivision?.proofTypes || milestone.physical?.proofTypes || 'form';
       const physicalDescription = milestone.physicalDescription || milestone.physicalDivision?.description || milestone.physical?.description || 'Physical requirements not specified';
       let physicalStatus = milestone.physicalStatus || 'pending';
@@ -2706,7 +2706,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-2">
               <div>
-                <span class="font-medium">Weight:</span> <span class="text-blue-600 font-bold">${weight.toFixed(1)}%</span>
+                <span class="font-medium">Weight:</span> <span class="text-blue-600 font-bold">${(parseFloat(weight) || 0).toFixed(1)}%</span>
               </div>
               <div>
                 <span class="font-medium">Budget:</span> <span class="text-green-600 font-bold">₱${parseFloat(plannedBudget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -2739,7 +2739,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
               <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(timelineStatusUpdated)} bg-opacity-75">${timelineStatusUpdated}</span>
             </div>
             <div class="space-y-2 text-sm">
-              <div><span class="text-blue-700 font-medium">Weight:</span> <span class="font-bold">${timelineWeight.toFixed(1)}%</span></div>
+              <div><span class="text-blue-700 font-medium">Weight:</span> <span class="font-bold">${(parseFloat(timelineWeight) || 0).toFixed(1)}%</span></div>
               <div><span class="text-blue-700 font-medium">Start:</span> <span class="text-blue-900">${formatDate(timelineStartDate)}</span></div>
               <div><span class="text-blue-700 font-medium">End:</span> <span class="text-blue-900">${formatDate(timelineEndDate)}</span></div>
               <div><span class="text-blue-700 font-medium">Description:</span><p class="text-blue-900 text-xs mt-1">${timelineDescription}</p></div>
@@ -2758,7 +2758,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
               <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(budgetStatusUpdated)} bg-opacity-75">${budgetStatusUpdated}</span>
             </div>
             <div class="space-y-2 text-sm">
-              <div><span class="text-green-700 font-medium">Weight:</span> <span class="font-bold">${budgetWeight.toFixed(1)}%</span></div>
+              <div><span class="text-green-700 font-medium">Weight:</span> <span class="font-bold">${(parseFloat(budgetWeight) || 0).toFixed(1)}%</span></div>
               <div><span class="text-green-700 font-medium">Budget:</span> <span class="text-green-900 font-bold">₱${parseFloat(budgetPlanned || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
               <div><span class="text-green-700 font-medium">Breakdown:</span><p class="text-green-900 text-xs mt-1">${budgetBreakdown}</p></div>
             </div>
@@ -2776,7 +2776,7 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
               <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(physicalStatusUpdated)} bg-opacity-75">${physicalStatusUpdated}</span>
             </div>
             <div class="space-y-2 text-sm">
-              <div><span class="text-purple-700 font-medium">Weight:</span> <span class="font-bold">${physicalWeight.toFixed(1)}%</span></div>
+              <div><span class="text-purple-700 font-medium">Weight:</span> <span class="font-bold">${(parseFloat(physicalWeight) || 0).toFixed(1)}%</span></div>
               <div><span class="text-purple-700 font-medium">Proof Types:</span> <span class="text-purple-900 capitalize">${physicalProofType || 'Form'}</span></div>
               <div><span class="text-purple-700 font-medium">Description:</span><p class="text-purple-900 text-xs mt-1">${physicalDescription}</p></div>
             </div>

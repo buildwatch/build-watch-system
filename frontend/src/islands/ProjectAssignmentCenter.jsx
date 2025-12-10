@@ -90,8 +90,15 @@ export default function ProjectAssignmentCenter({
   // Clear password when password modal opens
   useEffect(() => {
     if (showPasswordModal) {
+      console.log('🔍 [PASSWORD DEBUG] Password modal opened - clearing password state');
+      console.log('🔍 [PASSWORD DEBUG] Password value before clear:', password);
       setPassword('');
       setPasswordError('');
+      // Force clear any browser autofill by using a timeout
+      setTimeout(() => {
+        setPassword('');
+        console.log('🔍 [PASSWORD DEBUG] Password cleared after timeout');
+      }, 100);
     }
   }, [showPasswordModal]);
 
@@ -599,6 +606,28 @@ export default function ProjectAssignmentCenter({
   };
 
 
+  // Expose debugging function for password field
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.debugPasswordField = () => {
+        console.log('🔍 [PASSWORD DEBUG] Current password state:', password);
+        console.log('🔍 [PASSWORD DEBUG] Password modal open:', showPasswordModal);
+        console.log('🔍 [PASSWORD DEBUG] Password error:', passwordError);
+        console.log('🔍 [PASSWORD DEBUG] Verifying password:', verifyingPassword);
+        const passwordInput = document.querySelector('input[type="password"]');
+        if (passwordInput) {
+          console.log('🔍 [PASSWORD DEBUG] Password input element found');
+          console.log('🔍 [PASSWORD DEBUG] Input value:', passwordInput.value);
+          console.log('🔍 [PASSWORD DEBUG] Input value length:', passwordInput.value.length);
+          console.log('🔍 [PASSWORD DEBUG] React state value:', password);
+          console.log('🔍 [PASSWORD DEBUG] Values match:', passwordInput.value === password);
+        } else {
+          console.log('🔍 [PASSWORD DEBUG] Password input element NOT found');
+        }
+      };
+    }
+  }, [password, showPasswordModal, passwordError, verifyingPassword]);
+
   // Expose methods to window
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -855,10 +884,17 @@ export default function ProjectAssignmentCenter({
                 </button>
                 <button
                   onClick={() => {
+                    console.log('🔍 [PASSWORD DEBUG] Proceed Anyway clicked - opening password modal');
+                    console.log('🔍 [PASSWORD DEBUG] Current password value:', password);
                     setShowWarningModal(false);
-                    setShowPasswordModal(true);
+                    // Clear password before opening modal
                     setPassword('');
                     setPasswordError('');
+                    // Use setTimeout to ensure password is cleared before modal opens
+                    setTimeout(() => {
+                      setShowPasswordModal(true);
+                      console.log('🔍 [PASSWORD DEBUG] Password modal opened, password should be empty');
+                    }, 50);
                   }}
                   disabled={loading}
                   className={`flex-1 px-4 py-2 ${colors.button} text-white rounded-lg font-semibold disabled:opacity-50 transition-all`}
@@ -893,15 +929,26 @@ export default function ProjectAssignmentCenter({
                   Password
                 </label>
                 <input
+                  key={`password-input-${showPasswordModal ? Date.now() : 'closed'}`}
                   type="password"
                   value={password}
                   onChange={(e) => {
+                    console.log('🔍 [PASSWORD DEBUG] Password input changed, length:', e.target.value.length);
                     setPassword(e.target.value);
                     setPasswordError('');
                   }}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter' && !verifyingPassword && password.trim()) {
                       verifyPassword();
+                    }
+                  }}
+                  onFocus={(e) => {
+                    console.log('🔍 [PASSWORD DEBUG] Password field focused, current value:', e.target.value);
+                    // Clear any autofilled value on focus
+                    if (e.target.value && !password) {
+                      console.log('🔍 [PASSWORD DEBUG] Detected autofilled value, clearing...');
+                      e.target.value = '';
+                      setPassword('');
                     }
                   }}
                   className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
@@ -912,10 +959,13 @@ export default function ProjectAssignmentCenter({
                   placeholder="Enter your password"
                   disabled={verifyingPassword}
                   autoFocus
-                  autoComplete="off"
+                  autoComplete="new-password"
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck="false"
+                  data-form-type="other"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                 />
                 {passwordError && (
                   <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
