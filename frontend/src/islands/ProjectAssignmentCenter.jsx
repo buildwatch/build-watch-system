@@ -789,6 +789,7 @@ export default function ProjectAssignmentCenter({
           </button>
         </div>
       </div>
+      )}
 
       {/* Warning Modal for Reassignment */}
       {showWarningModal && (
