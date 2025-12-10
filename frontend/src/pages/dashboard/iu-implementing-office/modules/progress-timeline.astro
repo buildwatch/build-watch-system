@@ -5644,6 +5644,10 @@ This compilation report has been generated automatically based on approved EIU m
 
     const filteredSubmissions = milestoneSubmissions.filter(submission => {
       if (currentSubmissionFilter === 'all') return true;
+      // Show both 'needs_revision' and 'rejected' statuses in the Needs Revision tab
+      if (currentSubmissionFilter === 'needs_revision') {
+        return submission.status === 'needs_revision' || submission.status === 'rejected';
+      }
       return submission.status === currentSubmissionFilter;
     });
 
@@ -6054,6 +6058,70 @@ This compilation report has been generated automatically based on approved EIU m
             </div>
           </div>
 
+          ${(submission.status === 'needs_revision' || submission.status === 'rejected') && submission.reviewNotes ? `
+            <!-- Rejection Audit Receipt Section -->
+            <div class="mt-4 pt-4 border-t-2 border-red-200 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl p-5 border border-red-200 shadow-sm">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <h4 class="text-lg font-bold text-red-800">Rejection Audit Receipt</h4>
+                <span class="ml-auto px-3 py-1 bg-red-200 text-red-800 text-xs font-bold rounded-full border border-red-300">
+                  NON-DELETABLE
+                </span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-white rounded-lg p-3 border border-red-200">
+                  <label class="block text-xs font-bold text-red-700 uppercase tracking-wide mb-1">Rejection Reason</label>
+                  <div class="text-sm text-gray-800 bg-red-50 rounded-lg p-3 border border-red-200 leading-relaxed whitespace-pre-wrap">
+                    ${submission.reviewNotes || submission.remarks || 'No reason provided'}
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg p-3 border border-red-200">
+                  <label class="block text-xs font-bold text-red-700 uppercase tracking-wide mb-1">Rejected By</label>
+                  <div class="text-sm font-semibold text-gray-800">
+                    ${submission.reviewer?.name || submission.approverName || submission.approverFullName || 'LGU-IU Implementing Office'}
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg p-3 border border-red-200">
+                  <label class="block text-xs font-bold text-red-700 uppercase tracking-wide mb-1">Rejection Date & Time</label>
+                  <div class="text-sm font-semibold text-gray-800">
+                    ${submission.reviewedAt ? new Date(submission.reviewedAt).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    }) : submissionDate.toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg p-3 border border-red-200">
+                  <label class="block text-xs font-bold text-red-700 uppercase tracking-wide mb-1">Original Submission Date</label>
+                  <div class="text-sm font-semibold text-gray-800">
+                    ${submissionDate.toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+
           <!-- Enhanced Action Buttons -->
           <div class="flex items-center justify-between pt-4 border-t-2 border-gray-100">
             <div class="flex items-center gap-3">
@@ -6061,7 +6129,7 @@ This compilation report has been generated automatically based on approved EIU m
                 <svg class="w-4 h-4 text-[#0D7DB5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                 </svg>
-                <span class="font-semibold">Review Required</span>
+                <span class="font-semibold">${submission.status === 'needs_revision' || submission.status === 'rejected' ? 'Rejected - Audit Receipt' : 'Review Required'}</span>
               </div>
               <div class="text-xs text-gray-500">
                 Submitted: ${submissionDate.toLocaleDateString('en-US', { 
@@ -6082,6 +6150,17 @@ This compilation report has been generated automatically based on approved EIU m
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                     Review
+                  </span>
+                </button>
+              ` : (submission.status === 'needs_revision' || submission.status === 'rejected') ? `
+                <!-- Rejected submissions are non-deletable audit receipts - only view button -->
+                <button onclick="openMilestoneSubmissionModal('${submission.id}')" class="px-6 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    View Audit Receipt
                   </span>
                 </button>
               ` : `
@@ -6152,6 +6231,13 @@ This compilation report has been generated automatically based on approved EIU m
 
   // Delete submission function
   async function deleteSubmission(submissionId) {
+    // Prevent deletion of rejected/needs_revision submissions (audit receipts)
+    const submission = milestoneSubmissions.find(s => s.id === submissionId);
+    if (submission && (submission.status === 'needs_revision' || submission.status === 'rejected')) {
+      alert('This submission cannot be deleted. Rejected submissions are kept as audit receipts for compliance and record-keeping purposes.');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this milestone submission? This action cannot be undone.')) {
       return;
     }
@@ -8925,7 +9011,8 @@ This compilation report has been generated automatically based on approved EIU m
         return;
       }
 
-      // Update submission status to rejected with rejection reason
+      // Update submission status to needs_revision (not rejected) with rejection reason
+      // This preserves the submission as an audit receipt in the Needs Revision tab
       const response = await fetch(`${API_URL}/milestones/milestone-submissions/${submissionId}/status`, {
         method: 'PUT',
         headers: {
@@ -8933,7 +9020,7 @@ This compilation report has been generated automatically based on approved EIU m
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          status: 'rejected',
+          status: 'needs_revision', // Changed from 'rejected' to 'needs_revision' to preserve as audit receipt
           reviewNotes: rejectionReason // Store rejection reason in reviewNotes
         })
       });
@@ -8950,8 +9037,8 @@ This compilation report has been generated automatically based on approved EIU m
         // Create notification for EIU
         await createEIURejectionNotification(submissionId, rejectionReason, submission);
         
-        // Delete the submission
-        await deleteRejectedSubmission(submissionId);
+        // DO NOT DELETE - Keep submission as audit receipt in Needs Revision tab
+        // await deleteRejectedSubmission(submissionId); // REMOVED
         
         // Reload milestone submissions
         loadMilestoneSubmissions();
@@ -9040,52 +9127,53 @@ This compilation report has been generated automatically based on approved EIU m
          return;
        }
 
-       // Update submission status to rejected with rejection reason
-       const response = await fetch(`${API_URL}/milestones/milestone-submissions/${window.currentReviewSubmissionId}/status`, {
-         method: 'PUT',
-         headers: {
-           'Authorization': `Bearer ${token}`,
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({
-           status: 'rejected',
-           reviewNotes: rejectionReason, // Store rejection reason in reviewNotes
-           remarks: remarks || rejectionReason, // Use rejection reason if remarks not provided
-           remarksAndRecommendation: remarks || rejectionReason,
-           approverFullName: fullName,
-           approverName: fullName
-         })
-       });
+      // Update submission status to needs_revision (not rejected) with rejection reason
+      // This preserves the submission as an audit receipt in the Needs Revision tab
+      const response = await fetch(`${API_URL}/milestones/milestone-submissions/${window.currentReviewSubmissionId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'needs_revision', // Changed from 'rejected' to 'needs_revision' to preserve as audit receipt
+          reviewNotes: rejectionReason, // Store rejection reason in reviewNotes
+          remarks: remarks || rejectionReason, // Use rejection reason if remarks not provided
+          remarksAndRecommendation: remarks || rejectionReason,
+          approverFullName: fullName,
+          approverName: fullName
+        })
+      });
 
-       if (!response.ok) {
-         const errorData = await response.json().catch(() => ({}));
-         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-       }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
 
-       const data = await response.json();
-       console.log('📦 Rejection response:', data);
+      const data = await response.json();
+      console.log('📦 Rejection response:', data);
 
-       if (data.success) {
-         // Create notification for EIU
-         await createEIURejectionNotification(window.currentReviewSubmissionId, rejectionReason, submission);
-         
-         // Update local submission status
-         if (submission) {
-           submission.status = 'rejected';
-           submission.reviewNotes = rejectionReason;
-           submission.reviewedAt = new Date().toISOString();
-         }
-         
-         // Refresh the submissions list
-         await loadMilestoneSubmissions();
-         
-         closeMilestoneSubmissionModal();
-         
-         // Show success notification with check animation
-         await showRejectionSuccessModal();
-       } else {
-         throw new Error(data.error || 'Failed to reject submission');
-       }
+      if (data.success) {
+        // Create notification for EIU
+        await createEIURejectionNotification(window.currentReviewSubmissionId, rejectionReason, submission);
+        
+        // Update local submission status
+        if (submission) {
+          submission.status = 'needs_revision'; // Changed from 'rejected' to 'needs_revision'
+          submission.reviewNotes = rejectionReason;
+          submission.reviewedAt = new Date().toISOString();
+        }
+        
+        // Refresh the submissions list
+        await loadMilestoneSubmissions();
+        
+        closeMilestoneSubmissionModal();
+        
+        // Show success notification with check animation
+        await showRejectionSuccessModal();
+      } else {
+        throw new Error(data.error || 'Failed to reject submission');
+      }
      } catch (error) {
        console.error('❌ Error rejecting submission:', error);
        await showRejectionErrorModal(`Error rejecting submission: ${error.message}`);
@@ -9419,6 +9507,10 @@ This compilation report has been generated automatically based on approved EIU m
        const projectName = submission.project?.name || submission.projectName || 'Unknown Project';
        const milestoneName = submission.milestone?.title || submission.milestoneName || 'Unknown Milestone';
        
+       // Create clickable notification that navigates to submit-update with milestone focus
+       // The link includes query params to auto-scroll to the milestone form
+       const notificationLink = `/dashboard/eiu/modules/submit-update?projectId=${submission.projectId}&milestoneId=${submission.milestoneId}&focus=milestone-${submission.milestoneId}`;
+       
        // Create notification for the EIU user
        const response = await fetch(`${API_URL}/notifications/create-for-user`, {
          method: 'POST',
@@ -9430,19 +9522,21 @@ This compilation report has been generated automatically based on approved EIU m
            userId: eiuUserId,
            type: 'milestone_rejected',
            title: 'Milestone Submission Rejected',
-           message: `Your milestone submission "${milestoneName}" for project "${projectName}" has been rejected. Reason: ${rejectionReason}`,
-           link: `/dashboard/eiu/modules/submit-update`,
+           message: `Your milestone submission "${milestoneName}" for project "${projectName}" has been rejected. Click to view rejection reason and resubmit.`,
+           link: notificationLink,
            metadata: {
              submissionId: submissionId,
              projectId: submission.projectId,
              milestoneId: submission.milestoneId,
-             rejectionReason: rejectionReason
+             rejectionReason: rejectionReason,
+             targetRole: 'eiu', // Ensure EIU users see this notification
+             action: 'view_rejection'
            }
          })
        });
        
        if (response.ok) {
-         console.log('✅ Notification created for EIU user');
+         console.log('✅ Notification created for EIU user with clickable link');
        } else {
          console.warn('⚠️ Failed to create notification:', await response.text());
        }
