@@ -6699,20 +6699,38 @@ loading = false;
       try {
         const token = localStorage.getItem('token');
         if (!token) {
+          console.error('🔍 [DELETE DEBUG] No authentication token found');
           return { success: false, error: 'Authentication token not found' };
         }
         
         const apiUrl = window.getApiUrl();
+        console.log('🔍 [DELETE DEBUG] Deleting project:', projectId, 'via:', `${apiUrl}/projects/${projectId}`);
+        
         const response = await fetch(`${apiUrl}/projects/${projectId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        return await response.json();
+        
+        console.log('🔍 [DELETE DEBUG] Delete response status:', response.status);
+        
+        const responseText = await response.text();
+        console.log('🔍 [DELETE DEBUG] Delete response text:', responseText);
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          console.error('🔍 [DELETE DEBUG] Failed to parse response as JSON:', e);
+          result = { success: false, error: responseText || 'Failed to delete project' };
+        }
+        
+        console.log('🔍 [DELETE DEBUG] Delete result:', result);
+        return result;
       } catch (error) {
-        console.error('Error deleting project:', error);
-        return { success: false, error: 'Network error' };
+        console.error('🔍 [DELETE DEBUG] Error deleting project:', error);
+        return { success: false, error: error.message || 'Network error' };
       }
     }
   };
@@ -8391,20 +8409,25 @@ loading = false;
           window.pendingDeleteProjectId = null;
           window.pendingDeleteProjectName = null;
           
-          // Show success modal with check animation
-          window.showDeleteSuccessModal();
-          
-          // Perform deletion
+          // Perform deletion first
+          console.log('🔍 [DELETE PASSWORD DEBUG] Calling deleteProject with ID:', projectId);
           const result = await window.deleteProject(projectId);
+          console.log('🔍 [DELETE PASSWORD DEBUG] deleteProject result:', result);
           
-          if (result.success) {
-            // Reload page after a short delay
+          if (result && result.success) {
+            // Show success modal with check animation after successful deletion
+            window.showDeleteSuccessModal();
+            
+            // Reload page after a short delay to show success message
             setTimeout(() => {
               window.location.reload();
             }, 2000);
           } else {
-            window.closeDeleteSuccessModal();
-            alert(result.error || 'Failed to delete project');
+            // Close password modal if still open
+            window.closePasswordModalForDeletion();
+            const errorMsg = result?.error || 'Failed to delete project';
+            console.error('🔍 [DELETE PASSWORD DEBUG] Deletion failed:', errorMsg);
+            window.showWarningModal('Error Deleting Project', errorMsg);
           }
         }
       } else {
@@ -11219,23 +11242,42 @@ loading = false;
   // Delete project function
   window.deleteProject = async function(projectId) {
     try {
-      const response = await projectService.deleteProject(projectId);
+      console.log('🔍 [DELETE DEBUG] deleteProject called with projectId:', projectId);
       
-      if (response.success) {
-        // Success modal is already shown by verifyPasswordForDeletion
-        // Force refresh notifications to show the project deletion notification
+      if (!projectId) {
+        console.error('🔍 [DELETE DEBUG] No projectId provided');
+        return { success: false, error: 'Project ID is required' };
+      }
+      
+      const response = await projectService.deleteProject(projectId);
+      console.log('🔍 [DELETE DEBUG] deleteProject response:', response);
+      console.log('🔍 [DELETE DEBUG] response.success:', response?.success);
+      console.log('🔍 [DELETE DEBUG] response type:', typeof response);
+      
+      // Check if response is valid
+      if (!response) {
+        console.error('🔍 [DELETE DEBUG] No response received from deleteProject');
+        return { success: false, error: 'No response from server' };
+      }
+      
+      if (response.success === true || response.success === 'true') {
+        // Success - force refresh notifications
         if (window.notificationService) {
           await window.notificationService.forceRefresh();
-          console.log('Notifications refreshed after project deletion');
+          console.log('🔍 [DELETE DEBUG] Notifications refreshed after project deletion');
         }
-        // Page reload is handled by verifyPasswordForDeletion
+        // Return success response - verifyPasswordForDeletion will handle showing success modal and reload
+        return response;
       } else {
-        window.closeDeleteSuccessModal();
-        window.showWarningModal('Error Deleting Project', response.error || 'An error occurred while deleting the project. Please try again.');
+        // Deletion failed
+        const errorMsg = response.error || response.message || 'An error occurred while deleting the project. Please try again.';
+        console.error('🔍 [DELETE DEBUG] Delete failed:', errorMsg);
+        return { success: false, error: errorMsg };
       }
     } catch (error) {
-      console.error('Error deleting project:', error);
-      window.showWarningModal('Error Deleting Project', 'An error occurred while deleting the project. Please try again.');
+      console.error('🔍 [DELETE DEBUG] Exception in deleteProject:', error);
+      console.error('🔍 [DELETE DEBUG] Error stack:', error.stack);
+      return { success: false, error: error.message || 'An error occurred while deleting the project' };
     }
   };
 
