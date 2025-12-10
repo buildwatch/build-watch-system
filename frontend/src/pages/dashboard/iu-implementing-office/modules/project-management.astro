@@ -231,6 +231,15 @@ loading = false;
         animation: sinkAndPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
+      @keyframes checkMarkDraw {
+        from {
+          stroke-dashoffset: 24;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      
       @keyframes sinkAndPop {
         0% {
           transform: translateY(0);
@@ -2834,9 +2843,78 @@ loading = false;
               </button>
               <button 
                 id="deleteConfirmButton"
+                onclick="window.showPasswordModalForDeletion()"
                 class="px-6 py-3 bg-gradient-to-r from-red-600 via-red-500 to-red-600 hover:from-red-700 hover:via-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
               >
                 Delete Project
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password Verification Modal for Deletion -->
+    <div id="deletePasswordModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[90] backdrop-blur-sm">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Password Verification Required</h3>
+                <p class="text-sm text-gray-600 mt-1">Please enter your LGU-IU account password to confirm deletion</p>
+              </div>
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                id="deletePasswordInput"
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:border-amber-500 focus:ring-amber-200 transition-all"
+                placeholder="Enter your password"
+                autocomplete="new-password"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                data-form-type="other"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                onkeypress="if(event.key === 'Enter' && !document.getElementById('deletePasswordVerifyButton').disabled) { window.verifyPasswordForDeletion(); }"
+              />
+              <p id="deletePasswordError" class="mt-2 text-sm text-red-600 hidden flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span id="deletePasswordErrorText"></span>
+              </p>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                onclick="window.closePasswordModalForDeletion()"
+                id="deletePasswordCancelButton"
+                class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onclick="window.verifyPasswordForDeletion()"
+                id="deletePasswordVerifyButton"
+                class="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+              >
+                <span id="deletePasswordVerifyText">Verify & Delete</span>
+                <svg id="deletePasswordSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
               </button>
             </div>
           </div>
@@ -8116,6 +8194,244 @@ loading = false;
       modal.classList.add('hidden');
       document.body.style.overflow = 'auto';
     }
+    // Clear pending deletion data
+    window.pendingDeleteProjectId = null;
+    window.pendingDeleteProjectName = null;
+  };
+
+  // Password Modal Functions for Deletion
+  window.showPasswordModalForDeletion = function() {
+    const passwordModal = document.getElementById('deletePasswordModal');
+    const passwordInput = document.getElementById('deletePasswordInput');
+    const passwordError = document.getElementById('deletePasswordError');
+    const passwordErrorText = document.getElementById('deletePasswordErrorText');
+    
+    if (!passwordModal) {
+      console.error('Password modal not found');
+      // Fallback: proceed with deletion without password
+      if (window.pendingDeleteProjectId) {
+        window.closeDeleteConfirmModal();
+        window.deleteProject(window.pendingDeleteProjectId);
+      }
+      return;
+    }
+    
+    // Clear password field
+    if (passwordInput) {
+      passwordInput.value = '';
+      console.log('🔍 [DELETE PASSWORD DEBUG] Password field cleared');
+    }
+    
+    // Hide error message
+    if (passwordError) {
+      passwordError.classList.add('hidden');
+    }
+    
+    // Close delete confirmation modal
+    window.closeDeleteConfirmModal();
+    
+    // Show password modal
+    passwordModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Focus password input after a short delay
+    setTimeout(() => {
+      if (passwordInput) {
+        passwordInput.focus();
+      }
+    }, 100);
+  };
+
+  window.closePasswordModalForDeletion = function() {
+    const passwordModal = document.getElementById('deletePasswordModal');
+    const passwordInput = document.getElementById('deletePasswordInput');
+    const passwordError = document.getElementById('deletePasswordError');
+    const verifyButton = document.getElementById('deletePasswordVerifyButton');
+    const verifyText = document.getElementById('deletePasswordVerifyText');
+    const spinner = document.getElementById('deletePasswordSpinner');
+    
+    if (passwordModal) {
+      passwordModal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Clear password field
+    if (passwordInput) {
+      passwordInput.value = '';
+    }
+    
+    // Hide error
+    if (passwordError) {
+      passwordError.classList.add('hidden');
+    }
+    
+    // Reset button state
+    if (verifyButton) {
+      verifyButton.disabled = false;
+    }
+    if (verifyText) {
+      verifyText.textContent = 'Verify & Delete';
+    }
+    if (spinner) {
+      spinner.classList.add('hidden');
+    }
+  };
+
+  window.verifyPasswordForDeletion = async function() {
+    const passwordInput = document.getElementById('deletePasswordInput');
+    const passwordError = document.getElementById('deletePasswordError');
+    const passwordErrorText = document.getElementById('deletePasswordErrorText');
+    const verifyButton = document.getElementById('deletePasswordVerifyButton');
+    const verifyText = document.getElementById('deletePasswordVerifyText');
+    const spinner = document.getElementById('deletePasswordSpinner');
+    
+    if (!passwordInput || !passwordInput.value.trim()) {
+      if (passwordError && passwordErrorText) {
+        passwordErrorText.textContent = 'Please enter your password';
+        passwordError.classList.remove('hidden');
+      }
+      return;
+    }
+    
+    const password = passwordInput.value.trim();
+    
+    // Disable button and show loading
+    if (verifyButton) {
+      verifyButton.disabled = true;
+    }
+    if (verifyText) {
+      verifyText.textContent = 'Verifying...';
+    }
+    if (spinner) {
+      spinner.classList.remove('hidden');
+    }
+    
+    // Hide error
+    if (passwordError) {
+      passwordError.classList.add('hidden');
+    }
+    
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      // Get current user ID
+      let currentUserId = null;
+      try {
+        const apiUrl = window.getApiUrl();
+        const profileResponse = await fetch(`${apiUrl}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          if (profileData.success && profileData.user) {
+            currentUserId = profileData.user.id;
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching user profile:', e);
+      }
+      
+      if (!currentUserId) {
+        throw new Error('Unable to verify user. Please log in again.');
+      }
+      
+      // Verify password
+      const apiUrl = window.getApiUrl();
+      const response = await fetch(`${apiUrl}/auth/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password, targetUserId: currentUserId })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Password verified - proceed with deletion
+        console.log('🔍 [DELETE PASSWORD DEBUG] Password verified, proceeding with deletion');
+        window.closePasswordModalForDeletion();
+        
+        if (window.pendingDeleteProjectId) {
+          const projectId = window.pendingDeleteProjectId;
+          window.pendingDeleteProjectId = null;
+          window.pendingDeleteProjectName = null;
+          
+          // Show success modal with check animation
+          window.showDeleteSuccessModal();
+          
+          // Perform deletion
+          const result = await window.deleteProject(projectId);
+          
+          if (result.success) {
+            // Reload page after a short delay
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            window.closeDeleteSuccessModal();
+            alert(result.error || 'Failed to delete project');
+          }
+        }
+      } else {
+        // Password incorrect
+        const errorMsg = data.error || 'Incorrect password. Please try again.';
+        if (passwordError && passwordErrorText) {
+          passwordErrorText.textContent = errorMsg;
+          passwordError.classList.remove('hidden');
+        }
+        
+        // Re-enable button
+        if (verifyButton) {
+          verifyButton.disabled = false;
+        }
+        if (verifyText) {
+          verifyText.textContent = 'Verify & Delete';
+        }
+        if (spinner) {
+          spinner.classList.add('hidden');
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      const errorMsg = error.message || 'Failed to verify password. Please try again.';
+      if (passwordError && passwordErrorText) {
+        passwordErrorText.textContent = errorMsg;
+        passwordError.classList.remove('hidden');
+      }
+      
+      // Re-enable button
+      if (verifyButton) {
+        verifyButton.disabled = false;
+      }
+      if (verifyText) {
+        verifyText.textContent = 'Verify & Delete';
+      }
+      if (spinner) {
+        spinner.classList.add('hidden');
+      }
+    }
+  };
+
+  // Delete Success Modal Functions
+  window.showDeleteSuccessModal = function() {
+    const modal = document.getElementById('deleteSuccessModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  window.closeDeleteSuccessModal = function() {
+    const modal = document.getElementById('deleteSuccessModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
   };
 
   // Success Modal Functions
@@ -10876,20 +11192,15 @@ loading = false;
       const response = await projectService.deleteProject(projectId);
       
       if (response.success) {
-        // Show success modal before reload
-        window.showSuccessModal('Project Deleted Successfully!', 'The project has been permanently deleted from the system.');
-        
+        // Success modal is already shown by verifyPasswordForDeletion
         // Force refresh notifications to show the project deletion notification
         if (window.notificationService) {
           await window.notificationService.forceRefresh();
           console.log('Notifications refreshed after project deletion');
         }
-        
-        // Reload after a short delay to allow user to see success message
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        // Page reload is handled by verifyPasswordForDeletion
       } else {
+        window.closeDeleteSuccessModal();
         window.showWarningModal('Error Deleting Project', response.error || 'An error occurred while deleting the project. Please try again.');
       }
     } catch (error) {
