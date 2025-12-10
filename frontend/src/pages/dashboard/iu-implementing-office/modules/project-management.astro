@@ -8325,8 +8325,30 @@ loading = false;
     }
   };
 
+  // Flag to prevent multiple simultaneous calls
+  let isVerifyingPassword = false;
+
   window.verifyPasswordForDeletion = async function() {
     console.log('🔍 [DELETE PASSWORD DEBUG] verifyPasswordForDeletion called');
+    
+    // Prevent multiple simultaneous calls
+    if (isVerifyingPassword) {
+      console.log('🔍 [DELETE PASSWORD DEBUG] Already verifying password, ignoring duplicate call');
+      return;
+    }
+    
+    // Capture projectId immediately before any async operations
+    const projectId = window.pendingDeleteProjectId;
+    const projectName = window.pendingDeleteProjectName;
+    
+    console.log('🔍 [DELETE PASSWORD DEBUG] Captured projectId:', projectId);
+    console.log('🔍 [DELETE PASSWORD DEBUG] Captured projectName:', projectName);
+    
+    if (!projectId) {
+      console.error('🔍 [DELETE PASSWORD DEBUG] ❌ No projectId found at start of function!');
+      window.showWarningModal('Error', 'Project ID not found. Please try deleting again.');
+      return;
+    }
     
     const passwordInput = document.getElementById('deletePasswordInput');
     const passwordError = document.getElementById('deletePasswordError');
@@ -8358,6 +8380,9 @@ loading = false;
     
     const password = passwordInput.value.trim();
     console.log('🔍 [DELETE PASSWORD DEBUG] Password entered, length:', password.length);
+    
+    // Set flag to prevent duplicate calls
+    isVerifyingPassword = true;
     
     // Disable button and show loading
     if (verifyButton) {
@@ -8424,53 +8449,60 @@ loading = false;
       if (response.ok && data.success) {
         // Password verified - proceed with deletion
         console.log('🔍 [DELETE PASSWORD DEBUG] ✅ Password verified successfully, proceeding with deletion');
+        console.log('🔍 [DELETE PASSWORD DEBUG] Using captured projectId:', projectId);
+        
+        if (!projectId) {
+          console.error('🔍 [DELETE PASSWORD DEBUG] ❌ No projectId available after password verification!');
+          window.closePasswordModalForDeletion();
+          isVerifyingPassword = false;
+          window.showWarningModal('Error', 'Project ID not found. Please try deleting again.');
+          return;
+        }
+        
+        // Close password modal
         window.closePasswordModalForDeletion();
         
-        if (window.pendingDeleteProjectId) {
-          const projectId = window.pendingDeleteProjectId;
-          console.log('🔍 [DELETE PASSWORD DEBUG] Pending project ID:', projectId);
-          window.pendingDeleteProjectId = null;
-          window.pendingDeleteProjectName = null;
+        // Clear pending values
+        window.pendingDeleteProjectId = null;
+        window.pendingDeleteProjectName = null;
+        
+        // Perform deletion
+        console.log('🔍 [DELETE PASSWORD DEBUG] Calling deleteProject with ID:', projectId);
+        try {
+          const result = await window.deleteProject(projectId);
+          console.log('🔍 [DELETE PASSWORD DEBUG] deleteProject result:', result);
+          console.log('🔍 [DELETE PASSWORD DEBUG] result.success:', result?.success);
+          console.log('🔍 [DELETE PASSWORD DEBUG] result type:', typeof result);
           
-          // Perform deletion first
-          console.log('🔍 [DELETE PASSWORD DEBUG] Calling deleteProject with ID:', projectId);
-          try {
-            const result = await window.deleteProject(projectId);
-            console.log('🔍 [DELETE PASSWORD DEBUG] deleteProject result:', result);
-            console.log('🔍 [DELETE PASSWORD DEBUG] result.success:', result?.success);
-            console.log('🔍 [DELETE PASSWORD DEBUG] result type:', typeof result);
+          // Reset flag
+          isVerifyingPassword = false;
+          
+          if (result && (result.success === true || result.success === 'true')) {
+            // Show success modal with check animation after successful deletion
+            console.log('🔍 [DELETE PASSWORD DEBUG] ✅ Deletion successful, showing success modal');
+            window.showDeleteSuccessModal();
             
-            if (result && (result.success === true || result.success === 'true')) {
-              // Show success modal with check animation after successful deletion
-              console.log('🔍 [DELETE PASSWORD DEBUG] ✅ Deletion successful, showing success modal');
-              window.showDeleteSuccessModal();
-              
-              // Reload page after a short delay to show success message
-              setTimeout(() => {
-                console.log('🔍 [DELETE PASSWORD DEBUG] Reloading page...');
-                window.location.reload();
-              }, 2000);
-            } else {
-              // Close password modal if still open
-              window.closePasswordModalForDeletion();
-              const errorMsg = result?.error || result?.message || 'Failed to delete project';
-              console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Deletion failed:', errorMsg);
-              console.error('🔍 [DELETE PASSWORD DEBUG] Full result object:', result);
-              window.showWarningModal('Error Deleting Project', errorMsg);
-            }
-          } catch (deleteError) {
-            console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Exception during deletion:', deleteError);
-            console.error('🔍 [DELETE PASSWORD DEBUG] Error stack:', deleteError.stack);
-            window.closePasswordModalForDeletion();
-            window.showWarningModal('Error Deleting Project', deleteError.message || 'An error occurred while deleting the project');
+            // Reload page after a short delay to show success message
+            setTimeout(() => {
+              console.log('🔍 [DELETE PASSWORD DEBUG] Reloading page...');
+              window.location.reload();
+            }, 2000);
+          } else {
+            // Deletion failed
+            const errorMsg = result?.error || result?.message || 'Failed to delete project';
+            console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Deletion failed:', errorMsg);
+            console.error('🔍 [DELETE PASSWORD DEBUG] Full result object:', result);
+            window.showWarningModal('Error Deleting Project', errorMsg);
           }
-        } else {
-          console.error('🔍 [DELETE PASSWORD DEBUG] ❌ No pendingDeleteProjectId found!');
-          window.closePasswordModalForDeletion();
-          window.showWarningModal('Error', 'Project ID not found. Please try again.');
+        } catch (deleteError) {
+          console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Exception during deletion:', deleteError);
+          console.error('🔍 [DELETE PASSWORD DEBUG] Error stack:', deleteError.stack);
+          isVerifyingPassword = false;
+          window.showWarningModal('Error Deleting Project', deleteError.message || 'An error occurred while deleting the project');
         }
       } else {
         // Password incorrect
+        isVerifyingPassword = false;
         const errorMsg = data.error || 'Incorrect password. Please try again.';
         if (passwordError && passwordErrorText) {
           passwordErrorText.textContent = errorMsg;
@@ -8492,6 +8524,7 @@ loading = false;
       console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Exception in verifyPasswordForDeletion:', error);
       console.error('🔍 [DELETE PASSWORD DEBUG] Error message:', error.message);
       console.error('🔍 [DELETE PASSWORD DEBUG] Error stack:', error.stack);
+      isVerifyingPassword = false;
       const errorMsg = error.message || 'Failed to verify password. Please try again.';
       if (passwordError && passwordErrorText) {
         passwordErrorText.textContent = errorMsg;
