@@ -1,5 +1,40 @@
 import { useState, useEffect } from 'react';
 
+// CSS Animations for modals
+const modalAnimations = `
+  @keyframes xMarkDraw {
+    from {
+      stroke-dashoffset: 24;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  @keyframes checkMarkDraw {
+    from {
+      stroke-dashoffset: 24;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+  }
+  
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  .animate-x-mark {
+    animation: xMarkDraw 0.6s ease-out forwards;
+  }
+`;
+
 /**
  * ProjectAssignmentCenter - Centralized component for EIU assignment and reassignment
  * 
@@ -26,6 +61,10 @@ export default function ProjectAssignmentCenter({
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
   
   // Dynamic API URL helper
   const getApiUrl = () => {
@@ -253,6 +292,88 @@ export default function ProjectAssignmentCenter({
     }
   };
 
+  // Verify password before proceeding with reassignment
+  const verifyPassword = async () => {
+    if (!password.trim()) {
+      setPasswordError('Please enter your password');
+      return;
+    }
+
+    setVerifyingPassword(true);
+    setPasswordError('');
+
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) {
+        setPasswordError('Authentication required. Please log in again.');
+        setVerifyingPassword(false);
+        return;
+      }
+
+      // Get current user ID from token or profile
+      let currentUserId = null;
+      try {
+        const profileResponse = await fetch(`${getApiUrl()}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          if (profileData.success && profileData.user) {
+            currentUserId = profileData.user.id;
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching user profile:', e);
+      }
+
+      if (!currentUserId) {
+        setPasswordError('Unable to verify user. Please log in again.');
+        setVerifyingPassword(false);
+        return;
+      }
+
+      // Verify password with backend - use current user's ID
+      const response = await fetch(`${getApiUrl()}/auth/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password, targetUserId: currentUserId })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Password verified - proceed with assignment
+        setShowPasswordModal(false);
+        setPassword('');
+        setVerifyingPassword(false);
+        await handleAssign(true);
+      } else {
+        // Password incorrect
+        const errorMsg = data.error || 'Incorrect password. Please try again.';
+        setPasswordError(errorMsg);
+        setVerifyingPassword(false);
+        
+        // Show error modal with X animation
+        setTimeout(() => {
+          setShowErrorModal(true);
+          setErrorMessage(errorMsg);
+        }, 300);
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      const errorMsg = 'Failed to verify password. Please try again.';
+      setPasswordError(errorMsg);
+      setVerifyingPassword(false);
+      setTimeout(() => {
+        setShowErrorModal(true);
+        setErrorMessage(errorMsg);
+      }, 300);
+    }
+  };
+
   // Handle assignment (with warning if reassigning)
   const handleAssign = async (proceedAnyway = false) => {
     if (!project || !project.id) {
@@ -420,7 +541,18 @@ export default function ProjectAssignmentCenter({
       }
       
       if (updateData.success) {
-        setSuccessMessage(`Successfully ${project.eiuPersonnelId ? 'reassigned' : 'assigned'} EIU: ${eiuValidation.name}`);
+        const successMsg = `Successfully ${project.eiuPersonnelId ? 'reassigned' : 'assigned'} EIU: ${eiuValidation.name}`;
+        setSuccessMessage(successMsg);
+        
+        // Close password modal if open
+        setShowPasswordModal(false);
+        setPassword('');
+        
+        // Close other modals
+        setShowModal(false);
+        setShowWarningModal(false);
+        
+        // Show success modal with check animation
         setShowSuccessModal(true);
         
         // Call callback if provided
@@ -432,15 +564,11 @@ export default function ProjectAssignmentCenter({
             eiuEmail: eiuValidation.email
           });
         }
-
-        // Close modals
-        setShowModal(false);
-        setShowWarningModal(false);
         
-        // Reload page after a short delay to show success message
+        // Reload page after showing success message
         setTimeout(() => {
           window.location.reload();
-        }, 2000);
+        }, 3000);
       } else {
         throw new Error(updateData.error || 'Failed to update project');
       }
@@ -544,12 +672,13 @@ export default function ProjectAssignmentCenter({
   }, []);
 
   // Render error and success modals even if main modal is closed
-  if (!showModal && !showErrorModal && !showSuccessModal) {
+  if (!showModal && !showErrorModal && !showSuccessModal && !showPasswordModal) {
     return null;
   }
 
   return (
     <>
+      <style>{modalAnimations}</style>
       {showModal && (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
@@ -717,7 +846,9 @@ export default function ProjectAssignmentCenter({
                 <button
                   onClick={() => {
                     setShowWarningModal(false);
-                    handleAssign(true);
+                    setShowPasswordModal(true);
+                    setPassword('');
+                    setPasswordError('');
                   }}
                   disabled={loading}
                   className={`flex-1 px-4 py-2 ${colors.button} text-white rounded-lg font-semibold disabled:opacity-50 transition-all`}
@@ -729,11 +860,203 @@ export default function ProjectAssignmentCenter({
           </div>
         </div>
       )}
-    </div>
+
+      {/* Password Verification Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Password Verification Required</h3>
+                  <p className="text-sm text-gray-600 mt-1">Please enter your LGU-IU account password to proceed</p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !verifyingPassword && password.trim()) {
+                      verifyPassword();
+                    }
+                  }}
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                    passwordError 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
+                      : 'border-gray-300 focus:border-amber-500 focus:ring-amber-200'
+                  }`}
+                  placeholder="Enter your password"
+                  disabled={verifyingPassword}
+                  autoFocus
+                />
+                {passwordError && (
+                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    {passwordError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPassword('');
+                    setPasswordError('');
+                    setShowWarningModal(true);
+                  }}
+                  disabled={verifyingPassword}
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={verifyPassword}
+                  disabled={verifyingPassword || !password.trim()}
+                  className={`flex-1 px-4 py-3 ${colors.button} text-white rounded-xl font-semibold disabled:opacity-50 transition-all flex items-center justify-center gap-2`}
+                >
+                  {verifyingPassword ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify & Proceed'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Error Modal */}
-      {showErrorModal && (
+      {/* Password Error Modal with X Animation */}
+      {showErrorModal && errorMessage.includes('password') && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all animate-shake">
+            <div className="p-6">
+              <div className="flex flex-col items-center gap-4 mb-6">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center relative">
+                  <svg 
+                    className="w-12 h-12 text-red-600 animate-x-mark" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    style={{
+                      animation: 'xMarkDraw 0.6s ease-out forwards'
+                    }}
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="3" 
+                      d="M6 18L18 6M6 6l12 12"
+                      style={{
+                        strokeDasharray: '24',
+                        strokeDashoffset: '24',
+                        animation: 'xMarkDraw 0.6s ease-out 0.2s forwards'
+                      }}
+                    />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Password Verification Failed</h3>
+                  <p className="text-sm text-gray-600">{errorMessage}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    setShowErrorModal(false);
+                    setErrorMessage('');
+                    setShowPasswordModal(true);
+                    setPassword('');
+                  }}
+                  className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-all"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal with Check Animation */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+            <div className="p-6">
+              <div className="flex flex-col items-center gap-4 mb-6">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center relative">
+                  <svg 
+                    className="w-12 h-12 text-green-600" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    style={{
+                      strokeDasharray: '24',
+                      strokeDashoffset: '24',
+                      animation: 'checkMarkDraw 0.6s ease-out 0.2s forwards'
+                    }}
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="3" 
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">EIU Reassignment Successful</h3>
+                  <p className="text-sm text-gray-600">{successMessage}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setSuccessMessage('');
+                    setShowModal(false);
+                    setPassword('');
+                    if (onAssign) {
+                      onAssign();
+                    }
+                  }}
+                  className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal (for non-password errors) */}
+      {showErrorModal && !errorMessage.includes('password') && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="p-6">
@@ -757,42 +1080,6 @@ export default function ProjectAssignmentCenter({
                   onClick={() => {
                     setShowErrorModal(false);
                     setErrorMessage('');
-                  }}
-                  className={`px-6 py-2 ${colors.button} text-white rounded-lg font-semibold transition-all`}
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Success</h3>
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <p className="text-sm text-gray-700">{successMessage}</p>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowSuccessModal(false);
-                    setSuccessMessage('');
                   }}
                   className={`px-6 py-2 ${colors.button} text-white rounded-lg font-semibold transition-all`}
                 >

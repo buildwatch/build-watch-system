@@ -2411,12 +2411,6 @@ loading = false;
                               View
                             </button>
                             <button 
-                              onclick={`editProject('${project.id}')`} 
-                              class="px-2 py-1 bg-[#0D7DB5] hover:bg-[#0A6A9A] text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
-                            >
-                              Edit
-                            </button>
-                            <button 
                               onclick={`if(window.projectAssignmentCenter) window.projectAssignmentCenter.openModal(${JSON.stringify(project)})`} 
                               class="px-2 py-1 bg-teal-500 hover:bg-teal-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
                               title="Assign/Reassign EIU"
@@ -2429,13 +2423,6 @@ loading = false;
                               title="Add Notes & Annotations"
                             >
                               Notes
-                            </button>
-                            <button 
-                              onclick={`if(window.projectArchivingCenter) { const project = ${JSON.stringify(project)}; const status = project.status?.toLowerCase(); if(status === 'complete') { window.projectArchivingCenter.openModal(project); } else { if(window.projectArchivingCenter.showWarningModal) { window.projectArchivingCenter.showWarningModal('Only projects with "Complete" status can be archived.'); } } }`} 
-                              class="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
-                              title="Archive Project (Only Pending/Complete)"
-                            >
-                              Archive
                             </button>
                             {project.status === 'complete' ? (
                               <button 
