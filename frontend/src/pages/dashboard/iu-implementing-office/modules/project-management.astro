@@ -2420,9 +2420,10 @@ loading = false;
                               View
                             </button>
                             <button 
-                              onclick={`if(window.projectAssignmentCenter) window.projectAssignmentCenter.openModal(${JSON.stringify(project)})`} 
-                              class="px-2 py-1 bg-teal-500 hover:bg-teal-600 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0"
-                              title="Assign/Reassign EIU"
+                              onclick={project.status === 'completed' || project.status === 'complete' ? '' : `if(window.projectAssignmentCenter) window.projectAssignmentCenter.openModal(${JSON.stringify(project)})`}
+                              class={`px-2 py-1 text-white text-xs font-medium rounded transition-all whitespace-nowrap flex-shrink-0 ${project.status === 'completed' || project.status === 'complete' ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600'}`}
+                              title={project.status === 'completed' || project.status === 'complete' ? 'Cannot assign EIU to completed projects' : 'Assign/Reassign EIU'}
+                              disabled={project.status === 'completed' || project.status === 'complete'}
                             >
                               Assign EIU
                             </button>

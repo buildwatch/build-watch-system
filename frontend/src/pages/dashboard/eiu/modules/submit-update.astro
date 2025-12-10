@@ -9046,6 +9046,49 @@ loading = false;
     const input = document.getElementById(`milestone-${milestoneId}-${fileType}-files`);
     
     if (input && files.length > 0) {
+      // Validate file types before processing
+      const fileArray = Array.from(files);
+      let invalidFiles = [];
+      
+      if (fileType === 'photo') {
+        invalidFiles = fileArray.filter(file => !file.type.startsWith('image/'));
+        if (invalidFiles.length > 0) {
+          const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+          showFileTypeErrorModal('Photo Evidence', invalidFileNames, 'image files (JPG, PNG, GIF)');
+          return;
+        }
+      } else if (fileType === 'video') {
+        invalidFiles = fileArray.filter(file => !file.type.startsWith('video/'));
+        if (invalidFiles.length > 0) {
+          const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+          showFileTypeErrorModal('Video Evidence', invalidFileNames, 'video files (MP4, MOV, AVI)');
+          return;
+        }
+      } else if (fileType === 'document') {
+        const allowedDocumentTypes = [
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        const allowedExtensions = ['.xlsx', '.xls', '.pdf', '.doc', '.docx'];
+        const getFileExtension = (filename) => {
+          return filename.toLowerCase().substring(filename.lastIndexOf('.'));
+        };
+        invalidFiles = fileArray.filter(file => {
+          const extension = getFileExtension(file.name);
+          const isValidType = allowedDocumentTypes.includes(file.type) || allowedExtensions.includes(extension);
+          return !isValidType;
+        });
+        if (invalidFiles.length > 0) {
+          const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+          showFileTypeErrorModal('Excel/Document Files', invalidFileNames, 'document files (XLSX, XLS, PDF, DOC, DOCX)');
+          return;
+        }
+      }
+      
+      // If validation passes, process files
       input.files = files;
       if (fileType === 'photo') {
         window.handlePhotoUpload(milestoneId, input);
@@ -9072,6 +9115,15 @@ loading = false;
     // Limit to 5 photo evidence files total
     const maxFiles = 5;
     const newFiles = Array.from(input.files);
+    
+    // Validate file types - only accept image files
+    const invalidFiles = newFiles.filter(file => !file.type.startsWith('image/'));
+    if (invalidFiles.length > 0) {
+      const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+      input.value = ''; // Clear the input
+      showFileTypeErrorModal('Photo Evidence', invalidFileNames, 'image files (JPG, PNG, GIF)');
+      return;
+    }
     
     // Check if we're at the limit before processing
     if (existingCount >= maxFiles) {
@@ -9200,6 +9252,17 @@ loading = false;
     const previewContainer = document.getElementById(`milestone-${milestoneId}-video-preview`);
     if (!previewContainer || !input.files) return;
 
+    const newFiles = Array.from(input.files);
+    
+    // Validate file types - only accept video files
+    const invalidFiles = newFiles.filter(file => !file.type.startsWith('video/'));
+    if (invalidFiles.length > 0) {
+      const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+      input.value = ''; // Clear the input
+      showFileTypeErrorModal('Video Evidence', invalidFileNames, 'video files (MP4, MOV, AVI)');
+      return;
+    }
+
     // Store videos in persistent storage
     if (!window.milestoneFileStorage) {
       window.milestoneFileStorage = {};
@@ -9296,6 +9359,35 @@ loading = false;
   window.handleDocumentUpload = function(milestoneId, input) {
     const previewContainer = document.getElementById(`milestone-${milestoneId}-document-preview`);
     if (!previewContainer || !input.files) return;
+
+    const newFiles = Array.from(input.files);
+    
+    // Validate file types - only accept document files (Excel, Word, PDF)
+    const allowedDocumentTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel', // .xls
+      'application/pdf', // .pdf
+      'application/msword', // .doc
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
+    ];
+    
+    const allowedExtensions = ['.xlsx', '.xls', '.pdf', '.doc', '.docx'];
+    const getFileExtension = (filename) => {
+      return filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    };
+    
+    const invalidFiles = newFiles.filter(file => {
+      const extension = getFileExtension(file.name);
+      const isValidType = allowedDocumentTypes.includes(file.type) || allowedExtensions.includes(extension);
+      return !isValidType;
+    });
+    
+    if (invalidFiles.length > 0) {
+      const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+      input.value = ''; // Clear the input
+      showFileTypeErrorModal('Excel/Document Files', invalidFileNames, 'document files (XLSX, XLS, PDF, DOC, DOCX)');
+      return;
+    }
 
     // Store documents in persistent storage
     if (!window.milestoneFileStorage) {
@@ -11396,6 +11488,96 @@ window.restoreVideosFromStorage = function(milestoneId) {
   window.modernConfirm = (message, title = 'Confirm Action') => {
     return showModernModal(title, message, 'warning', { confirm: true });
   };
+
+  // Show File Type Error Modal with X animation
+  function showFileTypeErrorModal(divisionName, invalidFileNames, expectedTypes) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('fileTypeErrorModal');
+      if (!modal) {
+        // Create modal if it doesn't exist
+        const modalHTML = `
+          <div id="fileTypeErrorModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-[10001] overflow-y-auto backdrop-blur-sm">
+            <div class="flex items-center justify-center min-h-screen px-4 py-8">
+              <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 transform transition-all animate-modal-enter">
+                <div class="p-6">
+                  <div class="flex justify-center mb-4">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center animate-bounce">
+                      <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="fileTypeErrorIcon">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-800 text-center mb-2">Invalid File Type</h3>
+                  <p class="text-gray-600 text-center mb-4">The selected file(s) are not valid for <strong>${divisionName}</strong>.</p>
+                  
+                  <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-semibold text-red-800 mb-2">Invalid File(s):</p>
+                    <p class="text-sm text-red-700 break-words">${invalidFileNames}</p>
+                  </div>
+                  
+                  <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+                    <p class="text-sm font-semibold text-blue-800 mb-1">Expected File Type:</p>
+                    <p class="text-sm text-blue-700">${expectedTypes}</p>
+                  </div>
+                  
+                  <div class="flex justify-center">
+                    <button 
+                      id="fileTypeErrorOkBtn"
+                      class="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      OK
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+      }
+      
+      const modalElement = document.getElementById('fileTypeErrorModal');
+      const iconElement = document.getElementById('fileTypeErrorIcon');
+      const okBtn = document.getElementById('fileTypeErrorOkBtn');
+      
+      // Animate X icon with rotation
+      if (iconElement) {
+        iconElement.style.transform = 'rotate(0deg)';
+        iconElement.style.transition = 'transform 0.5s ease-in-out';
+        setTimeout(() => {
+          iconElement.style.transform = 'rotate(360deg)';
+        }, 100);
+      }
+      
+      const closeModal = () => {
+        modalElement.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        resolve(true);
+      };
+      
+      if (okBtn) {
+        okBtn.onclick = closeModal;
+      }
+      
+      modalElement.onclick = (e) => {
+        if (e.target === modalElement) {
+          closeModal();
+        }
+      };
+      
+      // Close on Escape key
+      const handleEscape = (e) => {
+        if (e.key === 'Escape' && !modalElement.classList.contains('hidden')) {
+          closeModal();
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+      
+      modalElement.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+  }
 
   // Show Rejection Note Modal
   window.showRejectionNoteModal = function(milestoneId, rejectionReason, rejectedBy, rejectedAt) {
