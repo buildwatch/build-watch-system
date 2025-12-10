@@ -2906,9 +2906,9 @@ loading = false;
                 Cancel
               </button>
               <button
-                onclick="window.verifyPasswordForDeletion()"
+                onclick="if(typeof window.verifyPasswordForDeletion === 'function') { console.log('🔍 [DELETE PASSWORD DEBUG] Button clicked, calling verifyPasswordForDeletion'); window.verifyPasswordForDeletion(); } else { console.error('🔍 [DELETE PASSWORD DEBUG] verifyPasswordForDeletion function not found!'); alert('Function not found. Please refresh the page.'); }"
                 id="deletePasswordVerifyButton"
-                class="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                class="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span id="deletePasswordVerifyText">Verify & Delete</span>
                 <svg id="deletePasswordSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -8326,6 +8326,8 @@ loading = false;
   };
 
   window.verifyPasswordForDeletion = async function() {
+    console.log('🔍 [DELETE PASSWORD DEBUG] verifyPasswordForDeletion called');
+    
     const passwordInput = document.getElementById('deletePasswordInput');
     const passwordError = document.getElementById('deletePasswordError');
     const passwordErrorText = document.getElementById('deletePasswordErrorText');
@@ -8333,7 +8335,20 @@ loading = false;
     const verifyText = document.getElementById('deletePasswordVerifyText');
     const spinner = document.getElementById('deletePasswordSpinner');
     
-    if (!passwordInput || !passwordInput.value.trim()) {
+    console.log('🔍 [DELETE PASSWORD DEBUG] Elements found:', {
+      passwordInput: !!passwordInput,
+      passwordError: !!passwordError,
+      verifyButton: !!verifyButton
+    });
+    
+    if (!passwordInput) {
+      console.error('🔍 [DELETE PASSWORD DEBUG] Password input not found!');
+      alert('Password input field not found. Please refresh the page.');
+      return;
+    }
+    
+    if (!passwordInput.value.trim()) {
+      console.log('🔍 [DELETE PASSWORD DEBUG] Password is empty');
       if (passwordError && passwordErrorText) {
         passwordErrorText.textContent = 'Please enter your password';
         passwordError.classList.remove('hidden');
@@ -8342,6 +8357,7 @@ loading = false;
     }
     
     const password = passwordInput.value.trim();
+    console.log('🔍 [DELETE PASSWORD DEBUG] Password entered, length:', password.length);
     
     // Disable button and show loading
     if (verifyButton) {
@@ -8387,7 +8403,11 @@ loading = false;
       }
       
       // Verify password
+      console.log('🔍 [DELETE PASSWORD DEBUG] Verifying password with API...');
       const apiUrl = window.getApiUrl();
+      console.log('🔍 [DELETE PASSWORD DEBUG] API URL:', apiUrl);
+      console.log('🔍 [DELETE PASSWORD DEBUG] Current User ID:', currentUserId);
+      
       const response = await fetch(`${apiUrl}/auth/verify-password`, {
         method: 'POST',
         headers: {
@@ -8397,38 +8417,57 @@ loading = false;
         body: JSON.stringify({ password, targetUserId: currentUserId })
       });
       
+      console.log('🔍 [DELETE PASSWORD DEBUG] Password verification response status:', response.status);
       const data = await response.json();
+      console.log('🔍 [DELETE PASSWORD DEBUG] Password verification response data:', data);
       
       if (response.ok && data.success) {
         // Password verified - proceed with deletion
-        console.log('🔍 [DELETE PASSWORD DEBUG] Password verified, proceeding with deletion');
+        console.log('🔍 [DELETE PASSWORD DEBUG] ✅ Password verified successfully, proceeding with deletion');
         window.closePasswordModalForDeletion();
         
         if (window.pendingDeleteProjectId) {
           const projectId = window.pendingDeleteProjectId;
+          console.log('🔍 [DELETE PASSWORD DEBUG] Pending project ID:', projectId);
           window.pendingDeleteProjectId = null;
           window.pendingDeleteProjectName = null;
           
           // Perform deletion first
           console.log('🔍 [DELETE PASSWORD DEBUG] Calling deleteProject with ID:', projectId);
-          const result = await window.deleteProject(projectId);
-          console.log('🔍 [DELETE PASSWORD DEBUG] deleteProject result:', result);
-          
-          if (result && result.success) {
-            // Show success modal with check animation after successful deletion
-            window.showDeleteSuccessModal();
+          try {
+            const result = await window.deleteProject(projectId);
+            console.log('🔍 [DELETE PASSWORD DEBUG] deleteProject result:', result);
+            console.log('🔍 [DELETE PASSWORD DEBUG] result.success:', result?.success);
+            console.log('🔍 [DELETE PASSWORD DEBUG] result type:', typeof result);
             
-            // Reload page after a short delay to show success message
-            setTimeout(() => {
-              window.location.reload();
-            }, 2000);
-          } else {
-            // Close password modal if still open
+            if (result && (result.success === true || result.success === 'true')) {
+              // Show success modal with check animation after successful deletion
+              console.log('🔍 [DELETE PASSWORD DEBUG] ✅ Deletion successful, showing success modal');
+              window.showDeleteSuccessModal();
+              
+              // Reload page after a short delay to show success message
+              setTimeout(() => {
+                console.log('🔍 [DELETE PASSWORD DEBUG] Reloading page...');
+                window.location.reload();
+              }, 2000);
+            } else {
+              // Close password modal if still open
+              window.closePasswordModalForDeletion();
+              const errorMsg = result?.error || result?.message || 'Failed to delete project';
+              console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Deletion failed:', errorMsg);
+              console.error('🔍 [DELETE PASSWORD DEBUG] Full result object:', result);
+              window.showWarningModal('Error Deleting Project', errorMsg);
+            }
+          } catch (deleteError) {
+            console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Exception during deletion:', deleteError);
+            console.error('🔍 [DELETE PASSWORD DEBUG] Error stack:', deleteError.stack);
             window.closePasswordModalForDeletion();
-            const errorMsg = result?.error || 'Failed to delete project';
-            console.error('🔍 [DELETE PASSWORD DEBUG] Deletion failed:', errorMsg);
-            window.showWarningModal('Error Deleting Project', errorMsg);
+            window.showWarningModal('Error Deleting Project', deleteError.message || 'An error occurred while deleting the project');
           }
+        } else {
+          console.error('🔍 [DELETE PASSWORD DEBUG] ❌ No pendingDeleteProjectId found!');
+          window.closePasswordModalForDeletion();
+          window.showWarningModal('Error', 'Project ID not found. Please try again.');
         }
       } else {
         // Password incorrect
@@ -8450,7 +8489,9 @@ loading = false;
         }
       }
     } catch (error) {
-      console.error('Error verifying password:', error);
+      console.error('🔍 [DELETE PASSWORD DEBUG] ❌ Exception in verifyPasswordForDeletion:', error);
+      console.error('🔍 [DELETE PASSWORD DEBUG] Error message:', error.message);
+      console.error('🔍 [DELETE PASSWORD DEBUG] Error stack:', error.stack);
       const errorMsg = error.message || 'Failed to verify password. Please try again.';
       if (passwordError && passwordErrorText) {
         passwordErrorText.textContent = errorMsg;
@@ -8486,6 +8527,47 @@ loading = false;
       document.body.style.overflow = 'auto';
     }
   };
+
+  // Ensure button event listener is set up after DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    const verifyButton = document.getElementById('deletePasswordVerifyButton');
+    if (verifyButton) {
+      console.log('🔍 [DELETE PASSWORD DEBUG] Setting up event listener for verify button');
+      verifyButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔍 [DELETE PASSWORD DEBUG] Verify button clicked via event listener');
+        if (typeof window.verifyPasswordForDeletion === 'function') {
+          window.verifyPasswordForDeletion();
+        } else {
+          console.error('🔍 [DELETE PASSWORD DEBUG] verifyPasswordForDeletion function not found!');
+        }
+      });
+    } else {
+      console.warn('🔍 [DELETE PASSWORD DEBUG] Verify button not found on DOMContentLoaded');
+    }
+  });
+
+  // Also set up event listener immediately if DOM is already loaded
+  if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+  } else {
+    // DOM is already loaded
+    const verifyButton = document.getElementById('deletePasswordVerifyButton');
+    if (verifyButton) {
+      console.log('🔍 [DELETE PASSWORD DEBUG] DOM already loaded, setting up event listener for verify button');
+      verifyButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔍 [DELETE PASSWORD DEBUG] Verify button clicked via event listener (immediate)');
+        if (typeof window.verifyPasswordForDeletion === 'function') {
+          window.verifyPasswordForDeletion();
+        } else {
+          console.error('🔍 [DELETE PASSWORD DEBUG] verifyPasswordForDeletion function not found!');
+        }
+      });
+    }
+  }
 
   // Success Modal Functions
   window.showSuccessModal = function(title, message) {
