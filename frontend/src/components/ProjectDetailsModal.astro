@@ -623,11 +623,21 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
 
       <!-- Modal Footer -->
       <div class={`sticky bottom-0 bg-white border-t ${theme.border} p-6 flex justify-between items-center rounded-b-2xl`}>
-        <div class="text-sm text-gray-500 flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          Last updated: <span id="lastUpdated" class="font-medium ml-1">-</span>
+        <div class="flex items-center gap-4">
+          <div class="text-sm text-gray-500 flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Last updated: <span id="lastUpdated" class="font-medium ml-1">-</span>
+          </div>
+          <!-- EIU Reassignment Note -->
+          <div id="eiuReassignmentNote" class="hidden">
+            <div class="p-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <p class="text-xs text-amber-800 leading-relaxed">
+                <span class="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span id="eiuReassignmentName" class="font-semibold">-</span>, effective as of <span id="eiuReassignmentDate" class="font-semibold">-</span>.
+              </p>
+            </div>
+          </div>
         </div>
         <div class="flex gap-3">
           <button 
@@ -2177,6 +2187,44 @@ const theme = themeColors[userTheme] || themeColors.mpmec;
       console.warn('⚠️ Could not fetch last updated date, using fallback:', err);
       safeSetTextContent('lastUpdated', formatDate(project.updatedAt || project.lastProgressUpdate || project.lastModified || project.lastUpdate?.createdAt) || 'N/A');
     });
+
+    // Display EIU Reassignment Note if applicable
+    const eiuReassignmentNote = document.getElementById('eiuReassignmentNote');
+    const eiuReassignmentName = document.getElementById('eiuReassignmentName');
+    const eiuReassignmentDate = document.getElementById('eiuReassignmentDate');
+    
+    if (project.eiuReassignedAt && (project.eiuPersonnel || project.eiuPersonnelName)) {
+      if (eiuReassignmentNote) {
+        eiuReassignmentNote.classList.remove('hidden');
+        const eiuName = project.eiuPersonnel?.fullName || project.eiuPersonnel?.name || project.eiuPersonnelName || 'N/A';
+        if (eiuReassignmentName) {
+          eiuReassignmentName.textContent = eiuName;
+        }
+        if (eiuReassignmentDate) {
+          try {
+            const reassignedDate = new Date(project.eiuReassignedAt);
+            if (!isNaN(reassignedDate.getTime())) {
+              eiuReassignmentDate.textContent = reassignedDate.toLocaleString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              });
+            } else {
+              eiuReassignmentDate.textContent = project.eiuReassignedAt;
+            }
+          } catch (e) {
+            eiuReassignmentDate.textContent = project.eiuReassignedAt;
+          }
+        }
+      }
+    } else {
+      if (eiuReassignmentNote) {
+        eiuReassignmentNote.classList.add('hidden');
+      }
+    }
   }
 
   // Note: fetchDetailedEiuInfo function removed - no longer needed since ProgressCalculationService now includes all EIU fields

@@ -2478,6 +2478,29 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                         <p className="text-gray-700">
                           {selectedProject.eiuPersonnel?.name || selectedProject.assignedEIU?.name || 'Not assigned'}
                         </p>
+                        {/* EIU Reassignment Note */}
+                        {selectedProject.eiuReassignedAt && (selectedProject.eiuPersonnel || selectedProject.eiuPersonnelName) && (
+                          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <p className="text-xs text-amber-800 leading-relaxed">
+                              <span className="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span className="font-semibold">{selectedProject.eiuPersonnel?.fullName || selectedProject.eiuPersonnel?.name || selectedProject.eiuPersonnelName || 'N/A'}</span>, effective as of {(() => {
+                                try {
+                                  const reassignedDate = new Date(selectedProject.eiuReassignedAt);
+                                  if (isNaN(reassignedDate.getTime())) return selectedProject.eiuReassignedAt;
+                                  return reassignedDate.toLocaleString('en-PH', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  });
+                                } catch (e) {
+                                  return selectedProject.eiuReassignedAt;
+                                }
+                              })()}.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -3589,6 +3612,29 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                                 All milestones have been successfully approved and completed. This project has met all requirements and is now marked as completed in the system.
                               </p>
                             </div>
+                            {/* EIU Reassignment Note */}
+                            {selectedProject.eiuReassignedAt && (selectedProject.eiuPersonnel || selectedProject.eiuPersonnelName) && (
+                              <div className="bg-white/60 rounded-lg p-3 mt-3 border-2 border-amber-200">
+                                <p className="text-xs text-amber-800 leading-relaxed">
+                                  <span className="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span className="font-semibold">{selectedProject.eiuPersonnel?.fullName || selectedProject.eiuPersonnel?.name || selectedProject.eiuPersonnelName || 'N/A'}</span>, effective as of {(() => {
+                                    try {
+                                      const reassignedDate = new Date(selectedProject.eiuReassignedAt);
+                                      if (isNaN(reassignedDate.getTime())) return selectedProject.eiuReassignedAt;
+                                      return reassignedDate.toLocaleString('en-PH', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                      });
+                                    } catch (e) {
+                                      return selectedProject.eiuReassignedAt;
+                                    }
+                                  })()}.
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

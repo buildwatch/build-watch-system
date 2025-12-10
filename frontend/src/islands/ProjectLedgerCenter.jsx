@@ -6120,6 +6120,33 @@ export default function ProjectLedgerCenter({
                           <td className="px-6 py-4 font-semibold text-gray-700 bg-blue-50/50">Company</td>
                           <td className="px-6 py-4 text-gray-900">{eiuPartner.company}</td>
                         </tr>
+                        {/* EIU Reassignment Note */}
+                        {displayProject.eiuReassignedAt && (displayProject.eiuPersonnel || displayProject.eiuPersonnelName) && (
+                          <tr className="bg-amber-50 border-b-2 border-gray-300">
+                            <td colSpan="2" className="px-6 py-4">
+                              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p className="text-xs text-amber-800 leading-relaxed">
+                                  <span className="font-semibold">Note:</span> This project has been realigned to a new EIU Partner Contractor, <span className="font-semibold">{displayProject.eiuPersonnel?.fullName || displayProject.eiuPersonnel?.name || displayProject.eiuPersonnelName || 'N/A'}</span>, effective as of {(() => {
+                                    try {
+                                      const reassignedDate = new Date(displayProject.eiuReassignedAt);
+                                      if (isNaN(reassignedDate.getTime())) return displayProject.eiuReassignedAt;
+                                      return reassignedDate.toLocaleString('en-PH', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                      });
+                                    } catch (e) {
+                                      return displayProject.eiuReassignedAt;
+                                    }
+                                  })()}.
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                       </>
                     )}
 
@@ -6690,7 +6717,32 @@ export default function ProjectLedgerCenter({
                                   <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.group || 'N/A'}</td>
                                   <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.department || 'N/A'}</td>
                                   <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.subrole || 'N/A'}</td>
-                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">{eiuPartner?.company || 'N/A'}</td>
+                                  <td className="px-2 py-3 text-xs border-r border-gray-400 bg-white">
+                                    {eiuPartner?.company || 'N/A'}
+                                    {/* EIU Reassignment Note */}
+                                    {displayProject.eiuReassignedAt && (displayProject.eiuPersonnel || displayProject.eiuPersonnelName) && (
+                                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-[10px]">
+                                        <p className="text-amber-800 leading-tight">
+                                          <span className="font-semibold">Note:</span> Realigned to <span className="font-semibold">{displayProject.eiuPersonnel?.fullName || displayProject.eiuPersonnel?.name || displayProject.eiuPersonnelName || 'N/A'}</span> on {(() => {
+                                            try {
+                                              const reassignedDate = new Date(displayProject.eiuReassignedAt);
+                                              if (isNaN(reassignedDate.getTime())) return displayProject.eiuReassignedAt;
+                                              return reassignedDate.toLocaleString('en-PH', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: true
+                                              });
+                                            } catch (e) {
+                                              return displayProject.eiuReassignedAt;
+                                            }
+                                          })()}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </td>
                                 </>
                               )}
                               
