@@ -87,6 +87,14 @@ export default function ProjectAssignmentCenter({
     }
   }, [propProject]);
 
+  // Clear password when password modal opens
+  useEffect(() => {
+    if (showPasswordModal) {
+      setPassword('');
+      setPasswordError('');
+    }
+  }, [showPasswordModal]);
+
   // Theme colors
   const themeColors = {
     amber: {
@@ -904,6 +912,10 @@ export default function ProjectAssignmentCenter({
                   placeholder="Enter your password"
                   disabled={verifyingPassword}
                   autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
                 {passwordError && (
                   <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
