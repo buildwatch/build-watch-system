@@ -8232,9 +8232,8 @@ loading = false;
       modal.classList.add('hidden');
       document.body.style.overflow = 'auto';
     }
-    // Clear pending deletion data
-    window.pendingDeleteProjectId = null;
-    window.pendingDeleteProjectName = null;
+    // DON'T clear pending deletion data here - it's needed for the password modal
+    // It will be cleared after successful deletion or if user cancels
   };
 
   // Password Modal Functions for Deletion
@@ -8275,6 +8274,15 @@ loading = false;
     // Close delete confirmation modal
     console.log('🔍 [DELETE PASSWORD DEBUG] Closing delete confirmation modal');
     window.closeDeleteConfirmModal();
+    
+    // Store projectId in data attribute on modal for persistence
+    if (passwordModal && window.pendingDeleteProjectId) {
+      passwordModal.setAttribute('data-project-id', window.pendingDeleteProjectId);
+      if (window.pendingDeleteProjectName) {
+        passwordModal.setAttribute('data-project-name', window.pendingDeleteProjectName);
+      }
+      console.log('🔍 [DELETE PASSWORD DEBUG] Stored projectId in modal data attribute:', window.pendingDeleteProjectId);
+    }
     
     // Show password modal
     console.log('🔍 [DELETE PASSWORD DEBUG] Showing password modal');
@@ -8337,12 +8345,29 @@ loading = false;
       return;
     }
     
-    // Capture projectId immediately before any async operations
-    const projectId = window.pendingDeleteProjectId;
-    const projectName = window.pendingDeleteProjectName;
+    // Try to get projectId from multiple sources (window variable or modal data attribute)
+    let projectId = window.pendingDeleteProjectId;
+    let projectName = window.pendingDeleteProjectName;
+    
+    // If not in window variable, try to get from modal data attribute
+    if (!projectId) {
+      const passwordModal = document.getElementById('deletePasswordModal');
+      if (passwordModal) {
+        projectId = passwordModal.getAttribute('data-project-id');
+        projectName = passwordModal.getAttribute('data-project-name');
+        console.log('🔍 [DELETE PASSWORD DEBUG] Retrieved projectId from modal data attribute:', projectId);
+        
+        // Also restore to window variable for consistency
+        if (projectId) {
+          window.pendingDeleteProjectId = projectId;
+          window.pendingDeleteProjectName = projectName;
+        }
+      }
+    }
     
     console.log('🔍 [DELETE PASSWORD DEBUG] Captured projectId:', projectId);
     console.log('🔍 [DELETE PASSWORD DEBUG] Captured projectName:', projectName);
+    console.log('🔍 [DELETE PASSWORD DEBUG] window.pendingDeleteProjectId:', window.pendingDeleteProjectId);
     
     if (!projectId) {
       console.error('🔍 [DELETE PASSWORD DEBUG] ❌ No projectId found at start of function!');
