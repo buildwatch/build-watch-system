@@ -5764,8 +5764,10 @@ This compilation report has been generated automatically based on approved EIU m
       return `${parseFloat(progress).toFixed(1)}%`;
     };
 
-    // Check if submission is approved - make it collapsible
+    // Check if submission is approved or rejected/needs_revision - make it collapsible
     const isApproved = submission.status === 'approved' || submission.status === 'iu_approved';
+    const isRejected = submission.status === 'needs_revision' || submission.status === 'rejected';
+    const isCollapsible = isApproved || isRejected; // Both approved and rejected submissions are collapsible
     const cardId = `submission-card-${submission.id}`;
     const contentId = `submission-content-${submission.id}`;
     
@@ -5778,8 +5780,8 @@ This compilation report has been generated automatically based on approved EIU m
           <!-- Photo Evidence Section - Moved to Milestone Update Details as Background Slideshow -->
           ${submission.photoEvidence || submission.files?.length ? '' : ''}
 
-          <!-- Project Header - Clickable for Approved Submissions -->
-          <div class="p-6 relative z-10 ${isApproved ? 'cursor-pointer hover:bg-blue-100/50 transition-colors duration-200' : ''}" ${isApproved ? `onclick="toggleSubmissionCard('${submission.id}')"` : ''}>
+          <!-- Project Header - Clickable for Approved/Rejected Submissions -->
+          <div class="p-6 relative z-10 ${isCollapsible ? 'cursor-pointer hover:bg-blue-100/50 transition-colors duration-200' : ''}" ${isCollapsible ? `onclick="toggleSubmissionCard('${submission.id}')"` : ''}>
             <div class="flex items-start justify-between">
               <div class="flex-1">
                 <div class="flex items-center gap-4 mb-4">
@@ -5793,7 +5795,7 @@ This compilation report has been generated automatically based on approved EIU m
                       <h3 class="text-xl font-bold text-gray-800 group-hover:text-[#0A6A9A] transition-colors duration-300 mb-1">
                         ${project.name || 'Project Name Not Available'}
                       </h3>
-                      ${isApproved ? `
+                      ${isCollapsible ? `
                         <svg class="w-5 h-5 text-gray-500 transition-transform duration-300" id="toggle-icon-${submission.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -5836,8 +5838,8 @@ This compilation report has been generated automatically based on approved EIU m
           </div>
         </div>
 
-        <!-- Enhanced Content Section - Collapsible for Approved Submissions -->
-        <div class="p-6 space-y-6 ${isApproved ? 'hidden' : ''}" id="${contentId}">
+        <!-- Enhanced Content Section - Collapsible for Approved/Rejected Submissions -->
+        <div class="p-6 space-y-6 ${isCollapsible ? 'hidden' : ''}" id="${contentId}">
           <!-- Project Information Grid -->
           <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-5 border border-gray-100">
             <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">

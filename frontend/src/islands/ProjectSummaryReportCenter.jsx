@@ -2585,19 +2585,25 @@ export default function ProjectSummaryReportCenter({ userRole = null, accessLeve
                         const milestoneContributionToOverall = (isApproved && hasPhysicalInput) ? evenWeightPerMilestone : 0;
                         
                         // Calculate Budget Division Utilization for this milestone
+                        // Use actual milestone weight (not even weight distribution) for Budget Division
+                        const actualMilestoneWeight = parseFloat(milestone.weight || 0);
                         const plannedBudget = parseFloat(milestone.plannedBudget || milestone.budgetPlanned || approvedSubmission?.plannedBudget || 0);
                         const budgetUtilizationPercent = plannedBudget > 0 ? (usedBudget / plannedBudget) * 100 : 0;
-                        const budgetDivisionUtilization = budgetUtilizationPercent * (evenWeightPerMilestone / 100);
+                        // Formula: (utilization% × actual_milestone_weight%) 
+                        // Example: 100% utilization × 25% weight = 25% contribution
+                        const budgetDivisionUtilization = budgetUtilizationPercent * (actualMilestoneWeight / 100);
                         
                         // Debug logging
                         console.log(`🔍 [${milestone.title}] Milestone Tab Progress Calculation:`, {
                           milestoneId: milestone.id,
                           evenWeightPerMilestone: evenWeightPerMilestone,
+                          actualMilestoneWeight: actualMilestoneWeight,
                           milestoneContributionToOverall: milestoneContributionToOverall,
                           plannedBudget: plannedBudget,
                           usedBudget: usedBudget,
                           budgetUtilizationPercent: budgetUtilizationPercent,
                           budgetDivisionUtilization: budgetDivisionUtilization,
+                          calculation: `(${budgetUtilizationPercent.toFixed(2)}% × ${actualMilestoneWeight.toFixed(2)}% / 100) = ${budgetDivisionUtilization.toFixed(2)}%`,
                           hasSubmissions: !!milestone.submissions,
                           submissionsCount: milestone.submissions?.length || 0,
                           hasApprovedSubmission: !!approvedSubmission,

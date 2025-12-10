@@ -2649,6 +2649,19 @@ loading = false;
       });
 
       const revisionRequestMilestones = projectMilestones.filter(milestone => {
+        // Exclude milestones that are already approved/completed
+        const isApproved = milestone.status === 'completed' || milestone.status === 'approved';
+        const hasApprovedSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
+          milestone.submissions.some(s => s.status === 'approved' || s.status === 'iu_approved');
+        const allDivisionsApproved = milestone.timelineStatus === 'approved' && 
+                                    milestone.budgetStatus === 'approved' && 
+                                    milestone.physicalStatus === 'approved';
+        
+        // If milestone is approved, don't show in revision request section
+        if (isApproved || hasApprovedSubmission || allDivisionsApproved) {
+          return false;
+        }
+        
         // Check if milestone has rejected/needs_revision submission
         const hasRejectedSubmission = milestone.submissions && Array.isArray(milestone.submissions) && 
           milestone.submissions.some(s => s.status === 'rejected' || s.status === 'needs_revision');
