@@ -490,9 +490,9 @@ class ProgressCalculationService {
       order: [['order', 'ASC']]
     });
 
-    // Calculate even weight per milestone (same as overall progress calculation)
-    const milestoneCount = milestones.length;
-    const evenWeightPerMilestone = milestoneCount > 0 ? 100 / milestoneCount : 0;
+    // Note: We use actual milestone weights (from milestone.weight field) for Budget Division calculation
+    // This is different from overall progress which uses even weight distribution
+    // Budget Division = sum of (utilization% × actual_milestone_weight%) for each approved milestone
 
     // Get approved milestone submissions to get budget data
     const approvedSubmissions = await MilestoneSubmission.findAll({
@@ -510,7 +510,12 @@ class ProgressCalculationService {
     });
 
     console.log(`📊 [calculateDivisionProgress] Found ${approvedSubmissions.length} approved submissions and ${milestones.length} milestones`);
-    console.log(`📊 [calculateDivisionProgress] Even weight per milestone: ${evenWeightPerMilestone}%`);
+    console.log(`📊 [calculateDivisionProgress] Using actual milestone weights (not even distribution)`);
+    console.log(`📊 [calculateDivisionProgress] Milestone weights:`, milestones.map(m => ({
+      id: m.id,
+      title: m.title,
+      weight: m.weight
+    })));
     console.log(`📊 [calculateDivisionProgress] Approved submissions details:`, approvedSubmissions.map(s => ({
       id: s.id,
       milestoneId: s.milestoneId,
@@ -555,17 +560,24 @@ class ProgressCalculationService {
         finalUsedBudget: usedBudget
       });
       
-      // Get milestone weight (use even weight per milestone)
-      const milestoneWeight = evenWeightPerMilestone;
+      // Get milestone weight (use actual milestone weight from database, not even weight)
+      // This ensures Budget Division Utilization uses the correct weight (e.g., 25%, 25%, 50%)
+      // instead of even distribution (33.33%, 33.33%, 33.33%)
+      const milestoneWeight = parseFloat(milestone.weight || 0);
+      
+      if (milestoneWeight === 0) {
+        console.log(`⏸️ [calculateDivisionProgress] Milestone "${milestone.title}" (ID: ${milestone.id}) has no weight, skipping`);
+        return;
+      }
       
       // Only calculate if milestone has planned budget AND used budget (to avoid division by zero and meaningless calculations)
       if (plannedBudget > 0 && usedBudget > 0) {
         // Calculate utilization percentage for this milestone
-        // Example: 1M / 2.5M = 40% utilization
+        // Example: 250,000 / 250,000 = 100% utilization
         const milestoneUtilizationPercent = (usedBudget / plannedBudget) * 100;
         
         // Calculate weighted contribution: utilization * (weight / 100)
-        // Example: 40% utilization * (33.33% / 100) = 13.33%
+        // Example: 100% utilization * (25% / 100) = 25% contribution to Budget Division
         // Formula: (usedBudget / plannedBudget) * (milestoneWeight / 100)
         const weightedContribution = milestoneUtilizationPercent * (milestoneWeight / 100);
         totalWeightedUtilization += weightedContribution;
