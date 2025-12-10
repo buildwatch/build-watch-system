@@ -2843,7 +2843,7 @@ loading = false;
               </button>
               <button 
                 id="deleteConfirmButton"
-                onclick="window.showPasswordModalForDeletion()"
+                onclick="if(typeof window.showPasswordModalForDeletion === 'function') { window.showPasswordModalForDeletion(); } else { console.error('showPasswordModalForDeletion function not found'); }"
                 class="px-6 py-3 bg-gradient-to-r from-red-600 via-red-500 to-red-600 hover:from-red-700 hover:via-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
               >
                 Delete Project
@@ -8175,11 +8175,31 @@ loading = false;
       descriptionElement.textContent = 'This action cannot be undone. All project data, milestones, and submissions will be permanently deleted.';
     }
     
-    // Set up confirm button
+    // Store project ID and name for deletion (used by password modal)
+    window.pendingDeleteProjectId = projectId;
+    window.pendingDeleteProjectName = projectName;
+    
+    console.log('🔍 [DELETE DEBUG] Delete confirmation modal opened');
+    console.log('🔍 [DELETE DEBUG] Project ID:', projectId);
+    console.log('🔍 [DELETE DEBUG] Project Name:', projectName);
+    console.log('🔍 [DELETE DEBUG] showPasswordModalForDeletion function exists:', typeof window.showPasswordModalForDeletion === 'function');
+    
+    // Ensure the button calls the password modal function
     if (confirmButton) {
-      confirmButton.onclick = function() {
-        window.closeDeleteConfirmModal();
-        window.deleteProject(projectId);
+      // Remove any existing onclick handlers
+      confirmButton.onclick = null;
+      // Set up the click handler to show password modal
+      confirmButton.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔍 [DELETE DEBUG] Delete Project button clicked');
+        if (typeof window.showPasswordModalForDeletion === 'function') {
+          window.showPasswordModalForDeletion();
+        } else {
+          console.error('❌ [DELETE DEBUG] showPasswordModalForDeletion function not found!');
+          alert('Password verification function not available. Please refresh the page.');
+        }
+        return false;
       };
     }
     
@@ -8201,13 +8221,20 @@ loading = false;
 
   // Password Modal Functions for Deletion
   window.showPasswordModalForDeletion = function() {
+    console.log('🔍 [DELETE PASSWORD DEBUG] showPasswordModalForDeletion called');
+    console.log('🔍 [DELETE PASSWORD DEBUG] pendingDeleteProjectId:', window.pendingDeleteProjectId);
+    console.log('🔍 [DELETE PASSWORD DEBUG] pendingDeleteProjectName:', window.pendingDeleteProjectName);
+    
     const passwordModal = document.getElementById('deletePasswordModal');
     const passwordInput = document.getElementById('deletePasswordInput');
     const passwordError = document.getElementById('deletePasswordError');
     const passwordErrorText = document.getElementById('deletePasswordErrorText');
     
+    console.log('🔍 [DELETE PASSWORD DEBUG] Password modal element found:', !!passwordModal);
+    console.log('🔍 [DELETE PASSWORD DEBUG] Password input element found:', !!passwordInput);
+    
     if (!passwordModal) {
-      console.error('Password modal not found');
+      console.error('❌ [DELETE PASSWORD DEBUG] Password modal not found in DOM');
       // Fallback: proceed with deletion without password
       if (window.pendingDeleteProjectId) {
         window.closeDeleteConfirmModal();
@@ -8228,9 +8255,11 @@ loading = false;
     }
     
     // Close delete confirmation modal
+    console.log('🔍 [DELETE PASSWORD DEBUG] Closing delete confirmation modal');
     window.closeDeleteConfirmModal();
     
     // Show password modal
+    console.log('🔍 [DELETE PASSWORD DEBUG] Showing password modal');
     passwordModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     
@@ -8238,6 +8267,7 @@ loading = false;
     setTimeout(() => {
       if (passwordInput) {
         passwordInput.focus();
+        console.log('🔍 [DELETE PASSWORD DEBUG] Password input focused');
       }
     }, 100);
   };
