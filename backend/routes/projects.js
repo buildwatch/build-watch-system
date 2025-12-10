@@ -3045,7 +3045,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
     
     // Check and update project completion status based on milestones
     const ProjectCompletionService = require('../services/projectCompletionService');
-    const project = await Project.findByPk(id);
+    const project = await Project.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: 'eiuPersonnel',
+          attributes: ['id', 'name', 'fullName', 'email', 'role', 'subRole', 'contactNumber', 'department', 'group', 'externalCompanyName', 'profilePictureUrl']
+        }
+      ]
+    });
     if (project) {
       await ProjectCompletionService.checkAndUpdateProjectCompletion(id, project);
     }
@@ -3147,6 +3155,20 @@ router.get('/:id', authenticateToken, async (req, res) => {
       success: true,
       project: {
         ...progressData.project,
+        eiuReassignedAt: project.eiuReassignedAt, // Ensure eiuReassignedAt is included
+        eiuPersonnel: project.eiuPersonnel ? {
+          id: project.eiuPersonnel.id,
+          name: project.eiuPersonnel.name,
+          fullName: project.eiuPersonnel.fullName,
+          email: project.eiuPersonnel.email,
+          role: project.eiuPersonnel.role,
+          subRole: project.eiuPersonnel.subRole,
+          contactNumber: project.eiuPersonnel.contactNumber,
+          department: project.eiuPersonnel.department,
+          group: project.eiuPersonnel.group,
+          externalCompanyName: project.eiuPersonnel.externalCompanyName,
+          profilePictureUrl: project.eiuPersonnel.profilePictureUrl
+        } : null,
         milestones: progressData.milestones || [],
         updates: recentUpdates, // Include recent updates
         progress: formattedProgress,
